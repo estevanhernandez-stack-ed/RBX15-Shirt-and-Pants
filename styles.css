@@ -27,7 +27,7 @@ header span { font-size:11px; color:#888; }
 .ribbon-group:last-child { border-right:none; }
 .ribbon-group-items { display:flex; gap:3px; flex-wrap:wrap; align-items:center; flex:1; }
 .ribbon-group-items.vert { flex-direction:column; align-items:stretch; }
-.ribbon-group-label { font-size:8px; color:#555; text-transform:uppercase; letter-spacing:.5px; text-align:center; padding-top:3px; white-space:nowrap; }
+.ribbon-group-label { font-size:10px; color:#888; text-transform:uppercase; letter-spacing:.5px; text-align:center; padding-top:4px; white-space:nowrap; font-weight:600; }
 .rbtn { padding:4px 10px; font-size:11px; background:linear-gradient(180deg, #1e1e32, #1a1a2e); border:1px solid #3a3a50; color:#ccc; border-radius:4px; cursor:pointer; white-space:nowrap; transition:all .15s ease; }
 .rbtn:hover { border-color:#e040fb; color:#e040fb; box-shadow:0 0 8px rgba(224,64,251,0.15); }
 .rbtn.active { border-color:#e040fb; background:#1e1040; color:#e040fb; }

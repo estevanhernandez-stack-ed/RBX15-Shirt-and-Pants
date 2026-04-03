@@ -2139,26 +2139,13 @@ function showAssetFolder(folder) {
     thumb.appendChild(nameTag);
 
     // Click to add as layer
+    // Capture the display name from the nameTag (which shows the clean name)
+    const displayName = file.name.replace(/\.[^.]+$/, '');
     thumb.onclick = () => {
       const reader = new FileReader();
       reader.onload = re => {
         const layerImg = new window.Image();
-        layerImg.onload = () => {
-          saveUndo();
-          const id = Date.now() + Math.random();
-          layers.push({
-            id, type: 'image', img: layerImg,
-            name: file.name.replace(/\.[^.]+$/, ''),
-            x: 231, y: 74,  // default to torso_front
-            scale: Math.min(128 / layerImg.width, 128 / layerImg.height),
-            rotation: 0, opacity: 1, visible: true, flipH: false, flipV: false,
-            brightness: 100, contrast: 100, saturate: 100, hueRotate: 0,
-            rShift: 0, gShift: 0, bShift: 0
-          });
-          selectedLayerId = id;
-          updateUI();
-          render();
-        };
+        layerImg.onload = () => addLayer(layerImg, displayName);
         layerImg.src = re.target.result;
       };
       reader.readAsDataURL(file);
@@ -2172,17 +2159,19 @@ function showAssetFolder(folder) {
         const layerImg = new window.Image();
         layerImg.onload = () => {
           saveUndo();
-          const id = Date.now() + Math.random();
-          layers.push({
-            id, type: 'image', img: layerImg,
-            name: file.name.replace(/\.[^.]+$/, '') + ' (full)',
+          const layer = {
+            id: nextId++,
+            name: displayName + ' (full)',
+            img: layerImg, visible: true, opacity: 1,
             x: 0, y: 0,
             scale: Math.max(TW / layerImg.width, TH / layerImg.height),
-            rotation: 0, opacity: 1, visible: true, flipH: false, flipV: false,
+            rotation: 0, flipH: false, flipV: false,
             brightness: 100, contrast: 100, saturate: 100, hueRotate: 0,
-            rShift: 0, gShift: 0, bShift: 0
-          });
-          selectedLayerId = id;
+            rShift: 0, gShift: 0, bShift: 0,
+          };
+          layers.push(layer);
+          selectedLayerId = layer.id;
+          setTool('select');
           updateUI();
           render();
         };

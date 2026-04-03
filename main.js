@@ -5,7 +5,7 @@ function createWindow () {
   const win = new BrowserWindow({
     width: 1200,
     height: 800,
-    title: "Conundrum by Este - R15 Shirt Editor",
+    title: "ItsjustEste's RBX Classic Shirt and Pants Maker",
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -13,7 +13,7 @@ function createWindow () {
   })
 
   // Load the main HTML file
-  win.loadFile('shirt_editor.html')
+  win.loadFile('editor.html')
   
   // Optionally open DevTools
   // win.webContents.openDevTools()

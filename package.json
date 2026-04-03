@@ -1,8 +1,8 @@
 {
-  "name": "conundrum-r15-designer",
-  "productName": "R15 Template Designer",
-  "version": "1.0.0",
-  "description": "Roblox R15 Shirt Editor / Template Designer",
+  "name": "itsjusteste-rbx-maker",
+  "productName": "ItsjustEste's RBX Classic Shirt and Pants Maker",
+  "version": "4.0.0",
+  "description": "Roblox Classic Shirt and Pants Template Maker by ItsjustEste",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -14,10 +14,10 @@
     "editor",
     "r15"
   ],
-  "author": "Conundrum by Este",
+  "author": "ItsjustEste / 626 Labs LLC",
   "license": "ISC",
   "build": {
-    "appId": "com.conundrum.r15",
+    "appId": "com.itsjusteste.rbx-maker",
     "win": {
       "target": "nsis"
     },

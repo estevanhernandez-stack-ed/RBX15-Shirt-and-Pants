@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ItsjustEste's RBX Classic Shirt and Pants Maker</title>
+<link rel="stylesheet" href="styles.css">
+<!-- Google Fonts for Word Art -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Dancing+Script:wght@700&family=Great+Vibes&family=Pacifico&family=Creepster&family=Poppins:wght@700;900&family=Lato:wght@900&family=Bangers&family=Permanent+Marker&family=Bungee+Shade&family=Rubik+Mono+One&family=Press+Start+2P&family=Righteous&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header>
+  <h1>RBX Classic Shirt &amp; Pants Maker</h1>
+  <span>ItsjustEste | v4.0</span>
+</header>
+
+<!-- ═══════════ RIBBON ═══════════ -->
+<div class="ribbon">
+  <div class="ribbon-tabs">
+    <button class="ribbon-tab active" data-tab="home">Home</button>
+    <button class="ribbon-tab" data-tab="layout">Layout</button>
+    <button class="ribbon-tab" data-tab="details">Details</button>
+    <button class="ribbon-tab" data-tab="text">Text</button>
+  </div>
+
+  <!-- HOME TAB -->
+  <div class="ribbon-pane active" data-tab="home">
+    <div class="ribbon-group" style="padding:0 14px;">
+      <div class="ribbon-group-items vert" style="align-items:center;gap:4px;">
+        <button id="btnModeToggle" class="btn btn-sm" style="font-size:13px;font-weight:700;padding:6px 18px;background:linear-gradient(135deg,#e040fb,#7c4dff);color:#fff;border:none;border-radius:6px;cursor:pointer;letter-spacing:.5px;min-width:80px;">SHIRT</button>
+        <select id="assetType" hidden>
+          <option value="Shirt">Shirt</option>
+          <option value="Pants">Pants</option>
+        </select>
+      </div>
+      <div class="ribbon-group-label">Mode</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items">
+        <button class="btn btn-sm btn-secondary" id="btnSelect" title="Select/Move (V)">Select</button>
+        <button class="btn btn-sm btn-secondary" id="btnDrawPen" title="Freehand draw (B)">Draw</button>
+        <button class="btn btn-sm btn-secondary" id="btnDrawLine" title="Line tool (L)">Line</button>
+        <button class="btn btn-sm btn-secondary" id="btnDrawRect" title="Rectangle (U)">Rect</button>
+        <button class="btn btn-sm btn-secondary" id="btnDrawCircle" title="Ellipse (O)">Ellipse</button>
+        <button class="btn btn-sm btn-secondary" id="btnEraser" title="Eraser (E)">Eraser</button>
+        <button class="btn btn-sm" id="btnToggleKeys" title="Toggle keyboard shortcuts" style="background:#2d4a2d;color:#7fff7f;font-size:10px;">Keys: ON</button>
+      </div>
+      <div class="ribbon-group-label">Tools</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items vert">
+        <div style="display:flex;gap:4px;align-items:center">
+          <input type="color" id="drawColor" value="#e040fb" title="Draw color" style="width:26px;height:24px;border:none;padding:0;cursor:pointer;border-radius:4px;">
+          <input type="range" id="drawSize" min="1" max="50" value="4" title="Brush size" style="width:60px;accent-color:#e040fb">
+        </div>
+        <label style="font-size:10px;color:#888;margin:0;display:flex;align-items:center;gap:2px"><input type="checkbox" id="drawFill"> Fill</label>
+      </div>
+      <div class="ribbon-group-label">Brush</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items vert">
+        <div style="display:flex;gap:3px">
+          <button class="btn btn-sm btn-secondary" id="btnFitFront" title="Fit to front torso">Fit Front</button>
+          <button class="btn btn-sm btn-secondary" id="btnFitFB" title="Front + Back">F+B</button>
+          <button class="btn btn-sm btn-secondary" id="btnStretch" title="Stretch across torso">Stretch</button>
+        </div>
+        <div style="display:flex;gap:3px">
+          <button class="btn btn-sm btn-secondary" id="btnAllover" title="Tile allover">Allover</button>
+          <button class="btn btn-sm btn-secondary" id="btnScatter" title="Scatter randomly">Scatter</button>
+        </div>
+      </div>
+      <div class="ribbon-group-label">Placement</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items">
+        <button class="btn btn-sm btn-secondary" id="btnUndo">Undo</button>
+        <button class="btn btn-sm btn-secondary" id="btnClear">Clear</button>
+      </div>
+      <div class="ribbon-group-label">Edit</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items vert">
+        <div style="display:flex;gap:3px">
+          <button class="btn btn-sm btn-secondary" id="btnSaveProject" title="Save your work — reopen &amp; edit later">&#128190; Save Work</button>
+          <button class="btn btn-sm btn-secondary" id="btnLoadProject" title="Open a saved project">&#128194; Open</button>
+          <button class="btn btn-sm btn-secondary" id="btnLoadImage" title="Load image as layer">&#128444; Image</button>
+        </div>
+        <div style="display:flex;gap:3px;align-items:center">
+          <button class="btn btn-sm btn-primary" id="btnExport">&#11015; Download Template</button>
+        </div>
+      </div>
+      <div class="ribbon-group-label">File</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items vert">
+        <input type="text" id="exportTitle" placeholder="Template name..." style="background:#1a1a2e;border:1px solid #333;color:#e0e0e0;padding:3px 8px;border-radius:4px;font-size:11px;width:140px;">
+        <div style="display:flex;gap:8px;align-items:center">
+          <label style="font-size:10px;display:flex;align-items:center;gap:3px;color:#999"><input type="checkbox" id="showMask" checked> Mask</label>
+          <label style="font-size:10px;display:flex;align-items:center;gap:3px;color:#999"><input type="checkbox" id="showGrid"> Grid</label>
+        </div>
+      </div>
+      <div class="ribbon-group-label">Settings</div>
+    </div>
+    <input type="file" id="projectFileInput" accept=".json,.r15proj" hidden>
+    <input type="file" id="imageLoadInput" accept="image/*" multiple hidden>
+  </div>
+
+  <!-- LAYOUT TAB -->
+  <div class="ribbon-pane" data-tab="layout">
+    <div class="ribbon-group">
+      <div class="ribbon-group-items" style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px;">
+        <button class="preset-btn" data-preset="meme" style="padding:4px 8px;font-size:10px;">Meme Tee</button>
+        <button class="preset-btn" data-preset="allover" style="padding:4px 8px;font-size:10px;">Allover</button>
+        <button class="preset-btn" data-preset="sleeve-pop" style="padding:4px 8px;font-size:10px;">Sleeve Pop</button>
+        <button class="preset-btn" data-preset="mirror" style="padding:4px 8px;font-size:10px;">Mirror F+B</button>
+        <button class="preset-btn" data-preset="scattered" style="padding:4px 8px;font-size:10px;">Scatter</button>
+        <button class="preset-btn" data-preset="fullbleed" style="padding:4px 8px;font-size:10px;">Fullbleed</button>
+      </div>
+      <div class="ribbon-group-label">Presets</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items">
+        <div class="color-swatches" id="bgSwatches" style="display:flex;flex-wrap:wrap;gap:3px;"></div>
+      </div>
+      <div class="ribbon-group-label">Background</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items vert">
+        <div style="display:flex;gap:4px;align-items:center">
+          <input type="color" id="bgColor" value="#1a1a2e" style="width:30px;height:24px;border:none;cursor:pointer;">
+          <button class="btn btn-sm btn-secondary" id="bgImageBtn" style="font-size:10px;padding:3px 8px;">BG Image</button>
+          <input type="file" id="bgFileInput" accept="image/*" hidden>
+        </div>
+        <div style="display:flex;gap:4px;align-items:center">
+          <label style="font-size:9px;color:#888;margin:0;white-space:nowrap;">Opacity</label>
+          <input type="range" id="bgOpacity" min="0" max="100" value="100" style="width:80px;accent-color:#e040fb;">
+        </div>
+      </div>
+      <div class="ribbon-group-label">BG Settings</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items" id="regionGrid"></div>
+      <div class="ribbon-group-label">Template Regions</div>
+    </div>
+  </div>
+
+  <!-- DETAILS TAB -->
+  <div class="ribbon-pane" data-tab="details">
+    <div class="ribbon-group">
+      <div class="ribbon-group-items vert">
+        <div style="display:flex;gap:4px;align-items:center">
+          <input type="color" id="detailColor" value="#333333" style="width:26px;height:22px;border:none;cursor:pointer;">
+          <label style="font-size:9px;color:#888;margin:0">W</label>
+          <input type="range" id="detailWidth" min="1" max="8" value="2" style="width:50px;accent-color:#e040fb;">
+          <label style="font-size:9px;color:#888;margin:0;display:flex;align-items:center;gap:2px"><input type="checkbox" id="detailDash"> Stitch</label>
+        </div>
+      </div>
+      <div class="ribbon-group-label">Settings</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items">
+        <button class="preset-btn detail-btn" data-detail="collar-v" style="padding:3px 7px;font-size:10px;">V-Neck</button>
+        <button class="preset-btn detail-btn" data-detail="collar-crew" style="padding:3px 7px;font-size:10px;">Crew</button>
+        <button class="preset-btn detail-btn" data-detail="collar-scoop" style="padding:3px 7px;font-size:10px;">Scoop</button>
+        <button class="preset-btn detail-btn" data-detail="collar-henley" style="padding:3px 7px;font-size:10px;">Henley</button>
+      </div>
+      <div class="ribbon-group-label">Neckline</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items">
+        <button class="preset-btn detail-btn" data-detail="cuff-left" style="padding:3px 7px;font-size:10px;">L Cuff</button>
+        <button class="preset-btn detail-btn" data-detail="cuff-right" style="padding:3px 7px;font-size:10px;">R Cuff</button>
+        <button class="preset-btn detail-btn" data-detail="cuffs-both" style="padding:3px 7px;font-size:10px;">Both</button>
+        <button class="preset-btn detail-btn" data-detail="hem" style="padding:3px 7px;font-size:10px;">Hem</button>
+      </div>
+      <div class="ribbon-group-label">Edges</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items">
+        <button class="preset-btn detail-btn" data-detail="seam-center" style="padding:3px 7px;font-size:10px;">Center</button>
+        <button class="preset-btn detail-btn" data-detail="seam-sides" style="padding:3px 7px;font-size:10px;">Sides</button>
+        <button class="preset-btn detail-btn" data-detail="shoulder-stripe" style="padding:3px 7px;font-size:10px;">Shoulder</button>
+        <button class="preset-btn detail-btn" data-detail="arm-bands" style="padding:3px 7px;font-size:10px;">Bands</button>
+        <button class="preset-btn detail-btn" data-detail="yoke" style="padding:3px 7px;font-size:10px;">Yoke</button>
+      </div>
+      <div class="ribbon-group-label">Seams</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items">
+        <button class="preset-btn detail-btn" data-detail="pocket" style="padding:3px 7px;font-size:10px;">Pocket</button>
+        <button class="preset-btn detail-btn" data-detail="placket" style="padding:3px 7px;font-size:10px;">Placket</button>
+        <button class="preset-btn detail-btn" data-detail="full-detail" style="padding:3px 7px;font-size:10px;border-color:#7c4dff;color:#b388ff;">Full Set</button>
+      </div>
+      <div class="ribbon-group-label">Accents</div>
+    </div>
+  </div>
+
+  <!-- TEXT TAB -->
+  <div class="ribbon-pane" data-tab="text">
+    <div class="ribbon-group">
+      <div class="ribbon-group-items vert">
+        <textarea id="waText" placeholder="Type text..." rows="2" style="width:150px;min-height:36px;background:#1a1a2e;border:1px solid #333;color:#e0e0e0;padding:4px 8px;border-radius:4px;font-size:12px;resize:vertical;font-family:inherit;">RIZZ</textarea>
+        <select id="waFont" style="width:150px;background:#1a1a2e;border:1px solid #333;color:#e0e0e0;padding:2px 6px;border-radius:4px;font-size:10px;">
+          <option value="Anton">Anton (Block)</option>
+          <option value="Bebas Neue">Bebas Neue (Tall)</option>
+          <option value="Dancing Script">Dancing Script</option>
+          <option value="Great Vibes">Great Vibes</option>
+          <option value="Pacifico">Pacifico (Retro)</option>
+          <option value="Creepster">Creepster</option>
+          <option value="Poppins">Poppins (Bold)</option>
+          <option value="Lato">Lato (Modern)</option>
+          <option value="Bangers">Bangers (Comic)</option>
+          <option value="Permanent Marker">Permanent Marker</option>
+          <option value="Bungee Shade">Bungee Shade (3D)</option>
+          <option value="Rubik Mono One">Rubik Mono</option>
+          <option value="Press Start 2P">Press Start 2P</option>
+          <option value="Righteous">Righteous</option>
+          <option value="Orbitron">Orbitron (Cyber)</option>
+        </select>
+      </div>
+      <div class="ribbon-group-label">Text</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items vert">
+        <div style="display:flex;gap:4px;align-items:center">
+          <div style="text-align:center"><label style="font-size:8px;color:#666">Fill</label><br><input type="color" id="waColor" value="#e040fb" style="width:28px;height:20px;border:none;cursor:pointer;"></div>
+          <div style="text-align:center"><label style="font-size:8px;color:#666">Stroke</label><br><input type="color" id="waStroke" value="#000000" style="width:28px;height:20px;border:none;cursor:pointer;"></div>
+          <div style="text-align:center"><label style="font-size:8px;color:#666">Grad</label><br><input type="color" id="waColor2" value="#00e5ff" style="width:28px;height:20px;border:none;cursor:pointer;"></div>
+          <div style="text-align:center"><label style="font-size:8px;color:#666">Size</label><br><input type="number" id="waSize" value="64" min="8" max="300" style="width:44px;background:#1a1a2e;border:1px solid #333;color:#e0e0e0;padding:1px 4px;border-radius:3px;font-size:10px;"></div>
+        </div>
+        <div style="display:flex;gap:4px;align-items:center">
+          <label style="font-size:8px;color:#666;white-space:nowrap">Stroke W</label>
+          <input type="range" id="waStrokeW" min="0" max="20" value="3" style="width:60px;accent-color:#e040fb">
+          <label style="font-size:8px;color:#666;white-space:nowrap">Angle</label>
+          <input type="range" id="waAngle" min="0" max="360" value="0" style="width:50px;accent-color:#00e5ff">
+        </div>
+      </div>
+      <div class="ribbon-group-label">Colors &amp; Size</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items" style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;">
+        <button class="wordart-style-btn active" data-style="solid" style="padding:3px 6px;font-size:9px;">Solid</button>
+        <button class="wordart-style-btn" data-style="gradient" style="padding:3px 6px;font-size:9px;">Gradient</button>
+        <button class="wordart-style-btn" data-style="neon" style="padding:3px 6px;font-size:9px;">Neon</button>
+        <button class="wordart-style-btn" data-style="shadow" style="padding:3px 6px;font-size:9px;">Shadow</button>
+        <button class="wordart-style-btn" data-style="outline" style="padding:3px 6px;font-size:9px;">Outline</button>
+        <button class="wordart-style-btn" data-style="retro" style="padding:3px 6px;font-size:9px;">Retro</button>
+      </div>
+      <div class="ribbon-group-label">Style</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items vert" style="align-items:center;">
+        <div class="wordart-preview" style="background:#000;border:1px solid #333;border-radius:4px;min-height:44px;display:flex;align-items:center;justify-content:center;overflow:hidden;"><canvas id="waPreview" width="200" height="60"></canvas></div>
+        <button class="btn btn-primary btn-sm" id="btnAddWordArt" style="width:100%;font-size:10px;padding:3px 8px;">Add to Canvas</button>
+      </div>
+      <div class="ribbon-group-label">Preview</div>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+  <!-- LEFT: Layers & Images -->
+  <div class="panel">
+    <h3>Asset Library</h3>
+    <div class="controls" style="margin-bottom:8px;">
+      <label style="font-size:10px;color:#888">Load Folder</label>
+      <div class="row" style="gap:4px;">
+        <button class="btn btn-sm btn-secondary" id="btnLoadFolder" title="Pick a folder of PNGs to browse">Open Folder</button>
+        <input type="file" id="folderInput" webkitdirectory directory multiple hidden>
+      </div>
+      <div id="assetBrowser" style="max-height:180px;overflow-y:auto;margin-top:6px;display:none;">
+        <div id="assetSubfolders" style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px;"></div>
+        <div id="assetGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;"></div>
+      </div>
+      <div id="assetCount" style="font-size:10px;color:#555;margin-top:4px;"></div>
+      <div class="asset-resize-handle" id="assetResizeHandle" title="Drag to resize"></div>
+    </div>
+
+    <h3>Drop Art Here</h3>
+    <div class="drop-zone" id="dropZone">
+      Drag &amp; drop PNG images<br>or click to browse
+      <input type="file" id="fileInput" accept="image/*" multiple hidden>
+    </div>
+
+    <h3>Layers <span style="font-size:10px;color:#555;text-transform:none">(drag to reorder)</span></h3>
+    <div class="layer-list" id="layerList"></div>
+
+    <h3>Selected Layer</h3>
+    <div class="controls" id="layerControls">
+      <p class="info">Select a layer to edit</p>
+    </div>
+
+  </div>
+
+  <!-- CENTER: Canvas -->
+  <div class="canvas-area">
+    <div class="canvas-wrap" id="canvasWrap">
+      <canvas id="mainCanvas" width="585" height="559"></canvas>
+    </div>
+    <div class="zoom-controls">
+      <button id="zoomOut">-</button>
+      <span id="zoomLevel">100%</span>
+      <button id="zoomIn">+</button>
+    </div>
+  </div>
+
+  <!-- btnExport2 kept for JS compat -->
+  <button id="btnExport2" hidden></button>
+</div>
+
+<footer>Developed at 626 Labs LLC</footer>
+
+<script src="editor.js"></script>
+</body>
+</html>

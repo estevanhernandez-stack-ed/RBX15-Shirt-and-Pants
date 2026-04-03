@@ -836,6 +836,23 @@ canvas.ondrop = e => {
   const rect = canvas.getBoundingClientRect();
   const dropX = (e.clientX - rect.left) / zoom;
   const dropY = (e.clientY - rect.top) / zoom;
+
+  // Check if this is a drag from the asset browser
+  if (window._assetDragFile) {
+    const file = window._assetDragFile;
+    const name = window._assetDragName;
+    window._assetDragFile = null;
+    window._assetDragName = null;
+    const reader = new FileReader();
+    reader.onload = re => {
+      const img = new Image();
+      img.onload = () => addLayer(img, name, dropX, dropY);
+      img.src = re.target.result;
+    };
+    reader.readAsDataURL(file);
+    return;
+  }
+
   handleFiles(e.dataTransfer.files, dropX, dropY);
 };
 
@@ -2133,19 +2150,33 @@ function showAssetFolder(folder) {
     // Name overlay
     const nameTag = document.createElement('div');
     nameTag.style.cssText = 'position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.7);color:#ccc;font-size:7px;padding:1px 2px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;';
-    nameTag.textContent = file.name.replace(/\.(png|jpg|jpeg|gif|webp)$/i, '');
+    const tagRawName = file.name.replace(/\.(png|jpg|jpeg|gif|webp)$/i, '');
+    const tagParts = (file.webkitRelativePath || '').split('/');
+    const tagParent = tagParts.length >= 3 ? tagParts[tagParts.length - 2] : null;
+    const tagIsUUID = /^[0-9a-f]{8}-[0-9a-f]{4}/i.test(tagRawName);
+    nameTag.textContent = (tagIsUUID && tagParent) ? tagParent : tagRawName;
 
     thumb.appendChild(img);
     thumb.appendChild(nameTag);
 
     // Click to add as layer
-    // Capture the display name from the nameTag (which shows the clean name)
     const displayName = file.name.replace(/\.[^.]+$/, '');
+
+    // Enable dragging from asset browser to canvas
+    thumb.draggable = true;
+    thumb.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('text/plain', 'asset-drag');
+      e.dataTransfer.setData('application/x-asset-name', displayName);
+      // Store file reference for the drop handler
+      window._assetDragFile = file;
+      window._assetDragName = displayName;
+    });
+
     thumb.onclick = () => {
       const reader = new FileReader();
       reader.onload = re => {
         const layerImg = new window.Image();
-        layerImg.onload = () => addLayer(layerImg, displayName);
+        layerImg.onload = () => addLayer(layerImg, clickName);
         layerImg.src = re.target.result;
       };
       reader.readAsDataURL(file);

@@ -95,6 +95,10 @@ let drawStartX = 0, drawStartY = 0;
 let drawPoints = []; // for pen tool
 let drawCanvas = null; // offscreen canvas for live drawing preview
 
+// Asset browser drag state
+let _assetDragFile = null;
+let _assetDragName = null;
+
 // Drag state
 let dragging = null;
 let dragStart = {x:0, y:0};
@@ -123,9 +127,60 @@ buildMask();
 // RENDER
 // ═══════════════════════════════════════════════════════════
 // ═══════════════════════════════════════════════════════════
+// LAYER FACTORY & HELPERS
+// ═══════════════════════════════════════════════════════════
+function makeLayer(img, name, x, y, scale, overrides) {
+  return Object.assign({
+    id: nextId++, name: name || 'Layer', img,
+    visible: true, opacity: 1, x: x || 0, y: y || 0,
+    scale: scale || 1, rotation: 0, flipH: false, flipV: false,
+    brightness: 100, contrast: 100, saturate: 100, hueRotate: 0,
+    rShift: 0, gShift: 0, bShift: 0,
+  }, overrides);
+}
+
+function autocrop(sourceCanvas, pad) {
+  pad = pad || 10;
+  const sw = sourceCanvas.width, sh = sourceCanvas.height;
+  const pxData = sourceCanvas.getContext('2d').getImageData(0, 0, sw, sh);
+  let minX = sw, minY = sh, maxX = 0, maxY = 0;
+  for (let y = 0; y < sh; y++) {
+    for (let x = 0; x < sw; x++) {
+      if (pxData.data[(y * sw + x) * 4 + 3] > 0) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (maxX < minX) return null; // nothing drawn
+  minX = Math.max(0, minX - pad);
+  minY = Math.max(0, minY - pad);
+  maxX = Math.min(sw - 1, maxX + pad);
+  maxY = Math.min(sh - 1, maxY + pad);
+  const cropW = maxX - minX + 1;
+  const cropH = maxY - minY + 1;
+  const cropped = document.createElement('canvas');
+  cropped.width = cropW;
+  cropped.height = cropH;
+  cropped.getContext('2d').drawImage(sourceCanvas, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
+  return { canvas: cropped, x: minX, y: minY };
+}
+
+// ═══════════════════════════════════════════════════════════
 // IMAGE ADJUSTMENT HELPERS
 // ═══════════════════════════════════════════════════════════
-function applyRGBShift(img, rShift, gShift, bShift) {
+// Cached RGB shift — avoids per-frame pixel manipulation
+let _rgbCache = { layerId: null, r: 0, g: 0, b: 0, canvas: null };
+
+function applyRGBShift(layer) {
+  // Return cached result if values haven't changed
+  if (_rgbCache.layerId === layer.id &&
+      _rgbCache.r === layer.rShift && _rgbCache.g === layer.gShift && _rgbCache.b === layer.bShift) {
+    return _rgbCache.canvas;
+  }
+  const img = layer.img;
   const tmp = document.createElement('canvas');
   tmp.width = img.width;
   tmp.height = img.height;
@@ -135,11 +190,12 @@ function applyRGBShift(img, rShift, gShift, bShift) {
   const d = imgData.data;
   for (let i = 0; i < d.length; i += 4) {
     if (d[i + 3] === 0) continue;
-    d[i]     = Math.max(0, Math.min(255, d[i]     + rShift));
-    d[i + 1] = Math.max(0, Math.min(255, d[i + 1] + gShift));
-    d[i + 2] = Math.max(0, Math.min(255, d[i + 2] + bShift));
+    d[i]     = Math.max(0, Math.min(255, d[i]     + layer.rShift));
+    d[i + 1] = Math.max(0, Math.min(255, d[i + 1] + layer.gShift));
+    d[i + 2] = Math.max(0, Math.min(255, d[i + 2] + layer.bShift));
   }
   tc.putImageData(imgData, 0, 0);
+  _rgbCache = { layerId: layer.id, r: layer.rShift, g: layer.gShift, b: layer.bShift, canvas: tmp };
   return tmp;
 }
 
@@ -166,8 +222,7 @@ function drawLayerWithAdjustments(ctx, layer) {
   }
 
   if (layer.rShift !== 0 || layer.gShift !== 0 || layer.bShift !== 0) {
-    const shifted = applyRGBShift(layer.img, layer.rShift, layer.gShift, layer.bShift);
-    ctx.drawImage(shifted, -w/2, -h/2, w, h);
+    ctx.drawImage(applyRGBShift(layer), -w/2, -h/2, w, h);
   } else {
     ctx.drawImage(layer.img, -w/2, -h/2, w, h);
   }
@@ -176,13 +231,15 @@ function drawLayerWithAdjustments(ctx, layer) {
   ctx.restore();
 }
 
-function render() {
-  const off = document.createElement('canvas');
-  off.width = TW; off.height = TH;
-  const oc = off.getContext('2d');
+// Persistent offscreen canvas — reused every render instead of allocating new ones
+const _offCanvas = document.createElement('canvas');
+_offCanvas.width = TW; _offCanvas.height = TH;
+const _offCtx = _offCanvas.getContext('2d');
 
-  // Background
-  oc.clearRect(0,0,TW,TH);
+function render() {
+  const off = _offCanvas;
+  const oc = _offCtx;
+  oc.clearRect(0, 0, TW, TH);
   if (bgImage) {
     oc.globalAlpha = bgOpacity;
     oc.drawImage(bgImage, 0, 0, TW, TH);
@@ -228,7 +285,7 @@ function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // Checkerboard for transparency
-  const pat = ctx.createPattern(makeCheckerboard(), 'repeat');
+  const pat = ctx.createPattern(_checkerboard, 'repeat');
   ctx.fillStyle = pat;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -313,14 +370,14 @@ function render() {
   updateCursor();
 }
 
-function makeCheckerboard() {
+const _checkerboard = (() => {
   const c = document.createElement('canvas');
   c.width = 16; c.height = 16;
   const x = c.getContext('2d');
   x.fillStyle = '#1a1a2e'; x.fillRect(0,0,16,16);
   x.fillStyle = '#111'; x.fillRect(0,0,8,8); x.fillRect(8,8,8,8);
   return c;
-}
+})();
 
 function updateCursor() {
   const cursors = { select:'crosshair', pen:'crosshair', line:'crosshair', rect:'crosshair', circle:'crosshair', eraser:'crosshair' };
@@ -388,51 +445,17 @@ function addLayer(img, name, dropX, dropY) {
 }
 
 function addDrawingLayer(drawingCanvas, name) {
-  // Auto-crop to actual drawn pixels so bounding box is tight
-  const sw = drawingCanvas.width, sh = drawingCanvas.height;
-  const pxData = drawingCanvas.getContext('2d').getImageData(0, 0, sw, sh);
-  let minX = sw, minY = sh, maxX = 0, maxY = 0;
-  for (let y = 0; y < sh; y++) {
-    for (let x = 0; x < sw; x++) {
-      if (pxData.data[(y * sw + x) * 4 + 3] > 0) {
-        if (x < minX) minX = x;
-        if (x > maxX) maxX = x;
-        if (y < minY) minY = y;
-        if (y > maxY) maxY = y;
-      }
-    }
-  }
-  if (maxX < minX) return; // nothing drawn
-  const pad = 10;
-  minX = Math.max(0, minX - pad);
-  minY = Math.max(0, minY - pad);
-  maxX = Math.min(sw - 1, maxX + pad);
-  maxY = Math.min(sh - 1, maxY + pad);
-  const cropW = maxX - minX + 1;
-  const cropH = maxY - minY + 1;
-
-  const cropped = document.createElement('canvas');
-  cropped.width = cropW;
-  cropped.height = cropH;
-  cropped.getContext('2d').drawImage(drawingCanvas, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
-
+  const crop = autocrop(drawingCanvas);
+  if (!crop) return;
   const img = new Image();
   img.onload = () => {
-    const layer = {
-      id: nextId++,
-      name: name || 'Drawing ' + nextId,
-      img, visible: true, opacity: 1,
-      x: minX, y: minY,
-      scale: 1, rotation: 0, flipH: false, flipV: false,
-      brightness: 100, contrast: 100, saturate: 100, hueRotate: 0,
-      rShift: 0, gShift: 0, bShift: 0,
-    };
+    const layer = makeLayer(img, name || 'Drawing ' + (nextId + 1), crop.x, crop.y, 1);
     layers.push(layer);
     selectedLayerId = layer.id;
     updateUI();
     render();
   };
-  img.src = cropped.toDataURL();
+  img.src = crop.canvas.toDataURL();
 }
 
 function duplicateLayer(id) {
@@ -838,11 +861,11 @@ canvas.ondrop = e => {
   const dropY = (e.clientY - rect.top) / zoom;
 
   // Check if this is a drag from the asset browser
-  if (window._assetDragFile) {
-    const file = window._assetDragFile;
-    const name = window._assetDragName;
-    window._assetDragFile = null;
-    window._assetDragName = null;
+  if (_assetDragFile) {
+    const file = _assetDragFile;
+    const name = _assetDragName;
+    _assetDragFile = null;
+    _assetDragName = null;
     const reader = new FileReader();
     reader.onload = re => {
       const img = new Image();
@@ -1556,50 +1579,18 @@ function createDetailLayer(name, drawFn) {
 
   drawFn(c);
 
-  // Auto-crop to actual drawn pixels so bounding box is tight but grabbable
-  const imgData = c.getImageData(0, 0, TW, TH);
-  let minX = TW, minY = TH, maxX = 0, maxY = 0;
-  for (let y = 0; y < TH; y++) {
-    for (let x = 0; x < TW; x++) {
-      if (imgData.data[(y * TW + x) * 4 + 3] > 0) {
-        if (x < minX) minX = x;
-        if (x > maxX) maxX = x;
-        if (y < minY) minY = y;
-        if (y > maxY) maxY = y;
-      }
-    }
-  }
-  // Comfortable grab padding (min 10px each side)
-  const pad = 10;
-  minX = Math.max(0, minX - pad);
-  minY = Math.max(0, minY - pad);
-  maxX = Math.min(TW - 1, maxX + pad);
-  maxY = Math.min(TH - 1, maxY + pad);
-  const cropW = maxX - minX + 1;
-  const cropH = maxY - minY + 1;
-
-  // Create cropped canvas
-  const cropped = document.createElement('canvas');
-  cropped.width = cropW;
-  cropped.height = cropH;
-  cropped.getContext('2d').drawImage(dc, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
+  const crop = autocrop(dc);
+  if (!crop) return;
 
   const img = new Image();
   img.onload = () => {
-    const layer = {
-      id: nextId++, name: name,
-      img, visible: true, opacity: 1,
-      x: minX, y: minY, scale: 1, rotation: 0,
-      flipH: false, flipV: false,
-      brightness: 100, contrast: 100, saturate: 100, hueRotate: 0,
-      rShift: 0, gShift: 0, bShift: 0,
-    };
+    const layer = makeLayer(img, name, crop.x, crop.y, 1);
     layers.push(layer);
     selectedLayerId = layer.id;
     setTool('select');
     updateUI(); render();
   };
-  img.src = cropped.toDataURL();
+  img.src = crop.canvas.toDataURL();
 }
 
 const DETAIL_GENERATORS = {
@@ -2168,8 +2159,8 @@ function showAssetFolder(folder) {
       e.dataTransfer.setData('text/plain', 'asset-drag');
       e.dataTransfer.setData('application/x-asset-name', displayName);
       // Store file reference for the drop handler
-      window._assetDragFile = file;
-      window._assetDragName = displayName;
+      _assetDragFile = file;
+      _assetDragName = displayName;
     });
 
     thumb.onclick = () => {

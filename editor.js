@@ -122,6 +122,60 @@ buildMask();
 // ═══════════════════════════════════════════════════════════
 // RENDER
 // ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+// IMAGE ADJUSTMENT HELPERS
+// ═══════════════════════════════════════════════════════════
+function applyRGBShift(img, rShift, gShift, bShift) {
+  const tmp = document.createElement('canvas');
+  tmp.width = img.width;
+  tmp.height = img.height;
+  const tc = tmp.getContext('2d');
+  tc.drawImage(img, 0, 0);
+  const imgData = tc.getImageData(0, 0, tmp.width, tmp.height);
+  const d = imgData.data;
+  for (let i = 0; i < d.length; i += 4) {
+    if (d[i + 3] === 0) continue;
+    d[i]     = Math.max(0, Math.min(255, d[i]     + rShift));
+    d[i + 1] = Math.max(0, Math.min(255, d[i + 1] + gShift));
+    d[i + 2] = Math.max(0, Math.min(255, d[i + 2] + bShift));
+  }
+  tc.putImageData(imgData, 0, 0);
+  return tmp;
+}
+
+function hasAdjustments(layer) {
+  return layer.brightness !== 100 || layer.contrast !== 100 ||
+         layer.saturate !== 100 || layer.hueRotate !== 0 ||
+         layer.rShift !== 0 || layer.gShift !== 0 || layer.bShift !== 0;
+}
+
+function drawLayerWithAdjustments(ctx, layer) {
+  ctx.save();
+  ctx.globalAlpha = layer.opacity;
+  const cx = layer.x + (layer.img.width * layer.scale) / 2;
+  const cy = layer.y + (layer.img.height * layer.scale) / 2;
+  ctx.translate(cx, cy);
+  ctx.rotate(layer.rotation * Math.PI / 180);
+  if (layer.flipH) ctx.scale(-1, 1);
+  if (layer.flipV) ctx.scale(1, -1);
+  const w = layer.img.width * layer.scale;
+  const h = layer.img.height * layer.scale;
+
+  if (hasAdjustments(layer)) {
+    ctx.filter = 'brightness(' + layer.brightness + '%) contrast(' + layer.contrast + '%) saturate(' + layer.saturate + '%) hue-rotate(' + layer.hueRotate + 'deg)';
+  }
+
+  if (layer.rShift !== 0 || layer.gShift !== 0 || layer.bShift !== 0) {
+    const shifted = applyRGBShift(layer.img, layer.rShift, layer.gShift, layer.bShift);
+    ctx.drawImage(shifted, -w/2, -h/2, w, h);
+  } else {
+    ctx.drawImage(layer.img, -w/2, -h/2, w, h);
+  }
+
+  ctx.filter = 'none';
+  ctx.restore();
+}
+
 function render() {
   const off = document.createElement('canvas');
   off.width = TW; off.height = TH;
@@ -152,18 +206,7 @@ function render() {
   // Layers (bottom to top)
   for (const layer of layers) {
     if (!layer.visible || !layer.img) continue;
-    oc.save();
-    oc.globalAlpha = layer.opacity;
-    const cx = layer.x + (layer.img.width * layer.scale) / 2;
-    const cy = layer.y + (layer.img.height * layer.scale) / 2;
-    oc.translate(cx, cy);
-    oc.rotate(layer.rotation * Math.PI / 180);
-    if (layer.flipH) oc.scale(-1, 1);
-    if (layer.flipV) oc.scale(1, -1);
-    const w = layer.img.width * layer.scale;
-    const h = layer.img.height * layer.scale;
-    oc.drawImage(layer.img, -w/2, -h/2, w, h);
-    oc.restore();
+    drawLayerWithAdjustments(oc, layer);
   }
 
   // Draw live preview (shape being drawn right now)
@@ -316,17 +359,26 @@ document.getElementById('drawFill').onchange = e => drawFill = e.target.checked;
 // LAYERS
 // ═══════════════════════════════════════════════════════════
 let nextId = 1;
-function addLayer(img, name) {
+function addLayer(img, name, dropX, dropY) {
   saveUndo();
   const front = SHIRT_REGIONS.torso_front;
   const scale = Math.min(front.w / img.width, front.h / img.height) * 0.85;
+  let x, y;
+  if (dropX !== undefined && dropY !== undefined) {
+    x = dropX - (img.width * scale) / 2;
+    y = dropY - (img.height * scale) / 2;
+  } else {
+    x = front.x + (front.w - img.width * scale) / 2;
+    y = front.y + (front.h - img.height * scale) / 2;
+  }
   const layer = {
     id: nextId++,
     name: name || 'Image ' + nextId,
     img, visible: true, opacity: 1,
-    x: front.x + (front.w - img.width * scale) / 2,
-    y: front.y + (front.h - img.height * scale) / 2,
+    x, y,
     scale, rotation: 0, flipH: false, flipV: false,
+    brightness: 100, contrast: 100, saturate: 100, hueRotate: 0,
+    rShift: 0, gShift: 0, bShift: 0,
   };
   layers.push(layer);
   selectedLayerId = layer.id;
@@ -372,6 +424,8 @@ function addDrawingLayer(drawingCanvas, name) {
       img, visible: true, opacity: 1,
       x: minX, y: minY,
       scale: 1, rotation: 0, flipH: false, flipV: false,
+      brightness: 100, contrast: 100, saturate: 100, hueRotate: 0,
+      rShift: 0, gShift: 0, bShift: 0,
     };
     layers.push(layer);
     selectedLayerId = layer.id;
@@ -524,23 +578,46 @@ function updateUI() {
     const thumb = document.createElement('img');
     thumb.src = l.img.src;
     thumb.alt = '';
+    thumb.style.cssText = 'width:48px;height:48px;object-fit:contain;border-radius:4px;background:#000;pointer-events:none;flex-shrink:0;';
+
+    const rightSide = document.createElement('div');
+    rightSide.style.cssText = 'display:flex;flex-direction:column;flex:1;gap:4px;min-width:0;padding-left:8px;justify-content:center;';
 
     const nameSpan = document.createElement('span');
     nameSpan.className = 'name';
     nameSpan.textContent = l.name;
     nameSpan.style.opacity = l.visible ? '1' : '0.4';
+    nameSpan.style.cssText += 'font-weight:600;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
 
-    const btns = document.createElement('span');
-    btns.className = 'layer-btns';
-    btns.innerHTML = `
-      <button class="btn-vis ${l.visible ? '' : 'hidden-layer'}" data-action="vis" title="${l.visible ? 'Hide' : 'Show'}">${l.visible ? '\u{1F441}' : '\u{1F441}\u200D\u{1F5E8}'}</button>
-      <button class="btn-dupe" data-action="dupe" title="Duplicate">\u{2398}</button>
-      <button class="btn-del" data-action="del" title="Delete">&times;</button>
-    `;
+    const btns = document.createElement('div');
+    btns.style.cssText = 'display:flex;gap:3px;';
 
+    const dupeBtn = document.createElement('button');
+    dupeBtn.dataset.action = 'dupe';
+    dupeBtn.title = 'Duplicate layer';
+    dupeBtn.textContent = 'Dupe';
+    dupeBtn.style.cssText = 'flex:1;padding:3px 0;font-size:10px;background:#1a2a3a;border:1px solid #00e5ff;color:#00e5ff;border-radius:3px;cursor:pointer;font-weight:600;';
+
+    const visBtn = document.createElement('button');
+    visBtn.dataset.action = 'vis';
+    visBtn.title = l.visible ? 'Hide layer' : 'Show layer';
+    visBtn.textContent = l.visible ? 'Hide' : 'Show';
+    visBtn.style.cssText = 'flex:1;padding:3px 0;font-size:10px;background:#1a1a2e;border:1px solid #555;color:' + (l.visible ? '#aaa' : '#555') + ';border-radius:3px;cursor:pointer;font-weight:600;';
+
+    const delBtn = document.createElement('button');
+    delBtn.dataset.action = 'del';
+    delBtn.title = 'Delete layer';
+    delBtn.textContent = 'Del';
+    delBtn.style.cssText = 'flex:1;padding:3px 0;font-size:10px;background:#2a1a1a;border:1px solid #f44;color:#f44;border-radius:3px;cursor:pointer;font-weight:600;';
+
+    btns.appendChild(dupeBtn);
+    btns.appendChild(visBtn);
+    btns.appendChild(delBtn);
+
+    rightSide.appendChild(nameSpan);
+    rightSide.appendChild(btns);
     div.appendChild(thumb);
-    div.appendChild(nameSpan);
-    div.appendChild(btns);
+    div.appendChild(rightSide);
 
     // Click to select
     div.addEventListener('click', (e) => {
@@ -549,15 +626,9 @@ function updateUI() {
     });
 
     // Button actions
-    btns.querySelectorAll('button').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const action = btn.dataset.action;
-        if (action === 'del') removeLayer(l.id);
-        else if (action === 'dupe') duplicateLayer(l.id);
-        else if (action === 'vis') toggleLayerVisibility(l.id);
-      });
-    });
+    dupeBtn.addEventListener('click', (e) => { e.stopPropagation(); duplicateLayer(l.id); });
+    visBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleLayerVisibility(l.id); });
+    delBtn.addEventListener('click', (e) => { e.stopPropagation(); removeLayer(l.id); });
 
     // Drag-to-reorder events
     div.addEventListener('dragstart', (e) => handleLayerDragStart(e, l.id));
@@ -601,6 +672,31 @@ function updateUI() {
     <div style="margin-top:6px">
       <button class="btn btn-sm btn-secondary" id="btnCenterFront" style="width:100%">Center on Front Torso</button>
     </div>
+    <div style="margin-top:8px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:4px 0;" id="adjToggle">
+        <span style="font-size:11px;color:#e040fb;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Image Adjustments</span>
+        <span id="adjArrow" style="color:#e040fb;font-size:10px;">&#9654;</span>
+      </div>
+      <div id="adjPanel" style="display:none;">
+        <label>Brightness: <span id="brightVal">${sel.brightness || 100}%</span></label>
+        <input type="range" id="ctrlBright" min="0" max="200" value="${sel.brightness || 100}">
+        <label>Contrast: <span id="contVal">${sel.contrast || 100}%</span></label>
+        <input type="range" id="ctrlContrast" min="0" max="200" value="${sel.contrast || 100}">
+        <label>Saturation: <span id="satVal">${sel.saturate || 100}%</span></label>
+        <input type="range" id="ctrlSaturate" min="0" max="200" value="${sel.saturate || 100}">
+        <label>Hue Rotate: <span id="hueVal">${sel.hueRotate || 0}&deg;</span></label>
+        <input type="range" id="ctrlHue" min="0" max="360" value="${sel.hueRotate || 0}">
+        <div style="margin-top:6px;">
+          <label style="color:#f44;">R: <span id="rVal">${sel.rShift || 0}</span></label>
+          <input type="range" id="ctrlR" min="-100" max="100" value="${sel.rShift || 0}" style="accent-color:#f44;">
+          <label style="color:#4f4;">G: <span id="gVal">${sel.gShift || 0}</span></label>
+          <input type="range" id="ctrlG" min="-100" max="100" value="${sel.gShift || 0}" style="accent-color:#4f4;">
+          <label style="color:#66f;">B: <span id="bVal">${sel.bShift || 0}</span></label>
+          <input type="range" id="ctrlB" min="-100" max="100" value="${sel.bShift || 0}" style="accent-color:#66f;">
+        </div>
+        <button class="btn btn-sm btn-secondary" id="btnResetAdj" style="width:100%;margin-top:6px;border-color:#7c4dff;color:#b388ff;">Reset Adjustments</button>
+      </div>
+    </div>
   `;
 
   document.getElementById('ctrlName').onchange = e => { sel.name = e.target.value; updateUI(); };
@@ -637,6 +733,59 @@ function updateUI() {
     sel.x = front.x + (front.w - sel.img.width * sel.scale) / 2;
     sel.y = front.y + (front.h - sel.img.height * sel.scale) / 2;
     render();
+  };
+
+  // Adjustments panel toggle
+  document.getElementById('adjToggle').onclick = () => {
+    const panel = document.getElementById('adjPanel');
+    const arrow = document.getElementById('adjArrow');
+    if (panel.style.display === 'none') {
+      panel.style.display = 'block';
+      arrow.textContent = '\u25BC';
+    } else {
+      panel.style.display = 'none';
+      arrow.textContent = '\u25B6';
+    }
+  };
+  document.getElementById('ctrlBright').oninput = e => {
+    sel.brightness = +e.target.value;
+    document.getElementById('brightVal').textContent = e.target.value + '%';
+    render();
+  };
+  document.getElementById('ctrlContrast').oninput = e => {
+    sel.contrast = +e.target.value;
+    document.getElementById('contVal').textContent = e.target.value + '%';
+    render();
+  };
+  document.getElementById('ctrlSaturate').oninput = e => {
+    sel.saturate = +e.target.value;
+    document.getElementById('satVal').textContent = e.target.value + '%';
+    render();
+  };
+  document.getElementById('ctrlHue').oninput = e => {
+    sel.hueRotate = +e.target.value;
+    document.getElementById('hueVal').textContent = e.target.value + '\u00B0';
+    render();
+  };
+  document.getElementById('ctrlR').oninput = e => {
+    sel.rShift = +e.target.value;
+    document.getElementById('rVal').textContent = e.target.value;
+    render();
+  };
+  document.getElementById('ctrlG').oninput = e => {
+    sel.gShift = +e.target.value;
+    document.getElementById('gVal').textContent = e.target.value;
+    render();
+  };
+  document.getElementById('ctrlB').oninput = e => {
+    sel.bShift = +e.target.value;
+    document.getElementById('bVal').textContent = e.target.value;
+    render();
+  };
+  document.getElementById('btnResetAdj').onclick = () => {
+    sel.brightness = 100; sel.contrast = 100; sel.saturate = 100; sel.hueRotate = 0;
+    sel.rShift = 0; sel.gShift = 0; sel.bShift = 0;
+    updateUI(); render();
   };
 }
 
@@ -681,7 +830,14 @@ fileInput.onchange = e => handleFiles(e.target.files);
 
 // Also allow drop on canvas (with stopPropagation to prevent double-add)
 canvas.ondragover = e => { e.preventDefault(); e.stopPropagation(); };
-canvas.ondrop = e => { e.preventDefault(); e.stopPropagation(); handleFiles(e.dataTransfer.files); };
+canvas.ondrop = e => {
+  e.preventDefault();
+  e.stopPropagation();
+  const rect = canvas.getBoundingClientRect();
+  const dropX = (e.clientX - rect.left) / zoom;
+  const dropY = (e.clientY - rect.top) / zoom;
+  handleFiles(e.dataTransfer.files, dropX, dropY);
+};
 
 // CRITICAL: Prevent browser from opening dropped files
 document.addEventListener('dragover', e => e.preventDefault());
@@ -693,14 +849,14 @@ function isImageFile(f) {
   return ['png','jpg','jpeg','gif','webp','bmp','svg'].includes(ext);
 }
 
-function handleFiles(files) {
+function handleFiles(files, dropX, dropY) {
   for (const f of files) {
     if (!isImageFile(f)) { console.log('Skipped non-image:', f.name, f.type); continue; }
     const name = f.name.replace(/\.[^.]+$/, '');
     const reader = new FileReader();
     reader.onload = ev => {
       const img = new Image();
-      img.onload = () => { console.log('Loaded:', name, img.width+'x'+img.height); addLayer(img, name); };
+      img.onload = () => { console.log('Loaded:', name, img.width+'x'+img.height); addLayer(img, name, dropX, dropY); };
       img.onerror = err => console.error('Image load failed:', name, err);
       img.src = ev.target.result;
     };
@@ -1131,18 +1287,7 @@ function exportPNG() {
 
   for (const layer of layers) {
     if (!layer.visible || !layer.img) continue;
-    ec.save();
-    ec.globalAlpha = layer.opacity;
-    const cx = layer.x + (layer.img.width * layer.scale) / 2;
-    const cy = layer.y + (layer.img.height * layer.scale) / 2;
-    ec.translate(cx, cy);
-    ec.rotate(layer.rotation * Math.PI / 180);
-    if (layer.flipH) ec.scale(-1, 1);
-    if (layer.flipV) ec.scale(1, -1);
-    const w = layer.img.width * layer.scale;
-    const h = layer.img.height * layer.scale;
-    ec.drawImage(layer.img, -w/2, -h/2, w, h);
-    ec.restore();
+    drawLayerWithAdjustments(ec, layer);
   }
 
   ec.globalCompositeOperation = 'destination-in';
@@ -1429,6 +1574,8 @@ function createDetailLayer(name, drawFn) {
       img, visible: true, opacity: 1,
       x: minX, y: minY, scale: 1, rotation: 0,
       flipH: false, flipV: false,
+      brightness: 100, contrast: 100, saturate: 100, hueRotate: 0,
+      rShift: 0, gShift: 0, bShift: 0,
     };
     layers.push(layer);
     selectedLayerId = layer.id;
@@ -1852,6 +1999,8 @@ document.getElementById('btnAddWordArt').onclick = () => {
       x: front.x + (front.w - img.width * scale) / 2,
       y: front.y + (front.h - img.height * scale) / 2,
       scale, rotation: 0, flipH: false, flipV: false,
+      brightness: 100, contrast: 100, saturate: 100, hueRotate: 0,
+      rShift: 0, gShift: 0, bShift: 0,
     };
     layers.push(layer);
     selectedLayerId = layer.id;
@@ -2002,7 +2151,9 @@ function showAssetFolder(folder) {
             name: file.name.replace(/\.[^.]+$/, ''),
             x: 231, y: 74,  // default to torso_front
             scale: Math.min(128 / layerImg.width, 128 / layerImg.height),
-            rotation: 0, opacity: 1, visible: true, flipH: false, flipV: false
+            rotation: 0, opacity: 1, visible: true, flipH: false, flipV: false,
+            brightness: 100, contrast: 100, saturate: 100, hueRotate: 0,
+            rShift: 0, gShift: 0, bShift: 0
           });
           selectedLayerId = id;
           updateUI();
@@ -2027,7 +2178,9 @@ function showAssetFolder(folder) {
             name: file.name.replace(/\.[^.]+$/, '') + ' (full)',
             x: 0, y: 0,
             scale: Math.max(TW / layerImg.width, TH / layerImg.height),
-            rotation: 0, opacity: 1, visible: true, flipH: false, flipV: false
+            rotation: 0, opacity: 1, visible: true, flipH: false, flipV: false,
+            brightness: 100, contrast: 100, saturate: 100, hueRotate: 0,
+            rShift: 0, gShift: 0, bShift: 0
           });
           selectedLayerId = id;
           updateUI();
@@ -2049,8 +2202,8 @@ function showAssetFolder(folder) {
 // ═══════════════════════════════════════════════════════════
 function saveProject() {
   const project = {
-    version: '3.0',
-    app: 'Conundrum R15 Editor',
+    version: '4.0',
+    app: "ItsjustEste's RBX Classic Shirt and Pants Maker",
     savedAt: new Date().toISOString(),
     mode: currentMode,
     bgColor,
@@ -2070,6 +2223,13 @@ function saveProject() {
       rotation: l.rotation,
       flipH: l.flipH,
       flipV: l.flipV,
+      brightness: l.brightness,
+      contrast: l.contrast,
+      saturate: l.saturate,
+      hueRotate: l.hueRotate,
+      rShift: l.rShift,
+      gShift: l.gShift,
+      bShift: l.bShift,
       imgSrc: l.img ? l.img.src : null,
     })),
   };
@@ -2143,6 +2303,13 @@ function loadProject(file) {
             rotation: d.rotation || 0,
             flipH: !!d.flipH,
             flipV: !!d.flipV,
+            brightness: d.brightness != null ? d.brightness : 100,
+            contrast: d.contrast != null ? d.contrast : 100,
+            saturate: d.saturate != null ? d.saturate : 100,
+            hueRotate: d.hueRotate != null ? d.hueRotate : 0,
+            rShift: d.rShift || 0,
+            gShift: d.gShift || 0,
+            bShift: d.bShift || 0,
             img,
           });
           loaded++;

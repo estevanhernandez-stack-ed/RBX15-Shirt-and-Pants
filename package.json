@@ -1,7 +1,7 @@
 {
   "name": "rbx15-classic-shirt-and-pants-maker",
   "productName": "RBX15 Classic Shirt and Pants Maker",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Roblox Classic R15 shirt and pants template maker. Built by ItsjustEste at 626 Labs LLC.",
   "main": "main.js",
   "scripts": {

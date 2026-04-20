@@ -2,6 +2,15 @@
 
 All notable changes to RBX15 Classic Shirt and Pants Maker are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.1] — 2026-04-20
+
+### Fixed
+
+- **MSIX manifest tile filename mismatch.** `Package.appxmanifest.template` referenced `Images\SmallTile.png` and `Images\LargeTile.png` for the `Square71x71Logo` and `Square310x310Logo` attributes, but `make-msix-images.py` produced files named `Square71x71Logo.png` and `Square310x310Logo.png`. Partner Center validation rejected v4.0.0 with *"The following image(s) specified in the appxManifest.xml were not found: Images\SmallTile.png, Images\LargeTile.png"*. Manifest now points at the filenames the generator actually outputs — self-documenting and no regeneration required.
+- **Short tile name** updated from `RBX Maker` → `RBX15` to match the reserved Store name and the wordmark on the tiles themselves.
+
+---
+
 ## [Unreleased]
 
 **Quality bar + Microsoft Store prep.** Mirroring the Sanduhr shipping model — README and legal in place, design system done, MSIX packaging wired, Partner Center identity locked in.

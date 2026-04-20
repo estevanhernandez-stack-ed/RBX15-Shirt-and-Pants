@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ItsjustEste's RBX Classic Shirt and Pants Maker — desktop editor for Roblox templates</title>
+  <meta name="description" content="Native Windows desktop editor for Roblox Classic R15 shirt and pants templates. Layer-based compositing, non-destructive image adjustments, word art, drawing tools, built for the exact 585x559 template grid." />
+  <meta name="theme-color" content="#0f1f31" />
+  <meta name="color-scheme" content="dark" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="ItsjustEste's RBX Classic Shirt and Pants Maker" />
+  <meta property="og:description" content="Layer-based desktop editor for Roblox Classic R15 shirt and pants templates. Non-destructive adjustments, word art, drawing tools." />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --brand-navy:        #192e44;
+      --brand-navy-deep:   #0f1f31;
+      --brand-navy-soft:   #223a54;
+      --brand-cyan:        #17d4fa;
+      --brand-cyan-bright: #5ce6ff;
+      --brand-magenta:     #f22f89;
+      --brand-magenta-bright: #ff5aa3;
+      --brand-gradient: linear-gradient(135deg, var(--brand-cyan) 0%, var(--brand-magenta) 100%);
+      --ink-0: #ffffff;
+      --ink-200: #c4cdda;
+      --ink-300: #8e9bad;
+      --ink-400: #5e6b7f;
+      --ink-700: #1e2a3d;
+      --ink-900: #0a1524;
+      --ink-950: #050c18;
+      --border-1: rgba(255,255,255,.08);
+      --border-2: rgba(255,255,255,.14);
+      --border-accent: rgba(23,212,250,.45);
+      --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+      --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      background: var(--brand-navy-deep);
+      color: var(--ink-200);
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.55;
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(1200px 800px at 50% -200px, rgba(23, 212, 250, 0.12), transparent 70%),
+        radial-gradient(900px 600px at 80% 600px, rgba(242, 47, 137, 0.10), transparent 70%),
+        var(--brand-navy-deep);
+    }
+
+    a { color: var(--brand-cyan); text-decoration: none; transition: color .2s ease; }
+    a:hover { color: var(--brand-cyan-bright); }
+
+    code, pre {
+      font-family: var(--font-mono);
+      background: rgba(23,212,250,.08);
+      border: 1px solid var(--border-1);
+      border-radius: 4px;
+    }
+    code { padding: 2px 6px; font-size: 0.9em; color: var(--brand-cyan-bright); }
+    pre { padding: 16px 20px; overflow-x: auto; font-size: 13px; }
+    pre code { background: transparent; border: 0; padding: 0; }
+
+    .container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── top nav ────────────────────────────────────── */
+    nav.topbar {
+      border-bottom: 1px solid var(--border-1);
+      padding: 16px 0;
+      position: sticky;
+      top: 0;
+      background: rgba(15, 31, 49, 0.82);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 50;
+    }
+    nav.topbar .inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    nav.topbar .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      color: var(--ink-0);
+      font-family: var(--font-display);
+    }
+    nav.topbar .links { display: flex; gap: 22px; font-size: 14px; align-items: center; }
+    nav.topbar .links a { color: var(--ink-300); }
+    nav.topbar .links a:hover { color: var(--brand-cyan-bright); }
+
+    .pub-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border-1);
+      background: rgba(25, 46, 68, 0.55);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink-300);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      transition: all .2s ease;
+    }
+    .pub-chip:hover {
+      border-color: var(--border-accent);
+      color: var(--brand-cyan-bright);
+    }
+
+    /* ── hero ──────────────────────────────────────── */
+    section.hero {
+      padding: 96px 0 64px;
+      text-align: center;
+    }
+    section.hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(36px, 6vw, 56px);
+      line-height: 1.1;
+      padding-bottom: 0.08em;
+      margin: 0 0 18px;
+      letter-spacing: -0.025em;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--brand-cyan-bright) 0%, var(--brand-cyan) 50%, var(--brand-magenta) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+    }
+    section.hero .tagline {
+      font-size: clamp(18px, 2.2vw, 22px);
+      color: var(--ink-200);
+      max-width: 660px;
+      margin: 0 auto 14px;
+    }
+    section.hero .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--ink-400);
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      margin-bottom: 20px;
+    }
+    section.hero .sub {
+      font-size: 14px;
+      color: var(--ink-400);
+      max-width: 640px;
+      margin: 0 auto 38px;
+    }
+    section.hero .ctas {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 22px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 15px;
+      font-family: var(--font-body);
+      transition: all .2s ease;
+      border: 1px solid transparent;
+    }
+    .btn-primary {
+      background: var(--brand-gradient);
+      color: var(--ink-950);
+      box-shadow: 0 2px 8px rgba(23, 212, 250, 0.25);
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 24px rgba(23, 212, 250, 0.4), 0 0 48px rgba(242, 47, 137, 0.2);
+      color: var(--ink-950);
+    }
+    .btn-ghost {
+      background: rgba(25, 46, 68, 0.5);
+      color: var(--ink-200);
+      border-color: var(--border-2);
+    }
+    .btn-ghost:hover {
+      border-color: var(--brand-cyan);
+      color: var(--brand-cyan-bright);
+    }
+
+    /* ── features grid ─────────────────────────────── */
+    section.features {
+      padding: 64px 0;
+      border-top: 1px solid var(--border-1);
+    }
+    section.features h2 {
+      font-family: var(--font-display);
+      font-size: clamp(28px, 3.5vw, 36px);
+      color: var(--ink-0);
+      margin-bottom: 14px;
+      letter-spacing: -0.015em;
+    }
+    section.features .subhead {
+      color: var(--ink-300);
+      font-size: 16px;
+      margin-bottom: 48px;
+      max-width: 620px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: linear-gradient(180deg, var(--brand-navy) 0%, var(--brand-navy-deep) 100%);
+      border: 1px solid var(--border-1);
+      border-radius: 14px;
+      padding: 24px;
+      transition: border-color .2s ease;
+    }
+    .card:hover { border-color: var(--border-accent); }
+    .card .tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--brand-cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .card h3 {
+      font-family: var(--font-display);
+      font-size: 20px;
+      color: var(--ink-0);
+      margin-bottom: 10px;
+      letter-spacing: -0.01em;
+    }
+    .card p {
+      color: var(--ink-300);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* ── install ──────────────────────────────────── */
+    section.install {
+      padding: 72px 0;
+      border-top: 1px solid var(--border-1);
+    }
+    section.install h2 {
+      font-family: var(--font-display);
+      font-size: clamp(28px, 3.5vw, 36px);
+      color: var(--ink-0);
+      margin-bottom: 24px;
+      letter-spacing: -0.015em;
+    }
+    section.install .steps { display: grid; gap: 16px; margin-top: 24px; }
+    section.install .step {
+      display: grid;
+      grid-template-columns: 40px 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+    section.install .step .num {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--brand-magenta);
+      font-weight: 600;
+      border: 1px solid var(--brand-magenta);
+      border-radius: 999px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    section.install .step p { color: var(--ink-200); font-size: 15px; }
+    section.install .step p a { font-family: var(--font-mono); font-size: 14px; }
+
+    /* ── roadmap ──────────────────────────────────── */
+    section.roadmap {
+      padding: 64px 0;
+      border-top: 1px solid var(--border-1);
+    }
+    section.roadmap h2 {
+      font-family: var(--font-display);
+      font-size: clamp(28px, 3.5vw, 36px);
+      color: var(--ink-0);
+      margin-bottom: 24px;
+      letter-spacing: -0.015em;
+    }
+    section.roadmap ul { list-style: none; padding: 0; }
+    section.roadmap li {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-1);
+      display: flex;
+      gap: 12px;
+      align-items: baseline;
+    }
+    section.roadmap li:last-child { border-bottom: 0; }
+    section.roadmap li .status {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    section.roadmap li .status.shipped {
+      color: #2bd99a;
+      background: rgba(43, 217, 154, 0.12);
+      border: 1px solid rgba(43, 217, 154, 0.3);
+    }
+    section.roadmap li .status.next {
+      color: var(--brand-cyan);
+      background: rgba(23, 212, 250, 0.12);
+      border: 1px solid rgba(23, 212, 250, 0.3);
+    }
+    section.roadmap li p { color: var(--ink-200); font-size: 15px; }
+
+    /* ── footer ──────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border-1);
+      padding: 40px 0 60px;
+      background: linear-gradient(180deg, var(--brand-navy-deep), var(--ink-950));
+    }
+    footer .inner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 16px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink-400);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+    footer a { color: var(--ink-300); }
+    footer a:hover { color: var(--brand-cyan-bright); }
+
+    /* ── shared section spacing ─────────────────── */
+    section + section { scroll-margin-top: 80px; }
+  </style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="container inner">
+    <a href="#" class="brand">ItsjustEste's RBX Maker</a>
+    <div class="links">
+      <a href="#features">Features</a>
+      <a href="#install">Install</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants">GitHub</a>
+      <a href="https://626labs.dev" class="pub-chip">626 Labs</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="container">
+    <div class="eyebrow">Windows desktop · v4.0 · open source</div>
+    <h1>Design Roblox templates<br>without fighting your tools.</h1>
+    <p class="tagline">A native editor for Roblox Classic R15 shirt and pants templates. Layer-based compositing, non-destructive image adjustments, word art, drawing tools — built for the exact 585×559 template grid.</p>
+    <p class="sub">Imagine Something Else.</p>
+    <div class="ctas">
+      <a href="https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/releases" class="btn btn-primary">Download for Windows</a>
+      <a href="https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants" class="btn btn-ghost">View on GitHub</a>
+    </div>
+  </div>
+</section>
+
+<section id="features" class="features">
+  <div class="container">
+    <h2>Built for template work, not general-purpose drawing.</h2>
+    <p class="subhead">Roblox Classic templates have a specific 585×559 grid: torso, arms, legs, waist, each with exact regions. This editor knows that grid by heart.</p>
+
+    <div class="grid">
+      <div class="card">
+        <div class="tag">Compositing</div>
+        <h3>Layer-based editing</h3>
+        <p>Drag to reorder, duplicate, hide, or delete. Every layer keeps its own transform and adjustment state. On-canvas handles for move / scale / rotate. Scroll-wheel scales. Arrow keys nudge.</p>
+      </div>
+      <div class="card">
+        <div class="tag">Adjustments</div>
+        <h3>Non-destructive image adjustments</h3>
+        <p>Brightness, contrast, saturation, hue rotate, plus per-channel RGB shift. Every slider renders in real time. Baked into the exported PNG. Reset in one click.</p>
+      </div>
+      <div class="card">
+        <div class="tag">Roblox-specific</div>
+        <h3>Exact R15 grid awareness</h3>
+        <p>Precise torso, arm, leg, and waist regions. Mode toggle between Shirt and Pants templates. Live mask overlay so you can see what will actually show on the model. Placement presets for Fit Front, F+B, Stretch, Allover, Scatter.</p>
+      </div>
+      <div class="card">
+        <div class="tag">Assets</div>
+        <h3>Asset library browser</h3>
+        <p>Point at a folder, get a thumbnail grid. Drag to canvas and the image lands where you drop it. Click for the default torso spot. Right-click for full-bleed scale.</p>
+      </div>
+      <div class="card">
+        <div class="tag">Word art</div>
+        <h3>15 fonts, six styles</h3>
+        <p>Solid, gradient, neon, shadow, outline, retro. Live preview, adjustable stroke and angle. Add to canvas at any size. Full text wraps, multi-line support.</p>
+      </div>
+      <div class="card">
+        <div class="tag">Clothing details</div>
+        <h3>Auto-generate seams + trim</h3>
+        <p>V-neck, crew, scoop, henley collars. Cuffs, hems, side seams, pockets, plackets, shoulder stripes, arm bands, back yokes. Adjustable width, color, and optional stitched-dash look.</p>
+      </div>
+      <div class="card">
+        <div class="tag">Privacy</div>
+        <h3>No network, no accounts</h3>
+        <p>The app makes zero API calls. Images load from disk. Projects save to disk. Templates download to disk. No telemetry, no analytics, no cloud sync.</p>
+      </div>
+      <div class="card">
+        <div class="tag">Workflow</div>
+        <h3>Save work, download template</h3>
+        <p>Save your workspace as a <code>.r15proj</code> file and reopen it later with every layer and adjustment preserved. Export the finished 585×559 PNG when you're ready to upload to Roblox.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="install" class="install">
+  <div class="container">
+    <h2>Install.</h2>
+    <p style="color: var(--ink-300); max-width: 620px;">Windows 10 / 11. Microsoft Store submission pending — for now, install via the NSIS installer or build from source.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="num">1</div>
+        <p>Download <code>ItsjustEste's RBX Classic Shirt and Pants Maker Setup.exe</code> from <a href="https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/releases">Releases</a>.</p>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <p>Click through the SmartScreen "unknown publisher" warning. Code signing is deferred until Microsoft Store approval clears.</p>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <p>Run the installer. Pick an install directory. Desktop and Start Menu shortcuts are created automatically.</p>
+      </div>
+    </div>
+
+    <h3 style="font-family: var(--font-display); font-size: 18px; color: var(--ink-0); margin-top: 40px; margin-bottom: 14px;">Or build from source</h3>
+    <pre><code>git clone https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants.git
+cd RBX15-Shirt-and-Pants
+npm install
+npm run build    # produces dist/ with the installer</code></pre>
+    <p style="color: var(--ink-400); font-size: 13px; margin-top: 12px;">Node.js 18+ and Electron 41 required. <code>npm start</code> for dev mode.</p>
+  </div>
+</section>
+
+<section id="roadmap" class="roadmap">
+  <div class="container">
+    <h2>Roadmap.</h2>
+
+    <ul>
+      <li><span class="status shipped">Shipped</span><p>v4.0 polish release — decomposition, non-destructive adjustments, canvas drop positioning, redesigned layer panel, 626 Labs brand palette.</p></li>
+      <li><span class="status next">In review</span><p>Microsoft Store MSIX submission.</p></li>
+      <li><span class="status next">Next</span><p>Code signing for the Windows binary — eliminates the SmartScreen prompt.</p></li>
+      <li><span class="status next">Next</span><p><code>winget install rbx-maker</code> manifest (blocked on MS Store certificate).</p></li>
+      <li><span class="status next">Future</span><p>Accessibility pass — keyboard navigation for canvas, screen-reader-friendly controls.</p></li>
+      <li><span class="status next">Future</span><p>Historical versions browser — open any saved <code>.r15proj</code> as a starting point for a new design.</p></li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  <div class="container inner">
+    <div>Built by <a href="https://626labs.dev">626 Labs LLC</a></div>
+    <div>
+      <a href="https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants">GitHub</a> ·
+      <a href="PRIVACY.md">Privacy</a> ·
+      <a href="https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/blob/main/LICENSE">License</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

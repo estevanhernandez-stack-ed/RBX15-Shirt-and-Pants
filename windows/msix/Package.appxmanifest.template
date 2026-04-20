@@ -46,9 +46,9 @@
         Square44x44Logo="Images\Square44x44Logo.png">
         <uap:DefaultTile
           Wide310x150Logo="Images\Wide310x150Logo.png"
-          Square310x310Logo="Images\LargeTile.png"
-          Square71x71Logo="Images\SmallTile.png"
-          ShortName="RBX Maker" />
+          Square310x310Logo="Images\Square310x310Logo.png"
+          Square71x71Logo="Images\Square71x71Logo.png"
+          ShortName="RBX15" />
         <uap:SplashScreen Image="Images\SplashScreen.png" BackgroundColor="#0f1f31" />
       </uap:VisualElements>
     </Application>

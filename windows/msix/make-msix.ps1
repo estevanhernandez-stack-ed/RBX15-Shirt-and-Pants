@@ -1,4 +1,4 @@
-# Build RBX15-Maker.msix from the electron-builder win-unpacked output.
+﻿# Build RBX15-Maker.msix from the electron-builder win-unpacked output.
 #
 # Assumes `npm run build` already produced `dist/win-unpacked/`. If you
 # haven't, this script will run it for you via the -Build switch.
@@ -39,7 +39,7 @@ if ($baseVersion -notmatch '^[0-9]+\.[0-9]+\.[0-9]+$') {
 $Version = "$baseVersion.0"
 Write-Host "-> MSIX version: $Version" -ForegroundColor Cyan
 
-# Publisher CN is hardcoded in the manifest template (not a secret — it's
+# Publisher CN is hardcoded in the manifest template (not a secret - it's
 # baked into every signed MSIX anyway). No parameter injection needed.
 $PublisherCN = "CN=177BCE59-0966-4975-9962-10E36652141F"
 
@@ -134,5 +134,5 @@ Write-Host ""
 Write-Host "-> MSIX: $MsixPath" -ForegroundColor Green
 Write-Host "   Size: $([math]::Round((Get-Item $MsixPath).Length / 1MB, 2)) MB"
 if (-not $SelfSign) {
-    Write-Host "   (Unsigned — Store ingestion signs it on upload.)" -ForegroundColor Gray
+    Write-Host "   (Unsigned - Store ingestion signs it on upload.)" -ForegroundColor Gray
 }

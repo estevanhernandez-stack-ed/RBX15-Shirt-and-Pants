@@ -182,6 +182,8 @@ Roblox has two avatar systems: **Classic** (the traditional 2D flat-panel shirts
 
 MIT — do whatever you want with it. Built by [626 Labs LLC](https://626labs.dev).
 
+Part of the 626 Labs product family. Find other tools at [626labs.dev](https://626labs.dev).
+
 <p align="center">
   <sub>
     "Roblox" and the Roblox logo are trademarks of Roblox Corporation, used nominatively to describe the output file format. ItsjustEste's RBX Classic Shirt and Pants Maker is an independent third-party tool.

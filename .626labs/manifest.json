@@ -1,0 +1,82 @@
+{
+  "$schema": "https://626labs.dev/schema/product-manifest.v1.json",
+  "id": "rbx-maker",
+  "name": "ItsjustEste's RBX Classic Shirt and Pants Maker",
+  "short_name": "RBX Maker",
+  "tagline": "Design Roblox templates without fighting your tools.",
+  "description": "Native Windows desktop editor for Roblox Classic R15 shirt and pants templates. Layer-based compositing, non-destructive image adjustments, word art, drawing tools, built for the exact 585x559 template grid.",
+  "category": "creator-tools",
+  "status": "public",
+  "version": "4.0.0",
+  "platforms": ["windows"],
+  "publisher": {
+    "id": "626labs-llc",
+    "name": "626 Labs LLC",
+    "url": "https://626labs.dev"
+  },
+  "author": {
+    "id": "itsjusteste",
+    "name": "ItsjustEste"
+  },
+  "links": {
+    "homepage": "https://estevanhernandez-stack-ed.github.io/RBX15-Shirt-and-Pants/",
+    "repository": "https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants",
+    "releases": "https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/releases",
+    "issues": "https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/issues",
+    "privacy": "https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/blob/main/docs/PRIVACY.md",
+    "security": "https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/blob/main/SECURITY.md",
+    "changelog": "https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/blob/main/CHANGELOG.md"
+  },
+  "distribution": [
+    {
+      "type": "github-releases",
+      "format": "nsis",
+      "signed": false,
+      "url": "https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/releases"
+    },
+    {
+      "type": "microsoft-store",
+      "format": "msix",
+      "status": "pending-submission"
+    }
+  ],
+  "assets": {
+    "logo_square_1080": "docs/store-assets/logo-square-1080x1080.png",
+    "logo_portrait_720x1080": "docs/store-assets/logo-portrait-720x1080.png",
+    "tile_300": "docs/store-assets/app-tile-300x300.png",
+    "tile_150": "docs/store-assets/app-tile-150x150.png",
+    "tile_71": "docs/store-assets/app-tile-71x71.png",
+    "screenshots": [
+      {"file": "docs/screenshots/app-home.png", "caption": "Editor with a design loaded on canvas"},
+      {"file": "docs/screenshots/app-layers.png", "caption": "Redesigned layer panel"},
+      {"file": "docs/screenshots/app-adjustments.png", "caption": "Non-destructive image adjustments"},
+      {"file": "docs/screenshots/app-adjustments-rgb.png", "caption": "Per-channel RGB shift"},
+      {"file": "docs/screenshots/app-wordart.png", "caption": "Word art generator"},
+      {"file": "docs/screenshots/app-layout.png", "caption": "Layout tab — presets and regions"},
+      {"file": "docs/screenshots/app-details.png", "caption": "Details tab — clothing generators"}
+    ]
+  },
+  "tech": {
+    "stack": ["electron", "vanilla-js", "canvas-2d"],
+    "source_language": "javascript",
+    "build": "electron-builder",
+    "license": "MIT"
+  },
+  "tags": ["roblox", "r15", "shirt", "pants", "template", "editor", "desktop", "electron", "creator-tools"],
+  "features": [
+    "Layer-based editor with on-canvas transform",
+    "Non-destructive image adjustments (brightness, contrast, saturation, hue, RGB channels)",
+    "Canvas drop positioning",
+    "Word art generator — 15 fonts, six styles",
+    "Clothing detail generators (collars, cuffs, hems, seams, pockets)",
+    "Built-in asset packs: 156 drips + 25 word art PNGs",
+    "Placement presets (Fit Front, F+B, Stretch, Allover, Scatter)",
+    "Save/load .r15proj workspace files",
+    "No network, no accounts, no telemetry"
+  ],
+  "hub_display": {
+    "card_accent": "cyan",
+    "featured": false,
+    "sort_weight": 50
+  }
+}

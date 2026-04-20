@@ -10,6 +10,7 @@ and a fullscreen canvas built for the exact 585×559 template grid.
 
 <p align="center">
   <a href="https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/releases"><img alt="Latest release" src="https://img.shields.io/github/v/release/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants?label=release"></a>
+  <a href="https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/actions/workflows/windows-ci.yml"><img alt="Windows CI" src="https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/actions/workflows/windows-ci.yml/badge.svg"></a>
   <a href="https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants?style=flat"></a>
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-4ade80"></a>
   <img alt="Windows 10/11" src="https://img.shields.io/badge/platform-Windows%2010%2F11-17d4fa">

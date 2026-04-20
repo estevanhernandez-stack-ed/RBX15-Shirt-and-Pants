@@ -18,6 +18,20 @@
   "license": "MIT",
   "build": {
     "appId": "com.itsjusteste.rbx-maker",
+    "files": [
+      "main.js",
+      "editor.html",
+      "editor.js",
+      "styles.css",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "packs",
+        "to": "packs",
+        "filter": ["**/*.png"]
+      }
+    ],
     "win": {
       "target": "nsis"
     },

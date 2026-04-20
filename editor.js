@@ -2044,6 +2044,68 @@ let currentAssetFolder = null;
 
 btnLoadFolder.onclick = () => { folderInput.value = ''; folderInput.click(); };
 
+// ═══════════════════════════════════════════════════════════
+// BUILT-IN ASSET PACKS — drips / word art bundled with the app
+// ═══════════════════════════════════════════════════════════
+// Resolve the packs directory. In dev mode, packs/ sits at the repo root
+// next to editor.js. In a packaged build (MSIX or NSIS), electron-builder
+// copies packs/ into process.resourcesPath per the extraResources config
+// in package.json.
+function resolvePackDir(packName) {
+  const nodePath = require('path');
+  const fs = require('fs');
+  const devPath = nodePath.join(__dirname, 'packs', packName);
+  if (fs.existsSync(devPath)) return devPath;
+  const prodPath = nodePath.join(process.resourcesPath, 'packs', packName);
+  if (fs.existsSync(prodPath)) return prodPath;
+  return null;
+}
+
+// Load a bundled pack into the asset browser. Creates real File objects
+// from the on-disk PNGs so the rest of the asset-browser pipeline
+// (thumbnails, click-to-add, drag-to-canvas, deduplication) works
+// identically to a user-chosen folder.
+function loadBuiltInPack(packName) {
+  const fs = require('fs');
+  const nodePath = require('path');
+  const dir = resolvePackDir(packName);
+  if (!dir) {
+    alert('Built-in pack "' + packName + '" not found. Reinstall the app to restore it.');
+    return;
+  }
+  const files = fs.readdirSync(dir)
+    .filter(n => /\.(png|jpg|jpeg|gif|webp)$/i.test(n))
+    .map(n => {
+      const full = nodePath.join(dir, n);
+      const buf = fs.readFileSync(full);
+      const blob = new Blob([buf], {type: 'image/png'});
+      const file = new File([blob], n, {type: 'image/png'});
+      // Fake webkitRelativePath so the existing grouping logic treats them
+      // as coming from a folder named after the pack.
+      Object.defineProperty(file, 'webkitRelativePath', {
+        value: 'packs/' + packName + '/' + n,
+        configurable: false,
+      });
+      return file;
+    });
+
+  if (!files.length) {
+    alert('Built-in pack "' + packName + '" is empty.');
+    return;
+  }
+
+  // Reuse the existing asset-browser pipeline wholesale.
+  allAssetFiles = files;
+  assetFolderMap = { '(all)': files, [packName]: files };
+  assetBrowser.style.display = 'block';
+  assetSubfolders.innerHTML = '';
+  assetCount.textContent = `${files.length} images in built-in ${packName} pack`;
+  showAssetFolder('(all)');
+}
+
+document.getElementById('btnPackDrips').onclick = () => loadBuiltInPack('drips');
+document.getElementById('btnPackWordArt').onclick = () => loadBuiltInPack('word_art');
+
 folderInput.onchange = e => {
   const files = Array.from(e.target.files).filter(f =>
     /\.(png|jpg|jpeg|gif|webp)$/i.test(f.name)

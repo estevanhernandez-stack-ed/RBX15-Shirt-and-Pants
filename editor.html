@@ -266,7 +266,12 @@
   <div class="panel">
     <h3>Asset library</h3>
     <div class="controls" style="margin-bottom:8px;">
-      <label style="font-size:10px;color:#888">Load folder</label>
+      <label style="font-size:10px;color:#888">Built-in packs</label>
+      <div class="row" style="gap:4px;">
+        <button class="btn btn-sm btn-secondary" id="btnPackDrips" title="Load the bundled blood / liquid drip pack.">Drips</button>
+        <button class="btn btn-sm btn-secondary" id="btnPackWordArt" title="Load the bundled word art pack.">Word art</button>
+      </div>
+      <label style="font-size:10px;color:#888;margin-top:6px;">Load folder</label>
       <div class="row" style="gap:4px;">
         <button class="btn btn-sm btn-secondary" id="btnLoadFolder" title="Pick a folder of PNGs to browse.">Open folder</button>
         <input type="file" id="folderInput" webkitdirectory directory multiple hidden>

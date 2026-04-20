@@ -20,7 +20,11 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        # Using npm install (not ci) because package-lock.json currently has
+        # stale identity from the v1 'conundrum-r15-designer' days. Regenerate
+        # via `npm install` locally and switch this back to `npm ci` for
+        # stricter, faster installs.
+        run: npm install
 
       - name: Build NSIS installer + win-unpacked
         # electron-builder downloads Electron on first run; cache handles repeats.

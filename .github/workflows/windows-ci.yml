@@ -36,7 +36,9 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        # See note in windows-release.yml — swap back to `npm ci` once the
+        # repo's package-lock.json is regenerated.
+        run: npm install
 
       - name: Build NSIS installer + win-unpacked (smoke)
         run: npm run build

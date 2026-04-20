@@ -1,0 +1,34 @@
+name: Docs Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**/*.md"
+      - ".markdownlint.json"
+      - ".github/workflows/docs-check.yml"
+  pull_request:
+    paths:
+      - "**/*.md"
+      - ".markdownlint.json"
+
+jobs:
+  markdownlint:
+    runs-on: ubuntu-latest
+    # Informational only — surface issues in Actions logs without blocking
+    # merges. The repo's .markdownlint.json already silences the rules that
+    # fight GitHub-standard README patterns (MD013 line length, MD024
+    # duplicate headings, MD033 inline HTML).
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install markdownlint-cli
+        run: npm install -g markdownlint-cli@0.42.0
+
+      - name: Lint markdown
+        run: markdownlint "**/*.md" --ignore node_modules --ignore "docs/superpowers/**"

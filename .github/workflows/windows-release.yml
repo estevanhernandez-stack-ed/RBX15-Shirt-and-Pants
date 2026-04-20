@@ -1,0 +1,60 @@
+name: Windows Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write  # required to upload release assets
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        # Using npm install (not ci) because package-lock.json currently has
+        # stale identity from the v1 'conundrum-r15-designer' days. Regenerate
+        # via `npm install` locally and switch this back to `npm ci` for
+        # stricter, faster installs.
+        run: npm install
+
+      - name: Build NSIS installer + win-unpacked
+        # electron-builder downloads Electron on first run; cache handles repeats.
+        run: npm run build
+
+      - name: Build MSIX (unsigned; Store ingestion re-signs)
+        shell: pwsh
+        # -Build flag is omitted because npm run build already ran above.
+        run: powershell -ExecutionPolicy Bypass -File windows/msix/make-msix.ps1
+
+      - name: Extract version
+        id: ver
+        shell: pwsh
+        run: |
+          $t = "${{ github.ref_name }}"
+          $v = $t -replace "^v", ""
+          echo "version=$v" >> $env:GITHUB_OUTPUT
+          echo "msix_version=$v.0" >> $env:GITHUB_OUTPUT
+
+      - name: List dist artifacts
+        shell: pwsh
+        run: |
+          Get-ChildItem dist\ | Select-Object Name, Length, LastWriteTime
+
+      - name: Upload release artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/RBX15 Classic Shirt and Pants Maker Setup ${{ steps.ver.outputs.version }}.exe
+            dist/RBX15-Maker-v${{ steps.ver.outputs.msix_version }}.msix
+          body_path: windows/RELEASE_NOTES.md
+          fail_on_unmatched_files: true
+          prerelease: false

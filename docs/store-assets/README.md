@@ -4,15 +4,33 @@ Microsoft Store Partner Center submission assets for RBX15 Classic Shirt and Pan
 
 ## What's here
 
-| File | Dimensions | Purpose | Source |
-|---|---|---|---|
-| `app-tile-71x71.png` | 71 x 71 | Small tile in Store listings | Generated |
-| `app-tile-150x150.png` | 150 x 150 | Medium tile / default listing art | Generated |
-| `app-tile-300x300.png` | 300 x 300 | Large tile | Generated |
-| `logo-square-1080x1080.png` | 1080 x 1080 | Publisher mark (square) | 626 Labs logo on navy |
-| `logo-portrait-720x1080.png` | 720 x 1080 | Publisher mark (portrait) | 626 Labs logo on navy |
+### Product art (upload to the app's Store Listing → Store logos step)
 
-The app tiles carry *this specific product* identity (RBX15 Maker). The publisher logos carry *626 Labs LLC*. Partner Center asks for both — don't mix them up.
+| File | Dimensions | Partner Center slot |
+|---|---|---|
+| `store-box-1080x1080.png` | 1080 x 1080 | 1:1 Box art |
+| `store-box-2160x2160.png` | 2160 x 2160 | 1:1 Box art (hi-res) |
+| `store-poster-720x1080.png` | 720 x 1080 | 9:16 Poster art |
+| `store-poster-1440x2160.png` | 1440 x 2160 | 9:16 Poster art (hi-res) |
+
+These carry the **RBX15** product mark — brand-navy base, cyan + magenta gradient "RBX" wordmark, "CLASSIC R15 / SHIRT & PANTS MAKER" eyebrows, feature chips on the poster, 626 Labs LLC publisher chip. Upload to the *individual app's* Store logos step, not to publisher-level branding.
+
+### App tiles (Store display images step, optional — Store falls back to MSIX tiles if omitted)
+
+| File | Dimensions | Partner Center slot |
+|---|---|---|
+| `app-tile-71x71.png` | 71 x 71 | 1:1 71x71 |
+| `app-tile-150x150.png` | 150 x 150 | 1:1 150x150 |
+| `app-tile-300x300.png` | 300 x 300 | 1:1 App tile icon (300x300) |
+
+### Publisher logos (reference only — use at the publisher/account level, not per-app)
+
+| File | Dimensions | Notes |
+|---|---|---|
+| `logo-square-1080x1080.png` | 1080 x 1080 | 626 Labs company logo on navy |
+| `logo-portrait-720x1080.png` | 720 x 1080 | 626 Labs company logo on navy |
+
+⚠️ Don't upload the publisher logos to an app's Store Listing. Partner Center's "Store logos" on the app submission is for the **product** (use `store-box-*` and `store-poster-*` instead).
 
 ## Regenerating
 

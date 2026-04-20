@@ -334,6 +334,50 @@
     }
     section.roadmap li p { color: var(--ink-200); font-size: 15px; }
 
+    /* ── shots section ───────────────────────────── */
+    section.shots { padding: 72px 0; border-top: 1px solid var(--border-1); }
+    section.shots h2 {
+      font-family: var(--font-display);
+      font-size: clamp(28px, 3.5vw, 36px);
+      color: var(--ink-0);
+      margin-bottom: 14px;
+      letter-spacing: -0.015em;
+    }
+    section.shots .subhead { color: var(--ink-300); font-size: 16px; margin-bottom: 40px; max-width: 620px; }
+    section.shots .hero-shot {
+      border-radius: 14px;
+      border: 1px solid var(--border-1);
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0,0,0,.6), 0 0 32px rgba(23,212,250,.08);
+      margin-bottom: 32px;
+    }
+    section.shots .hero-shot img { display: block; width: 100%; height: auto; }
+    section.shots .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+    }
+    section.shots .shot {
+      border: 1px solid var(--border-1);
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--brand-navy);
+      transition: border-color .2s ease;
+    }
+    section.shots .shot:hover { border-color: var(--border-accent); }
+    section.shots .shot img { display: block; width: 100%; height: auto; }
+    section.shots .shot .cap {
+      padding: 14px 18px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink-300);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 600;
+      border-top: 1px solid var(--border-1);
+    }
+    section.shots .shot .cap strong { color: var(--brand-cyan); display: block; font-size: 12px; margin-bottom: 4px; }
+
     /* ── footer ──────────────────────────────────── */
     footer {
       border-top: 1px solid var(--border-1);
@@ -364,6 +408,7 @@
   <div class="container inner">
     <a href="#" class="brand">ItsjustEste's RBX Maker</a>
     <div class="links">
+      <a href="#shots">Tour</a>
       <a href="#features">Features</a>
       <a href="#install">Install</a>
       <a href="#roadmap">Roadmap</a>
@@ -382,6 +427,44 @@
     <div class="ctas">
       <a href="https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/releases" class="btn btn-primary">Download for Windows</a>
       <a href="https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants" class="btn btn-ghost">View on GitHub</a>
+    </div>
+  </div>
+</section>
+
+<section id="shots" class="shots">
+  <div class="container">
+    <h2>See it in action.</h2>
+    <p class="subhead">The whole editor fits in one window. Ribbon toolbar up top, asset library on the left, the canvas in the middle, zoom and transform tools on demand.</p>
+
+    <div class="hero-shot">
+      <img src="screenshots/app-home.png" alt="ItsjustEste's RBX Classic Shirt and Pants Maker — Home tab" />
+    </div>
+
+    <div class="grid">
+      <div class="shot">
+        <img src="screenshots/app-layers.png" alt="Layers panel with large thumbnails and labeled action buttons" />
+        <div class="cap"><strong>Layers panel</strong>Big thumbnails. Labeled Dupe / Hide / Del buttons.</div>
+      </div>
+      <div class="shot">
+        <img src="screenshots/app-adjustments.png" alt="Image adjustments panel with brightness, contrast, saturation, hue sliders" />
+        <div class="cap"><strong>Image adjustments</strong>Brightness, contrast, saturation, hue rotate — real-time.</div>
+      </div>
+      <div class="shot">
+        <img src="screenshots/app-adjustments-rgb.png" alt="Per-channel RGB shift sliders" />
+        <div class="cap"><strong>Per-channel RGB shift</strong>Pixel-level tint without touching the source.</div>
+      </div>
+      <div class="shot">
+        <img src="screenshots/app-wordart.png" alt="Word art generator tab" />
+        <div class="cap"><strong>Word art generator</strong>15 fonts. Six styles. Live preview.</div>
+      </div>
+      <div class="shot">
+        <img src="screenshots/app-layout.png" alt="Layout tab with presets and template regions" />
+        <div class="cap"><strong>Layout tab</strong>Presets, backgrounds, template regions.</div>
+      </div>
+      <div class="shot">
+        <img src="screenshots/app-details.png" alt="Details tab with clothing generators" />
+        <div class="cap"><strong>Details tab</strong>Collars, cuffs, hems, seams, pockets, plackets.</div>
+      </div>
     </div>
   </div>
 </section>

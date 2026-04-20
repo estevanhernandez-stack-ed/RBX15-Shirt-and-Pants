@@ -23,6 +23,10 @@ and a fullscreen canvas built for the exact 585×559 template grid.
 <sub>Independent third-party tool. Not affiliated with Roblox Corporation. Roblox is a trademark of Roblox Corporation, used nominatively to describe the output format.</sub>
 </p>
 
+<p align="center">
+  <img src="docs/screenshots/app-home.png" alt="ItsjustEste's RBX Classic Shirt and Pants Maker — Home tab" width="860">
+</p>
+
 ---
 
 ## Install
@@ -53,6 +57,25 @@ npm start        # launches Electron with hot-reload disabled
 ```
 
 Requires **Node.js 18+** and **Electron 41**.
+
+---
+
+## A quick tour
+
+<table>
+  <tr>
+    <td align="center" width="50%"><img src="docs/screenshots/app-layers.png" alt="Layers panel" width="420"><br><strong>Layers panel</strong><br><sub>big thumbnails, labeled Dupe / Hide / Del buttons</sub></td>
+    <td align="center" width="50%"><img src="docs/screenshots/app-adjustments.png" alt="Image adjustments panel" width="420"><br><strong>Image adjustments</strong><br><sub>brightness, contrast, saturation, hue — real-time</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="50%"><img src="docs/screenshots/app-adjustments-rgb.png" alt="Per-channel RGB shift sliders" width="420"><br><strong>Per-channel RGB shift</strong><br><sub>pixel-level tint without touching the source</sub></td>
+    <td align="center" width="50%"><img src="docs/screenshots/app-wordart.png" alt="Word art generator tab" width="420"><br><strong>Word art generator</strong><br><sub>15 fonts, six styles, live preview</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="50%"><img src="docs/screenshots/app-layout.png" alt="Layout tab with presets" width="420"><br><strong>Layout tab</strong><br><sub>presets, backgrounds, template regions</sub></td>
+    <td align="center" width="50%"><img src="docs/screenshots/app-details.png" alt="Details tab with clothing generators" width="420"><br><strong>Details tab</strong><br><sub>collars, cuffs, hems, seams, pockets, plackets</sub></td>
+  </tr>
+</table>
 
 ---
 

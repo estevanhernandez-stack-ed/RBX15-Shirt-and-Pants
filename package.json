@@ -15,7 +15,7 @@
     "r15"
   ],
   "author": "ItsjustEste / 626 Labs LLC",
-  "license": "ISC",
+  "license": "MIT",
   "build": {
     "appId": "com.itsjusteste.rbx-maker",
     "win": {

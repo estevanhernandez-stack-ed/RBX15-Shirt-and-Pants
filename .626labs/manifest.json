@@ -1,8 +1,8 @@
 {
   "$schema": "https://626labs.dev/schema/product-manifest.v1.json",
-  "id": "rbx-maker",
-  "name": "ItsjustEste's RBX Classic Shirt and Pants Maker",
-  "short_name": "RBX Maker",
+  "id": "rbx15-maker",
+  "name": "RBX15 Classic Shirt and Pants Maker",
+  "short_name": "RBX15 Maker",
   "tagline": "Design Roblox templates without fighting your tools.",
   "description": "Native Windows desktop editor for Roblox Classic R15 shirt and pants templates. Layer-based compositing, non-destructive image adjustments, word art, drawing tools, built for the exact 585x559 template grid.",
   "category": "creator-tools",
@@ -37,7 +37,10 @@
     {
       "type": "microsoft-store",
       "format": "msix",
-      "status": "pending-submission"
+      "status": "reserved-pending-submission",
+      "store_id": "9MV9G4XFJ8S0",
+      "store_url": "https://apps.microsoft.com/detail/9MV9G4XFJ8S0",
+      "package_family_name": "626LabsLLC.RBX15ClassicShirtandPantsMaker_wz1chhb2h2v4a"
     }
   ],
   "assets": {

@@ -1,10 +1,10 @@
-"""Generate Microsoft Store / social listing assets for ItsjustEste's RBX Maker.
+"""Generate Microsoft Store / social listing assets for ItsjustEste's RBX15 Maker.
 
 Two brand marks end up in Partner Center:
 
   1. Store logo / publisher identity — the 626Labs company logo on a navy
      canvas. Used for the publisher mark in store listings.
-  2. App tile / product identity — the RBX Maker app icon, rendered here
+  2. App tile / product identity — the RBX15 Maker app icon, rendered here
      programmatically since we don't have a standalone source PNG.
 
 Store logos carry the publisher; app tiles carry this specific product.
@@ -92,7 +92,7 @@ def render_gradient_text(draw_size: int, text: str, font: ImageFont.FreeTypeFont
 
 
 def draw_app_tile(size: int) -> Image.Image:
-    """RBX Maker app tile — solid navy, gradient-text wordmark, tracked eyebrow.
+    """RBX15 Maker app tile — solid navy, gradient-text wordmark, tracked eyebrow.
 
     Respects the 626 Labs brand rules:
     - Solid navy baseline (no full-panel gradient background)
@@ -204,7 +204,7 @@ def main() -> int:
     else:
         print(f"[skip] company logo not found at {args.company}. Install the 626labs-design skill or pass --company.")
 
-    # --- App tiles: RBX Maker product identity ---------------------------
+    # --- App tiles: RBX15 Maker product identity ---------------------------
     for size in (71, 150, 300):
         tile = draw_app_tile(size)
         out = HERE / f"app-tile-{size}x{size}.png"

@@ -1,4 +1,4 @@
-"""Generate the full set of MSIX tile images for RBX Maker.
+"""Generate the full set of MSIX tile images for RBX15 Maker.
 
 Windows Store / MSIX wants a specific set of tile sizes and scales that
 don't match the generic Partner-Center store-listing assets in

@@ -27,7 +27,7 @@
 
 ### Install
 
-**Windows 10 or 11.** Download `ItsjustEste's RBX Classic Shirt and Pants Maker Setup.exe` from [the latest release](https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/releases). SmartScreen will warn about the unknown publisher — click "More info" → "Run anyway" until Microsoft Store approval lands (in review).
+**Windows 10 or 11.** Download `RBX15 Classic Shirt and Pants Maker Setup.exe` from [the latest release](https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/releases). SmartScreen will warn about the unknown publisher — click "More info" → "Run anyway" until Microsoft Store approval lands (in review).
 
 Or build from source:
 

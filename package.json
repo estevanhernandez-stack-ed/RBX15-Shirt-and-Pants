@@ -1,8 +1,8 @@
 {
-  "name": "itsjusteste-rbx-maker",
-  "productName": "ItsjustEste's RBX Classic Shirt and Pants Maker",
+  "name": "rbx15-classic-shirt-and-pants-maker",
+  "productName": "RBX15 Classic Shirt and Pants Maker",
   "version": "4.0.0",
-  "description": "Roblox Classic Shirt and Pants Template Maker by ItsjustEste",
+  "description": "Roblox Classic R15 shirt and pants template maker. Built by ItsjustEste at 626 Labs LLC.",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -17,7 +17,7 @@
   "author": "ItsjustEste / 626 Labs LLC",
   "license": "MIT",
   "build": {
-    "appId": "com.itsjusteste.rbx-maker",
+    "appId": "com.626labs.rbx15maker",
     "files": [
       "main.js",
       "editor.html",

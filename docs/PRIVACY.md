@@ -1,4 +1,4 @@
-# Privacy Policy — ItsjustEste's RBX Classic Shirt and Pants Maker
+# Privacy Policy — RBX15 Classic Shirt and Pants Maker
 
 **Last updated:** 2026-04-20
 **Publisher:** 626 Labs LLC
@@ -34,7 +34,7 @@ If you want to disable even this, block `fonts.googleapis.com` at your firewall.
 ## How you remove your data
 
 - **Projects and templates** live wherever you chose to save them. Delete those files directly.
-- **The app itself:** Start → Apps & features → ItsjustEste's RBX Classic Shirt and Pants Maker → Uninstall. There is no hidden data to wipe.
+- **The app itself:** Start → Apps & features → RBX15 Classic Shirt and Pants Maker → Uninstall. There is no hidden data to wipe.
 
 ## Third-party services the app does not use
 

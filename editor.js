@@ -64,10 +64,10 @@ let SHIRT_REGIONS = {...SHIRT_REGION_DATA};
 let currentMode = 'Shirt'; // 'Shirt' or 'Pants'
 
 const BG_COLORS = [
-  {name:'Midnight',c:'#1a1a2e'}, {name:'Navy',c:'#16213e'}, {name:'Black',c:'#0f0f0f'},
+  {name:'Navy',c:'#192e44'}, {name:'Navy Deep',c:'#0f1f31'}, {name:'Black',c:'#050c18'},
   {name:'Charcoal',c:'#2d2d2d'}, {name:'Wine',c:'#4a1942'}, {name:'Forest',c:'#1b4332'},
   {name:'Ocean',c:'#0c2461'}, {name:'Storm',c:'#2c3e50'}, {name:'White',c:'#f5f5f5'},
-  {name:'Red',c:'#b71c1c'}, {name:'Purple',c:'#4a148c'}, {name:'Teal',c:'#004d40'},
+  {name:'Red',c:'#b71c1c'}, {name:'Magenta',c:'#f22f89'}, {name:'Cyan',c:'#17d4fa'},
 ];
 
 // ═══════════════════════════════════════════════════════════
@@ -75,7 +75,7 @@ const BG_COLORS = [
 // ═══════════════════════════════════════════════════════════
 let layers = [];
 let selectedLayerId = null;
-let bgColor = '#1a1a2e';
+let bgColor = '#192e44';
 let bgImage = null;
 let bgOpacity = 1;
 let zoom = 1;
@@ -85,7 +85,7 @@ let undoStack = [];
 
 // Current tool: 'select', 'pen', 'line', 'rect', 'circle', 'eraser'
 let currentTool = 'select';
-let drawColor = '#e040fb';
+let drawColor = '#17d4fa';
 let drawSize = 4;
 let drawFill = false;
 
@@ -313,30 +313,30 @@ function render() {
       ctx.translate(cx, cy);
       ctx.rotate(layer.rotation * Math.PI / 180);
 
-      // Bounding box
-      ctx.strokeStyle = '#e040fb';
+      // Bounding box (cyan — primary selection color)
+      ctx.strokeStyle = '#17d4fa';
       ctx.lineWidth = 2;
       ctx.setLineDash([5,5]);
       ctx.strokeRect(-w/2, -h/2, w, h);
       ctx.setLineDash([]);
 
       // Corner resize handles
-      ctx.fillStyle = '#e040fb';
+      ctx.fillStyle = '#17d4fa';
       const corners = [[-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2]];
       corners.forEach(([hx,hy]) => ctx.fillRect(hx-4, hy-4, 8, 8));
 
-      // Rotation handle
+      // Rotation handle (magenta — paired accent)
       const rotHandleDist = 30;
       ctx.beginPath();
       ctx.moveTo(0, -h/2);
       ctx.lineTo(0, -h/2 - rotHandleDist);
-      ctx.strokeStyle = '#00e5ff';
+      ctx.strokeStyle = '#f22f89';
       ctx.lineWidth = 2;
       ctx.stroke();
 
       ctx.beginPath();
       ctx.arc(0, -h/2 - rotHandleDist, 8, 0, Math.PI * 2);
-      ctx.fillStyle = '#00e5ff';
+      ctx.fillStyle = '#f22f89';
       ctx.fill();
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 1.5;
@@ -356,8 +356,8 @@ function render() {
       ctx.stroke();
 
       if (layer.rotation !== 0) {
-        ctx.font = '11px system-ui';
-        ctx.fillStyle = '#00e5ff';
+        ctx.font = '11px "JetBrains Mono", ui-monospace, monospace';
+        ctx.fillStyle = '#f22f89';
         ctx.textAlign = 'center';
         ctx.fillText(layer.rotation.toFixed(1) + '\u00B0', 0, -h/2 - rotHandleDist - 16);
       }
@@ -374,8 +374,8 @@ const _checkerboard = (() => {
   const c = document.createElement('canvas');
   c.width = 16; c.height = 16;
   const x = c.getContext('2d');
-  x.fillStyle = '#1a1a2e'; x.fillRect(0,0,16,16);
-  x.fillStyle = '#111'; x.fillRect(0,0,8,8); x.fillRect(8,8,8,8);
+  x.fillStyle = '#0f1f31'; x.fillRect(0,0,16,16);
+  x.fillStyle = '#050c18'; x.fillRect(0,0,8,8); x.fillRect(8,8,8,8);
   return c;
 })();
 
@@ -619,19 +619,19 @@ function updateUI() {
     dupeBtn.dataset.action = 'dupe';
     dupeBtn.title = 'Duplicate layer';
     dupeBtn.textContent = 'Dupe';
-    dupeBtn.style.cssText = 'flex:1;padding:3px 0;font-size:10px;background:#1a2a3a;border:1px solid #00e5ff;color:#00e5ff;border-radius:3px;cursor:pointer;font-weight:600;';
+    dupeBtn.style.cssText = 'flex:1;padding:3px 0;font-size:10px;background:rgba(23,212,250,.1);border:1px solid #17d4fa;color:#17d4fa;border-radius:3px;cursor:pointer;font-weight:600;font-family:inherit;';
 
     const visBtn = document.createElement('button');
     visBtn.dataset.action = 'vis';
     visBtn.title = l.visible ? 'Hide layer' : 'Show layer';
     visBtn.textContent = l.visible ? 'Hide' : 'Show';
-    visBtn.style.cssText = 'flex:1;padding:3px 0;font-size:10px;background:#1a1a2e;border:1px solid #555;color:' + (l.visible ? '#aaa' : '#555') + ';border-radius:3px;cursor:pointer;font-weight:600;';
+    visBtn.style.cssText = 'flex:1;padding:3px 0;font-size:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.14);color:' + (l.visible ? '#c4cdda' : '#5e6b7f') + ';border-radius:3px;cursor:pointer;font-weight:600;font-family:inherit;';
 
     const delBtn = document.createElement('button');
     delBtn.dataset.action = 'del';
     delBtn.title = 'Delete layer';
     delBtn.textContent = 'Del';
-    delBtn.style.cssText = 'flex:1;padding:3px 0;font-size:10px;background:#2a1a1a;border:1px solid #f44;color:#f44;border-radius:3px;cursor:pointer;font-weight:600;';
+    delBtn.style.cssText = 'flex:1;padding:3px 0;font-size:10px;background:rgba(255,84,114,.1);border:1px solid #ff5472;color:#ff5472;border-radius:3px;cursor:pointer;font-weight:600;font-family:inherit;';
 
     btns.appendChild(dupeBtn);
     btns.appendChild(visBtn);
@@ -697,8 +697,8 @@ function updateUI() {
     </div>
     <div style="margin-top:8px;">
       <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:4px 0;" id="adjToggle">
-        <span style="font-size:11px;color:#e040fb;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Image Adjustments</span>
-        <span id="adjArrow" style="color:#e040fb;font-size:10px;">&#9654;</span>
+        <span style="font-size:11px;color:#17d4fa;text-transform:uppercase;letter-spacing:0.12em;font-weight:600;font-family:'JetBrains Mono',ui-monospace,monospace;">Image Adjustments</span>
+        <span id="adjArrow" style="color:#17d4fa;font-size:10px;">&#9654;</span>
       </div>
       <div id="adjPanel" style="display:none;">
         <label>Brightness: <span id="brightVal">${sel.brightness || 100}%</span></label>
@@ -710,14 +710,14 @@ function updateUI() {
         <label>Hue Rotate: <span id="hueVal">${sel.hueRotate || 0}&deg;</span></label>
         <input type="range" id="ctrlHue" min="0" max="360" value="${sel.hueRotate || 0}">
         <div style="margin-top:6px;">
-          <label style="color:#f44;">R: <span id="rVal">${sel.rShift || 0}</span></label>
-          <input type="range" id="ctrlR" min="-100" max="100" value="${sel.rShift || 0}" style="accent-color:#f44;">
+          <label style="color:#ff5472;">R: <span id="rVal">${sel.rShift || 0}</span></label>
+          <input type="range" id="ctrlR" min="-100" max="100" value="${sel.rShift || 0}" style="accent-color:#ff5472;">
           <label style="color:#4f4;">G: <span id="gVal">${sel.gShift || 0}</span></label>
           <input type="range" id="ctrlG" min="-100" max="100" value="${sel.gShift || 0}" style="accent-color:#4f4;">
           <label style="color:#66f;">B: <span id="bVal">${sel.bShift || 0}</span></label>
           <input type="range" id="ctrlB" min="-100" max="100" value="${sel.bShift || 0}" style="accent-color:#66f;">
         </div>
-        <button class="btn btn-sm btn-secondary" id="btnResetAdj" style="width:100%;margin-top:6px;border-color:#7c4dff;color:#b388ff;">Reset Adjustments</button>
+        <button class="btn btn-sm btn-secondary" id="btnResetAdj" style="width:100%;margin-top:6px;border-color:#f22f89;color:#ff5aa3;">Reset Adjustments</button>
       </div>
     </div>
   `;
@@ -1446,11 +1446,11 @@ function switchMode(mode) {
   if (mode === 'Pants') {
     SHIRT_REGIONS = {...PANTS_REGION_DATA};
     modeBtn.textContent = 'PANTS';
-    modeBtn.style.background = 'linear-gradient(135deg,#00e5ff,#7c4dff)';
+    modeBtn.style.background = 'linear-gradient(135deg,#f22f89,#17d4fa)';
   } else {
     SHIRT_REGIONS = {...SHIRT_REGION_DATA};
     modeBtn.textContent = 'SHIRT';
-    modeBtn.style.background = 'linear-gradient(135deg,#e040fb,#7c4dff)';
+    modeBtn.style.background = 'linear-gradient(135deg,#17d4fa,#f22f89)';
   }
 
   // Clear region colors (they use different keys)
@@ -2262,7 +2262,7 @@ function loadProject(file) {
       // Restore mode
       if (project.mode) switchMode(project.mode);
       // Restore background
-      bgColor = project.bgColor || '#1a1a2e';
+      bgColor = project.bgColor || '#192e44';
       bgOpacity = project.bgOpacity != null ? project.bgOpacity : 1;
       document.getElementById('bgColor').value = bgColor;
       document.getElementById('bgOpacity').value = bgOpacity * 100;

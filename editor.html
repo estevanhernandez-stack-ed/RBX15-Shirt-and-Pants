@@ -30,7 +30,7 @@
   <div class="ribbon-pane active" data-tab="home">
     <div class="ribbon-group" style="padding:0 14px;">
       <div class="ribbon-group-items vert" style="align-items:center;gap:4px;">
-        <button id="btnModeToggle" class="btn btn-sm" style="font-size:13px;font-weight:700;padding:6px 18px;background:linear-gradient(135deg,#e040fb,#7c4dff);color:#fff;border:none;border-radius:6px;cursor:pointer;letter-spacing:.5px;min-width:80px;">SHIRT</button>
+        <button id="btnModeToggle" class="btn btn-sm" style="font-size:13px;font-weight:700;padding:6px 18px;background:linear-gradient(135deg,#17d4fa,#f22f89);color:#050c18;border:none;border-radius:6px;cursor:pointer;letter-spacing:.5px;min-width:80px;">SHIRT</button>
         <select id="assetType" hidden>
           <option value="Shirt">Shirt</option>
           <option value="Pants">Pants</option>
@@ -53,8 +53,8 @@
     <div class="ribbon-group">
       <div class="ribbon-group-items vert">
         <div style="display:flex;gap:4px;align-items:center">
-          <input type="color" id="drawColor" value="#e040fb" title="Draw color" style="width:26px;height:24px;border:none;padding:0;cursor:pointer;border-radius:4px;">
-          <input type="range" id="drawSize" min="1" max="50" value="4" title="Brush size" style="width:60px;accent-color:#e040fb">
+          <input type="color" id="drawColor" value="#17d4fa" title="Draw color" style="width:26px;height:24px;border:none;padding:0;cursor:pointer;border-radius:4px;">
+          <input type="range" id="drawSize" min="1" max="50" value="4" title="Brush size" style="width:60px;accent-color:#17d4fa">
         </div>
         <label style="font-size:10px;color:#888;margin:0;display:flex;align-items:center;gap:2px"><input type="checkbox" id="drawFill"> Fill</label>
       </div>
@@ -130,13 +130,13 @@
     <div class="ribbon-group">
       <div class="ribbon-group-items vert">
         <div style="display:flex;gap:4px;align-items:center">
-          <input type="color" id="bgColor" value="#1a1a2e" style="width:30px;height:24px;border:none;cursor:pointer;">
+          <input type="color" id="bgColor" value="#192e44" style="width:30px;height:24px;border:none;cursor:pointer;">
           <button class="btn btn-sm btn-secondary" id="bgImageBtn" style="font-size:10px;padding:3px 8px;">BG Image</button>
           <input type="file" id="bgFileInput" accept="image/*" hidden>
         </div>
         <div style="display:flex;gap:4px;align-items:center">
           <label style="font-size:9px;color:#888;margin:0;white-space:nowrap;">Opacity</label>
-          <input type="range" id="bgOpacity" min="0" max="100" value="100" style="width:80px;accent-color:#e040fb;">
+          <input type="range" id="bgOpacity" min="0" max="100" value="100" style="width:80px;accent-color:#17d4fa;">
         </div>
       </div>
       <div class="ribbon-group-label">BG Settings</div>
@@ -154,7 +154,7 @@
         <div style="display:flex;gap:4px;align-items:center">
           <input type="color" id="detailColor" value="#333333" style="width:26px;height:22px;border:none;cursor:pointer;">
           <label style="font-size:9px;color:#888;margin:0">W</label>
-          <input type="range" id="detailWidth" min="1" max="8" value="2" style="width:50px;accent-color:#e040fb;">
+          <input type="range" id="detailWidth" min="1" max="8" value="2" style="width:50px;accent-color:#17d4fa;">
           <label style="font-size:9px;color:#888;margin:0;display:flex;align-items:center;gap:2px"><input type="checkbox" id="detailDash"> Stitch</label>
         </div>
       </div>
@@ -192,7 +192,7 @@
       <div class="ribbon-group-items">
         <button class="preset-btn detail-btn" data-detail="pocket" style="padding:3px 7px;font-size:10px;">Pocket</button>
         <button class="preset-btn detail-btn" data-detail="placket" style="padding:3px 7px;font-size:10px;">Placket</button>
-        <button class="preset-btn detail-btn" data-detail="full-detail" style="padding:3px 7px;font-size:10px;border-color:#7c4dff;color:#b388ff;">Full Set</button>
+        <button class="preset-btn detail-btn" data-detail="full-detail" style="padding:3px 7px;font-size:10px;border-color:#f22f89;color:#ff5aa3;">Full Set</button>
       </div>
       <div class="ribbon-group-label">Accents</div>
     </div>
@@ -226,16 +226,16 @@
     <div class="ribbon-group">
       <div class="ribbon-group-items vert">
         <div style="display:flex;gap:4px;align-items:center">
-          <div style="text-align:center"><label style="font-size:8px;color:#666">Fill</label><br><input type="color" id="waColor" value="#e040fb" style="width:28px;height:20px;border:none;cursor:pointer;"></div>
+          <div style="text-align:center"><label style="font-size:8px;color:#666">Fill</label><br><input type="color" id="waColor" value="#17d4fa" style="width:28px;height:20px;border:none;cursor:pointer;"></div>
           <div style="text-align:center"><label style="font-size:8px;color:#666">Stroke</label><br><input type="color" id="waStroke" value="#000000" style="width:28px;height:20px;border:none;cursor:pointer;"></div>
-          <div style="text-align:center"><label style="font-size:8px;color:#666">Grad</label><br><input type="color" id="waColor2" value="#00e5ff" style="width:28px;height:20px;border:none;cursor:pointer;"></div>
+          <div style="text-align:center"><label style="font-size:8px;color:#666">Grad</label><br><input type="color" id="waColor2" value="#f22f89" style="width:28px;height:20px;border:none;cursor:pointer;"></div>
           <div style="text-align:center"><label style="font-size:8px;color:#666">Size</label><br><input type="number" id="waSize" value="64" min="8" max="300" style="width:44px;background:#1a1a2e;border:1px solid #333;color:#e0e0e0;padding:1px 4px;border-radius:3px;font-size:10px;"></div>
         </div>
         <div style="display:flex;gap:4px;align-items:center">
           <label style="font-size:8px;color:#666;white-space:nowrap">Stroke W</label>
-          <input type="range" id="waStrokeW" min="0" max="20" value="3" style="width:60px;accent-color:#e040fb">
+          <input type="range" id="waStrokeW" min="0" max="20" value="3" style="width:60px;accent-color:#17d4fa">
           <label style="font-size:8px;color:#666;white-space:nowrap">Angle</label>
-          <input type="range" id="waAngle" min="0" max="360" value="0" style="width:50px;accent-color:#00e5ff">
+          <input type="range" id="waAngle" min="0" max="360" value="0" style="width:50px;accent-color:#f22f89">
         </div>
       </div>
       <div class="ribbon-group-label">Colors &amp; Size</div>

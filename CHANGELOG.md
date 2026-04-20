@@ -1,29 +1,36 @@
 # Changelog
 
-All notable changes to ItsjustEste's RBX Classic Shirt and Pants Maker are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+All notable changes to RBX15 Classic Shirt and Pants Maker are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-**Quality bar + Microsoft Store prep.** Mirroring the Sanduhr shipping model — README and legal in place, design system pass next, then MSIX packaging and Store submission.
+**Quality bar + Microsoft Store prep.** Mirroring the Sanduhr shipping model — README and legal in place, design system done, MSIX packaging wired, Partner Center identity locked in.
 
 ### Added
 
-- README.md — full rewrite in 626 Labs voice with badges, organized feature sections, controls reference, and roadmap. Mirrors the structure of [Sanduhr's README](https://github.com/estevanhernandez-stack-ed/Sanduhr_f-r_Claude).
-- LICENSE — MIT, 626 Labs LLC.
-- `.markdownlint.json` — disables MD024 (duplicate headings) and MD033 (inline HTML) so the centered-header + badges pattern lints clean. Mirrors Sanduhr.
+- README.md full rewrite in 626 Labs voice; landing page at `docs/index.html`; screenshots, CHANGELOG, CONTRIBUTING, SECURITY, LICENSE (MIT), PRIVACY, FUNDING
+- 626 Labs brand palette + voice pass across the editor (styles.css, editor.html, editor.js)
+- 7 app screenshots wired into README + landing page
+- Microsoft Store assets at `docs/store-assets/` (tiles + publisher logos + generator script)
+- MSIX packaging scaffold at `windows/msix/` with manifest template, image generator, build script
+- TEST_PLAN, RELEASE_NOTES, SIGNING runbook at `windows/`
+- Built-in asset packs: 156 drips + 25 word-art PNGs under `packs/`, loadable via new Asset library buttons
+- `.626labs/manifest.json` product manifest for 626labs.dev hub ingestion
 
 ### Changed
 
-- `package.json` license field: `ISC` → `MIT` to match the new LICENSE file.
+- **App rebranded** from *ItsjustEste's RBX Classic Shirt and Pants Maker* to **RBX15 Classic Shirt and Pants Maker** to match the Partner Center reservation. ItsjustEste credit preserved as author / header subtitle.
+- MSIX manifest identity wired to Partner Center reservation (Name `626LabsLLC.RBX15ClassicShirtandPantsMaker`, Publisher CN `CN=177BCE59-0966-4975-9962-10E36652141F`, Store ID `9MV9G4XFJ8S0`).
+- `package.json` license field: `ISC` → `MIT` (matches LICENSE file).
+- `package.json` appId: `com.itsjusteste.rbx-maker` → `com.626labs.rbx15maker`.
 
 ### Up next
 
-- CHANGELOG (this file), CONTRIBUTING, SECURITY, `.github/FUNDING.yml`
-- 626 Labs design-system pass — swap cyberpunk palette to brand navy / cyan / magenta across `styles.css`, `editor.html`, `editor.js`
-- `docs/index.html` landing page, `docs/PRIVACY.md`, `docs/screenshots/`
-- `docs/store-assets/` (Microsoft Store tiles + logos) and `windows/msix/` packaging
-- Code signing, test plan, release notes
-- Hub entry at [626labs.dev](https://626labs.dev) and 626Labs Dashboard
+- Reserve final Partner Center listing copy + screenshots
+- Run `windows/msix/make-msix.ps1 -Build` and upload to Partner Center
+- Enable GitHub Pages on `/docs`
+- Add product card to 626labs.dev hub
+- Code signing for the NSIS installer (Azure Trusted Signing — see `windows/SIGNING.md`)
 
 ---
 

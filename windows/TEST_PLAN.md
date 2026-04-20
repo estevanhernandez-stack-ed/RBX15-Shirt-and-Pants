@@ -5,17 +5,17 @@ Estimated time: 15 minutes.
 
 ## Prerequisites
 
-- Windows 10 1809+ or Windows 11 VM with no prior RBX Maker install
+- Windows 10 1809+ or Windows 11 VM with no prior RBX15 Maker install
 - ~300 MB free disk for the installer + app
 - A folder of PNG images for the asset-library test (any PNGs work, they don't need to be Roblox art)
 
 ## 1. Fresh NSIS install
 
-- [ ] Double-click `ItsjustEste's RBX Classic Shirt and Pants Maker Setup.exe`
+- [ ] Double-click `RBX15 Classic Shirt and Pants Maker Setup.exe`
 - [ ] SmartScreen warns → click "More info" → "Run anyway" (expected until code signing is set up)
-- [ ] Installer wizard appears with the RBX Maker banner
+- [ ] Installer wizard appears with the RBX15 Maker banner
 - [ ] "Desktop shortcut" and "Start Menu shortcut" are checked by default
-- [ ] Install directory picker defaults to `%LOCALAPPDATA%\Programs\ItsjustEste's RBX Classic Shirt and Pants Maker\`
+- [ ] Install directory picker defaults to `%LOCALAPPDATA%\Programs\RBX15 Classic Shirt and Pants Maker\`
 - [ ] Install completes without errors
 - [ ] App launches (either auto or via the Start Menu shortcut)
 
@@ -23,8 +23,8 @@ Estimated time: 15 minutes.
 
 - [ ] Window opens at 1200x800, centered
 - [ ] Menu bar is hidden
-- [ ] Title bar reads "ItsjustEste's RBX Classic Shirt and Pants Maker"
-- [ ] Header shows "RBX Classic Shirt & Pants Maker" with "ItsjustEste | v4.0" subtitle
+- [ ] Title bar reads "RBX15 Classic Shirt and Pants Maker"
+- [ ] Header shows "RBX15 Classic Shirt & Pants Maker" with "ItsjustEste | v4.0" subtitle
 - [ ] Ribbon tab reads "HOME" in brand cyan with a cyan→magenta gradient underline
 - [ ] Canvas shows the 585×559 template grid with the navy/black checkerboard backdrop
 - [ ] Footer reads "DEVELOPED AT 626 LABS LLC" in JetBrains Mono
@@ -126,7 +126,7 @@ Estimated time: 15 minutes.
 
 ## 15. Uninstall
 
-- [ ] Settings → Apps & features → ItsjustEste's RBX Classic Shirt and Pants Maker → Uninstall
+- [ ] Settings → Apps & features → RBX15 Classic Shirt and Pants Maker → Uninstall
 - [ ] Uninstaller runs to completion
 - [ ] Desktop and Start Menu shortcuts removed
 - [ ] Install directory cleaned up

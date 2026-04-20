@@ -1,4 +1,4 @@
-<h1 align="center">ItsjustEste's RBX Classic Shirt and Pants Maker</h1>
+<h1 align="center">RBX15 Classic Shirt and Pants Maker</h1>
 
 <p align="center"><em>Imagine Something Else.</em></p>
 
@@ -24,7 +24,7 @@ and a fullscreen canvas built for the exact 585×559 template grid.
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/app-home.png" alt="ItsjustEste's RBX Classic Shirt and Pants Maker — Home tab" width="860">
+  <img src="docs/screenshots/app-home.png" alt="RBX15 Classic Shirt and Pants Maker — Home tab" width="860">
 </p>
 
 ---
@@ -33,7 +33,7 @@ and a fullscreen canvas built for the exact 585×559 template grid.
 
 ### Windows 10 / 11 — NSIS installer
 
-Download the latest **`ItsjustEste's RBX Classic Shirt and Pants Maker Setup.exe`** from [Releases](https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/releases), click through the SmartScreen "unknown publisher" warning (signing deferred pending Microsoft Store approval), and run the installer.
+Download the latest **`RBX15 Classic Shirt and Pants Maker Setup.exe`** from [Releases](https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/releases), click through the SmartScreen "unknown publisher" warning (signing deferred pending Microsoft Store approval), and run the installer.
 
 - Creates desktop + Start Menu shortcuts.
 - Installs to your chosen directory (NSIS lets you pick).
@@ -186,6 +186,6 @@ Part of the 626 Labs product family. Find other tools at [626labs.dev](https://6
 
 <p align="center">
   <sub>
-    "Roblox" and the Roblox logo are trademarks of Roblox Corporation, used nominatively to describe the output file format. ItsjustEste's RBX Classic Shirt and Pants Maker is an independent third-party tool.
+    "Roblox" and the Roblox logo are trademarks of Roblox Corporation, used nominatively to describe the output file format. RBX15 Classic Shirt and Pants Maker is an independent third-party tool.
   </sub>
 </p>

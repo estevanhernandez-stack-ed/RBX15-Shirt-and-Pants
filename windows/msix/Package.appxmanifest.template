@@ -5,19 +5,22 @@
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   IgnorableNamespaces="uap rescap">
 
-  <!-- Identity block — Partner Center-reserved. Do not modify Name or Publisher
-       without updating the Partner Center reservation, or Store ingestion will
-       reject the submission. Version is injected by make-msix.ps1 from
-       package.json so this stays in sync with the .exe installer. -->
+  <!-- Identity block — values assigned by Partner Center reservation. These
+       MUST match exactly or Store ingestion rejects the submission:
+         Name      = 626LabsLLC.RBX15ClassicShirtandPantsMaker
+         Publisher = CN=177BCE59-0966-4975-9962-10E36652141F  (626 Labs LLC account CN,
+                                                               shared with Sanduhr)
+       Version is injected by make-msix.ps1 from package.json so the MSIX stays in
+       sync with the .exe installer version. -->
   <Identity
-    Name="626LabsLLC.RBX15ShirtAndPantsMaker"
-    Publisher="{{PUBLISHER_CN}}"
+    Name="626LabsLLC.RBX15ClassicShirtandPantsMaker"
+    Publisher="CN=177BCE59-0966-4975-9962-10E36652141F"
     Version="{{VERSION}}"
     ProcessorArchitecture="x64" />
 
   <Properties>
-    <DisplayName>ItsjustEste's RBX Classic Shirt and Pants Maker</DisplayName>
-    <PublisherDisplayName>626 Labs LLC</PublisherDisplayName>
+    <DisplayName>RBX15 Classic Shirt and Pants Maker</DisplayName>
+    <PublisherDisplayName>626Labs LLC</PublisherDisplayName>
     <Logo>Images\StoreLogo.png</Logo>
     <Description>Native Windows desktop editor for Roblox Classic (R15) shirt and pants templates. Layer-based compositing, non-destructive image adjustments, word art, drawing tools, built for the exact 585x559 template grid.</Description>
   </Properties>
@@ -33,10 +36,10 @@
 
   <Applications>
     <Application Id="RBXMaker"
-                 Executable="ItsjustEste's RBX Classic Shirt and Pants Maker.exe"
+                 Executable="RBX15 Classic Shirt and Pants Maker.exe"
                  EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
-        DisplayName="ItsjustEste's RBX Classic Shirt and Pants Maker"
+        DisplayName="RBX15 Classic Shirt and Pants Maker"
         Description="Roblox Classic R15 shirt and pants template editor"
         BackgroundColor="#0f1f31"
         Square150x150Logo="Images\Square150x150Logo.png"

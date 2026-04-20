@@ -1,4 +1,4 @@
-# Contributing to ItsjustEste's RBX Classic Shirt and Pants Maker
+# Contributing to RBX15 Classic Shirt and Pants Maker
 
 Builder-to-builder. Bring a patch, ship a patch. Here's what you need.
 

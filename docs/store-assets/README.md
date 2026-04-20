@@ -1,6 +1,6 @@
 # Store assets
 
-Microsoft Store Partner Center submission assets for ItsjustEste's RBX Classic Shirt and Pants Maker.
+Microsoft Store Partner Center submission assets for RBX15 Classic Shirt and Pants Maker.
 
 ## What's here
 
@@ -12,7 +12,7 @@ Microsoft Store Partner Center submission assets for ItsjustEste's RBX Classic S
 | `logo-square-1080x1080.png` | 1080 x 1080 | Publisher mark (square) | 626 Labs logo on navy |
 | `logo-portrait-720x1080.png` | 720 x 1080 | Publisher mark (portrait) | 626 Labs logo on navy |
 
-The app tiles carry *this specific product* identity (RBX Maker). The publisher logos carry *626 Labs LLC*. Partner Center asks for both — don't mix them up.
+The app tiles carry *this specific product* identity (RBX15 Maker). The publisher logos carry *626 Labs LLC*. Partner Center asks for both — don't mix them up.
 
 ## Regenerating
 

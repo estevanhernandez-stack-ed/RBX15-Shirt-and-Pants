@@ -2276,7 +2276,7 @@ function showAssetFolder(folder) {
 function saveProject() {
   const project = {
     version: '4.0',
-    app: "ItsjustEste's RBX Classic Shirt and Pants Maker",
+    app: "RBX15 Classic Shirt and Pants Maker",
     savedAt: new Date().toISOString(),
     mode: currentMode,
     bgColor,

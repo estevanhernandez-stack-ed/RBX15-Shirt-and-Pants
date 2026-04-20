@@ -1,9 +1,13 @@
-# Build RBX-Maker.msix from the electron-builder win-unpacked output.
+# Build RBX15-Maker.msix from the electron-builder win-unpacked output.
 #
 # Assumes `npm run build` already produced `dist/win-unpacked/`. If you
 # haven't, this script will run it for you via the -Build switch.
 #
-# Emits `dist/RBX-Maker-v{version}.msix`.
+# Identity values (Name, Publisher CN, PublisherDisplayName) are hardcoded
+# in Package.appxmanifest.template per the Partner Center reservation for
+# the 626 Labs LLC account.
+#
+# Emits `dist/RBX15-Maker-v{version}.msix`.
 #
 # Flags:
 #   -Build       Run `npm run build` first to produce the unpacked output.
@@ -11,22 +15,15 @@
 #                manifest's Publisher CN. Required to sideload-install on
 #                your own machine for testing. NOT used for Store submission
 #                -- leave the MSIX unsigned and let Store ingestion sign it.
-#   -PublisherCN <value>
-#                Override the Publisher CN placeholder in the manifest
-#                template. After Partner Center reservation, you'll get a
-#                CN like `CN=ABCDEFGH-1234-...`. Set it once via this flag
-#                (or hard-code it into the template).
 #
 # Usage (from repo root):
 #   powershell -ExecutionPolicy Bypass -File windows/msix/make-msix.ps1
 #   powershell -ExecutionPolicy Bypass -File windows/msix/make-msix.ps1 -Build -SelfSign
-#   powershell -ExecutionPolicy Bypass -File windows/msix/make-msix.ps1 -PublisherCN "CN=12345678-..."
 
 [CmdletBinding()]
 param(
     [switch]$Build,
-    [switch]$SelfSign,
-    [string]$PublisherCN = ""
+    [switch]$SelfSign
 )
 
 $ErrorActionPreference = "Stop"
@@ -42,17 +39,9 @@ if ($baseVersion -notmatch '^[0-9]+\.[0-9]+\.[0-9]+$') {
 $Version = "$baseVersion.0"
 Write-Host "-> MSIX version: $Version" -ForegroundColor Cyan
 
-# -- Publisher CN --
-if (-not $PublisherCN) {
-    $PublisherCN = $env:RBX_MAKER_PUBLISHER_CN
-}
-if (-not $PublisherCN) {
-    Write-Host "-> No -PublisherCN supplied. Falling back to placeholder." -ForegroundColor Yellow
-    Write-Host "   The packed MSIX will not validate for Store submission until you" -ForegroundColor Yellow
-    Write-Host "   re-run with the Partner-Center-reserved CN." -ForegroundColor Yellow
-    $PublisherCN = "CN=PUBLISHER_CN_PLACEHOLDER"
-}
-Write-Host "-> Publisher CN: $PublisherCN" -ForegroundColor Cyan
+# Publisher CN is hardcoded in the manifest template (not a secret — it's
+# baked into every signed MSIX anyway). No parameter injection needed.
+$PublisherCN = "CN=177BCE59-0966-4975-9962-10E36652141F"
 
 # -- Optional build step --
 if ($Build) {
@@ -98,16 +87,15 @@ Write-Host "-> Staging files..." -ForegroundColor Cyan
 Copy-Item "$Unpacked/*" $Stage -Recurse -Force
 Copy-Item $ImagesDir $Stage -Recurse -Force
 
-# Inject version + publisher CN into manifest template
+# Inject version into manifest template (Publisher CN is already hardcoded)
 $manifest = Get-Content (Join-Path $MsixDir "Package.appxmanifest.template") -Raw
 $manifest = $manifest -replace '\{\{VERSION\}\}', $Version
-$manifest = $manifest -replace '\{\{PUBLISHER_CN\}\}', [regex]::Escape($PublisherCN).Replace('\','')
 Set-Content (Join-Path $Stage "AppxManifest.xml") -Value $manifest -Encoding UTF8
 
 # -- Pack --
 $OutDir = Join-Path $RepoRoot "dist"
 New-Item -ItemType Directory -Force $OutDir | Out-Null
-$MsixPath = Join-Path $OutDir "RBX-Maker-v$Version.msix"
+$MsixPath = Join-Path $OutDir "RBX15-Maker-v$Version.msix"
 Remove-Item $MsixPath -ErrorAction SilentlyContinue
 
 Write-Host "-> Packing MSIX..." -ForegroundColor Cyan
@@ -128,13 +116,13 @@ if ($SelfSign) {
             -Type CodeSigningCert `
             -Subject $PublisherCN `
             -KeyUsage DigitalSignature `
-            -FriendlyName "RBX Maker MSIX Dev Cert" `
+            -FriendlyName "RBX15 Maker MSIX Dev Cert" `
             -CertStoreLocation "Cert:\CurrentUser\My" `
             -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}")
         Write-Host "   Created cert thumbprint: $($Cert.Thumbprint)"
         Write-Host "   NOTE: To sideload-install the signed MSIX, trust this cert once:"
-        Write-Host "     Export-Certificate -Cert Cert:\CurrentUser\My\$($Cert.Thumbprint) -FilePath rbx-maker-dev.cer"
-        Write-Host "     Then import rbx-maker-dev.cer into 'Trusted People' in certlm.msc"
+        Write-Host "     Export-Certificate -Cert Cert:\CurrentUser\My\$($Cert.Thumbprint) -FilePath rbx15-maker-dev.cer"
+        Write-Host "     Then import rbx15-maker-dev.cer into 'Trusted People' in certlm.msc"
     }
     & $SignTool sign /fd SHA256 /a /sha1 $Cert.Thumbprint $MsixPath
     if ($LASTEXITCODE -ne 0) {

@@ -5,7 +5,7 @@ function createWindow () {
   const win = new BrowserWindow({
     width: 1200,
     height: 800,
-    title: "ItsjustEste's RBX Classic Shirt and Pants Maker",
+    title: "RBX15 Classic Shirt and Pants Maker",
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false

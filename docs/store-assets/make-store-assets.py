@@ -42,94 +42,129 @@ INK_0     = (255, 255, 255, 255)
 INK_950   = (5, 12, 24, 255)
 
 
-def lerp(a, b, t):
-    return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(4))
-
-
-def draw_gradient_bg(size: int) -> Image.Image:
-    """Navy-deep background with a diagonal cyan→magenta radial glow."""
-    img = Image.new("RGBA", (size, size), NAVY_DEEP)
-    draw = ImageDraw.Draw(img)
-
-    # Fill solid navy first
-    draw.rectangle([(0, 0), (size, size)], fill=NAVY_DEEP)
-
-    # Soft radial cyan glow top-left
-    for r in range(int(size * 0.7), 0, -2):
-        t = r / (size * 0.7)
-        alpha = int(60 * (1 - t))
-        color = (CYAN[0], CYAN[1], CYAN[2], alpha)
-        overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
-        odraw = ImageDraw.Draw(overlay)
-        cx, cy = int(size * 0.25), int(size * 0.25)
-        odraw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=color)
-        img = Image.alpha_composite(img, overlay)
-
-    # Soft radial magenta glow bottom-right
-    for r in range(int(size * 0.7), 0, -2):
-        t = r / (size * 0.7)
-        alpha = int(50 * (1 - t))
-        color = (MAGENTA[0], MAGENTA[1], MAGENTA[2], alpha)
-        overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
-        odraw = ImageDraw.Draw(overlay)
-        cx, cy = int(size * 0.75), int(size * 0.75)
-        odraw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=color)
-        img = Image.alpha_composite(img, overlay)
-
-    return img
-
-
-def find_bold_font(target_size: int) -> ImageFont.FreeTypeFont:
-    """Return the best available bold sans font, in preference order."""
-    candidates = [
-        "C:/Windows/Fonts/SegoeUIB.ttf",
+def find_font(target_size: int, *, black: bool = False) -> ImageFont.FreeTypeFont:
+    """Return the best available sans font, in preference order."""
+    black_candidates = [
         "C:/Windows/Fonts/seguibl.ttf",
         "C:/Windows/Fonts/arialbd.ttf",
         "/System/Library/Fonts/SFNS.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVu-Sans-Bold.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
     ]
-    for p in candidates:
+    bold_candidates = [
+        "C:/Windows/Fonts/SegoeUIB.ttf",
+        "C:/Windows/Fonts/arialbd.ttf",
+        "/System/Library/Fonts/SFNS.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+    ]
+    for p in (black_candidates if black else bold_candidates):
         if pathlib.Path(p).exists():
             return ImageFont.truetype(p, target_size)
     return ImageFont.load_default()
 
 
+def render_gradient_text(draw_size: int, text: str, font: ImageFont.FreeTypeFont,
+                         start_color: tuple, end_color: tuple) -> Image.Image:
+    """Render text with a 135deg cyan→magenta gradient fill. Returns transparent RGBA."""
+    # Render mask (white text on transparent, high-res for crisp edges)
+    bbox = font.getbbox(text)
+    tw = bbox[2] - bbox[0]
+    th = bbox[3] - bbox[1]
+    mask = Image.new("L", (tw, th), 0)
+    mdraw = ImageDraw.Draw(mask)
+    mdraw.text((-bbox[0], -bbox[1]), text, font=font, fill=255)
+
+    # Build a 135deg linear gradient at the text bbox size
+    grad = Image.new("RGBA", (tw, th), (0, 0, 0, 0))
+    gpx = grad.load()
+    # 135deg = top-left → bottom-right. Project each pixel onto the axis.
+    for y in range(th):
+        for x in range(tw):
+            t = (x + y) / max(1, tw + th - 2)
+            r = int(start_color[0] + (end_color[0] - start_color[0]) * t)
+            g = int(start_color[1] + (end_color[1] - start_color[1]) * t)
+            b = int(start_color[2] + (end_color[2] - start_color[2]) * t)
+            gpx[x, y] = (r, g, b, 255)
+
+    # Use text mask as alpha channel on the gradient
+    result = Image.new("RGBA", (tw, th), (0, 0, 0, 0))
+    result.paste(grad, (0, 0), mask)
+    return result
+
+
 def draw_app_tile(size: int) -> Image.Image:
-    """RBX Maker app tile: gradient bg + 'RBX' wordmark in white + '15' small."""
-    img = draw_gradient_bg(size)
+    """RBX Maker app tile — solid navy, gradient-text wordmark, tracked eyebrow.
+
+    Respects the 626 Labs brand rules:
+    - Solid navy baseline (no full-panel gradient background)
+    - Brand gradient belongs to text / strokes / accents, not backgrounds
+    - Inner hairline stroke for subtle dimension
+    - Sentence-case eyebrow treatment with tracking
+    """
+    # Solid navy base
+    img = Image.new("RGB", (size, size), NAVY_DEEP)
+    img = img.convert("RGBA")
     draw = ImageDraw.Draw(img)
 
-    # Rounded-rect inner stroke to anchor the composition
-    inset = max(2, size // 30)
-    stroke_w = max(1, size // 80)
+    # Single soft cyan glow in the top-left corner for depth (small + low)
+    # Done with a single radial ellipse, not a layered loop, so it never
+    # approaches full opacity.
+    glow_r = int(size * 0.55)
+    glow = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    gdraw = ImageDraw.Draw(glow)
+    for step in range(10):
+        r = int(glow_r * (1 - step / 10))
+        alpha = int(18 * (step / 10))
+        gdraw.ellipse([-r // 3, -r // 3, r, r], fill=(CYAN[0], CYAN[1], CYAN[2], alpha))
+    img = Image.alpha_composite(img, glow)
+
+    # Inner hairline stroke — anchors composition without dominating
+    draw = ImageDraw.Draw(img)
+    inset = max(2, size // 24)
+    stroke_w = max(1, size // 100)
     draw.rounded_rectangle(
         [(inset, inset), (size - inset - 1, size - inset - 1)],
-        radius=max(6, size // 10),
-        outline=(255, 255, 255, 24),
+        radius=max(6, size // 8),
+        outline=(255, 255, 255, 30),
         width=stroke_w,
     )
 
-    # Primary mark: "RBX" in big bold white
-    mark_size = int(size * 0.42)
-    font = find_bold_font(mark_size)
-    text = "RBX"
-    bbox = draw.textbbox((0, 0), text, font=font)
-    tw = bbox[2] - bbox[0]
-    th = bbox[3] - bbox[1]
-    tx = (size - tw) // 2 - bbox[0]
-    ty = (size - th) // 2 - bbox[1] - int(size * 0.06)
-    draw.text((tx, ty), text, font=font, fill=INK_0)
+    # Primary mark — "RBX" rendered with the brand gradient (cyan → magenta, 135deg)
+    # Sized to take about 50% of tile width so it feels confident without crowding edges.
+    mark_target_w = int(size * 0.62)
+    # Binary-search a font size that hits that width
+    lo, hi = int(size * 0.3), int(size * 0.75)
+    best = lo
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        f = find_font(mid, black=True)
+        bb = f.getbbox("RBX")
+        w = bb[2] - bb[0]
+        if w <= mark_target_w:
+            best = mid
+            lo = mid + 1
+        else:
+            hi = mid - 1
+    font = find_font(best, black=True)
+    text_img = render_gradient_text(size, "RBX", font, CYAN, MAGENTA)
 
-    # Secondary mark: "15" tagline below in cyan, smaller
-    tag_size = max(10, int(size * 0.16))
-    tag_font = find_bold_font(tag_size)
-    tag = "15"
-    tbbox = draw.textbbox((0, 0), tag, font=tag_font)
-    tag_w = tbbox[2] - tbbox[0]
-    tag_h = tbbox[3] - tbbox[1]
-    tag_x = (size - tag_w) // 2 - tbbox[0]
-    tag_y = ty + th + int(size * 0.04) - tbbox[1]
-    draw.text((tag_x, tag_y), tag, font=tag_font, fill=CYAN)
+    # Center RBX in upper-middle of tile (eyebrow will sit below)
+    tx = (size - text_img.width) // 2
+    ty = int(size * 0.24)
+    img.alpha_composite(text_img, (tx, ty))
+
+    # Eyebrow — "CLASSIC R15" in caps with letter-spacing, small, cyan-dim
+    # 71x71 too small for eyebrow; show just on 150+
+    if size >= 150:
+        eyebrow_size = max(9, int(size * 0.075))
+        efont = find_font(eyebrow_size, black=False)
+        # Manual tracking via inserted spaces — Pillow doesn't do letter-spacing.
+        eyebrow = "C L A S S I C   R 1 5"
+        ebbox = efont.getbbox(eyebrow)
+        ew = ebbox[2] - ebbox[0]
+        eh = ebbox[3] - ebbox[1]
+        ex = (size - ew) // 2 - ebbox[0]
+        ey = ty + text_img.height + int(size * 0.05) - ebbox[1]
+        draw.text((ex, ey), eyebrow, font=efont, fill=(CYAN[0], CYAN[1], CYAN[2], 220))
 
     return img.convert("RGB")
 

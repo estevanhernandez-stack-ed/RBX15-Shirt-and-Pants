@@ -666,7 +666,7 @@ function updateUI() {
   const ctrl = document.getElementById('layerControls');
   const sel = getSelected();
   if (!sel) {
-    ctrl.innerHTML = '<p class="info">Select a layer to edit</p>';
+    ctrl.innerHTML = '<p class="info">Select a layer to edit.</p>';
     return;
   }
   ctrl.innerHTML = `
@@ -684,20 +684,20 @@ function updateUI() {
     <label>Opacity: <span id="opaVal">${(sel.opacity*100).toFixed(0)}%</span></label>
     <input type="range" id="ctrlOpa" min="0" max="100" value="${sel.opacity*100}">
     <div class="row" style="margin-top:6px">
-      <button class="btn btn-sm btn-secondary" id="btnFlipH">Flip H</button>
-      <button class="btn btn-sm btn-secondary" id="btnFlipV">Flip V</button>
-      <button class="btn btn-sm btn-secondary" id="btnDupe">Duplicate</button>
+      <button class="btn btn-sm btn-secondary" id="btnFlipH" title="Flip horizontally.">Flip H</button>
+      <button class="btn btn-sm btn-secondary" id="btnFlipV" title="Flip vertically.">Flip V</button>
+      <button class="btn btn-sm btn-secondary" id="btnDupe" title="Duplicate layer.">Duplicate</button>
     </div>
     <div class="row" style="margin-top:4px">
-      <button class="btn btn-sm btn-secondary" id="btnMoveUp">\u2191 Up</button>
-      <button class="btn btn-sm btn-secondary" id="btnMoveDown">\u2193 Down</button>
+      <button class="btn btn-sm btn-secondary" id="btnMoveUp" title="Move layer up.">Up</button>
+      <button class="btn btn-sm btn-secondary" id="btnMoveDown" title="Move layer down.">Down</button>
     </div>
     <div style="margin-top:6px">
-      <button class="btn btn-sm btn-secondary" id="btnCenterFront" style="width:100%">Center on Front Torso</button>
+      <button class="btn btn-sm btn-secondary" id="btnCenterFront" style="width:100%">Center on front torso</button>
     </div>
     <div style="margin-top:8px;">
       <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:4px 0;" id="adjToggle">
-        <span style="font-size:11px;color:#17d4fa;text-transform:uppercase;letter-spacing:0.12em;font-weight:600;font-family:'JetBrains Mono',ui-monospace,monospace;">Image Adjustments</span>
+        <span style="font-size:11px;color:#17d4fa;text-transform:uppercase;letter-spacing:0.12em;font-weight:600;font-family:'JetBrains Mono',ui-monospace,monospace;">Image adjustments</span>
         <span id="adjArrow" style="color:#17d4fa;font-size:10px;">&#9654;</span>
       </div>
       <div id="adjPanel" style="display:none;">
@@ -707,7 +707,7 @@ function updateUI() {
         <input type="range" id="ctrlContrast" min="0" max="200" value="${sel.contrast || 100}">
         <label>Saturation: <span id="satVal">${sel.saturate || 100}%</span></label>
         <input type="range" id="ctrlSaturate" min="0" max="200" value="${sel.saturate || 100}">
-        <label>Hue Rotate: <span id="hueVal">${sel.hueRotate || 0}&deg;</span></label>
+        <label>Hue rotate: <span id="hueVal">${sel.hueRotate || 0}&deg;</span></label>
         <input type="range" id="ctrlHue" min="0" max="360" value="${sel.hueRotate || 0}">
         <div style="margin-top:6px;">
           <label style="color:#ff5472;">R: <span id="rVal">${sel.rShift || 0}</span></label>
@@ -717,7 +717,7 @@ function updateUI() {
           <label style="color:#66f;">B: <span id="bVal">${sel.bShift || 0}</span></label>
           <input type="range" id="ctrlB" min="-100" max="100" value="${sel.bShift || 0}" style="accent-color:#66f;">
         </div>
-        <button class="btn btn-sm btn-secondary" id="btnResetAdj" style="width:100%;margin-top:6px;border-color:#f22f89;color:#ff5aa3;">Reset Adjustments</button>
+        <button class="btn btn-sm btn-secondary" id="btnResetAdj" style="width:100%;margin-top:6px;border-color:#f22f89;color:#ff5aa3;">Reset adjustments</button>
       </div>
     </div>
   `;
@@ -2344,7 +2344,7 @@ function loadProject(file) {
         img.src = d.imgSrc;
       });
     } catch (err) {
-      alert('Failed to load project: ' + err.message);
+      alert('Failed to load project. ' + err.message);
     }
   };
   reader.readAsText(file);

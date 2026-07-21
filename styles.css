@@ -108,6 +108,22 @@ body {
 }
 
 /* =========================================================================
+   Scrollbars — brand dark track, navy thumb that lights cyan on hover.
+   Replaces the default OS scrollbars on the asset browser, layer list,
+   and the ribbon's horizontal overflow.
+   ========================================================================= */
+* { scrollbar-color: var(--brand-navy-soft) var(--ink-950); scrollbar-width: thin; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--ink-950); }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--brand-navy-soft), var(--brand-navy));
+  border: 2px solid var(--ink-950);
+  border-radius: var(--r-sm);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--brand-cyan-dim); }
+::-webkit-scrollbar-corner { background: var(--ink-950); }
+
+/* =========================================================================
    Header
    ========================================================================= */
 header {

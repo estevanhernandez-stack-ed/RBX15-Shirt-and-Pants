@@ -384,9 +384,25 @@ const _checkerboard = (() => {
   return c;
 })();
 
+// A magenta dashed ring sized to the brush — erasing removes pixels you
+// can't preview any other way, so the cursor has to show what it'll take.
+// Scales with brush size and zoom; capped so it stays a valid CSS cursor.
+function eraserCursorURI() {
+  const r = Math.max(4, Math.min(120, (drawSize * zoom) / 2));
+  const d = Math.ceil(r) * 2 + 4;
+  const c = d / 2;
+  const svg =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="' + d + '" height="' + d + '" viewBox="0 0 ' + d + ' ' + d + '">' +
+    '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" fill="none" stroke="#000" stroke-width="3" opacity="0.5"/>' +
+    '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" fill="none" stroke="#f22f89" stroke-width="1.5" stroke-dasharray="4 3"/>' +
+    '<circle cx="' + c + '" cy="' + c + '" r="1.5" fill="#f22f89"/>' +
+    '</svg>';
+  return "url('data:image/svg+xml;base64," + btoa(svg) + "') " + c + ' ' + c + ', crosshair';
+}
+
 function updateCursor() {
-  const cursors = { select:'crosshair', pen:'crosshair', line:'crosshair', rect:'crosshair', circle:'crosshair', eraser:'crosshair' };
-  canvas.style.cursor = cursors[currentTool] || 'crosshair';
+  if (currentTool === 'eraser') { canvas.style.cursor = eraserCursorURI(); return; }
+  canvas.style.cursor = 'crosshair';
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -414,7 +430,7 @@ Object.entries(toolButtons).forEach(([tool, btn]) => {
 });
 
 document.getElementById('drawColor').oninput = e => drawColor = e.target.value;
-document.getElementById('drawSize').oninput = e => drawSize = +e.target.value;
+document.getElementById('drawSize').oninput = e => { drawSize = +e.target.value; updateCursor(); };
 document.getElementById('drawFill').onchange = e => drawFill = e.target.checked;
 
 // ═══════════════════════════════════════════════════════════
@@ -1239,6 +1255,7 @@ canvas.onwheel = e => {
     // Adjust brush size
     drawSize = Math.max(1, Math.min(50, drawSize + (e.deltaY > 0 ? -1 : 1)));
     document.getElementById('drawSize').value = drawSize;
+    updateCursor();
   }
 };
 

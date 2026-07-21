@@ -5,7 +5,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert');
 const { createCanvas } = require('@napi-rs/canvas');
-const { normalizeFill, paintRegionFill, fillToCSS } = require('../lib/fills.js');
+const { normalizeFill, paintRegionFill, fillToCSS, fillKey } = require('../lib/fills.js');
 
 const REGION = { x: 0, y: 0, w: 40, h: 40 };
 
@@ -91,6 +91,45 @@ test('fill is clipped to the region rect', () => {
   const ctx = c.getContext('2d');
   assert.deepStrictEqual(rgbAt(ctx, 15, 15), [0, 255, 0], 'inside region painted');
   assert.deepStrictEqual(ctx.getImageData(2, 2, 1, 1).data[3], 0, 'outside region untouched (transparent)');
+});
+
+test('a linear gradient spans a shared extent across regions', () => {
+  // Regions A [0,40) and B [40,80) painted with one gradient (angle 0) over
+  // the full [0,80) extent. The ramp is continuous across the A/B seam — B
+  // does NOT restart at c1 on its left edge.
+  const c = createCanvas(80, 20);
+  const ctx = c.getContext('2d');
+  const fill = { type: 'linear', c1: '#ff0000', c2: '#0000ff', angle: 0 };
+  const extent = { x: 0, y: 0, w: 80, h: 20 };
+  paintRegionFill(ctx, { x: 0, y: 0, w: 40, h: 20 }, fill, extent);
+  paintRegionFill(ctx, { x: 40, y: 0, w: 40, h: 20 }, fill, extent);
+  const left = rgbAt(ctx, 2, 10), right = rgbAt(ctx, 78, 10);
+  const seamA = rgbAt(ctx, 38, 10), seamB = rgbAt(ctx, 42, 10);
+  assert.ok(left[0] > 230 && left[2] < 30, 'left edge ~c1: ' + left);
+  assert.ok(right[2] > 230 && right[0] < 30, 'right edge ~c2: ' + right);
+  assert.ok(Math.abs(seamA[0] - seamB[0]) < 25 && Math.abs(seamA[2] - seamB[2]) < 25,
+    'gradient continuous across the seam (' + seamA + ' vs ' + seamB + ')');
+});
+
+test('without a shared extent each region is its own gradient (default)', () => {
+  // Same two regions, no extent passed -> region B restarts at c1 on its left,
+  // so the seam jumps. Proves the spanning is doing the work.
+  const c = createCanvas(80, 20);
+  const ctx = c.getContext('2d');
+  const fill = { type: 'linear', c1: '#ff0000', c2: '#0000ff', angle: 0 };
+  paintRegionFill(ctx, { x: 0, y: 0, w: 40, h: 20 }, fill);
+  paintRegionFill(ctx, { x: 40, y: 0, w: 40, h: 20 }, fill);
+  const seamA = rgbAt(ctx, 38, 10), seamB = rgbAt(ctx, 42, 10);
+  assert.ok(Math.abs(seamA[2] - seamB[2]) > 150, 'per-region gradients jump at the seam');
+});
+
+test('fillKey groups equal fills and separates different ones', () => {
+  const a = { type: 'linear', c1: '#000000', c2: '#ffffff', angle: 45 };
+  const b = { type: 'linear', c1: '#000000', c2: '#ffffff', angle: 45 };
+  const d = { type: 'linear', c1: '#000000', c2: '#ffffff', angle: 90 };
+  assert.strictEqual(fillKey(a), fillKey(b));
+  assert.notStrictEqual(fillKey(a), fillKey(d));
+  assert.strictEqual(fillKey('#aabbcc'), fillKey({ type: 'solid', c1: '#aabbcc' }));
 });
 
 test('fillToCSS produces a plain color for solid and a gradient string otherwise', () => {

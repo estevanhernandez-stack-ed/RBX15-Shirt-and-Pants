@@ -233,6 +233,65 @@ function drawLayerWithAdjustments(ctx, layer) {
   ctx.restore();
 }
 
+// ═══════════════════════════════════════════════════════════
+// REGION FILLS — paint every filled region, gradients spanning groups
+// ═══════════════════════════════════════════════════════════
+function unionRect(rects) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const r of rects) {
+    x0 = Math.min(x0, r.x); y0 = Math.min(y0, r.y);
+    x1 = Math.max(x1, r.x + r.w); y1 = Math.max(y1, r.y + r.h);
+  }
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+}
+
+// Split rects into connected components — regions whose (slightly inflated)
+// boxes touch. The R15 template leaves ~2px gutters between faces, so a small
+// tolerance bridges adjacent faces (torso front/right/left/back/top/bottom
+// become one group) while keeping distant clusters (arms/legs) separate.
+function connectedRegionGroups(rects, tol) {
+  tol = tol == null ? 4 : tol;
+  const touch = (a, b) =>
+    a.x - tol < b.x + b.w && b.x - tol < a.x + a.w &&
+    a.y - tol < b.y + b.h && b.y - tol < a.y + a.h;
+  const groups = [], seen = new Set();
+  for (let i = 0; i < rects.length; i++) {
+    if (seen.has(i)) continue;
+    const comp = [], stack = [i];
+    seen.add(i);
+    while (stack.length) {
+      const j = stack.pop();
+      comp.push(rects[j]);
+      for (let k = 0; k < rects.length; k++) {
+        if (!seen.has(k) && touch(rects[j], rects[k])) { seen.add(k); stack.push(k); }
+      }
+    }
+    groups.push(comp);
+  }
+  return groups;
+}
+
+// Paint all filled regions onto a target context. Same-fill regions are
+// grouped into connected components so a gradient spans the whole component
+// (one continuous ramp across connecting faces) instead of restarting per
+// region. Solid/pattern fills ignore the extent.
+function paintRegions(targetCtx) {
+  const byFill = {};
+  for (const [rName, fill] of Object.entries(regionColors)) {
+    const r = SHIRT_REGIONS[rName];
+    if (!r || !fill) continue;
+    const key = window.RBX15Fills.fillKey(fill);
+    (byFill[key] = byFill[key] || { fill, rects: [] }).rects.push(r);
+  }
+  for (const key in byFill) {
+    const { fill, rects } = byFill[key];
+    for (const comp of connectedRegionGroups(rects)) {
+      const extent = unionRect(comp);
+      for (const r of comp) window.RBX15Fills.paintRegionFill(targetCtx, r, fill, extent);
+    }
+  }
+}
+
 // Persistent offscreen canvas — reused every render instead of allocating new ones
 const _offCanvas = document.createElement('canvas');
 _offCanvas.width = TW; _offCanvas.height = TH;
@@ -254,10 +313,7 @@ function render() {
   }
 
   // Per-region fills (solid / gradient / pattern — see lib/fills.js)
-  for (const [rName, fill] of Object.entries(regionColors)) {
-    const r = SHIRT_REGIONS[rName];
-    if (r && fill) window.RBX15Fills.paintRegionFill(oc, r, fill);
-  }
+  paintRegions(oc);
 
   // Layers (bottom to top)
   for (const layer of layers) {
@@ -1458,10 +1514,7 @@ function exportPNG() {
     ec.globalAlpha = 1;
   }
 
-  for (const [rName, fill] of Object.entries(regionColors)) {
-    const r = SHIRT_REGIONS[rName];
-    if (r && fill) window.RBX15Fills.paintRegionFill(ec, r, fill);
-  }
+  paintRegions(ec);
 
   for (const layer of layers) {
     if (!layer.visible || !layer.img) continue;

@@ -1556,18 +1556,54 @@ function paintRegionButton(btn, fill) {
   }
 }
 
-// Fill-style controls (Layout tab)
+// Fill-style controls (Layout tab). These live-edit the active style: any
+// region already painted with the current fill updates in place, so tuning
+// the angle after painting all the panels rotates the whole gradient — you
+// don't have to re-click every region.
+function fillEditWillTouchRegions() {
+  const key = window.RBX15Fills.fillKey(currentFill);
+  for (const rName in regionColors) {
+    if (window.RBX15Fills.fillKey(regionColors[rName]) === key) return true;
+  }
+  return false;
+}
+// Snapshot once at the start of an edit, but only when it'll actually change
+// painted regions (no empty undo entries from idle slider drags).
+function snapshotBeforeFillEdit() { if (fillEditWillTouchRegions()) saveUndo(); }
+
+function applyFillEdit(mutate) {
+  const beforeKey = window.RBX15Fills.fillKey(currentFill);
+  mutate();
+  let touched = false;
+  for (const rName in regionColors) {
+    if (window.RBX15Fills.fillKey(regionColors[rName]) === beforeKey) {
+      regionColors[rName] = {...currentFill};
+      touched = true;
+    }
+  }
+  if (touched) {
+    document.querySelectorAll('.region-btn').forEach(b => {
+      const f = regionColors[b.dataset.r];
+      if (f) paintRegionButton(b, f);
+    });
+    render();
+  }
+}
+
 document.querySelectorAll('.fill-type-btn').forEach(b => {
   b.onclick = () => {
     document.querySelectorAll('.fill-type-btn').forEach(x => x.classList.remove('active'));
     b.classList.add('active');
-    currentFill.type = b.dataset.fill;
+    snapshotBeforeFillEdit();
+    applyFillEdit(() => { currentFill.type = b.dataset.fill; });
   };
 });
-document.getElementById('fillColor1').oninput = e => { currentFill.c1 = e.target.value; };
-document.getElementById('fillColor2').oninput = e => { currentFill.c2 = e.target.value; };
-document.getElementById('fillAngle').oninput = e => { currentFill.angle = +e.target.value; };
-document.getElementById('fillScale').oninput = e => { currentFill.scale = +e.target.value; };
+[['fillColor1', 'c1', v => v], ['fillColor2', 'c2', v => v],
+ ['fillAngle', 'angle', v => +v], ['fillScale', 'scale', v => +v]].forEach(([id, prop, conv]) => {
+  const el = document.getElementById(id);
+  el.addEventListener('pointerdown', snapshotBeforeFillEdit);
+  el.oninput = e => applyFillEdit(() => { currentFill[prop] = conv(e.target.value); });
+});
 
 function buildRegionGrid() {
   const isShirt = currentMode === 'Shirt';

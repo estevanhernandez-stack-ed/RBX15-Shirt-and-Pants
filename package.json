@@ -7,7 +7,7 @@
   "scripts": {
     "start": "electron .",
     "build": "electron-builder --win --publish never",
-    "lint": "eslint main.js editor.js",
+    "lint": "eslint .",
     "test": "node --test \"tests/**/*.test.js\""
   },
   "keywords": [

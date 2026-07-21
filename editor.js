@@ -266,9 +266,12 @@ function render() {
     drawLayerWithAdjustments(oc, layer);
   }
 
-  // Draw live preview (shape being drawn right now)
+  // Draw live preview (shape being drawn right now). Eraser previews at half
+  // alpha — its stroke marks what will be removed, it isn't paint.
   if (drawCanvas) {
+    oc.globalAlpha = currentTool === 'eraser' ? 0.5 : 1;
     oc.drawImage(drawCanvas, 0, 0);
+    oc.globalAlpha = 1;
   }
 
   // Apply mask
@@ -1026,13 +1029,13 @@ canvas.onmousedown = e => {
 
     if (currentTool === 'pen' || currentTool === 'eraser') {
       const dc = drawCanvas.getContext('2d');
-      dc.strokeStyle = currentTool === 'eraser' ? 'rgba(0,0,0,1)' : drawColor;
+      // Eraser strokes are recorded as opaque pixels — the stroke canvas is a
+      // mask consumed by applyEraseStroke at mouseup, not paint. Magenta so
+      // the half-alpha live preview reads as "marked for removal".
+      dc.strokeStyle = currentTool === 'eraser' ? '#f22f89' : drawColor;
       dc.lineWidth = drawSize;
       dc.lineCap = 'round';
       dc.lineJoin = 'round';
-      if (currentTool === 'eraser') {
-        dc.globalCompositeOperation = 'destination-out';
-      }
       dc.beginPath();
       dc.moveTo(mx, my);
     }
@@ -1157,9 +1160,24 @@ canvas.onmouseup = e => {
 
     if (hasContent) {
       if (currentTool === 'eraser') {
-        // Apply eraser to all layers - create eraser mask and apply
-        // For simplicity, add as a special erase layer that composites
-        addDrawingLayer(drawCanvas, 'Eraser stroke');
+        // Erase from the selected layer (Photoshop semantics). The stroke
+        // maps through the inverse of the layer's transform — see lib/erase.js.
+        const sel = getSelected();
+        if (!sel || !sel.img) {
+          alert('Select a layer to erase from, then try again.');
+        } else {
+          const erased = window.RBX15Erase.applyEraseStroke(
+            sel.img, sel, drawCanvas,
+            (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+          );
+          const img = new Image();
+          img.onload = () => {
+            sel.img = img;
+            _rgbCache.layerId = null; // cached RGB-shift result is stale now
+            updateUI(); render();
+          };
+          img.src = erased.toDataURL();
+        }
       } else {
         addDrawingLayer(drawCanvas, currentTool.charAt(0).toUpperCase() + currentTool.slice(1) + ' drawing');
       }

@@ -44,11 +44,24 @@ test('linear gradient runs c1 -> c2 across the region', () => {
   assert.ok(right[2] > 200 && right[0] < 60, 'right edge is blue-ish: ' + right);
 });
 
-test('stripes alternate c1 and c2', () => {
-  // scale 8, angle 0 -> vertical bands: c1 [0,8), c2 [8,16), ...
+test('stripes alternate c1 and c2 on the global lattice', () => {
+  // scale 8, angle 0 -> c2 bands at global [0,8),[16,24)...; c1 base in gaps.
   const ctx = paint({ type: 'stripes', c1: '#ff0000', c2: '#0000ff', angle: 0, scale: 8 });
-  assert.deepStrictEqual(rgbAt(ctx, 2, 20), [255, 0, 0], 'first band c1');
-  assert.deepStrictEqual(rgbAt(ctx, 11, 20), [0, 0, 255], 'second band c2');
+  assert.deepStrictEqual(rgbAt(ctx, 2, 20), [0, 0, 255], 'c2 band at global 0-8');
+  assert.deepStrictEqual(rgbAt(ctx, 11, 20), [255, 0, 0], 'c1 gap at global 8-16');
+});
+
+test('patterns are continuous across adjacent regions (global lattice)', () => {
+  // Two side-by-side regions, same dots fill. Dots sit on ONE global lattice
+  // (centers x = 8,24,40,56,72) — region B does not restart the pattern at
+  // its own left edge. The old per-region code would have dotted x=48.
+  const c = createCanvas(80, 40);
+  const ctx = c.getContext('2d');
+  const fill = { type: 'dots', c1: '#ff0000', c2: '#0000ff', scale: 16 };
+  paintRegionFill(ctx, { x: 0, y: 0, w: 40, h: 40 }, fill);
+  paintRegionFill(ctx, { x: 40, y: 0, w: 40, h: 40 }, fill);
+  assert.deepStrictEqual(rgbAt(ctx, 56, 8), [0, 0, 255], 'dot on the shared global lattice in region B');
+  assert.deepStrictEqual(rgbAt(ctx, 48, 8), [255, 0, 0], 'gap where a per-region restart would have dotted');
 });
 
 test('checker alternates on the diagonal', () => {

@@ -425,8 +425,15 @@ function setTool(tool) {
 }
 setTool('select');
 
+// Click (or press the shortcut for) the active tool again to switch it off —
+// back to Select, the neutral move/select mode. Select is the resting state,
+// so it has no "off".
+function toggleTool(tool) {
+  setTool(currentTool === tool && tool !== 'select' ? 'select' : tool);
+}
+
 Object.entries(toolButtons).forEach(([tool, btn]) => {
-  btn.onclick = () => setTool(tool);
+  btn.onclick = () => toggleTool(tool);
 });
 
 document.getElementById('drawColor').oninput = e => drawColor = e.target.value;
@@ -1663,12 +1670,12 @@ document.onkeydown = e => {
 
   // Tool shortcuts
   switch(e.key.toLowerCase()) {
-    case 'v': setTool('select'); e.preventDefault(); return;
-    case 'b': setTool('pen'); e.preventDefault(); return;
-    case 'l': setTool('line'); e.preventDefault(); return;
-    case 'u': setTool('rect'); e.preventDefault(); return;
-    case 'o': setTool('circle'); e.preventDefault(); return;
-    case 'e': if (!e.ctrlKey) { setTool('eraser'); e.preventDefault(); return; } break;
+    case 'v': toggleTool('select'); e.preventDefault(); return;
+    case 'b': toggleTool('pen'); e.preventDefault(); return;
+    case 'l': toggleTool('line'); e.preventDefault(); return;
+    case 'u': toggleTool('rect'); e.preventDefault(); return;
+    case 'o': toggleTool('circle'); e.preventDefault(); return;
+    case 'e': if (!e.ctrlKey) { toggleTool('eraser'); e.preventDefault(); return; } break;
     case 'd': if (e.ctrlKey) { e.preventDefault(); const sel = getSelected(); if (sel) duplicateLayer(sel.id); return; } break;
   }
 

@@ -348,8 +348,22 @@ header span {
 .controls select:focus,
 .controls input[type=text]:focus,
 .controls input[type=number]:focus {
-  outline: none;
   border-color: var(--brand-cyan);
+}
+
+/* Visible keyboard focus. The app previously killed input outlines with no
+   replacement, leaving keyboard users with no focus indicator at all. These
+   rings only show on keyboard navigation (:focus-visible), never on click. */
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+.ribbon-tab:focus-visible,
+.preset-btn:focus-visible,
+.fill-type-btn:focus-visible,
+.swatch:focus-visible {
+  outline: 2px solid var(--brand-cyan);
+  outline-offset: 2px;
 }
 
 .row { display: flex; gap: 8px; align-items: center; }
@@ -497,6 +511,23 @@ canvas { display: block; cursor: crosshair; }
 }
 .preset-btn:hover {
   border-color: var(--brand-cyan);
+  color: var(--brand-cyan);
+}
+
+/* Fill-style type buttons (Layout tab) */
+.fill-type-btn {
+  background: var(--brand-navy);
+  border: 1px solid var(--border-1);
+  color: var(--fg-2);
+  border-radius: var(--r-xs);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-weight: 500;
+}
+.fill-type-btn:hover { border-color: var(--brand-cyan); color: var(--brand-cyan); }
+.fill-type-btn.active {
+  border-color: var(--brand-cyan);
+  background: rgba(23,212,250,.12);
   color: var(--brand-cyan);
 }
 

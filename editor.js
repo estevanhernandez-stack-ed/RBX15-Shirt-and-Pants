@@ -233,6 +233,65 @@ function drawLayerWithAdjustments(ctx, layer) {
   ctx.restore();
 }
 
+// ═══════════════════════════════════════════════════════════
+// REGION FILLS — paint every filled region, gradients spanning groups
+// ═══════════════════════════════════════════════════════════
+function unionRect(rects) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const r of rects) {
+    x0 = Math.min(x0, r.x); y0 = Math.min(y0, r.y);
+    x1 = Math.max(x1, r.x + r.w); y1 = Math.max(y1, r.y + r.h);
+  }
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+}
+
+// Split rects into connected components — regions whose (slightly inflated)
+// boxes touch. The R15 template leaves ~2px gutters between faces, so a small
+// tolerance bridges adjacent faces (torso front/right/left/back/top/bottom
+// become one group) while keeping distant clusters (arms/legs) separate.
+function connectedRegionGroups(rects, tol) {
+  tol = tol == null ? 4 : tol;
+  const touch = (a, b) =>
+    a.x - tol < b.x + b.w && b.x - tol < a.x + a.w &&
+    a.y - tol < b.y + b.h && b.y - tol < a.y + a.h;
+  const groups = [], seen = new Set();
+  for (let i = 0; i < rects.length; i++) {
+    if (seen.has(i)) continue;
+    const comp = [], stack = [i];
+    seen.add(i);
+    while (stack.length) {
+      const j = stack.pop();
+      comp.push(rects[j]);
+      for (let k = 0; k < rects.length; k++) {
+        if (!seen.has(k) && touch(rects[j], rects[k])) { seen.add(k); stack.push(k); }
+      }
+    }
+    groups.push(comp);
+  }
+  return groups;
+}
+
+// Paint all filled regions onto a target context. Same-fill regions are
+// grouped into connected components so a gradient spans the whole component
+// (one continuous ramp across connecting faces) instead of restarting per
+// region. Solid/pattern fills ignore the extent.
+function paintRegions(targetCtx) {
+  const byFill = {};
+  for (const [rName, fill] of Object.entries(regionColors)) {
+    const r = SHIRT_REGIONS[rName];
+    if (!r || !fill) continue;
+    const key = window.RBX15Fills.fillKey(fill);
+    (byFill[key] = byFill[key] || { fill, rects: [] }).rects.push(r);
+  }
+  for (const key in byFill) {
+    const { fill, rects } = byFill[key];
+    for (const comp of connectedRegionGroups(rects)) {
+      const extent = unionRect(comp);
+      for (const r of comp) window.RBX15Fills.paintRegionFill(targetCtx, r, fill, extent);
+    }
+  }
+}
+
 // Persistent offscreen canvas — reused every render instead of allocating new ones
 const _offCanvas = document.createElement('canvas');
 _offCanvas.width = TW; _offCanvas.height = TH;
@@ -253,14 +312,8 @@ function render() {
     oc.globalAlpha = 1;
   }
 
-  // Per-region colors
-  for (const [rName, color] of Object.entries(regionColors)) {
-    const r = SHIRT_REGIONS[rName];
-    if (r && color) {
-      oc.fillStyle = color;
-      oc.fillRect(r.x, r.y, r.w, r.h);
-    }
-  }
+  // Per-region fills (solid / gradient / pattern — see lib/fills.js)
+  paintRegions(oc);
 
   // Layers (bottom to top)
   for (const layer of layers) {
@@ -1391,8 +1444,7 @@ function restoreState(snapStr) {
   regionColors = {...(s.regionColors || {})};
   document.querySelectorAll('.region-btn').forEach(btn => {
     const rName = btn.dataset.r;
-    if (regionColors[rName]) { btn.style.background = regionColors[rName]; btn.classList.add('filled'); }
-    else { btn.style.background = ''; btn.classList.remove('filled'); }
+    paintRegionButton(btn, regionColors[rName] || null);
   });
 
   layers = [];
@@ -1446,6 +1498,13 @@ document.getElementById('showGrid').onchange = e => { showGrid = e.target.checke
 // EXPORT
 // ═══════════════════════════════════════════════════════════
 function exportPNG() {
+  // Guard the "I clicked Download and got a blank file" surprise: warn only
+  // when the template is genuinely empty (no visible art, no region fills,
+  // no background image).
+  const hasArt = layers.some(l => l.visible && l.img) ||
+                 Object.keys(regionColors).length > 0 || !!bgImage;
+  if (!hasArt && !confirm('The template is empty — download a blank PNG anyway?')) return;
+
   const exp = document.createElement('canvas');
   exp.width = TW; exp.height = TH;
   const ec = exp.getContext('2d');
@@ -1462,10 +1521,7 @@ function exportPNG() {
     ec.globalAlpha = 1;
   }
 
-  for (const [rName, color] of Object.entries(regionColors)) {
-    const r = SHIRT_REGIONS[rName];
-    if (r && color) { ec.fillStyle = color; ec.fillRect(r.x, r.y, r.w, r.h); }
-  }
+  paintRegions(ec);
 
   for (const layer of layers) {
     if (!layer.visible || !layer.img) continue;
@@ -1490,10 +1546,71 @@ document.getElementById('btnExport2').onclick = exportPNG;
 // ═══════════════════════════════════════════════════════════
 const regionGrid = document.getElementById('regionGrid');
 let regionColors = {};
-let regionColorPicker = document.createElement('input');
-regionColorPicker.type = 'color';
-regionColorPicker.style.display = 'none';
-document.body.appendChild(regionColorPicker);
+
+// The active fill config, applied when you click a region with no layer
+// selected. Values map to a lib/fills.js descriptor.
+let currentFill = { type: 'solid', c1: '#17d4fa', c2: '#f22f89', angle: 45, scale: 16 };
+
+// Paint a region-grid button's preview swatch from a fill (descriptor or
+// legacy color string). Null clears it.
+function paintRegionButton(btn, fill) {
+  if (fill) {
+    btn.style.background = window.RBX15Fills.fillToCSS(fill);
+    btn.classList.add('filled');
+  } else {
+    btn.style.background = '';
+    btn.classList.remove('filled');
+  }
+}
+
+// Fill-style controls (Layout tab). These live-edit the active style: any
+// region already painted with the current fill updates in place, so tuning
+// the angle after painting all the panels rotates the whole gradient — you
+// don't have to re-click every region.
+function fillEditWillTouchRegions() {
+  const key = window.RBX15Fills.fillKey(currentFill);
+  for (const rName in regionColors) {
+    if (window.RBX15Fills.fillKey(regionColors[rName]) === key) return true;
+  }
+  return false;
+}
+// Snapshot once at the start of an edit, but only when it'll actually change
+// painted regions (no empty undo entries from idle slider drags).
+function snapshotBeforeFillEdit() { if (fillEditWillTouchRegions()) saveUndo(); }
+
+function applyFillEdit(mutate) {
+  const beforeKey = window.RBX15Fills.fillKey(currentFill);
+  mutate();
+  let touched = false;
+  for (const rName in regionColors) {
+    if (window.RBX15Fills.fillKey(regionColors[rName]) === beforeKey) {
+      regionColors[rName] = {...currentFill};
+      touched = true;
+    }
+  }
+  if (touched) {
+    document.querySelectorAll('.region-btn').forEach(b => {
+      const f = regionColors[b.dataset.r];
+      if (f) paintRegionButton(b, f);
+    });
+    render();
+  }
+}
+
+document.querySelectorAll('.fill-type-btn').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.fill-type-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    snapshotBeforeFillEdit();
+    applyFillEdit(() => { currentFill.type = b.dataset.fill; });
+  };
+});
+[['fillColor1', 'c1', v => v], ['fillColor2', 'c2', v => v],
+ ['fillAngle', 'angle', v => +v], ['fillScale', 'scale', v => +v]].forEach(([id, prop, conv]) => {
+  const el = document.getElementById(id);
+  el.addEventListener('pointerdown', snapshotBeforeFillEdit);
+  el.oninput = e => applyFillEdit(() => { currentFill[prop] = conv(e.target.value); });
+});
 
 function buildRegionGrid() {
   const isShirt = currentMode === 'Shirt';
@@ -1533,12 +1650,9 @@ function buildRegionGrid() {
 
   // Re-bind click handlers
   regionGrid.querySelectorAll('.region-btn').forEach(btn => {
-    // Restore saved region color if any
+    // Restore saved region fill if any
     const rName = btn.dataset.r;
-    if (regionColors[rName]) {
-      btn.style.background = regionColors[rName];
-      btn.classList.add('filled');
-    }
+    if (regionColors[rName]) paintRegionButton(btn, regionColors[rName]);
 
     btn.onclick = () => {
       const sel = getSelected();
@@ -1552,15 +1666,11 @@ function buildRegionGrid() {
         sel.rotation = 0;
         render();
       } else {
+        // No layer selected — paint the region with the current fill style.
         saveUndo();
-        regionColorPicker.value = regionColors[rName] || bgColor;
-        regionColorPicker.oninput = ev => {
-          regionColors[rName] = ev.target.value;
-          btn.style.background = ev.target.value;
-          btn.classList.add('filled');
-          render();
-        };
-        regionColorPicker.click();
+        regionColors[rName] = {...currentFill};
+        paintRegionButton(btn, regionColors[rName]);
+        render();
       }
     };
 
@@ -1569,8 +1679,7 @@ function buildRegionGrid() {
       if (!regionColors[rName]) return;
       saveUndo();
       delete regionColors[rName];
-      btn.style.background = '';
-      btn.classList.remove('filled');
+      paintRegionButton(btn, null);
       render();
     };
   });
@@ -2272,7 +2381,10 @@ folderInput.onchange = e => {
   const files = Array.from(e.target.files).filter(f =>
     /\.(png|jpg|jpeg|gif|webp)$/i.test(f.name)
   );
-  if (!files.length) return;
+  if (!files.length) {
+    alert('No images found in that folder. Pick a folder with PNG, JPG, GIF, or WEBP files.');
+    return;
+  }
 
   // Deduplicate by filename — keep the deepest nested version (most processed)
   const byName = new Map();
@@ -2499,17 +2611,10 @@ function loadProject(file) {
         bgImage = null;
       }
 
-      // Restore region colors
+      // Restore region fills (descriptors or legacy color strings)
       regionColors = project.regionColors || {};
       document.querySelectorAll('.region-btn').forEach(btn => {
-        const rName = btn.dataset.r;
-        if (regionColors[rName]) {
-          btn.style.background = regionColors[rName];
-          btn.classList.add('filled');
-        } else {
-          btn.style.background = '';
-          btn.classList.remove('filled');
-        }
+        paintRegionButton(btn, regionColors[btn.dataset.r] || null);
       });
 
       // Restore checkboxes

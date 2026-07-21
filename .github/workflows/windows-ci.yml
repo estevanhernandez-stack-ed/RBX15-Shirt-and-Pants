@@ -40,6 +40,12 @@ jobs:
         # repo's package-lock.json is regenerated.
         run: npm install
 
+      - name: Lint (no-undef gate)
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
       - name: Build NSIS installer + win-unpacked (smoke)
         run: npm run build
 

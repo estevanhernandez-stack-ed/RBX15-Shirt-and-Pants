@@ -6,7 +6,9 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder --win --publish never"
+    "build": "electron-builder --win --publish never",
+    "lint": "eslint main.js editor.js",
+    "test": "node --test \"tests/**/*.test.js\""
   },
   "keywords": [
     "roblox",
@@ -23,13 +25,16 @@
       "editor.html",
       "editor.js",
       "styles.css",
+      "lib/**",
       "package.json"
     ],
     "extraResources": [
       {
         "from": "packs",
         "to": "packs",
-        "filter": ["**/*.png"]
+        "filter": [
+          "**/*.png"
+        ]
       }
     ],
     "win": {
@@ -43,7 +48,10 @@
     }
   },
   "devDependencies": {
+    "@napi-rs/canvas": "^1.0.2",
     "electron": "^41.1.0",
-    "electron-builder": "^26.8.1"
+    "electron-builder": "^26.8.1",
+    "eslint": "^10.7.0",
+    "globals": "^17.7.0"
   }
 }

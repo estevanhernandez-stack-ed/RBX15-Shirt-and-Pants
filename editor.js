@@ -2229,7 +2229,7 @@ function showAssetFolder(folder) {
       const reader = new FileReader();
       reader.onload = re => {
         const layerImg = new window.Image();
-        layerImg.onload = () => addLayer(layerImg, clickName);
+        layerImg.onload = () => addLayer(layerImg, displayName);
         layerImg.src = re.target.result;
       };
       reader.readAsDataURL(file);

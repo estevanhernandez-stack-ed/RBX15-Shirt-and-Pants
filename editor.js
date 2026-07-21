@@ -266,9 +266,12 @@ function render() {
     drawLayerWithAdjustments(oc, layer);
   }
 
-  // Draw live preview (shape being drawn right now)
+  // Draw live preview (shape being drawn right now). Eraser previews at half
+  // alpha — its stroke marks what will be removed, it isn't paint.
   if (drawCanvas) {
+    oc.globalAlpha = currentTool === 'eraser' ? 0.5 : 1;
     oc.drawImage(drawCanvas, 0, 0);
+    oc.globalAlpha = 1;
   }
 
   // Apply mask
@@ -671,18 +674,18 @@ function updateUI() {
   }
   ctrl.innerHTML = `
     <label>Name</label>
-    <input type="text" id="ctrlName" value="${sel.name}">
+    <input type="text" id="ctrlName">
     <label>X: <span id="xVal">${sel.x.toFixed(0)}</span> &nbsp; Y: <span id="yVal">${sel.y.toFixed(0)}</span></label>
     <div class="row">
-      <input type="number" id="ctrlX" value="${sel.x.toFixed(0)}" style="width:50%">
-      <input type="number" id="ctrlY" value="${sel.y.toFixed(0)}" style="width:50%">
+      <input type="number" id="ctrlX" style="width:50%">
+      <input type="number" id="ctrlY" style="width:50%">
     </div>
     <label>Scale: <span id="scaleVal">${(sel.scale*100).toFixed(0)}%</span></label>
-    <input type="range" id="ctrlScale" min="1" max="500" value="${sel.scale*100}">
+    <input type="range" id="ctrlScale" min="1" max="500">
     <label>Rotation: <span id="rotVal">${sel.rotation}\u00B0</span></label>
-    <input type="range" id="ctrlRot" min="-180" max="180" value="${sel.rotation}">
+    <input type="range" id="ctrlRot" min="-180" max="180">
     <label>Opacity: <span id="opaVal">${(sel.opacity*100).toFixed(0)}%</span></label>
-    <input type="range" id="ctrlOpa" min="0" max="100" value="${sel.opacity*100}">
+    <input type="range" id="ctrlOpa" min="0" max="100">
     <div class="row" style="margin-top:6px">
       <button class="btn btn-sm btn-secondary" id="btnFlipH" title="Flip horizontally.">Flip H</button>
       <button class="btn btn-sm btn-secondary" id="btnFlipV" title="Flip vertically.">Flip V</button>
@@ -702,25 +705,44 @@ function updateUI() {
       </div>
       <div id="adjPanel" style="display:none;">
         <label>Brightness: <span id="brightVal">${sel.brightness || 100}%</span></label>
-        <input type="range" id="ctrlBright" min="0" max="200" value="${sel.brightness || 100}">
+        <input type="range" id="ctrlBright" min="0" max="200">
         <label>Contrast: <span id="contVal">${sel.contrast || 100}%</span></label>
-        <input type="range" id="ctrlContrast" min="0" max="200" value="${sel.contrast || 100}">
+        <input type="range" id="ctrlContrast" min="0" max="200">
         <label>Saturation: <span id="satVal">${sel.saturate || 100}%</span></label>
-        <input type="range" id="ctrlSaturate" min="0" max="200" value="${sel.saturate || 100}">
+        <input type="range" id="ctrlSaturate" min="0" max="200">
         <label>Hue rotate: <span id="hueVal">${sel.hueRotate || 0}&deg;</span></label>
-        <input type="range" id="ctrlHue" min="0" max="360" value="${sel.hueRotate || 0}">
+        <input type="range" id="ctrlHue" min="0" max="360">
         <div style="margin-top:6px;">
           <label style="color:#ff5472;">R: <span id="rVal">${sel.rShift || 0}</span></label>
-          <input type="range" id="ctrlR" min="-100" max="100" value="${sel.rShift || 0}" style="accent-color:#ff5472;">
+          <input type="range" id="ctrlR" min="-100" max="100" style="accent-color:#ff5472;">
           <label style="color:#4f4;">G: <span id="gVal">${sel.gShift || 0}</span></label>
-          <input type="range" id="ctrlG" min="-100" max="100" value="${sel.gShift || 0}" style="accent-color:#4f4;">
+          <input type="range" id="ctrlG" min="-100" max="100" style="accent-color:#4f4;">
           <label style="color:#66f;">B: <span id="bVal">${sel.bShift || 0}</span></label>
-          <input type="range" id="ctrlB" min="-100" max="100" value="${sel.bShift || 0}" style="accent-color:#66f;">
+          <input type="range" id="ctrlB" min="-100" max="100" style="accent-color:#66f;">
         </div>
         <button class="btn btn-sm btn-secondary" id="btnResetAdj" style="width:100%;margin-top:6px;border-color:#f22f89;color:#ff5aa3;">Reset adjustments</button>
       </div>
     </div>
   `;
+
+  // Control values are assigned via DOM properties, never interpolated into
+  // the markup above. A layer name is user-controlled text (usually a
+  // filename) — interpolating it into an attribute was an injection sink,
+  // and with nodeIntegration enabled that escalates to code execution.
+  // Invariant enforced by tests/injection.test.js.
+  document.getElementById('ctrlName').value = sel.name;
+  document.getElementById('ctrlX').value = sel.x.toFixed(0);
+  document.getElementById('ctrlY').value = sel.y.toFixed(0);
+  document.getElementById('ctrlScale').value = sel.scale * 100;
+  document.getElementById('ctrlRot').value = sel.rotation;
+  document.getElementById('ctrlOpa').value = sel.opacity * 100;
+  document.getElementById('ctrlBright').value = sel.brightness || 100;
+  document.getElementById('ctrlContrast').value = sel.contrast || 100;
+  document.getElementById('ctrlSaturate').value = sel.saturate || 100;
+  document.getElementById('ctrlHue').value = sel.hueRotate || 0;
+  document.getElementById('ctrlR').value = sel.rShift || 0;
+  document.getElementById('ctrlG').value = sel.gShift || 0;
+  document.getElementById('ctrlB').value = sel.bShift || 0;
 
   document.getElementById('ctrlName').onchange = e => { sel.name = e.target.value; updateUI(); };
   document.getElementById('ctrlX').onchange = e => { sel.x = +e.target.value; render(); };
@@ -1026,13 +1048,13 @@ canvas.onmousedown = e => {
 
     if (currentTool === 'pen' || currentTool === 'eraser') {
       const dc = drawCanvas.getContext('2d');
-      dc.strokeStyle = currentTool === 'eraser' ? 'rgba(0,0,0,1)' : drawColor;
+      // Eraser strokes are recorded as opaque pixels — the stroke canvas is a
+      // mask consumed by applyEraseStroke at mouseup, not paint. Magenta so
+      // the half-alpha live preview reads as "marked for removal".
+      dc.strokeStyle = currentTool === 'eraser' ? '#f22f89' : drawColor;
       dc.lineWidth = drawSize;
       dc.lineCap = 'round';
       dc.lineJoin = 'round';
-      if (currentTool === 'eraser') {
-        dc.globalCompositeOperation = 'destination-out';
-      }
       dc.beginPath();
       dc.moveTo(mx, my);
     }
@@ -1157,9 +1179,24 @@ canvas.onmouseup = e => {
 
     if (hasContent) {
       if (currentTool === 'eraser') {
-        // Apply eraser to all layers - create eraser mask and apply
-        // For simplicity, add as a special erase layer that composites
-        addDrawingLayer(drawCanvas, 'Eraser stroke');
+        // Erase from the selected layer (Photoshop semantics). The stroke
+        // maps through the inverse of the layer's transform — see lib/erase.js.
+        const sel = getSelected();
+        if (!sel || !sel.img) {
+          alert('Select a layer to erase from, then try again.');
+        } else {
+          const erased = window.RBX15Erase.applyEraseStroke(
+            sel.img, sel, drawCanvas,
+            (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+          );
+          const img = new Image();
+          img.onload = () => {
+            sel.img = img;
+            _rgbCache.layerId = null; // cached RGB-shift result is stale now
+            updateUI(); render();
+          };
+          img.src = erased.toDataURL();
+        }
       } else {
         addDrawingLayer(drawCanvas, currentTool.charAt(0).toUpperCase() + currentTool.slice(1) + ' drawing');
       }

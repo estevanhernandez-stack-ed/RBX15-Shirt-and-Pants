@@ -17,7 +17,7 @@ and a fullscreen canvas built for the exact 585×559 template grid.
 </p>
 
 <p align="center">
-  <strong>Windows 10 / 11</strong> · <strong>Electron</strong> · <strong>v4.0.0</strong>
+  <strong>Windows 10 / 11</strong> · <strong>Electron</strong> · <strong>v4.1.0</strong>
 </p>
 
 <p align="center">
@@ -102,7 +102,7 @@ Requires **Node.js 18+** and **Electron 41**.
 - **Mode toggle** — switch between **Shirt** and **Pants** templates. Regions swap accordingly.
 - **Placement presets** — *Fit Front*, *Front + Back*, *Stretch*, *Allover*, *Scatter*, and layout presets (*Meme Tee*, *Mirror F+B*, *Fullbleed*).
 - **Clothing details** — auto-generate collars (V-neck, crew, scoop, henley), cuffs, hems, seams, pockets, plackets, shoulder stripes, arm bands, and yokes.
-- **Region color fills** — click any region button to paint it a flat color. Right-click to clear.
+- **Region fills** — paint any template region with a solid color, a linear or radial gradient, or a pattern (stripes, checker, dots, camo). Patterns tile continuously across connecting faces and gradients span a whole group of connected regions, so the design wraps the body as one piece. Right-click to clear.
 
 ### Workflow
 
@@ -113,7 +113,7 @@ Requires **Node.js 18+** and **Electron 41**.
 
 ### Privacy & control
 
-- **No telemetry, no analytics, no ads.** The app makes zero network requests. Everything runs locally.
+- **No telemetry, no analytics, no ads, no account.** The only network request is loading the word-art fonts from Google Fonts on first launch (cached by the OS afterward). Nothing about your work, files, or usage ever leaves the machine. *(Bundling those fonts to make the app fully offline is on the roadmap.)*
 - **All files stay on disk.** Project files save where you tell them to. Images load from your filesystem or the asset library folder you point at.
 - **No account required.** No sign-in. No cloud.
 
@@ -140,15 +140,24 @@ Requires **Node.js 18+** and **Electron 41**.
 
 ## Docs
 
-- Landing page — *coming with docs/ submission PR*
-- [Changelog](CHANGELOG.md) — *coming with CHANGELOG PR*
-- [Contributing](CONTRIBUTING.md) — *coming with CONTRIBUTING PR*
-- [Security policy](SECURITY.md) — *coming with SECURITY PR*
-- Privacy policy — *coming with PRIVACY PR*
+- [Changelog](CHANGELOG.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security policy](SECURITY.md)
+- [Privacy policy](docs/PRIVACY.md)
+- [Smoke test](docs/SMOKE_TEST.md) · [Windows release test plan](windows/TEST_PLAN.md)
 
 ---
 
 ## Roadmap
+
+### Shipped in v4.1
+
+- [x] **Pattern & gradient region fills** — solid, linear/radial gradients, stripes, checker, dots, camo. Patterns tile continuously across connecting faces; gradients span a whole group of connected regions; fill controls live-edit painted regions
+- [x] Eraser tool (erases from the selected layer, brush-ring cursor)
+- [x] Full-state undo **+ redo** (covers layers, region fills, background, mode)
+- [x] Asset-browser click-to-add fix; layer-name injection hardening
+- [x] Keyboard focus rings (accessibility) and dead-end guards
+- [x] First test suite + lint/CI gate (31 tests)
 
 ### Shipped in v4.0
 
@@ -162,13 +171,11 @@ Requires **Node.js 18+** and **Electron 41**.
 
 ### Up next
 
-- [ ] 626 Labs design system pass — swap cyberpunk palette to brand navy / cyan / magenta
-- [ ] Microsoft Store MSIX submission (in prep)
+- [ ] Bundle the word-art fonts so the app is fully offline (no Google Fonts request)
+- [ ] Microsoft Store MSIX submission
 - [ ] Landing page at [626labs.dev](https://626labs.dev)
 - [ ] Code signing for Windows binary
-- [ ] Test plan + release notes
-- [ ] Privacy policy + security policy
-- [ ] Accessibility pass
+- [ ] Full keyboard access for region buttons (deeper accessibility pass)
 - [ ] Historical versions browser (open any saved `.r15proj` as a starting point)
 
 ---

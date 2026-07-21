@@ -2,6 +2,37 @@
 
 All notable changes to RBX15 Classic Shirt and Pants Maker are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.1.0] — 2026-07-21
+
+The revival release: broken features fixed, a big new creative capability, and the project's first automated test suite.
+
+### Added
+
+- **Pattern & gradient region fills.** Region fills go beyond flat color — solid, linear gradient, radial gradient, stripes, checker, dots, and camo, set from a new **Fill Style** group in the Layout tab (type, two colors, angle, pattern scale). Rendered by a pure `lib/fills.js` that feeds both the canvas and the PNG export, so what you see is what you upload.
+  - **Patterns tile continuously** across connecting regions — anchored to the global template lattice, so the same fill on adjacent faces reads as one fabric wrapping the body instead of restarting at each seam. Camo is deterministically seeded so it never drifts between screen and export.
+  - **Gradients span connected regions** — same-fill faces are grouped into connected components and share one gradient ramp across the whole group.
+  - **Fill controls live-edit** already-painted regions — change the angle after painting all the panels and the whole gradient rotates in place.
+- **Eraser tool** — actually works now (see Fixed); erases from the selected layer with a brush-ring cursor sized to the brush.
+- **Redo** — button in the Edit group plus `Ctrl+Y` / `Ctrl+Shift+Z`; buttons grey out when their stack is empty.
+- **Themed scrollbars**, **tool toggle-off** (re-click/press the active tool to return to Select), and **keyboard focus rings** for accessibility.
+- **First test suite + lint/CI gate** — 31 unit tests (erase math, history invariants, fill rendering, injection guard, parse smoke) plus an ESLint `no-undef` gate, both wired into Windows CI. `docs/SMOKE_TEST.md` manual checklist added.
+
+### Fixed
+
+- **Asset-browser click-to-add** threw a `ReferenceError` (`clickName` undefined) and silently added no layer — an advertised feature dead in the shipped build.
+- **Eraser tool was a complete no-op** — strokes composited onto an empty canvas and were discarded on release.
+- **Layer-name HTML injection** — a layer name (usually a filename) was interpolated unescaped into `innerHTML`; under `nodeIntegration` that was a code-execution sink. All control values now assign via DOM properties.
+- **Undo was layers-only** — region fills, background changes, and Shirt/Pants switches weren't captured (the mode switch permanently wiped region colors). Undo now snapshots full editor state, and `Ctrl+Z` works with no layer selected.
+- **`Ctrl+R` reset the selected layer's rotation** — movement shortcuts now ignore Ctrl/Cmd combos.
+- **Dead-ends** — picking an image-less folder and exporting an empty template are no longer silent.
+
+### Changed
+
+- Full editor state (layers, region fills, background, mode) round-trips through undo/redo and `.r15proj` save/load.
+- README corrected: the app makes one network request (Google Fonts for word art, cached), not zero — no telemetry or analytics of any kind. Bundling the fonts for full offline use is on the roadmap.
+
+---
+
 ## [4.0.1] — 2026-04-20
 
 ### Fixed

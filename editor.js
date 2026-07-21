@@ -1691,6 +1691,10 @@ document.onkeydown = e => {
 
   const sel = getSelected();
   if (!sel) return;
+  // Bare-key shortcuts only. Ctrl/Cmd combos belong to the app shell
+  // (Ctrl+R reload, Ctrl+= zoom) — don't let 'r' reset rotation on Ctrl+R,
+  // etc.
+  if (e.ctrlKey || e.metaKey) return;
   const step = e.shiftKey ? 10 : 1;
   const rotStep = e.shiftKey ? 15 : 5;
   switch(e.key) {

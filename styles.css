@@ -380,6 +380,13 @@ header span {
   background: rgba(23,212,250,.1) !important;
   color: var(--brand-cyan) !important;
 }
+/* Undo/Redo grey out when their stacks are empty. */
+.btn:disabled {
+  opacity: .4;
+  cursor: default;
+  transform: none;
+  box-shadow: none;
+}
 
 /* =========================================================================
    Color swatches

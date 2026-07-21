@@ -81,7 +81,9 @@ let bgOpacity = 1;
 let zoom = 1;
 let showMask = true;
 let showGrid = false;
-let undoStack = [];
+// Full-state undo/redo. The stack discipline lives in lib/history.js; this
+// file owns what a snapshot contains (see snapshotState/restoreState).
+const history = window.RBX15History.createHistory(30);
 
 // Current tool: 'select', 'pen', 'line', 'rect', 'circle', 'eraser'
 let currentTool = 'select';
@@ -841,17 +843,23 @@ const swatchDiv = document.getElementById('bgSwatches');
 BG_COLORS.forEach(c => {
   const s = document.createElement('div');
   s.className = 'swatch'; s.style.background = c.c; s.title = c.name;
-  s.onclick = () => { bgColor = c.c; bgImage = null; document.getElementById('bgColor').value = c.c; render(); };
+  s.onclick = () => { saveUndo(); bgColor = c.c; bgImage = null; document.getElementById('bgColor').value = c.c; render(); };
   swatchDiv.appendChild(s);
 });
 
+// The color picker and opacity slider fire `input` continuously while
+// dragging — snapshot once on pointerdown (before the drag) so one gesture
+// is one undo step, not thirty.
+document.getElementById('bgColor').addEventListener('pointerdown', saveUndo);
 document.getElementById('bgColor').oninput = e => { bgColor = e.target.value; bgImage = null; render(); };
+document.getElementById('bgOpacity').addEventListener('pointerdown', saveUndo);
 document.getElementById('bgOpacity').oninput = e => { bgOpacity = e.target.value / 100; render(); };
 
 document.getElementById('bgImageBtn').onclick = () => document.getElementById('bgFileInput').click();
 document.getElementById('bgFileInput').onchange = e => {
   const file = e.target.files[0];
   if (!file) return;
+  saveUndo();
   const reader = new FileReader();
   reader.onload = ev => {
     const img = new Image();
@@ -1308,26 +1316,99 @@ document.getElementById('btnStretch').onclick = () => {
 
 document.getElementById('btnClear').onclick = () => { saveUndo(); layers = []; selectedLayerId = null; updateUI(); render(); };
 
-// Undo
-function saveUndo() { undoStack.push(JSON.stringify(layers.map(l => ({...l, imgSrc: l.img.src})))); if (undoStack.length > 30) undoStack.shift(); }
-document.getElementById('btnUndo').onclick = () => {
-  if (!undoStack.length) return;
-  const data = JSON.parse(undoStack.pop());
+// ═══════════════════════════════════════════════════════════
+// UNDO / REDO — full editor state, not just layers
+// ═══════════════════════════════════════════════════════════
+// A snapshot is the whole recoverable surface: layers (with their pixels),
+// region fills, background, mode, and the mask/grid toggles. v4.0 captured
+// only layers, so region fills, background changes, and Shirt<->Pants
+// switches were unrecoverable — the mode switch silently wiped every region
+// color. Capturing the lot fixes all of that, and pairs with redo.
+function snapshotState() {
+  return JSON.stringify({
+    mode: currentMode,
+    bgColor,
+    bgOpacity,
+    bgImageSrc: bgImage ? bgImage.src : null,
+    regionColors: {...regionColors},
+    showMask,
+    showGrid,
+    layers: layers.map(l => ({...l, img: undefined, imgSrc: l.img ? l.img.src : null})),
+  });
+}
+
+// Snapshot the current state, then hand it to the history manager so it can
+// evict the redo branch. Called BEFORE every mutation, matching the app's
+// existing saveUndo-before-change idiom.
+function saveUndo() { history.push(snapshotState()); updateHistoryButtons(); }
+
+function restoreState(snapStr) {
+  const s = JSON.parse(snapStr);
+
+  // Mode first: switchMode rebuilds the region grid + mask and resets
+  // regionColors, so region colors must be re-applied after it.
+  if (s.mode && s.mode !== currentMode) switchMode(s.mode);
+
+  bgColor = s.bgColor || '#192e44';
+  bgOpacity = s.bgOpacity != null ? s.bgOpacity : 1;
+  document.getElementById('bgColor').value = bgColor;
+  document.getElementById('bgOpacity').value = bgOpacity * 100;
+  showMask = s.showMask !== false;
+  showGrid = !!s.showGrid;
+  document.getElementById('showMask').checked = showMask;
+  document.getElementById('showGrid').checked = showGrid;
+  bgImage = null;
+  if (s.bgImageSrc) {
+    const bimg = new Image();
+    bimg.onload = () => { bgImage = bimg; render(); };
+    bimg.src = s.bgImageSrc;
+  }
+
+  regionColors = {...(s.regionColors || {})};
+  document.querySelectorAll('.region-btn').forEach(btn => {
+    const rName = btn.dataset.r;
+    if (regionColors[rName]) { btn.style.background = regionColors[rName]; btn.classList.add('filled'); }
+    else { btn.style.background = ''; btn.classList.remove('filled'); }
+  });
+
   layers = [];
+  selectedLayerId = null;
+  const data = s.layers || [];
+  if (!data.length) { updateUI(); render(); updateHistoryButtons(); return; }
   let loaded = 0;
-  if (data.length === 0) { selectedLayerId = null; updateUI(); render(); return; }
   data.forEach(d => {
+    if (!d.imgSrc) { loaded++; if (loaded === data.length) finishRestore(); return; }
     const img = new Image();
-    img.onload = () => {
-      d.img = img;
-      delete d.imgSrc;
-      layers.push(d);
-      loaded++;
-      if (loaded === data.length) { updateUI(); render(); }
-    };
+    img.onload = () => { d.img = img; delete d.imgSrc; layers.push(d); loaded++; if (loaded === data.length) finishRestore(); };
+    img.onerror = () => { loaded++; if (loaded === data.length) finishRestore(); };
     img.src = d.imgSrc;
   });
+  function finishRestore() {
+    // Preserve stored z-order — async image loads can resolve out of order.
+    layers.sort((a, b) => data.findIndex(d => d.id === a.id) - data.findIndex(d => d.id === b.id));
+    if (layers.length) nextId = Math.max(nextId, Math.max(...layers.map(l => l.id)) + 1);
+    updateUI(); render(); updateHistoryButtons();
+  }
+}
+
+function updateHistoryButtons() {
+  const u = document.getElementById('btnUndo');
+  const r = document.getElementById('btnRedo');
+  if (u) u.disabled = !history.canUndo();
+  if (r) r.disabled = !history.canRedo();
+}
+
+document.getElementById('btnUndo').onclick = () => {
+  const target = history.undo(snapshotState());
+  if (target === null) return;
+  restoreState(target);
 };
+document.getElementById('btnRedo').onclick = () => {
+  const target = history.redo(snapshotState());
+  if (target === null) return;
+  restoreState(target);
+};
+updateHistoryButtons();
 
 // Zoom
 document.getElementById('zoomIn').onclick = () => { zoom = Math.min(3, zoom + 0.25); document.getElementById('zoomLevel').textContent = (zoom*100)+'%'; render(); };
@@ -1447,6 +1528,7 @@ function buildRegionGrid() {
         sel.rotation = 0;
         render();
       } else {
+        saveUndo();
         regionColorPicker.value = regionColors[rName] || bgColor;
         regionColorPicker.oninput = ev => {
           regionColors[rName] = ev.target.value;
@@ -1460,6 +1542,8 @@ function buildRegionGrid() {
 
     btn.oncontextmenu = e => {
       e.preventDefault();
+      if (!regionColors[rName]) return;
+      saveUndo();
       delete regionColors[rName];
       btn.style.background = '';
       btn.classList.remove('filled');
@@ -1500,6 +1584,10 @@ function switchMode(mode) {
 }
 
 modeBtn.onclick = () => {
+  // Snapshot before the switch so the region-color wipe is recoverable.
+  // switchMode is also called by loadProject/restoreState directly (no undo
+  // entry there — those aren't user edits).
+  saveUndo();
   switchMode(currentMode === 'Shirt' ? 'Pants' : 'Shirt');
 };
 
@@ -1567,6 +1655,16 @@ document.onkeydown = e => {
     case 'd': if (e.ctrlKey) { e.preventDefault(); const sel = getSelected(); if (sel) duplicateLayer(sel.id); return; } break;
   }
 
+  // Undo / redo run regardless of selection — checked BEFORE the no-selection
+  // guard below, which previously swallowed Ctrl+Z whenever nothing was
+  // selected (e.g. right after Clear).
+  if (e.ctrlKey && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) {
+    document.getElementById('btnRedo').click(); e.preventDefault(); return;
+  }
+  if (e.ctrlKey && e.key.toLowerCase() === 'z') {
+    document.getElementById('btnUndo').click(); e.preventDefault(); return;
+  }
+
   const sel = getSelected();
   if (!sel) return;
   const step = e.shiftKey ? 10 : 1;
@@ -1591,7 +1689,6 @@ document.onkeydown = e => {
     case 'Delete': case 'Backspace':
       removeLayer(sel.id); e.preventDefault(); break;
   }
-  if (e.ctrlKey && e.key === 'z') { document.getElementById('btnUndo').click(); e.preventDefault(); }
 };
 
 // ═══════════════════════════════════════════════════════════

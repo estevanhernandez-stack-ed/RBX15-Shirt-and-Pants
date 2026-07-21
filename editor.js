@@ -1498,6 +1498,13 @@ document.getElementById('showGrid').onchange = e => { showGrid = e.target.checke
 // EXPORT
 // ═══════════════════════════════════════════════════════════
 function exportPNG() {
+  // Guard the "I clicked Download and got a blank file" surprise: warn only
+  // when the template is genuinely empty (no visible art, no region fills,
+  // no background image).
+  const hasArt = layers.some(l => l.visible && l.img) ||
+                 Object.keys(regionColors).length > 0 || !!bgImage;
+  if (!hasArt && !confirm('The template is empty — download a blank PNG anyway?')) return;
+
   const exp = document.createElement('canvas');
   exp.width = TW; exp.height = TH;
   const ec = exp.getContext('2d');
@@ -2374,7 +2381,10 @@ folderInput.onchange = e => {
   const files = Array.from(e.target.files).filter(f =>
     /\.(png|jpg|jpeg|gif|webp)$/i.test(f.name)
   );
-  if (!files.length) return;
+  if (!files.length) {
+    alert('No images found in that folder. Pick a folder with PNG, JPG, GIF, or WEBP files.');
+    return;
+  }
 
   // Deduplicate by filename — keep the deepest nested version (most processed)
   const byName = new Map();

@@ -348,8 +348,22 @@ header span {
 .controls select:focus,
 .controls input[type=text]:focus,
 .controls input[type=number]:focus {
-  outline: none;
   border-color: var(--brand-cyan);
+}
+
+/* Visible keyboard focus. The app previously killed input outlines with no
+   replacement, leaving keyboard users with no focus indicator at all. These
+   rings only show on keyboard navigation (:focus-visible), never on click. */
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+.ribbon-tab:focus-visible,
+.preset-btn:focus-visible,
+.fill-type-btn:focus-visible,
+.swatch:focus-visible {
+  outline: 2px solid var(--brand-cyan);
+  outline-offset: 2px;
 }
 
 .row { display: flex; gap: 8px; align-items: center; }

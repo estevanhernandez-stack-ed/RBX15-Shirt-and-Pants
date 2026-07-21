@@ -76,7 +76,8 @@
     </div>
     <div class="ribbon-group">
       <div class="ribbon-group-items">
-        <button class="btn btn-sm btn-secondary" id="btnUndo">Undo</button>
+        <button class="btn btn-sm btn-secondary" id="btnUndo" title="Undo (Ctrl+Z)">Undo</button>
+        <button class="btn btn-sm btn-secondary" id="btnRedo" title="Redo (Ctrl+Y / Ctrl+Shift+Z)">Redo</button>
         <button class="btn btn-sm btn-secondary" id="btnClear">Clear</button>
       </div>
       <div class="ribbon-group-label">Edit</div>
@@ -318,6 +319,7 @@
 
 <footer>Developed at 626 Labs LLC</footer>
 
+<script src="lib/history.js"></script>
 <script src="lib/erase.js"></script>
 <script src="editor.js"></script>
 </body>

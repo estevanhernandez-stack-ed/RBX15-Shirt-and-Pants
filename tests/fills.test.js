@@ -1,0 +1,87 @@
+// Tests for the region-fill renderer (pattern & gradient fills feature).
+// Pixel-probe real 2D contexts; the key invariants are back-compat with the
+// old string form, correct color placement per fill type, and camo being
+// deterministic (so screen render and PNG export never drift).
+const { test } = require('node:test');
+const assert = require('node:assert');
+const { createCanvas } = require('@napi-rs/canvas');
+const { normalizeFill, paintRegionFill, fillToCSS } = require('../lib/fills.js');
+
+const REGION = { x: 0, y: 0, w: 40, h: 40 };
+
+function paint(fill, region) {
+  const c = createCanvas(40, 40);
+  paintRegionFill(c.getContext('2d'), region || REGION, fill);
+  return c.getContext('2d');
+}
+function rgbAt(ctx, x, y) {
+  const d = ctx.getImageData(x, y, 1, 1).data;
+  return [d[0], d[1], d[2]];
+}
+
+test('normalizeFill folds a bare color string into a solid descriptor', () => {
+  assert.deepStrictEqual(normalizeFill('#ff0000'), { type: 'solid', c1: '#ff0000' });
+  assert.strictEqual(normalizeFill({ type: 'linear', c1: '#000', c2: '#fff' }).type, 'linear');
+  assert.strictEqual(normalizeFill(null).type, 'solid');
+});
+
+test('legacy string fill paints solid (back-compat with v4.0 projects)', () => {
+  const ctx = paint('#ff0000');
+  assert.deepStrictEqual(rgbAt(ctx, 20, 20), [255, 0, 0]);
+});
+
+test('solid descriptor fills the region with c1', () => {
+  const ctx = paint({ type: 'solid', c1: '#00ff00' });
+  assert.deepStrictEqual(rgbAt(ctx, 5, 5), [0, 255, 0]);
+  assert.deepStrictEqual(rgbAt(ctx, 35, 35), [0, 255, 0]);
+});
+
+test('linear gradient runs c1 -> c2 across the region', () => {
+  const ctx = paint({ type: 'linear', c1: '#ff0000', c2: '#0000ff', angle: 0 });
+  const left = rgbAt(ctx, 1, 20);
+  const right = rgbAt(ctx, 39, 20);
+  assert.ok(left[0] > 200 && left[2] < 60, 'left edge is red-ish: ' + left);
+  assert.ok(right[2] > 200 && right[0] < 60, 'right edge is blue-ish: ' + right);
+});
+
+test('stripes alternate c1 and c2', () => {
+  // scale 8, angle 0 -> vertical bands: c1 [0,8), c2 [8,16), ...
+  const ctx = paint({ type: 'stripes', c1: '#ff0000', c2: '#0000ff', angle: 0, scale: 8 });
+  assert.deepStrictEqual(rgbAt(ctx, 2, 20), [255, 0, 0], 'first band c1');
+  assert.deepStrictEqual(rgbAt(ctx, 11, 20), [0, 0, 255], 'second band c2');
+});
+
+test('checker alternates on the diagonal', () => {
+  const ctx = paint({ type: 'checker', c1: '#ff0000', c2: '#0000ff', scale: 10 });
+  const cellA = rgbAt(ctx, 5, 5);    // rx0,ry0 -> c2 painted over c1
+  const cellB = rgbAt(ctx, 15, 5);   // rx1,ry0 -> c1
+  assert.notDeepStrictEqual(cellA, cellB, 'adjacent checker cells differ');
+});
+
+test('dots put c2 at cell centers and c1 in the gaps', () => {
+  const ctx = paint({ type: 'dots', c1: '#ff0000', c2: '#0000ff', scale: 16 });
+  assert.deepStrictEqual(rgbAt(ctx, 8, 8), [0, 0, 255], 'dot center is c2');
+  assert.deepStrictEqual(rgbAt(ctx, 0, 0), [255, 0, 0], 'corner gap is c1');
+});
+
+test('camo is deterministic — same params render identically', () => {
+  const a = paint({ type: 'camo', c1: '#33421a', c2: '#7a8a4a', scale: 14 });
+  const b = paint({ type: 'camo', c1: '#33421a', c2: '#7a8a4a', scale: 14 });
+  for (const [x, y] of [[5, 5], [20, 20], [33, 12], [10, 30]]) {
+    assert.deepStrictEqual(rgbAt(a, x, y), rgbAt(b, x, y), 'camo pixel drift at ' + x + ',' + y);
+  }
+});
+
+test('fill is clipped to the region rect', () => {
+  const c = createCanvas(40, 40);
+  paintRegionFill(c.getContext('2d'), { x: 10, y: 10, w: 10, h: 10 }, { type: 'solid', c1: '#00ff00' });
+  const ctx = c.getContext('2d');
+  assert.deepStrictEqual(rgbAt(ctx, 15, 15), [0, 255, 0], 'inside region painted');
+  assert.deepStrictEqual(ctx.getImageData(2, 2, 1, 1).data[3], 0, 'outside region untouched (transparent)');
+});
+
+test('fillToCSS produces a plain color for solid and a gradient string otherwise', () => {
+  assert.strictEqual(fillToCSS('#abcdef'), '#abcdef');
+  assert.match(fillToCSS({ type: 'linear', c1: '#000', c2: '#fff', angle: 45 }), /linear-gradient\(45deg/);
+  assert.match(fillToCSS({ type: 'dots', c1: '#000', c2: '#fff', scale: 12 }), /radial-gradient/);
+});

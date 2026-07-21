@@ -143,6 +143,29 @@
       <div class="ribbon-group-label">BG Settings</div>
     </div>
     <div class="ribbon-group">
+      <div class="ribbon-group-items vert">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:2px;">
+          <button class="fill-type-btn active" data-fill="solid" style="padding:3px 4px;font-size:9px;">Solid</button>
+          <button class="fill-type-btn" data-fill="linear" style="padding:3px 4px;font-size:9px;">Gradient</button>
+          <button class="fill-type-btn" data-fill="radial" style="padding:3px 4px;font-size:9px;">Radial</button>
+          <button class="fill-type-btn" data-fill="stripes" style="padding:3px 4px;font-size:9px;">Stripes</button>
+          <button class="fill-type-btn" data-fill="checker" style="padding:3px 4px;font-size:9px;">Checker</button>
+          <button class="fill-type-btn" data-fill="dots" style="padding:3px 4px;font-size:9px;">Dots</button>
+          <button class="fill-type-btn" data-fill="camo" style="padding:3px 4px;font-size:9px;">Camo</button>
+        </div>
+        <div style="display:flex;gap:4px;align-items:center;margin-top:2px;">
+          <input type="color" id="fillColor1" value="#17d4fa" title="Color 1" style="width:26px;height:22px;border:none;cursor:pointer;">
+          <input type="color" id="fillColor2" value="#f22f89" title="Color 2" style="width:26px;height:22px;border:none;cursor:pointer;">
+          <label style="font-size:9px;color:#888;margin:0;">Ang</label>
+          <input type="range" id="fillAngle" min="0" max="360" value="45" title="Angle" style="width:44px;accent-color:#17d4fa;">
+          <label style="font-size:9px;color:#888;margin:0;">Scale</label>
+          <input type="range" id="fillScale" min="4" max="48" value="16" title="Pattern scale" style="width:44px;accent-color:#f22f89;">
+        </div>
+        <div style="font-size:9px;color:#555;">Set a style, then click a region to paint it. Right-click clears.</div>
+      </div>
+      <div class="ribbon-group-label">Fill Style</div>
+    </div>
+    <div class="ribbon-group">
       <div class="ribbon-group-items" id="regionGrid"></div>
       <div class="ribbon-group-label">Template Regions</div>
     </div>
@@ -321,6 +344,7 @@
 
 <script src="lib/history.js"></script>
 <script src="lib/erase.js"></script>
+<script src="lib/fills.js"></script>
 <script src="editor.js"></script>
 </body>
 </html>

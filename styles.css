@@ -500,6 +500,23 @@ canvas { display: block; cursor: crosshair; }
   color: var(--brand-cyan);
 }
 
+/* Fill-style type buttons (Layout tab) */
+.fill-type-btn {
+  background: var(--brand-navy);
+  border: 1px solid var(--border-1);
+  color: var(--fg-2);
+  border-radius: var(--r-xs);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-weight: 500;
+}
+.fill-type-btn:hover { border-color: var(--brand-cyan); color: var(--brand-cyan); }
+.fill-type-btn.active {
+  border-color: var(--brand-cyan);
+  background: rgba(23,212,250,.12);
+  color: var(--brand-cyan);
+}
+
 /* =========================================================================
    Zoom controls
    ========================================================================= */

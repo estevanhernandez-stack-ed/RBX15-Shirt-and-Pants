@@ -253,13 +253,10 @@ function render() {
     oc.globalAlpha = 1;
   }
 
-  // Per-region colors
-  for (const [rName, color] of Object.entries(regionColors)) {
+  // Per-region fills (solid / gradient / pattern — see lib/fills.js)
+  for (const [rName, fill] of Object.entries(regionColors)) {
     const r = SHIRT_REGIONS[rName];
-    if (r && color) {
-      oc.fillStyle = color;
-      oc.fillRect(r.x, r.y, r.w, r.h);
-    }
+    if (r && fill) window.RBX15Fills.paintRegionFill(oc, r, fill);
   }
 
   // Layers (bottom to top)
@@ -1391,8 +1388,7 @@ function restoreState(snapStr) {
   regionColors = {...(s.regionColors || {})};
   document.querySelectorAll('.region-btn').forEach(btn => {
     const rName = btn.dataset.r;
-    if (regionColors[rName]) { btn.style.background = regionColors[rName]; btn.classList.add('filled'); }
-    else { btn.style.background = ''; btn.classList.remove('filled'); }
+    paintRegionButton(btn, regionColors[rName] || null);
   });
 
   layers = [];
@@ -1462,9 +1458,9 @@ function exportPNG() {
     ec.globalAlpha = 1;
   }
 
-  for (const [rName, color] of Object.entries(regionColors)) {
+  for (const [rName, fill] of Object.entries(regionColors)) {
     const r = SHIRT_REGIONS[rName];
-    if (r && color) { ec.fillStyle = color; ec.fillRect(r.x, r.y, r.w, r.h); }
+    if (r && fill) window.RBX15Fills.paintRegionFill(ec, r, fill);
   }
 
   for (const layer of layers) {
@@ -1490,10 +1486,35 @@ document.getElementById('btnExport2').onclick = exportPNG;
 // ═══════════════════════════════════════════════════════════
 const regionGrid = document.getElementById('regionGrid');
 let regionColors = {};
-let regionColorPicker = document.createElement('input');
-regionColorPicker.type = 'color';
-regionColorPicker.style.display = 'none';
-document.body.appendChild(regionColorPicker);
+
+// The active fill config, applied when you click a region with no layer
+// selected. Values map to a lib/fills.js descriptor.
+let currentFill = { type: 'solid', c1: '#17d4fa', c2: '#f22f89', angle: 45, scale: 16 };
+
+// Paint a region-grid button's preview swatch from a fill (descriptor or
+// legacy color string). Null clears it.
+function paintRegionButton(btn, fill) {
+  if (fill) {
+    btn.style.background = window.RBX15Fills.fillToCSS(fill);
+    btn.classList.add('filled');
+  } else {
+    btn.style.background = '';
+    btn.classList.remove('filled');
+  }
+}
+
+// Fill-style controls (Layout tab)
+document.querySelectorAll('.fill-type-btn').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.fill-type-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    currentFill.type = b.dataset.fill;
+  };
+});
+document.getElementById('fillColor1').oninput = e => { currentFill.c1 = e.target.value; };
+document.getElementById('fillColor2').oninput = e => { currentFill.c2 = e.target.value; };
+document.getElementById('fillAngle').oninput = e => { currentFill.angle = +e.target.value; };
+document.getElementById('fillScale').oninput = e => { currentFill.scale = +e.target.value; };
 
 function buildRegionGrid() {
   const isShirt = currentMode === 'Shirt';
@@ -1533,12 +1554,9 @@ function buildRegionGrid() {
 
   // Re-bind click handlers
   regionGrid.querySelectorAll('.region-btn').forEach(btn => {
-    // Restore saved region color if any
+    // Restore saved region fill if any
     const rName = btn.dataset.r;
-    if (regionColors[rName]) {
-      btn.style.background = regionColors[rName];
-      btn.classList.add('filled');
-    }
+    if (regionColors[rName]) paintRegionButton(btn, regionColors[rName]);
 
     btn.onclick = () => {
       const sel = getSelected();
@@ -1552,15 +1570,11 @@ function buildRegionGrid() {
         sel.rotation = 0;
         render();
       } else {
+        // No layer selected — paint the region with the current fill style.
         saveUndo();
-        regionColorPicker.value = regionColors[rName] || bgColor;
-        regionColorPicker.oninput = ev => {
-          regionColors[rName] = ev.target.value;
-          btn.style.background = ev.target.value;
-          btn.classList.add('filled');
-          render();
-        };
-        regionColorPicker.click();
+        regionColors[rName] = {...currentFill};
+        paintRegionButton(btn, regionColors[rName]);
+        render();
       }
     };
 
@@ -1569,8 +1583,7 @@ function buildRegionGrid() {
       if (!regionColors[rName]) return;
       saveUndo();
       delete regionColors[rName];
-      btn.style.background = '';
-      btn.classList.remove('filled');
+      paintRegionButton(btn, null);
       render();
     };
   });
@@ -2499,17 +2512,10 @@ function loadProject(file) {
         bgImage = null;
       }
 
-      // Restore region colors
+      // Restore region fills (descriptors or legacy color strings)
       regionColors = project.regionColors || {};
       document.querySelectorAll('.region-btn').forEach(btn => {
-        const rName = btn.dataset.r;
-        if (regionColors[rName]) {
-          btn.style.background = regionColors[rName];
-          btn.classList.add('filled');
-        } else {
-          btn.style.background = '';
-          btn.classList.remove('filled');
-        }
+        paintRegionButton(btn, regionColors[btn.dataset.r] || null);
       });
 
       // Restore checkboxes

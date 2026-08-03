@@ -171,6 +171,17 @@ Requires **Node.js 18+** and **Electron 41**.
 
 ### Up next
 
+- [ ] **[Founder decision needed] `roblox_uploader.py`'s home.** This script decrypts Chrome's
+      DPAPI-protected `Local State` key and pulls the live `.ROBLOSECURITY` cookie from Chrome's
+      cookie DB to authenticate uploads to Roblox — real, working credential-lifting code, sitting
+      in a **public** repo, unrelated to the shipped Electron app (not in `build.files`, never
+      invoked by `main.js`/`editor.js`). Flagged by the 2026-08-03 privacy evidence sweep. Not
+      moved or deleted here — needs Este's call: move to a private repo, or keep in place with a
+      README explaining what it is and why it's here. See also `docs/store/reviewer-letter-4.1.0.0.md`.
+- [ ] MSIX manifest declares only `runFullTrust`, no `internetClient` capability, despite the app
+      making the unconditional Google Fonts request — the manifest itself is silent about the
+      app's one network destination (the Partner Center reviewer letter already discloses it to
+      Microsoft, so this isn't blocking; worth aligning the manifest before the next submission).
 - [ ] Bundle the word-art fonts so the app is fully offline (no Google Fonts request)
 - [ ] Microsoft Store MSIX submission
 - [ ] Landing page at [626labs.dev](https://626labs.dev)

@@ -108,7 +108,7 @@ GEMINI_KEY_PATH = SCRIPT_DIR.parent / "POD_Pipeline" / "gemini_agent.py"
 
 def get_gemini_key():
     """Get Gemini API key from environment or config."""
-    key = os.environ.get("GOOGLE_AI_API_KEY")
+    key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_AI_API_KEY")
     if key:
         return key
     # Try to read from our pipeline config
@@ -127,7 +127,8 @@ def ai_analyze_for_shirt(image_path):
     import base64
     key = get_gemini_key()
     if not key:
-        key = "AIzaSyArphXiTDxrvOicMWgnjIb1xHhwk3CQkyc"
+        print("ERROR: No Gemini API key found. Set the GEMINI_API_KEY environment variable.")
+        sys.exit(1)
 
     with open(image_path, "rb") as f:
         img_b64 = base64.b64encode(f.read()).decode()

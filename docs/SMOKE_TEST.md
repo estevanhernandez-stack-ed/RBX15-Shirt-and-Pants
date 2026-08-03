@@ -62,31 +62,38 @@ they're the whole point of the revival run.
 ## Part B — core smoke (did we break the happy path?)
 
 ### B1. Load & first paint
+
 - [ ] Window opens, header + ribbon + 585×559 canvas render
 - [ ] Console clean, DevTools didn't auto-open on the packaged build
 
 ### B2. Layer basics
+
 - [ ] Select a layer → cyan bounding box + corner handles + magenta rotation handle
 - [ ] Drag to move, corner-drag to scale, rotation-handle to rotate
 - [ ] Scroll wheel scales; arrow keys nudge; `[` `]` rotate; `Delete` removes; `Ctrl+D` duplicates
 
 ### B3. Adjustments
+
 - [ ] Selected layer → Image adjustments → each slider (brightness/contrast/saturation/hue/R/G/B) moves the canvas live
 - [ ] **Reset adjustments** returns to original
 
 ### B4. Word art
+
 - [ ] Text tab → type text → preview renders → cycle the six styles → **Add to canvas** drops a layer
 
 ### B5. Details & placement
+
 - [ ] Details tab → a couple of generators (V-Neck, Hem, Pocket) add detail layers
 - [ ] Home → placement (Fit Front, F+B, Allover) reposition the selected layer
 
 ### B6. Save / load / export
+
 - [ ] **Save work** → `.r15proj` downloads
 - [ ] **Clear**, then **Open** the file → layers, positions, adjustments, region colors, and mode all restore
 - [ ] **Download template** → 585×559 PNG; opened externally it matches the canvas (adjustments baked in)
 
 ### B7. Mode
+
 - [ ] **Shirt → Pants** flips the toggle gradient and swaps the region grid to waist/legs
 
 ---

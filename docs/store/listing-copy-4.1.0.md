@@ -9,7 +9,7 @@ public on the listing.
 
 ## What's new in this version
 
-```
+```text
 Paint your clothes, don't just place them. This update adds real fill styles
 and fixes the tools that weren't pulling their weight.
 
@@ -37,7 +37,7 @@ Pants Maker is not affiliated with or endorsed by Roblox Corporation.
 
 ## Keywords
 
-```
+```text
 roblox, roblox clothing, shirt maker, pants maker, r15, classic clothing,
 template maker, clothing template, roblox template, shirt template, ugc, editor
 ```

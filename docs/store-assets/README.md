@@ -60,7 +60,7 @@ python make-store-assets.py --company /path/to/626Labs-logo.png
 
 All color values come from `~/.claude/skills/626labs-design/colors_and_type.css`:
 
-```
+```css
 --brand-navy-deep:   #0f1f31
 --brand-navy:        #192e44
 --brand-cyan:        #17d4fa

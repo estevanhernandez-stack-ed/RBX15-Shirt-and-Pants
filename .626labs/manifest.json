@@ -4,10 +4,10 @@
   "name": "RBX15 Classic Shirt and Pants Maker",
   "short_name": "RBX15 Maker",
   "tagline": "Design Roblox templates without fighting your tools.",
-  "description": "Native Windows desktop editor for Roblox Classic R15 shirt and pants templates. Layer-based compositing, non-destructive image adjustments, word art, drawing tools, built for the exact 585x559 template grid.",
+  "description": "Windows desktop editor (Electron) for Roblox Classic R15 shirt and pants templates. Layer-based compositing, pattern and gradient region fills that wrap across connected panels, non-destructive image adjustments, word art, drawing tools, built for the exact 585x559 template grid.",
   "category": "creator-tools",
   "status": "public",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "platforms": ["windows"],
   "publisher": {
     "id": "626labs-llc",
@@ -37,7 +37,7 @@
     {
       "type": "microsoft-store",
       "format": "msix",
-      "status": "reserved-pending-submission",
+      "status": "live",
       "store_id": "9MV9G4XFJ8S0",
       "store_url": "https://apps.microsoft.com/detail/9MV9G4XFJ8S0",
       "package_family_name": "626LabsLLC.RBX15ClassicShirtandPantsMaker_wz1chhb2h2v4a"
@@ -50,13 +50,12 @@
     "tile_150": "docs/store-assets/app-tile-150x150.png",
     "tile_71": "docs/store-assets/app-tile-71x71.png",
     "screenshots": [
-      {"file": "docs/screenshots/app-home.png", "caption": "Editor with a design loaded on canvas"},
-      {"file": "docs/screenshots/app-layers.png", "caption": "Redesigned layer panel"},
-      {"file": "docs/screenshots/app-adjustments.png", "caption": "Non-destructive image adjustments"},
-      {"file": "docs/screenshots/app-adjustments-rgb.png", "caption": "Per-channel RGB shift"},
-      {"file": "docs/screenshots/app-wordart.png", "caption": "Word art generator"},
-      {"file": "docs/screenshots/app-layout.png", "caption": "Layout tab — presets and regions"},
-      {"file": "docs/screenshots/app-details.png", "caption": "Details tab — clothing generators"}
+      {"file": "docs/screenshots/4.1/01-fills-that-wrap.png", "caption": "Fills that wrap: one gradient across every torso panel, patterns tiling across the seams"},
+      {"file": "docs/screenshots/4.1/02-layers.png", "caption": "Stack layers and adjust them without touching the original"},
+      {"file": "docs/screenshots/4.1/03-live-fill-editing.png", "caption": "Change a fill's angle after painting and every connected panel updates"},
+      {"file": "docs/screenshots/4.1/04-word-art.png", "caption": "Word art placed on the template"},
+      {"file": "docs/screenshots/4.1/05-pants.png", "caption": "Pants: a pattern running down both legs"},
+      {"file": "docs/screenshots/4.1/06-export-585x559.png", "caption": "The exported 585x559 PNG"}
     ]
   },
   "tech": {
@@ -68,6 +67,7 @@
   "tags": ["roblox", "r15", "shirt", "pants", "template", "editor", "desktop", "electron", "creator-tools"],
   "features": [
     "Layer-based editor with on-canvas transform",
+    "Pattern and gradient region fills (solid, linear, radial, stripes, checker, dots, camo) that wrap across connected panels and live-edit after painting",
     "Non-destructive image adjustments (brightness, contrast, saturation, hue, RGB channels)",
     "Canvas drop positioning",
     "Word art generator — 15 fonts, six styles",
@@ -75,7 +75,8 @@
     "Built-in asset packs: 156 drips + 25 word art PNGs",
     "Placement presets (Fit Front, F+B, Stretch, Allover, Scatter)",
     "Save/load .r15proj workspace files",
-    "No network, no accounts, no telemetry"
+    "Eraser tool, and undo/redo of the full editor state",
+    "No accounts, no telemetry; the only network request is Google Fonts for word art"
   ],
   "hub_display": {
     "card_accent": "cyan",

@@ -62,7 +62,7 @@ Classifying the 407 rows under this policy produced 197 keep, 183 fix, 26 drop a
 
 A headless engine plus an MVVM shell, side by side with Electron in this repo until cutover.
 
-```
+```text
 src/
   RBX15.slnx, global.json (SDK 10.0.x pin)
   RBX15.Engine/         net10.0, SkiaSharp only. No WPF, no ambient clock or randomness.

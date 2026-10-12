@@ -1,0 +1,228 @@
+# Divergences from 4.1
+
+Every deliberate behavior change in v5, generated from `parity-ledger.json` rows whose disposition is `fix` or `drop`. The bug policy: fix anything clearly unintended, keep anything a user could reasonably rely on. A change that is not in this table is a regression. Rows with a visual effect get a new golden image with a note.
+
+## Fixed in v5 (183)
+
+| ID | Owner | Change |
+|---|---|---|
+| `asset-count-label` | App.AssetLibrary | 4.1: the duplicates-removed count message is dead code, overwritten before display. v5: the duplicate-count label is shown. |
+| `asset-count-label-overwritten` | App.AssetLibrary | 4.1: dedupe/pack count message is immediately overwritten by 'in all folders'. v5: the duplicate-count label is shown. |
+| `asset-drag-stale-reference` | App.AssetLibrary | 4.1: a stale asset-drag file hijacks the next OS file drop. v5: stale asset-drag bug fixed via a typed drag payload. |
+| `asset-drag-to-canvas` | App.AssetLibrary | 4.1: a cancelled asset drag leaves a stale file that replaces the next external file drop. v5: drag state is cleared on drag end or cancel. |
+| `asset-grid-thumbnails` | App.AssetLibrary | 4.1: every full-size image is decoded eagerly and pack order is whatever the OS returns. v5: thumbnails decode lazily at thumb size and packs are deterministically sorted. |
+| `asset-objecturl-lifecycle` | App.AssetLibrary | 4.1: every thumbnail is decoded eagerly at full resolution. v5: thumbnails decoded lazily at thumb size. |
+| `drop-filetypes` | App.AssetLibrary | 4.1: SVG accepted, multi-file drops load in nondeterministic order with one undo step per file, and non-images are skipped silently. v5: SVG import dropped with a message, multi-file import in pick order as one undo step, and status messages for rejected files. |
+| `io-folder-picker` | App.AssetLibrary | 4.1: folder enumeration order is browser/OS-dependent. v5: deterministic sorted order, with the deepest-path dedup, parent-folder grouping and counts kept. |
+| `io-image-formats` | App.AssetLibrary | 4.1: accept=image/* silently lets SVG/AVIF through the picker. v5: explicit PNG/JPG/GIF/WEBP filter, SVG import dropped with a message, first frame only for animated files. |
+| `pack-load-sync-and-mime` | App.AssetLibrary | 4.1: pack load is synchronous on the UI thread in readdir order. v5: deterministic sorted packs loaded without blocking the UI. |
+| `packs-load-builtin` | App.AssetLibrary | 4.1: the intended 'N images in built-in <pack> pack' count is immediately overwritten by 'N images in all folders'. v5: the built-in pack count text is shown. |
+| `panel-asset-library` | App.AssetLibrary | 4.1: packs read synchronously, thumbnails decoded at full size, stale asset-drag file reused after a cancelled drag, bundled pack count text immediately overwritten. v5: deterministic sorted packs, thumbnails decoded lazily at thumb size, stale drag bug fixed, duplicate-count label shown. |
+| `panel-drop-zone` | App.AssetLibrary | 4.1: multi-file drops add layers in racy FileReader completion order with one undo entry each and the zone is not keyboard focusable. v5: multi-file import in pick order as one undo step and a keyboard-reachable zone. |
+| `canvas-coord-map` | App.Canvas | 4.1: any mouse button draws or drags, with no capture. v5: left button only, with mouse capture across the canvas edge. |
+| `canvas-cursor-states` | App.Canvas | 4.1: render() resets the cursor to crosshair on every move, so drag cursors flash only until the first move. v5: drag cursor is held for the whole drag. |
+| `canvas-mouse-button-agnostic` | App.Canvas | 4.1: right and middle buttons move layers and draw like left. v5: canvas input responds to the left button only. |
+| `canvas-select-gestures` | App.Canvas | 4.1: any mouse button starts a gesture, no capture across the edge, rotation not normalized, hidden layers can show handles, wheel steps asymmetric with no clamp, and move/rotate/resize push no undo. v5: left button only, mouse capture, hover cursors, rotation normalized -180..180, no handles on hidden layers, symmetric centered wheel scaling with the 1%-500% clamp, and each gesture is one undo step. |
+| `canvas-zoom-clipped-no-pan` | App.Canvas | 4.1: zoomed canvas is clipped with no way to pan. v5: scrollbars to pan when zoomed, zoom stays 25-300%. |
+| `canvas-zoom-controls` | App.Canvas | 4.1: at zoom above fit the canvas is clipped with no scrollbars or pan so edges are unreachable. v5: scrollbars to pan when zoomed, zoom stays 25-300% in 0.25 steps. |
+| `cursor-default` | App.Canvas | 4.1: every non-eraser tool shows a crosshair, with no hover feedback over handles. v5: hover cursors for move, resize and rotate (approved decision). |
+| `cursor-eraser` | App.Canvas | 4.1: eraser ring radius is capped at 120 so it under-represents the real footprint at large size and zoom, and is off-center by under 1px. v5: ring drawn at the true brush footprint, centered (clearly unintended mismatch). |
+| `draw-release-outside-canvas` | App.Canvas | 4.1: Releasing outside the canvas leaves a phantom stroke that resumes on re-entry. v5: Mouse capture on left button commits the stroke at release even outside the canvas. |
+| `draw-tool-switch-midstroke` | App.Canvas | 4.1: Switching tools mid-stroke orphans the live preview. v5: The in-progress stroke is cancelled cleanly when the tool changes. |
+| `drop-canvas` | App.Canvas | 4.1: an abandoned asset drag leaves a stale _assetDragFile that hijacks the next OS file drop. v5: stale asset-drag state is cleared on drag end. |
+| `eraser-selection-semantics` | App.Canvas | 4.1: Eraser with no selection lets the user draw a whole stroke, then alerts and loses it. v5: Eraser refuses on mousedown with a status message when no layer is selected. |
+| `layers-multi-file-async-order` | App.Canvas | 4.1: multi-file add orders layers by decode completion with one undo per file. v5: layers added in pick order as one undo step. |
+| `render-rotation-label` | App.Canvas | 4.1: label font JetBrains Mono is not bundled and falls back to ui-monospace when absent. v5: bundled JetBrains Mono, with rotation normalized to -180..180. |
+| `render-selection-box` | App.Canvas | 4.1: selection box and handles are drawn for a selected layer even when it is hidden. v5: hidden layers show no handles (approved decision). |
+| `render-zoom-canvas` | App.Canvas | 4.1: canvas is resized and reset every frame with truncated fractional dimensions, giving a half-pixel edge offset at fractional zoom, and it grows with zoom. v5: exact scaled size in a scroll host with scrollbars to pan, zoom 25-300% in 0.25 steps. |
+| `select-hidden-layer-still-handled` | App.Canvas | 4.1: a hidden selected layer still shows its box and live handles. v5: hidden layers show no handles. |
+| `select-hover-and-end` | App.Canvas | 4.1: Leaving the canvas edge cancels a drag and hover cursors are limited to grab/crosshair. v5: Left-button mouse capture keeps the drag alive across the edge and hover cursors reflect handles. |
+| `select-hover-idle` | App.Canvas | 4.1: idle hover shows only grab or crosshair, with no move or resize cursors. v5: hover cursors for rotate, resize and move. |
+| `select-move` | App.Canvas | 4.1: move drag stops tracking when the pointer leaves the canvas and the move has no undo step. v5: mouse capture across the edge and each move is exactly one undo step. |
+| `select-rotate-handle` | App.Canvas | 4.1: rotation handle is shown and active for a hidden selected layer. v5: hidden layers show no handles. |
+| `tools-cursor` | App.Canvas | 4.1: eraser ring cursor is not refreshed when zoom changes, so it drifts from the real brush size. v5: cursor refreshes on zoom as well as tool and brush size changes. |
+| `wheel-scale-layer` | App.Canvas | 4.1: Wheel scales about the top-left with asymmetric 0.95/1.05 steps and no upper bound. v5: Wheel scaling is centered with symmetric steps under the single 1%-500% scale clamp. |
+| `wheel-sign-only-and-midstroke` | App.Canvas | 4.1: wheel scaling uses delta sign with asymmetric x1.05/x0.95 steps, no max clamp, and changes width mid-stroke. v5: wheel scaling centered with symmetric steps under the single 1%-500% clamp. |
+| `diag-console-only-errors` | App.Dialogs | 4.1: image decode and read failures are console-only and silent to the user. v5: status strip reports previously console-only failures. |
+| `dialogs-inventory` | App.Dialogs | 4.1: blocking native alert/confirm with no status feedback and silent console-only failures. v5: themed dialogs titled with the product name, message strings kept verbatim, and a status strip for previously console-only failures. |
+| `file-input-same-file-reselect` | App.Dialogs | 4.1: drop-zone and background pickers ignore re-picking the same file. v5: native open dialogs always return, so the bug is gone. |
+| `io-alert-inventory` | App.Dialogs | 4.1: loadProject mutates mode, background and fills before layers parse, leaving a half-loaded document on failure. v5: parse and validate fully first, then apply atomically, leaving the current document untouched on failure. |
+| `home-keys-toggle` | App.Keyboard | 4.1: Keys OFF disables every shortcut including Ctrl+Z and Ctrl+Y. v5: Keys OFF disables only bare-key shortcuts and Ctrl combos always work. |
+| `kbd-bracket-rotate-negative-drift` | App.Keyboard | 4.1: '[' rotation wrap uses JS % and drifts below -180 without bound. v5: rotation wrap fixed with a true modulo, normalized to -180..180. |
+| `kbd-ctrl-combo-tool-toggles` | App.Keyboard | 4.1: Ctrl+V/B/L/U/O toggle tools and swallow standard shortcuts. v5: Ctrl+letter no longer toggles tools; Ctrl+O opens, Ctrl+S saves, Ctrl+Shift+S saves as, Ctrl+V pastes. |
+| `kbd-input-focus-trap` | App.Keyboard | 4.1: shortcuts die whenever focus is on any input including sliders, checkboxes and color inputs. v5: shortcuts are suppressed only in text fields. |
+| `kbd-shortcuts` | App.Keyboard | 4.1: shortcuts are trapped by sliders and checkboxes, Ctrl+letter toggles tools, '[' rotation wraps incorrectly, and Keys OFF disables everything. v5: only text fields suppress shortcuts, Ctrl+letter no longer toggles tools, Ctrl+O/S/Shift+S/V added, Keys OFF disables only bare-key shortcuts, and '[' rotation wrap fixed. |
+| `keyboard-tool-toggle-interplay` | App.Keyboard | 4.1: Ctrl+letter can toggle tools, sliders and checkboxes trap shortcuts, and '[' rotation wrap is wrong below -180. v5: Ctrl+letter no longer toggles tools, only text fields trap shortcuts, and rotation wrap is fixed to -180..180. |
+| `keys-arrow-nudge` | App.Keyboard | 4.1: arrow nudges are not undoable and leave the inspector stale. v5: each nudge is one undo step and the inspector refreshes; 1 px / 10 px steps kept. |
+| `keys-rotate-brackets` | App.Keyboard | 4.1: '[' from -180 goes to -185 and keeps drifting negative. v5: '[' rotation wrap fixed and rotation normalized to -180..180; loader still accepts any double. |
+| `keys-selection-gate-and-modifiers` | App.Keyboard | 4.1: keyboard nudge, rotate, reset and scale are not undoable. v5: every document mutation is exactly one undo step (move, resize and rotate via keys now undoable). |
+| `keys-text-input-guard` | App.Keyboard | 4.1: focus on any slider, color input or checkbox traps all shortcuts. v5: shortcuts are suppressed only in text fields. |
+| `keys-toggle-button` | App.Keyboard | 4.1: Keys OFF also disables Undo/Redo and other Ctrl shortcuts. v5: Keys OFF disables only bare-key shortcuts, Ctrl combos always work. |
+| `keys-tool-shortcuts` | App.Keyboard | 4.1: Ctrl+V/B/L/U/O switch tools and block native paste and open. v5: Ctrl+letter no longer toggles tools, freeing Ctrl+V paste and Ctrl+O open. |
+| `undo-buttons-shortcuts` | App.Keyboard | 4.1: Undo/redo shortcuts are blocked by focused sliders or color inputs and by Keys OFF. v5: Shortcuts are trapped only by text fields and Ctrl combos always work. |
+| `layers-selected-panel` | App.LayerProperties | 4.1: adjustment 0 shows as 100 after rebuild, adjustments panel collapses on every rebuild, rotation label unrounded, X/Y stale while dragging, and move/resize/opacity/flip/reorder push no undo. v5: 0 displays as 0, panel stays open, rotation label rounded, every document mutation is exactly one undo step, and one scale clamp 1%-500% applies to slider, keys, wheel and handles. |
+| `props-adjust-panel` | App.LayerProperties | 4.1: adjustments panel collapses on every UI rebuild (select, rename, reset, rotate/resize drag). v5: adjustments panel stays open. |
+| `props-adjust-reset` | App.LayerProperties | 4.1: Reset adjustments is not undoable and collapses the panel. v5: reset is one undo step and the panel stays open. |
+| `props-adjust-sliders` | App.LayerProperties | 4.1: the '\|\| 100' falsy bug shows a stored 0 as 100 for brightness, contrast and saturation. v5: 0 adjustments display as 0. |
+| `props-falsy-zero-adjust-display` | App.LayerProperties | 4.1: brightness/contrast/saturation of 0 display as 100 after reselect. v5: 0 adjustments display as 0. |
+| `props-live-refresh` | App.LayerProperties | 4.1: move drag leaves panel X/Y stale while rotate/resize rebuild the whole panel and drop focus. v5: bound properties update live without rebuilds or lost focus. |
+| `props-name-xy` | App.LayerProperties | 4.1: X/Y fields and header stay stale during a move drag and edits are not undoable. v5: fields track the layer live and each edit is one undo step. |
+| `props-opacity` | App.LayerProperties | 4.1: opacity change is not undoable. v5: opacity change is exactly one undo step. |
+| `props-panel-rebuild-resets` | App.LayerProperties | 4.1: every updateUI rebuilds the panel and collapses Image adjustments. v5: the adjustments panel stays open. |
+| `props-rotation` | App.LayerProperties | 4.1: rotation label shows raw fractional degrees after handle rotation. v5: rotation label is rounded and rotation is normalized to -180..180. |
+| `props-rotation-label-unrounded` | App.LayerProperties | 4.1: rotation label shows a raw float after a handle drag. v5: rotation label is rounded. |
+| `props-scale` | App.LayerProperties | 4.1: slider range 1-500 disagrees with handle/key/wheel limits and the label can exceed the slider. v5: one scale clamp of 1%-500% for slider, keys, wheel and handles, and the change is undoable. |
+| `layers-list` | App.Layers | 4.1: rows are not keyboard operable and Hide/Show pushes no undo. v5: keyboard-operable rows with automation names and visibility toggles are undoable (one step each). |
+| `layers-list-render` | App.Layers | 4.1: layer rows have no keyboard focus or accessibility. v5: layers panel is keyboard operable with automation names and a cyan focus ring. |
+| `layers-reorder-drag` | App.Layers | 4.1: dropping outside a row reuses the last hovered target (stale drag target). v5: stale drag target is cleared so only a live target reorders. |
+| `layers-reorder-drag-2` | App.Layers | 4.1: reorder is mouse-drag only and can leave a stale drag target. v5: stale drag target fixed and reorder is keyboard operable, with the same above/below z semantics and one undo step. |
+| `fillstyle-type-buttons` | App.Ribbon.Home | 4.1: the active type button and controls can disagree with currentFill after undo or project load. v5: controls are re-synced to the current fill whenever state is restored (unintended). |
+| `home-file-group` | App.Ribbon.Home | 4.1: Save/Open/Download go through anchor downloads and hidden file inputs with no current-file model. v5: native save/open dialogs with a current-file model (Ctrl+S / Ctrl+Shift+S), same default names and 585x559 PNG output. |
+| `home-mode-toggle` | App.Ribbon.Home | 4.1: in Pants mode most layer-adding actions throw because they read the shirt torso_front region. v5: Pants mode works everywhere via semantic slots per mode. |
+| `home-placement-group` | App.Ribbon.Home | 4.1: F+B and Stretch throw in Pants mode and the Placement group shows with no layer selected. v5: Pants works via semantic slots and the Placement group is hidden until a layer is selected. |
+| `project-load-image-layer` | App.Ribbon.Home | 4.1: multi-file import order is racy, each file is its own undo step, and SVG is accepted. v5: files import in pick order as one undo step and SVG is dropped with a message. |
+| `region-front-highlight-lost` | App.Ribbon.Home | 4.1: front region button loses its purple base highlight once cleared. v5: highlight is a persistent template trigger. |
+| `regions-button-swatch-paint` | App.Ribbon.Home | 4.1: The Front button's purple tint is permanently wiped after the first clear or restore of that region. v5: Unfilled buttons always show the resting tint, with swatches drawn by the Skia fill painter. |
+| `regions-click-fit-layer` | App.Ribbon.Home | 4.1: region-click fit leaves the properties sliders stale because updateUI is not called. v5: refreshes the inspector after the fit (unintended; saved files unchanged). |
+| `bg-image` | App.Ribbon.Layout | 4.1: undo is saved before the image loads, so a corrupt file leaves a no-op undo entry and failures are silent. v5: undo step only on successful load, with a status message on failure. |
+| `fills-to-css` | App.Ribbon.Layout | 4.1: swatch gradients use the CSS angle convention (0deg is bottom-to-top) so direction can contradict the canvas render (0 is left-to-right). v5: swatches are drawn with the canvas angle convention so they match the render (clearly unintended inconsistency). |
+| `layout-background-swatches` | App.Ribbon.Layout | 4.1: swatches are plain divs, not keyboard reachable. v5: focusable buttons with automation names and a cyan focus ring. |
+| `layout-bg-settings` | App.Ribbon.Layout | 4.1: undo snapshot on pointerdown even when nothing changes (empty undo entry). v5: no empty undo steps, exactly one step per real background change. |
+| `layout-presets` | App.Ribbon.Layout | 4.1: Meme/Allover/Mirror/Scatter push two undo entries and Sleeve Pop throws in Pants mode. v5: exactly one undo step per preset and semantic slots make every preset work in both modes, with the Presets group hidden until a layer is selected. |
+| `layout-template-regions` | App.Ribbon.Layout | 4.1: region tiles are mouse-only divs and the Front tile permanently loses its built-in tint after any paint or clear. v5: keyboard-reachable tiles with automation names and a consistent Front tile style, with region keys resolved through semantic slots per mode. |
+| `placement-selection-guard` | App.Ribbon.Layout | 4.1: Placement buttons are always enabled and silently do nothing without a selection. v5: The Placement and Presets groups are hidden until a layer is selected. |
+| `presets-six-buttons` | App.Ribbon.Layout | 4.1: Meme, Allover, Mirror and Scatter push two identical undo entries per click. v5: every action is exactly one undo step; the Presets group is hidden until a layer is selected. |
+| `props-center-front` | App.Ribbon.Layout | 4.1: Center on front torso is not undoable and the Placement group is always shown. v5: it is one undo step and the Placement group is hidden until a layer is selected. |
+| `text-add-to-canvas` | App.Ribbon.Text | 4.1: Add to canvas fails in Pants mode because it reads torso_front directly. v5: the front slot resolves per mode so it works in both, with the same layer name and full-resolution bitmap. |
+| `text-preview` | App.Ribbon.Text | 4.1: preview content is drawn at the top-left of the box, leaving blank space right and bottom (clearly unintended, not named in the design). v5: preview is centered in the box with the same uniform fit scale. |
+| `wordart-state-defaults` | App.Ribbon.Text | 4.1: Word Art size is not clamped, so 0 falls back to 64 and 5000 makes a giant canvas. v5: size clamped to 8-300 (unintended, named divergence). |
+| `a11y-focus-rings` | App.Shell | 4.1: swatches, region tiles, layers and the drop zone are not keyboard reachable. v5: keyboard-reachable tiles, layers and swatches with automation names and a cyan focus ring. |
+| `font-ui-runtime-google` | App.Shell | 4.1: UI fonts load at runtime from Google Fonts, leaking an IP and falling back offline. v5: Space Grotesk, Inter and JetBrains Mono are bundled with zero network requests. |
+| `project-startup` | App.Shell | 4.1: requests Google Fonts at startup and does not remember window size or position. v5: zero network requests and the window remembers size and position. |
+| `shell-header-version-hardcoded` | App.Shell | 4.1: header version is hand-typed markup that drifts from docs and package version. v5: header text bound to the assembly/package version. |
+| `shell-layout-skeleton` | App.Shell | 4.1: ribbon height changes per tab, shifting the canvas vertically on tab switch. v5: fixed ribbon height. |
+| `shell-lifecycle-quit` | App.Shell | 4.1: closing the window exits immediately with no unsaved-work prompt and no autosave. v5: save-changes prompt on close with dirty tracking, backed by autosave and crash recovery. |
+| `shell-window-size` | App.Shell | 4.1: fixed 1200x800 centered window with no memory of size or position. v5: window remembers size and position. |
+| `io-download-save-dialog` | App.Storage | 4.1: Electron anchor-download Save As with no current-file memory and no feedback after saving. v5: native save/open/folder dialogs with a current-file model and a status message. |
+| `shell-no-persistence` | App.Storage | 4.1: zero persisted settings and no hidden data. v5: remembers window rect, autosaves every 60s while dirty for crash recovery, and keeps 10 recent projects and a jump list, with PRIVACY docs updated to match. |
+| `shell-no-unsaved-changes-guard` | App.Storage | 4.1: closing or reloading silently discards all work. v5: save-changes prompt on close plus 60s autosave and crash recovery, not shown on a pristine or just-saved document. |
+| `shell-userdata-footprint` | App.Storage | 4.1: Electron creates a hidden %APPDATA% userData folder with cache while PRIVACY says no hidden data. v5: only window state, recents and autosave are stored locally and PRIVACY discloses them. |
+| `claim-fullscreen-canvas` | Docs | 4.1: Store and README promise a fullscreen canvas with no fullscreen feature behind it. v5: listing and README reworded (and the Store 'native' claim corrected) to describe what the app does. |
+| `claim-network-surface-inconsistent` | Docs | 4.1: SECURITY and PRIVACY contradict each other and the code on network and Google Fonts requests. v5: fonts bundled, zero network requests, and PRIVACY/SECURITY network claims corrected. |
+| `claim-region-click-color-picker` | Docs | 4.1: TEST_PLAN and SMOKE_TEST say a region click opens a color picker, but it paints the current Fill Style. v5: test docs rewritten for the native build to describe the real behavior. |
+| `claim-undo-everything` | Docs | 4.1: Store claims 'Undo everything' while nudge, rotate, scale, wheel and slider edits push no undo step. v5: every document mutation is exactly one undo step, so the claim becomes true and the docs are updated. |
+| `docs-dev-workflow-claims` | Docs | 4.1: README, RELEASE_NOTES and landing page give npm/Electron build and dev instructions. v5: rewritten for dotnet build, test and publish plus MSIX packaging. |
+| `docs-index-landing` | Docs | 4.1: landing page loads Google Fonts, says v4.0 and Store pending. v5: bundled fonts, current version and corrected Store claims. |
+| `docs-known-limitations` | Docs | 4.1: release notes list unsigned installer, Google Fonts and weak accessibility as known limitations. v5: fonts bundled and an accessibility pass closes them, notes updated. |
+| `docs-manifest-626labs` | Docs | 4.1: manifest says 'Windows desktop editor (Electron)' and lists NSIS distribution. v5: manifest says native WPF, version 5.0.0 and lists Store MSIX plus portable zip. |
+| `docs-privacy-claims` | Docs | 4.1: PRIVACY claims a Google Fonts request and no hidden data. v5: PRIVACY states zero network requests and discloses autosave, recents and settings storage. |
+| `docs-readme-claims` | Docs | 4.1: README describes Electron, 30-step undo with only Ctrl+Z and a hot-reload note. v5: README rewritten for the native app including redo and the named upgrades. |
+| `docs-reviewer-letter` | Docs | 4.1: certification letter calls the app an Electron desktop app and cites a Google Fonts request. v5: letter describes the native .NET app with zero network requests. |
+| `docs-security-md` | Docs | 4.1: SECURITY scope lists Electron surfaces, claims zero network requests while listing one, and claims load sanitizing that code does not do. v5: scope rewritten for WPF and the validated all-or-nothing project loader. |
+| `docs-store-listing` | Docs | 4.1: listing copy describes the Electron build as 'native'. v5: copy updated so the 'native' claim is accurate; screenshots are reshot only if the native polish visibly changes the look (spec section 7). |
+| `legacy-docs-superpowers` | Docs | 4.1: CONTRIBUTING describes four files, no frameworks and no build step. v5: CONTRIBUTING rewritten for the .NET solution, historical superpowers specs kept as history. |
+| `tests-count-claims` | Docs | 4.1: docs disagree on test counts (17+, 31, no framework). v5: docs state counts generated from the xUnit and golden suites. |
+| `tests-manual-smoke` | Docs | 4.1: SMOKE_TEST covers Electron flows and tells testers to open DevTools with Ctrl+Shift+I. v5: smoke test rewritten for the WPF app with a log file instead of DevTools. |
+| `tests-windows-test-plan` | Docs | 4.1: TEST_PLAN assumes NSIS install, a stale v4.0 header and two outbound hosts. v5: plan rewritten for MSIX and zip with zero network requests. |
+| `wordart-claim-wrap-any-size` | Docs | 4.1: landing page claims Word Art wraps text and adds at any size, but only explicit newlines break lines. v5: behavior ported unchanged and the landing copy corrected to match. |
+| `imgdata-premult-note` | Engine.Adjust | 4.1: RGB shift round-trips through premultiplied canvas data and loses low-alpha channel precision. v5: shift runs on unpremultiplied pixels, more precise at low alpha. |
+| `layers-adjust-pipeline` | Engine.Adjust | 4.1: Chromium ctx.filter chain with RGB shift applied on premultiplied canvas data. v5: per-stage CSS filter color matrices in the same order with RGB shift on unpremultiplied pixels (more precise on low alpha). |
+| `rgb-shift-cache` | Engine.Adjust | 4.1: single-slot cache keyed only on layer id and shifts can show stale shifted pixels after eraser or draw edits and thrashes with two shifted layers. v5: per-layer cache invalidated on any pixel edit (clearly unintended staleness bug). |
+| `rgb-shift-compute` | Engine.Adjust | 4.1: RGB shift runs on browser-premultiplied getImageData, losing precision on low-alpha pixels. v5: RGB shift runs on unpremultiplied pixels (approved decision), so low-alpha pixels are more precise. |
+| `details-buttons` | Engine.Details | 4.1: generators throw in Pants mode and push an undo entry even when nothing is drawn. v5: generators resolve regions through semantic slots (pants-specific details deferred to 5.1) and every action is exactly one real undo step with no empty entries. |
+| `details-pants-mode-behavior` | Engine.Details | 4.1: every detail generator throws a TypeError in Pants mode because of hardcoded torso/arm keys. v5: generators resolve semantic slots so they run in Pants; pants-specific details deferred to 5.1. |
+| `btn-fit-fb` | Engine.Document | 4.1: F+B throws a TypeError in Pants mode after pushing a snapshot. v5: Pants mode works via semantic front/back slots, keeping the 'Mirror F+B' label and unmirrored clone. |
+| `btn-fit-front` | Engine.Document | 4.1: Fit Front throws a TypeError in Pants mode after pushing a snapshot and does not refresh the properties panel. v5: Pants mode works via semantic slots and the panel refreshes. |
+| `btn-stretch` | Engine.Document | 4.1: Stretch throws a TypeError at the torso_back lookup in Pants mode. v5: Pants mode works via semantic slots with the same geometry. |
+| `layers-add-placement` | Engine.Document | 4.1: default name 'Image N' uses the incremented id, so the first unnamed layer is 'Image 2' with id 1. v5: default layer names match the id. |
+| `layers-default-name-offbyone` | Engine.Document | 4.1: default layer names are off by one from the layer id. v5: default layer names match the id. |
+| `layers-model` | Engine.Document | 4.1: a stored adjustment of 0 is treated as falsy and shown as 100 in the controls. v5: 0 displays and reloads as 0. |
+| `layers-move-updown` | Engine.Document | 4.1: Up/Down reorder is not undoable, unlike drag-reorder. v5: reorder is exactly one undo step. |
+| `layers-remove` | Engine.Document | 4.1: removeLayer pushes an undo snapshot even when the id is not found, creating an empty step. v5: every mutation is exactly one undo step, with no empty steps. |
+| `layers-visibility` | Engine.Document | 4.1: visibility toggle is not undoable. v5: visibility toggle is exactly one undo step. |
+| `preset-allover` | Engine.Document | 4.1: Allover pushes a double undo entry per click. v5: exactly one undo step; tile math, order and 0.8 factor kept. |
+| `preset-meme` | Engine.Document | 4.1: Meme Tee pushes a double undo entry and throws in Pants mode. v5: one undo step and it works in Pants via semantic slots. |
+| `preset-mirror` | Engine.Document | 4.1: Mirror F+B pushes a double undo entry and fails in Pants. v5: one undo step and works in Pants; label 'Mirror F+B' and no-flip behavior kept. |
+| `preset-sleeve-pop` | Engine.Document | 4.1: Sleeve Pop throws on the first iteration in Pants mode. v5: applies to the sleeve/leg arm slots via semantic slots. |
+| `props-flip` | Engine.Document | 4.1: Flip H/V is not undoable. v5: each flip is exactly one undo step. |
+| `props-scale-clamp-inconsistency` | Engine.Document | 4.1: slider, keys, wheel, handles and presets each clamp scale differently. v5: one scale clamp of 1%-500% for slider, keys, wheel and handles, with presets computing exact fits. |
+| `regions-click-paint` | Engine.Document | 4.1: Repainting a region with an identical fill still pushes an undo entry. v5: A repaint that changes nothing creates no undo step. |
+| `shell-gpu-canvas-edge-drift` | Engine.Export | 4.1: export edge pixels vary between GPU and software canvas and are not byte-stable across machines. v5: deterministic CPU-Skia export, byte-identical across machines. |
+| `file-undo-snapshot-scope` | Engine.History | 4.1: undo snapshots are re-encoded JSON, restore reloads images asynchronously and deselects, many mutations push no undo, and some push twice. v5: layers share immutable bitmaps, synchronous restore, selection survives undo, every document mutation is exactly one undo step (depth 30 kept), redo capped. |
+| `fillstyle-undo-snapshot-timing` | Engine.History | 4.1: keyboard-driven slider or picker changes mutate fills with no undo entry. v5: every document mutation is exactly one undo step, and idle drags still create none. |
+| `history-redo-stack-uncapped` | Engine.History | 4.1: redo is uncapped and can push undo past 30. v5: redo capped while undo depth stays 30. |
+| `history-snapshot-memory` | Engine.History | 4.1: Undo cap is 30 but the redo stack is unbounded and snapshots embed every layer's PNG data URL. v5: Undo depth stays 30, redo is capped, and snapshots share immutable bitmaps. |
+| `undo-coverage-gaps` | Engine.History | 4.1: Move, resize, opacity, flip, visibility and reorder are not undoable and presets push double snapshots. v5: Every document mutation is exactly one undo step, no empty or double steps. |
+| `undo-empty-steps` | Engine.History | 4.1: no-op actions and presets push empty or double undo steps. v5: every document mutation is exactly one undo step, with no empty or double steps. |
+| `undo-rapid-restore-race` | Engine.History | 4.1: async image restore lets a rapid second undo corrupt the redo stack. v5: layers share immutable bitmaps and restore is synchronous, so it is atomic. |
+| `undo-restore` | Engine.History | 4.1: Restore is async with races, silently dropped layers, and selection cleared on every undo. v5: Restore is synchronous over shared immutable bitmaps and selection survives undo. |
+| `undo-restore-ui-side-effects` | Engine.History | 4.1: every undo/redo deselects the layer. v5: selection survives undo. |
+| `file-project-format` | Engine.ProjectIO | 4.1: writes version '4.0', applies state before layers parse (half-loaded documents), and accepts any image source. v5: reads all 4.1 files, writes the same fields with version '5.0', all-or-nothing validated load, data: URLs only, and a visible warning naming dropped layers. |
+| `project-format-r15proj` | Engine.ProjectIO | 4.1: writes version '4.0' and loads unvalidated, trusting imgSrc and numeric fields. v5: reads all 4.1 files, writes version '5.0', all-or-nothing validated load, data: URLs only, visible warning naming dropped layers. |
+| `project-load-error-path-bugs` | Engine.ProjectIO | 4.1: a failed last image skips finalize (order, nextId, selection, render). v5: all-or-nothing validated load with a visible warning naming dropped layers. |
+| `project-load-flow` | Engine.ProjectIO | 4.1: load applies fields piecemeal, accepts bad shapes and unknown modes, and leaves the previous project's undo history in place. v5: all-or-nothing validated load with history cleared. |
+| `project-load-history-interplay` | Engine.ProjectIO | 4.1: opening a project leaves undo history so Ctrl+Z restores a pre-load session. v5: history cleared on open. |
+| `project-load-layers` | Engine.ProjectIO | 4.1: layer order, nextId and selection depend on async decode completion and are skipped when the last event is an error. v5: deterministic ordering with nextId and selection always set, and a visible warning naming dropped layers. |
+| `project-load-no-imgsrc-hang` | Engine.ProjectIO | 4.1: a project whose layers all lack imgSrc never finalizes and leaves stale UI, and open leaves undo history intact. v5: synchronous decode with a single finalize and history cleared on open. |
+| `project-load-untrusted-src` | Engine.ProjectIO | 4.1: .r15proj load assigns any URL (http, file) from imgSrc/bgImageSrc/mode/regionColors without sanitizing. v5: all-or-nothing validated load accepts data: image URLs only, validates mode, with a visible warning naming dropped layers. |
+| `project-save-format` | Engine.ProjectIO | 4.1: writes version '4.0'. v5: writes the same fields with version '5.0'. |
+| `project-version-compat` | Engine.ProjectIO | 4.1: writer emits version '4.0' and the reader ignores version. v5: reads all 4.1 files and writes version '5.0'. |
+| `bug-pants-mode-region-keys` | Engine.Template | 4.1: Pants mode swaps region tables so add image, Fit Front, Center, Word Art, Sleeve Pop and detail generators throw. v5: Pants mode works everywhere via semantic slots (front/back/rarm/larm/up/down per mode). |
+| `mode-pants-crash-hardcoded-keys` | Engine.Template | 4.1: Pants mode throws on code that hardcodes torso/arm keys after an undo snapshot is pushed. v5: semantic slots (front/back/rarm/larm/up/down per mode) make Pants work everywhere. |
+| `canvas-draw-tools` | Engine.Tools | 4.1: undo pushed on mousedown even for a zero-length click, pen re-strokes incrementally, and the eraser alerts after the stroke when no layer is selected. v5: pen strokes drawn once at mouseup, a press with no movement draws a brush-size dot, eraser refuses on mousedown with a status message when no layer is selected, and no empty undo steps. |
+| `draw-begin` | Engine.Tools | 4.1: undo saved at mousedown even with no stroke, and pen is re-stroked incrementally per move. v5: pen stroke drawn once at mouseup, a press with no movement draws a brush-size dot, and no empty undo steps. |
+| `draw-pen-incremental-stroke` | Engine.Tools | 4.1: Pen and eraser re-stroke the whole path on every mouse event, so edges depend on event frequency. v5: Strokes are drawn once at mouseup for deterministic edges. |
+| `draw-pen-single-click` | Engine.Tools | 4.1: A press with no movement draws nothing and creates no layer. v5: A press with no movement draws a brush-size dot. |
+| `draw-tool-start` | Engine.Tools | 4.1: Every draw mousedown pushes an undo snapshot even if nothing is drawn. v5: Each mutation is exactly one undo step, with no empty steps. |
+| `select-move-hit-and-drag` | Engine.Tools | 4.1: move drag has no undo step and no capture, so a drag can strand a layer off-canvas by mouse. v5: rect-based hit-test kept, drag is exactly one undo step with capture and selection survives undo. |
+| `select-resize-drag` | Engine.Tools | 4.1: resize has no maximum and no undo step, while '+' caps at 5 and wheel is uncapped. v5: one 1%-500% clamp for all paths and the drag is exactly one undo step. |
+| `select-resize-handles` | Engine.Tools | 4.1: resize has no upper limit and can divide by a near-zero start distance. v5: single 1%-500% scale clamp shared with slider, keys and wheel. |
+| `select-rotate-drag` | Engine.Tools | 4.1: rotation is never normalized and can jump by 360 across the atan2 discontinuity. v5: rotation normalized to -180..180 with the 45-degree snap kept. |
+| `select-rotate-drag-2` | Engine.Tools | 4.1: dragged rotation is unbounded (about +-360) so values like 350 or -270 never snap. v5: rotation normalized to -180..180 so snapping works at every angle. |
+| `select-rotate-handle-hit` | Engine.Tools | 4.1: rotation handle stays hittable for a hidden selected layer. v5: hidden layers have no handles, so no handle hit. |
+| `font-wordart-runtime-google` | Engine.WordArt | 4.1: the 15 Word Art fonts load at runtime from Google Fonts and fall back to sans-serif offline. v5: all 15 are bundled. |
+| `fonts-google-runtime` | Engine.WordArt | 4.1: 15 Word Art fonts load from Google Fonts at runtime and fall back offline. v5: fonts bundled with the app and zero network requests. |
+| `wordart-font-loading-race` | Engine.WordArt | 4.1: first preview or Add can render in a fallback font because canvas-only fonts are fetched lazily and never re-rendered. v5: bundled fonts render synchronously with no readiness gate. |
+| `ci-windows-ci` | Package | 4.1: path filter omits lib/**, tests/** and packs/**, so lint and test gates can be bypassed. v5: CI builds and runs dotnet tests on every PR with no path-filter hole. |
+| `ci-windows-release` | Package | 4.1: tag release reuses a single RELEASE_NOTES.md, never checks tag against version and runs no tests. v5: release builds MSIX and zip, verifies tag against version and runs tests first. |
+| `msix-capabilities` | Package | 4.1: runFullTrust justification cites Electron child processes and the folder picker. v5: justification rewritten for the .NET self-contained runtime. |
+| `msix-make-script` | Package | 4.1: make-msix.ps1 packs the Electron win-unpacked output with /nv and SIGNING.md references an undefined -PublisherCN parameter. v5: pipeline rebuilt around dotnet publish output and the doc bug corrected. |
+| `msix-signing-policy` | Package | 4.1: Store MSIX unsigned plus an unsigned NSIS installer on GitHub. v5: Store MSIX unsigned plus an unsigned portable zip, NSIS retired. |
+| `shell-window-no-icon` | Package | 4.1: NSIS exe and window use the default Electron icon (no icon configured). v5: brand app icon on the exe, window and MSIX tiles. |
+
+## Not carried into v5 (26)
+
+| ID | Owner | Change |
+|---|---|---|
+| `image-decode-format-matrix` | Engine.Document | 4.1: SVG imports via Chromium alongside raster formats. v5: SVG import dropped with a message; raster formats still decode. |
+| `build-electron-builder-config` | Retired | 4.1: electron-builder config with NSIS target. v5: deleted at cutover, NSIS retired in favor of Store MSIX plus portable zip. |
+| `build-extra-resources-packs` | Retired | 4.1: electron-builder extraResources copies packs to resources/packs. v5: deleted with electron-builder, packs ship as app content in the MSIX and zip. |
+| `build-package-lock-stale` | Retired | 4.1: stale npm package-lock with CI using npm install. v5: package.json and npm tooling deleted at cutover. |
+| `cross-state-globals` | Retired | 4.1: editor state lives in shared mutable globals in editor.js. v5: replaced by the Document/History model, so the globals are not carried. |
+| `dist-github-nsis-channel` | Retired | 4.1: unsigned NSIS installer on GitHub Releases is a second channel. v5: NSIS retired in favor of the Store MSIX plus an unsigned portable zip on GitHub. |
+| `drop-guard` | Retired | 4.1: document-level preventDefault stops the browser navigating to dropped files. v5: not carried, since a WPF window has no navigate-on-drop behavior. |
+| `fills-exports-api` | Retired | 4.1: UMD wrapper exposes the fills module to both browser (window.RBX15Fills) and Node tests. v5: not carried, since Fills is a C# engine class and the WYSIWYG guarantee comes from screen and export sharing one render path. |
+| `keys-single-handler` | Retired | 4.1: one document.onkeydown assignment holds all shortcuts. v5: WPF key bindings and command routing replace it, so the single-handler constraint does not carry over. |
+| `legacy-create-shortcut` | Retired | 4.1: create_shortcut.ps1 hardcodes a local username and v1 exe path. v5: removed from the repo. |
+| `legacy-launcher-bat` | Retired | 4.1: LaunchShirtEditor.bat opens the pre-4.0 v3 HTML monolith in a browser. v5: not carried, the launcher and monolith are removed. |
+| `legacy-manifests-outputs` | Retired | 4.1: upload_manifest.json, pants_manifest.json and output PNGs of unclear licensing in the public repo. v5: uploader manifests move to the private repo, remaining outputs are not carried. |
+| `legacy-roblox-uploader` | Retired | 4.1: roblox_uploader.py with Chrome cookie extraction lives in the public repo. v5: moves to a private repo and is never packaged. |
+| `legacy-scratch` | Retired | 4.1: gitignored scratch/ holds the .NET spike and local upload tooling. v5: scratch stays untracked local workspace and is not part of the product. |
+| `legacy-shirt-maker-py` | Retired | 4.1: roblox_shirt_maker.py CLI with optional Gemini call and the shirts/ outputs sit in the repo. v5: not carried into v5. |
+| `legacy-variation-gen` | Retired | 4.1: dead variation_generator.py and 86 variations/ PNGs. v5: not carried into v5. |
+| `project-electron-integration-risks` | Retired | 4.1: relies on nodeIntegration, fs/path in the renderer, blob URLs and browser downloads. v5: native .NET file APIs and dialogs, with no nodeIntegration. |
+| `props-injection-safe` | Retired | 4.1: layer names needed DOM-property assignment to avoid markup injection (tests/injection.test.js). v5: not carried, since WPF bindings cannot interpolate names into markup. |
+| `shell-default-menu-accelerators` | Retired | 4.1: hidden default Electron menu leaves Ctrl+R reload (no confirm), DevTools and page-zoom accelerators live. v5: no such accelerators exist in WPF, Ctrl+R unbound. |
+| `shell-devtools-off` | Retired | 4.1: DevTools exist but do not auto-open. v5: no DevTools; unhandled exceptions are logged instead. |
+| `shell-menu-hidden` | Retired | 4.1: hidden default Electron menu leaves Ctrl+R/F5 reload (wipes unsaved work), devtools and page-zoom accelerators live. v5: no default menu, so none of these accelerators exist. |
+| `shell-webprefs-node-integration` | Retired | 4.1: renderer runs with nodeIntegration true and contextIsolation false (the PR #27 injection sink). v5: no web content or Node in the renderer, with a hostile-layer-name regression test kept. |
+| `tests-eslint-gate` | Retired | 4.1: ESLint no-undef gate over JS sources. v5: JS removed at cutover, nullable plus warnings-as-errors replaces it. |
+| `tests-injection` | Retired | 4.1: source-grep test guarding HTML template injection in editor.js. v5: no HTML rendering of layer names, Node tests deleted at cutover. |
+| `tests-smoke-parse` | Retired | 4.1: new Function() parse check on main.js and editor.js. v5: the compiler with warnings-as-errors is the syntax floor. |
+| `vestigial-hidden-controls` | Retired | 4.1: hidden unused assetType select and btnExport2 button exist in markup. v5: not carried over. |
+
+## New in v5 (1)
+
+| ID | Owner | Behavior |
+|---|---|---|
+| `shell-unsaved-work-loss` | App.Storage | No unsaved-changes guard on close, reload or quit |

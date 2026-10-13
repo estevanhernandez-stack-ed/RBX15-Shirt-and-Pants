@@ -1,0 +1,128 @@
+{
+  "electron": "41.1.0",
+  "chrome": "146.0.7680.166",
+  "editorJsBlob": "2790c41e418cd5bfea82cf1ae4d71626a7b54e61",
+  "fillsJsBlob": "208d3297cb0920974d034639d754a65e75ae14d4",
+  "scenes": [
+    {
+      "name": "bg-default",
+      "sha256": "9ab90b5504a2709f1cb964de6289e1cbd415c13f14f38dfd589df441e3f5be40"
+    },
+    {
+      "name": "bg-color-half-opacity",
+      "sha256": "eb0a257a2d7670df649ef382888efc8807527dd874058674483ab74f21030c88"
+    },
+    {
+      "name": "bg-image-stretched",
+      "sha256": "2a285005012f27aba49bc7a9388d79c2e3a29e09a160af85fcada1be897c71c2"
+    },
+    {
+      "name": "bg-image-opacity",
+      "sha256": "0970811939ab0dd2de21131ba8be0f38485318f9eea440c9bff9b537a861575b"
+    },
+    {
+      "name": "fill-solid-all",
+      "sha256": "7a7146af278495912a842a182d51f1e60f1a24846d7cd664b40a2b3859cfd7ca"
+    },
+    {
+      "name": "fill-legacy-strings",
+      "sha256": "3785a9a0ef157b6034c82c0e59723b2a44860ef74b25dec2d5c3a07f9ab37e36"
+    },
+    {
+      "name": "fill-linear-0-torso",
+      "sha256": "42002210ff1fa88df45cd591136d3ed6149108e27a64ab4097393c21e8fbac90"
+    },
+    {
+      "name": "fill-linear-135-arms",
+      "sha256": "15739f324de6eaa8ffd99556b44d67563e080b1061fff653be691aec265a0872"
+    },
+    {
+      "name": "fill-radial-torso",
+      "sha256": "76cc60be8d3cc68fa0f5f56758ebd6932e7a9f0a9f33faf1c7d2ee8f8baa7982"
+    },
+    {
+      "name": "fill-stripes-30",
+      "sha256": "d36d0f68868b9c3bb25ac547092d5d2df955db7f7e97f536473b5a08bfcb152e"
+    },
+    {
+      "name": "fill-stripes-48-neg",
+      "sha256": "1d86b051044528e443f3b37db309d1bc863bd69e8a75087d9895c53e4ea970ae"
+    },
+    {
+      "name": "fill-checker-12",
+      "sha256": "9b903183251ebd01805d913fe02c6628a8a1c00455de3cd67b6210c89a85b990"
+    },
+    {
+      "name": "fill-dots-16",
+      "sha256": "83bc07366002dab7375d5ab59074ac3200d573b747af9a0323fc2afd54fe4431"
+    },
+    {
+      "name": "fill-camo-16",
+      "sha256": "8923b4ec1f2a526ee2fdf52ae58977fa0c2a58fa56afe175a8f8ca7a498d4181"
+    },
+    {
+      "name": "fill-camo-48",
+      "sha256": "2de11a45ea38d0f333cae686769a57d4cc27da0c2a1ab10d1e1227d5efff55fc"
+    },
+    {
+      "name": "fill-mixed-groups",
+      "sha256": "9d677fd1bc226f09e41244c22f78ed91142cdb61145576b1c238dbc8fbcba624"
+    },
+    {
+      "name": "pants-fills",
+      "sha256": "cf371aace7e9ca6db1c579886686e0611e90511d116904e4d475531f0954680c"
+    },
+    {
+      "name": "layer-basic",
+      "sha256": "8a4077a00b96f46afee10cdf336058b9272607be4cc3df2de2a8583655a48b10"
+    },
+    {
+      "name": "layer-rotate-scale-fliph-opacity",
+      "sha256": "4af62d44797bc60c38b0376144334ec6053995c18099bd9d41cec417b9071c59"
+    },
+    {
+      "name": "layer-rotate-neg-flipv-upscale",
+      "sha256": "8c81c9b557b0aac3ddefefea9f86f9210c855666f9640f4bdded02a0c17a2fbb"
+    },
+    {
+      "name": "adjust-brightness-150",
+      "sha256": "ef3b19d0e13d1c685f8dcb53ed00f575a70810e5271122ce52f2b2919ce4e043"
+    },
+    {
+      "name": "adjust-contrast-40",
+      "sha256": "a8d843bdee6ddac487483881e782a41ba42df4f57f07053edabfd210c7955ec5"
+    },
+    {
+      "name": "adjust-saturate-0",
+      "sha256": "a9af039d1d2883047ab34aab8cee010de67c5a9f42aee99d641c9c6d266f933c"
+    },
+    {
+      "name": "adjust-hue-90",
+      "sha256": "2420828429b1f1082f58a39de0677707d63196e6478f924186c643bcd46919b4"
+    },
+    {
+      "name": "adjust-combo",
+      "sha256": "50c6176c6fb98abd0aba31c056800ba603e6e7dec568e2d143c68b0704a4c122"
+    },
+    {
+      "name": "adjust-extremes",
+      "sha256": "7ed66f00b4125031ceb6263559038382e45ae6e219f6049e33380b2c376b9c2a"
+    },
+    {
+      "name": "rgb-shift",
+      "sha256": "87a6f736acaff70b79edb155bc63b6fc087e980896c01045b6cc2769d7d45cf1"
+    },
+    {
+      "name": "rgb-shift-with-adjust-rotated",
+      "sha256": "a066266a79f7015696a5a1bef197487966b52dad050eb575fc123b3b5c2d9275"
+    },
+    {
+      "name": "layers-order-hidden",
+      "sha256": "c64bc69766c9f298414a2f70038fd39337c572a8fbebef2d03c27df59b157884"
+    },
+    {
+      "name": "full-scene",
+      "sha256": "b673d523aaf4f3f57bd3823ce2999c9c1d58540fffdda0b7ac53921b2d03f997"
+    }
+  ]
+}

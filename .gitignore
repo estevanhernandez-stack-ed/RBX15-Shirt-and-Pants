@@ -11,3 +11,10 @@ Assets/
 .claude/
 windows/msix/_stage/
 scratch/
+
+# .NET (v5 native port)
+bin/
+obj/
+.vs/
+TestResults/
+*.user

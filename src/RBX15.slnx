@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="RBX15.App/RBX15.App.csproj" />
+  <Project Path="RBX15.Engine.Tests/RBX15.Engine.Tests.csproj" />
+  <Project Path="RBX15.Engine/RBX15.Engine.csproj" />
+  <Project Path="RBX15.Parity.Tests/RBX15.Parity.Tests.csproj" />
+  <Project Path="RBX15.Parity/RBX15.Parity.csproj" />
+</Solution>

@@ -1,8 +1,8 @@
 # Parity ledger
 
-Generated from `parity-ledger.json` (do not edit by hand; edit the JSON and regenerate). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
+Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**407 rows.** Disposition: keep 197, fix 183, drop 26, new 1. Checks: ui-auto 120, unit 110, manual 66, golden 64, none-retired 25, doc 22.
+**407 rows.** Status: open 407. Disposition: keep 197, fix 183, drop 26, new 1. Checks: ui-auto 120, unit 110, manual 66, golden 64, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 

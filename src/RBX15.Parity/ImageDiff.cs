@@ -13,10 +13,22 @@ public sealed record DiffResult(bool SameSize, int MaxDelta, int DifferingPixels
 /// </summary>
 public static class ImageDiff
 {
+    /// <summary>
+    /// Decodes straight into un-premultiplied RGBA. <c>SKBitmap.Decode</c> forces premultiplied
+    /// storage, which quantizes low-alpha pixels (the antialiased edges goldens care about most).
+    /// </summary>
     public static SKBitmap Load(string path)
     {
-        using var decoded = SKBitmap.Decode(path) ?? throw new InvalidOperationException($"cannot decode {path}");
-        return Normalize(decoded);
+        using var codec = SKCodec.Create(path) ?? throw new InvalidOperationException($"cannot decode {path}");
+        var info = new SKImageInfo(codec.Info.Width, codec.Info.Height, SKColorType.Rgba8888, SKAlphaType.Unpremul);
+        var bitmap = new SKBitmap(info);
+        var result = codec.GetPixels(info, bitmap.GetPixels());
+        if (result != SKCodecResult.Success)
+        {
+            bitmap.Dispose();
+            throw new InvalidOperationException($"cannot decode {path}: {result}");
+        }
+        return bitmap;
     }
 
     static SKBitmap Normalize(SKBitmap b)

@@ -77,6 +77,35 @@ public class ImageDiffTests
         Assert.Equal(1, r.EdgeOverTolerance);
     }
 
+    static string WritePng(SKColor c)
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"rbx15-parity-{Guid.NewGuid():N}.png");
+        using var b = new SKBitmap(new SKImageInfo(1, 1, SKColorType.Rgba8888, SKAlphaType.Unpremul));
+        b.SetPixel(0, 0, c);
+        using var img = SKImage.FromBitmap(b);
+        using var data = img.Encode(SKEncodedImageFormat.Png, 100);
+        File.WriteAllBytes(path, data.ToArray());
+        return path;
+    }
+
+    [Fact]
+    public void Load_keeps_low_alpha_colors_unpremultiplied()
+    {
+        // Antialiased edges are full of low-alpha pixels. Decoding them through premultiplied
+        // storage quantizes (200,100,50,a=3) to (170,85,85), corrupting every edge comparison.
+        using var loaded = ImageDiff.Load(WritePng(new SKColor(200, 100, 50, 3)));
+        Assert.Equal(SKAlphaType.Unpremul, loaded.AlphaType);
+        Assert.Equal(new SKColor(200, 100, 50, 3), loaded.GetPixel(0, 0));
+    }
+
+    [Fact]
+    public void A_low_alpha_difference_survives_the_png_round_trip()
+    {
+        using var a = ImageDiff.Load(WritePng(new SKColor(200, 100, 50, 3)));
+        using var b = ImageDiff.Load(WritePng(new SKColor(210, 100, 50, 3)));
+        Assert.Equal(10, ImageDiff.Compare(a, b).MaxDelta);
+    }
+
     [Fact]
     public void Heatmap_is_white_where_equal_and_red_where_different()
     {

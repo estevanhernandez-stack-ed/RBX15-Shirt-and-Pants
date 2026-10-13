@@ -2,6 +2,12 @@
 
 All notable changes to RBX15 Classic Shirt and Pants Maker are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Removed
+
+- `roblox_uploader.py`, `upload_manifest.json` and `pants_manifest.json` moved to a private repository. They were local upload tooling, never part of the app.
+
 ## [4.1.0] — 2026-07-21
 
 The revival release: broken features fixed, a big new creative capability, and the project's first automated test suite.

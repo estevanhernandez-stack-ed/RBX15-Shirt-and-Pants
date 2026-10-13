@@ -50,7 +50,7 @@ Also gained:
 
 ### What the ledger adds beyond these sections
 
-Classifying the 407 rows under this policy produced 197 keep, 183 fix, 26 drop and 1 new. Most fixes are the decisions below, applied row by row. A few were inferred under "clearly unintended" and are listed here so none of them lands silently:
+Classifying the 407 rows under this policy produced 197 keep, 183 fix, 26 drop and 1 new. Most fixes are the decisions below, applied row by row. Five were inferred under "clearly unintended" rather than decided in a section. Este approved all five on 2026-10-12:
 
 - The Word Art size is enforced to the 8 to 300 range the input already declares.
 - Opening a project clears undo history; 4.1 leaks the previous project's history into the new one.

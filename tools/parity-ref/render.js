@@ -79,20 +79,29 @@ app.whenReady().then(async () => {
 
     const win = new BrowserWindow({ show: false, webPreferences: { contextIsolation: false } });
     await win.loadURL('data:text/html;base64,' + Buffer.from(page()).toString('base64'));
-    const index = {
+    // Provenance is per scene, and an existing index is merged, never replaced: regenerating
+    // one golden with --only must keep every other golden's record, which is the only
+    // provenance left once this tool is deleted at cutover. Top-level fields describe the
+    // most recent run.
+    const run = {
       electron: process.versions.electron, chrome: process.versions.chrome,
-      editorJsBlob: blob('editor.js'), fillsJsBlob: blob('lib/fills.js'), scenes: [],
+      editorJsBlob: blob('editor.js'), fillsJsBlob: blob('lib/fills.js'),
     };
+    const indexFile = path.join(path.resolve(out), 'index.json');
+    const prior = fs.existsSync(indexFile) ? JSON.parse(fs.readFileSync(indexFile, 'utf8')).scenes || [] : [];
+    const index = { ...run, scenes: prior.slice() };
     for (const scene of scenes) {
       const images = {};
       for (const rel of [scene.bgImage, ...(scene.layers || []).map((l) => l.image)].filter(Boolean)) images[rel] = dataUrl(rel);
       const url = await win.webContents.executeJavaScript(`renderScene(${JSON.stringify(scene)}, ${JSON.stringify(images)})`);
       const png = Buffer.from(url.split(',')[1], 'base64');
       fs.writeFileSync(path.join(path.resolve(out), scene.name + '.png'), png);
-      index.scenes.push({ name: scene.name, sha256: crypto.createHash('sha256').update(png).digest('hex') });
+      const entry = { name: scene.name, sha256: crypto.createHash('sha256').update(png).digest('hex'), ...run };
+      const at = index.scenes.findIndex((s) => s.name === scene.name);
+      if (at >= 0) index.scenes[at] = entry; else index.scenes.push(entry);
       console.log('rendered', scene.name);
     }
-    fs.writeFileSync(path.join(path.resolve(out), 'index.json'), JSON.stringify(index, null, 2) + '\n');
+    fs.writeFileSync(indexFile, JSON.stringify(index, null, 2) + '\n');
     app.exit(0);
   } catch (e) {
     console.error(e.stack || String(e));

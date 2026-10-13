@@ -13,12 +13,12 @@ const { extractShipped } = require('./extract.js');
 const ROOT = path.resolve(__dirname, '..', '..');
 const ELECTRON = require('electron'); // in plain Node this is the path to electron.exe
 
-function render(scenes, outDir) {
+function render(scenes, outDir, extra = []) {
   const scenesFile = path.join(outDir, 'scenes.json');
   fs.writeFileSync(scenesFile, JSON.stringify(scenes));
   const env = { ...process.env };
   delete env.ELECTRON_RUN_AS_NODE;
-  const r = spawnSync(ELECTRON, [path.join(__dirname, 'render.js'), '--scenes', scenesFile, '--out', outDir],
+  const r = spawnSync(ELECTRON, [path.join(__dirname, 'render.js'), '--scenes', scenesFile, '--out', outDir, ...extra],
     { env, encoding: 'utf8', timeout: 120000 });
   assert.strictEqual(r.status, 0, `render failed:\n${r.stdout}\n${r.stderr}`);
 }
@@ -67,4 +67,18 @@ test('renders are deterministic and the export masks the gutters', async () => {
   const index = JSON.parse(fs.readFileSync(path.join(a, 'index.json'), 'utf8'));
   assert.ok(index.electron && index.chrome && index.editorJsBlob, 'provenance recorded');
   assert.strictEqual(index.scenes.length, 2);
+});
+
+test('--only keeps every other scene in index.json, with per-scene provenance', () => {
+  // index.json is the only provenance record after cutover: regenerating one golden
+  // must not erase the others' hashes or claim they came from this run's Electron.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pref-only-'));
+  render([SOLID, LAYER], dir);
+  const before = JSON.parse(fs.readFileSync(path.join(dir, 'index.json'), 'utf8'));
+  render([SOLID, LAYER], dir, ['--only', 'probe-solid']);
+  const after = JSON.parse(fs.readFileSync(path.join(dir, 'index.json'), 'utf8'));
+  assert.deepStrictEqual(after.scenes.map((s) => s.name), ['probe-solid', 'probe-layer']);
+  const layer = (ix) => ix.scenes.find((s) => s.name === 'probe-layer');
+  assert.deepStrictEqual(layer(after), layer(before));
+  for (const s of after.scenes) assert.ok(s.electron && s.chrome && s.editorJsBlob && s.fillsJsBlob, s.name);
 });

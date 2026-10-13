@@ -15,7 +15,7 @@ Renders parity scenes through shipped 4.1 code, lifted verbatim out of `editor.j
     env -u ELECTRON_RUN_AS_NODE ./node_modules/electron/dist/electron.exe tools/parity-ref/render.js \
       --scenes tools/parity-ref/scenes.json --out tests/goldens/render [--only name1,name2]
 
-`index.json` records the Electron and Chrome versions, the git blob hashes of `editor.js` and `lib/fills.js`, and each PNG's SHA-256.
+`index.json` records, for each golden, its SHA-256 plus the Electron and Chrome versions and the git blob hashes of `editor.js` and `lib/fills.js` that produced it. A run with `--only` merges into the existing index and never drops other goldens' records.
 
 ## Scene format
 

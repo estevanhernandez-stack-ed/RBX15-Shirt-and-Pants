@@ -10,3 +10,10 @@ dist/
 Assets/
 .claude/
 windows/msix/_stage/
+
+# .NET (v5 native port)
+bin/
+obj/
+.vs/
+TestResults/
+*.user

@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RBX15.Engine\RBX15.Engine.csproj" />
+    <ProjectReference Include="..\RBX15.Parity\RBX15.Parity.csproj" />
   </ItemGroup>
 
 </Project>

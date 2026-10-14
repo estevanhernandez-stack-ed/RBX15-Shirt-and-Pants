@@ -112,9 +112,30 @@ def problems(data: dict, md_dir: Path) -> list[str]:
     return found
 
 
+def mark_done(data: dict, ids: list[str]) -> dict:
+    known = {r["id"] for r in data["rows"]}
+    unknown = [i for i in ids if i not in known]
+    if unknown:
+        raise KeyError(f"unknown ledger ids: {', '.join(unknown)}")
+    wanted = set(ids)
+    for r in data["rows"]:
+        if r["id"] in wanted:
+            r["status"] = "done"
+    return data
+
+
 def main(argv: list[str]) -> int:
     cmd = argv[1] if len(argv) > 1 else "check"
     data = load(PORT / "parity-ledger.json")
+    if cmd == "done":
+        try:
+            mark_done(data, argv[2:])
+        except KeyError as e:
+            print(e.args[0])
+            return 1
+        (PORT / "parity-ledger.json").write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n",
+                                                 encoding="utf-8", newline="\n")
+        cmd = "render"
     if cmd == "render":
         (PORT / "parity-ledger.md").write_text(render_ledger(data), encoding="utf-8")
         (PORT / "divergences.md").write_text(render_divergences(data), encoding="utf-8")

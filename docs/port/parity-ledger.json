@@ -126,7 +126,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "tpl-shirt-regions",
@@ -145,7 +145,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "tpl-pants-regions",
@@ -164,7 +164,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "tpl-active-regions-swap",
@@ -204,7 +204,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "bg-palette",
@@ -243,7 +243,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "layer-factory",
@@ -262,7 +262,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "layer-fields-schema",
@@ -321,7 +321,7 @@
    "check": "golden",
    "disposition": "fix",
    "divergence": "4.1: RGB shift runs on browser-premultiplied getImageData, losing precision on low-alpha pixels. v5: RGB shift runs on unpremultiplied pixels (approved decision), so low-alpha pixels are more precise.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "rgb-shift-cache",
@@ -341,7 +341,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: single-slot cache keyed only on layer id and shifts can show stale shifted pixels after eraser or draw edits and thrashes with two shifted layers. v5: per-layer cache invalidated on any pixel edit (clearly unintended staleness bug).",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "has-adjustments",
@@ -360,7 +360,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "css-filter-chain",
@@ -380,7 +380,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "rgb-shift-draw-order",
@@ -399,7 +399,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "layer-draw-transform",
@@ -418,7 +418,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "layer-skip-rules",
@@ -437,7 +437,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "fills-normalize",
@@ -456,7 +456,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "fills-hex-parse",
@@ -475,7 +475,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "fills-prng",
@@ -495,7 +495,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "fills-defaults",
@@ -515,7 +515,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "fills-solid",
@@ -534,7 +534,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "fills-linear",
@@ -553,7 +553,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "fills-radial",
@@ -572,7 +572,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "fills-stripes",
@@ -591,7 +591,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "fills-checker",
@@ -610,7 +610,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "fills-dots",
@@ -629,7 +629,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "fills-camo",
@@ -648,7 +648,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "fills-to-css",
@@ -686,7 +686,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "fills-exports-api",
@@ -725,7 +725,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "region-connected-groups",
@@ -744,7 +744,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "paint-regions-grouping",
@@ -763,7 +763,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "render-offscreen",
@@ -782,7 +782,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "render-background",
@@ -801,7 +801,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "render-region-fills-step",
@@ -820,7 +820,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "render-live-preview",
@@ -858,7 +858,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "render-zoom-canvas",
@@ -1068,7 +1068,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "imgdata-premult-note",
@@ -1088,7 +1088,7 @@
    "check": "golden",
    "disposition": "fix",
    "divergence": "4.1: RGB shift round-trips through premultiplied canvas data and loses low-alpha channel precision. v5: shift runs on unpremultiplied pixels, more precise at low alpha.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "history-snapshot-coupling",
@@ -2890,7 +2890,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "export-filename-save",
@@ -2914,7 +2914,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "export-png-encoding",
@@ -2933,7 +2933,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "layer-sharing-img",
@@ -3059,7 +3059,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "regions-state-model",
@@ -5670,7 +5670,7 @@
    "check": "golden",
    "disposition": "fix",
    "divergence": "4.1: Chromium ctx.filter chain with RGB shift applied on premultiplied canvas data. v5: per-stage CSS filter color matrices in the same order with RGB shift on unpremultiplied pixels (more precise on low alpha).",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "canvas-element-render",
@@ -6173,7 +6173,7 @@
    "check": "golden",
    "disposition": "fix",
    "divergence": "4.1: export edge pixels vary between GPU and software canvas and are not byte-stable across machines. v5: deterministic CPU-Skia export, byte-identical across machines.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "shell-external-drop-guard",
@@ -6235,7 +6235,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "io-empty-export-confirm",
@@ -6711,7 +6711,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "tests-lib-erase",

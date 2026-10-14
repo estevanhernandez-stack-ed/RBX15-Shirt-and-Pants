@@ -20,8 +20,8 @@ namespace RBX15.Engine;
 ///   <description><c>Renderer.FloatPipeline</c>; layer-rotate-scale-fliph-opacity, layer-rotate-neg-flipv-upscale, rgb-shift-with-adjust-rotated, full-scene, gap-layer-rotate-90 (unit test Rotated_layer_composites_in_float_not_lowp)</description></item>
 /// <item><term>AutoLayerForImageFilter: a filtered draw runs in a draw-sized SaveLayer</term>
 ///   <description><c>Renderer.DrawLayer</c> (SaveLayer(dst, filter)); adjust-brightness-150, adjust-contrast-40, adjust-saturate-0, adjust-hue-90, adjust-combo, adjust-extremes, rgb-shift-with-adjust-rotated, full-scene, gap-opacity-with-adjust (opacity under a filter)</description></item>
-/// <item><term>cc decode cache: pre-scale at mip level 1 or more (target at or below 0.5)</term>
-///   <description><c>Renderer.DecodeCacheSize</c>, <c>Images.DecodeCacheScaled</c>; full-scene (scaled-down word art), gap-layer-mip2 (mip level 2), gap-bg-image-prescale (background pre-scale)</description></item>
+/// <item><term>cc decode cache: pre-scale at mip level 1 or more (target at or below 0.5), medium quality through Skia's mip chain at the geometric-mean level</term>
+///   <description><c>Renderer.DecodeCacheSize</c>, <c>Images.DecodeCacheScaled</c>, <c>Images.SkiaMipLevel</c>; full-scene (scaled-down word art), gap-layer-mip2 (mip level 2), gap-bg-image-prescale (background pre-scale)</description></item>
 /// <item><term>FEComponentTransfer: float32, truncating brightness and contrast tables</term>
 ///   <description><c>Adjust</c> (brightness and contrast tables, <c>FilterChain</c>); adjust-brightness-150, adjust-contrast-40, adjust-combo, adjust-extremes</description></item>
 /// </list>

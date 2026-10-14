@@ -11,8 +11,19 @@ Renders parity scenes through shipped 4.1 code in Electron with GPU raster off. 
 - They are frozen from 4.1. Regenerating them after `editor.js` changes is wrong unless the change is a 4.x release the native port must also match.
 - A deliberate v5 divergence with a visual effect gets a **new** golden next to the 4.1 one, plus a note in `docs/port/divergences.md`. The 4.1 golden is never overwritten.
 - Word Art goldens are drawn with the vendored fonts in `assets/fonts` (see its README). `app-render.js` answers every Google Fonts request from those files and fails on any other network request.
-- Project fixtures in `tests/goldens/projects` were written once by 4.1's own `saveProject`. They embed `savedAt`, so re-saving never reproduces them. Never re-run `--save-projects` into that folder.
+- Project fixtures in `tests/goldens/projects` were written once by 4.1's own `saveProject`. They were captured with `savedAt` pinned (harness commit `110e6e7`), but they are frozen all the same. Never re-run `--save-projects` into that folder.
 - This directory is deleted at cutover. The goldens and `assets/fonts` stay.
+
+## Capture provenance
+
+The `tests/goldens/app` and `tests/goldens/projects` goldens were captured at commit `cf29a55`. The four M1-gap render goldens in `tests/goldens/render` were captured at commit `52e1740`. Both captures share this environment:
+
+- Machine: `Dunder-MiffLan` (seat "Dunder").
+- OS: Windows 11 Pro, Microsoft Windows [Version 10.0.26220.9606].
+- Harness: `app-render.js`, `app-harness.js` and `fonts.js` at commit `110e6e7`, the version that captured them.
+- Runtime: Electron 41.1.0, Chrome 146.0.7680.166, CPU raster.
+
+Regenerating on another machine must first re-render into a scratch folder and compare each SHA-256 against `index.json`. Any mismatch is a machine or harness difference to investigate, never a reason to overwrite a golden.
 
 ## Use
 
@@ -37,6 +48,6 @@ Each `index.json` records, per golden, its SHA-256, the Electron and Chrome vers
   - `{ op: "shape", tool: "line"|"rect"|"ellipse", from: [x,y], to: [x,y], color: "#rrggbb", width, fill }` sends mousedown, one mousemove and mouseup through the real canvas handlers.
   - `{ op: "erase", layer, points: [[x,y], ...], size }` selects base layer `layer` (0-based), switches to the eraser and drags through `points`. At least two points are required.
   - `{ op: "detail", type, color, width, stitch }` sets the Details settings and clicks the real detail button. Shirt mode only.
-  - `{ op: "wordart", text?, font?, style?, size?, fill?, stroke?, grad?, strokeWidth?, angle? }` sets the Text-tab controls, waits for the vendored font, and clicks "Add to canvas". Omitted fields keep the `editor.html` defaults.
+  - `{ op: "wordart", text?, font?, style?, size?, fill?, stroke?, grad?, strokeWidth?, angle? }` sets the Text-tab controls, waits for the vendored font, and clicks "Add to canvas". Within a scene, an omitted field keeps the previous wordart op's value (each scene starts on a fresh page, so the first op sees the `editor.html` defaults). Golden scenes specify every wordart field.
   - `{ op: "project", file }` loads a `.r15proj` through the real Open path.
 - Template points are integers, and every value must fit its control's range: brush 1-50, detail width 1-8, stroke width 0-20, angle 0-360. Pen strokes are not frozen (approved divergence); the renderer refuses any op it does not know.

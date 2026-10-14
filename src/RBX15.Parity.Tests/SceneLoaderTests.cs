@@ -45,6 +45,6 @@ public class SceneLoaderTests
     public void All_frozen_scenes_load()
     {
         var scenes = SceneLoader.LoadAll(Path.Combine(Root, "tests", "goldens", "render", "scenes.json"), Root);
-        Assert.Equal(30, scenes.Count);
+        Assert.Equal(34, scenes.Count); // 30 M0/M1 scenes + 4 M1-gap scenes (M2a Task 3)
     }
 }

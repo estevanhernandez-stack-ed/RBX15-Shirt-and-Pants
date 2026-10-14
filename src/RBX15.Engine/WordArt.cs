@@ -84,8 +84,9 @@ public static class WordArt
     /// <summary>
     /// Shapes one line as Blink's HarfBuzzShaper does. The line splits into runs by font coverage, one
     /// grapheme cluster at a time: a cluster whose first character the vendored face covers stays in it,
-    /// and any other falls back to the system face SKFontManager.MatchCharacter picks for the family at
-    /// weight 900, as Chromium falls back (4.1's font string ends in ", sans-serif", editor.js:2131).
+    /// and any other falls back to Arial when Arial has it (Chromium's generic sans-serif on Windows),
+    /// else to the system face SKFontManager.MatchCharacter picks for the family at weight 900, as
+    /// Chromium falls back (4.1's font string ends in ", sans-serif", editor.js:2131).
     /// Each run is shaped with HarfBuzz at the font size in 16.16 fixed point, the vendored run at the
     /// request's wght; advances and offsets come back as floats summed left to right. Text the vendored
     /// face covers is one run, shaped exactly as one HarfBuzz call over the whole line.
@@ -135,6 +136,9 @@ public static class WordArt
     /// </summary>
     static FallbackFace? Fallback(string family, int codepoint) => FallbackByCharacter.GetOrAdd((family, codepoint), key =>
     {
+        // The generic sans-serif first (Arial on Windows, where Chromium resolves it), as the font
+        // list '900 <size>px "<family>", sans-serif' (editor.js:2131) asks; then the system fallback.
+        if (SansSerif.Value is { } sans && Covers(sans, key.Codepoint)) return Register(sans, owned: false);
         var typeface = SKFontManager.Default.MatchCharacter(key.Family, RequestStyle, null, key.Codepoint);
         if (typeface is null) return null;
         if (!Covers(typeface, key.Codepoint))
@@ -142,6 +146,15 @@ public static class WordArt
             typeface.Dispose();
             return null;
         }
+        return Register(typeface, owned: true);
+    });
+
+    /// <summary>
+    /// The one cached <see cref="FallbackFace"/> per distinct face. An owned typeface that lost the race
+    /// to an equal cached face is released; the shared sans-serif typeface is never disposed.
+    /// </summary>
+    static FallbackFace Register(SKTypeface typeface, bool owned)
+    {
         var id = $"{typeface.FamilyName}|{typeface.FontWeight}|{typeface.FontWidth}|{typeface.FontSlant}";
         var face = FallbackFaces.GetOrAdd(id, _ =>
         {
@@ -149,9 +162,17 @@ public static class WordArt
             using var data = SKData.Create(stream);
             return new FallbackFace(typeface, data.ToArray(), index);
         });
-        if (!ReferenceEquals(face.Typeface, typeface)) typeface.Dispose();
+        if (owned && !ReferenceEquals(face.Typeface, typeface)) typeface.Dispose();
         return face;
-    });
+    }
+
+    /// <summary>
+    /// The face Chromium's generic sans-serif resolves to on Windows: Arial at the request's style
+    /// (weight 900 matches Arial Bold). Null when the machine has no Arial (the font manager's
+    /// substitute is not taken), so the system fallback decides. Lives for the process.
+    /// </summary>
+    static readonly Lazy<SKTypeface?> SansSerif = new(() =>
+        SKFontManager.Default.MatchFamily("Arial", RequestStyle) is { FamilyName: "Arial" } arial ? arial : null);
 
     /// <summary>Whether the face has a glyph for the character (SKTypeface.ContainsGlyph is obsolete in 4.153.1).</summary>
     static bool Covers(SKTypeface typeface, int codepoint)

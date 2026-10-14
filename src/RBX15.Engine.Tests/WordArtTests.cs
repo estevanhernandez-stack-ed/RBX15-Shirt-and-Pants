@@ -70,6 +70,42 @@ public class WordArtTests
     }
 
     [Theory]
+    [InlineData(0x03B1)] // GREEK SMALL LETTER ALPHA
+    [InlineData(0x2665)] // BLACK HEART SUIT
+    public void A_character_the_family_lacks_tries_arial_before_system_fallback(int codepoint)
+    {
+        // 4.1's font string is '900 64px "Anton", sans-serif' (editor.js:2131), and Chromium on Windows
+        // resolves the generic sans-serif to Arial, so a character Anton lacks draws in Arial when Arial
+        // has it; only then does the system fallback (MatchCharacter) choose. Both characters are
+        // checked missing from the vendored Anton (assets/fonts/anton/Anton-Regular.ttf).
+        var style = new SKFontStyle(SKFontStyleWeight.Black, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
+        using (var anton = new SKFont(Fonts.Get("Anton", WordArt.Weight)))
+            Assert.False(anton.ContainsGlyph(codepoint));
+        var line = WordArt.Shape("Anton", 64, "A" + char.ConvertFromUtf32(codepoint));
+        Assert.Equal(2, line.Runs.Count);
+        var run = line.Runs[1];
+        Assert.False(run.Primary);
+        Assert.All(line.Runs, r => Assert.DoesNotContain((ushort)0, r.Glyphs));
+
+        // Typefaces from the font manager are shared wrappers; the test never disposes them.
+        var arial = SKFontManager.Default.MatchFamily("Arial", style);
+        bool arialHas = false;
+        if (arial is { FamilyName: "Arial" })
+            using (var probe = new SKFont(arial))
+                arialHas = probe.ContainsGlyph(codepoint);
+        if (arialHas)
+        {
+            Assert.Equal("Arial", run.Typeface.FamilyName);
+        }
+        else
+        {
+            // No Arial with this character on this machine: the system fallback decides.
+            var system = SKFontManager.Default.MatchCharacter("Anton", style, null, codepoint);
+            Assert.Equal(system?.FamilyName, run.Typeface.FamilyName);
+        }
+    }
+
+    [Theory]
     [InlineData("Anton", 64, 18.015625)]
     [InlineData("Poppins", 64, 16)]
     [InlineData("Dancing Script", 64, 17.0625)]

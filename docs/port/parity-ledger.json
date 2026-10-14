@@ -3863,7 +3863,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "detail-collar-v",
@@ -4350,7 +4350,7 @@
    "owner": "Engine.WordArt",
    "check": "golden",
    "disposition": "fix",
-   "divergence": "4.1: Chromium rasterizes Word Art glyphs through DirectWrite with ClearType-style coverage. v5: SkiaSharp's rasterizer smooths glyph edges differently; interiors match within 1 level, layout and placement match exactly (pinned by the 4.1-bitmap swap test).",
+   "divergence": "4.1: Chromium rasterizes Word Art glyphs through DirectWrite with ClearType-style coverage. v5: SkiaSharp's rasterizer smooths glyph edges differently; interiors match within 1 level, layout and placement match exactly (pinned by the 4.1-bitmap swap test). The engine bitmap is also held to per-scene ceilings by WordArtRatchetTests against tests/goldens/app/wordart-ref, and ceilings move only by a logged update.",
    "status": "done"
   },
   {

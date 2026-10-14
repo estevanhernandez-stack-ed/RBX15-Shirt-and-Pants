@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**408 rows.** Status: done 80, open 328. Disposition: keep 195, fix 186, drop 26, new 1. Checks: ui-auto 120, unit 110, manual 66, golden 65, none-retired 25, doc 22.
+**408 rows.** Status: done 81, open 327. Disposition: keep 195, fix 186, drop 26, new 1. Checks: ui-auto 120, unit 110, manual 66, golden 65, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -285,7 +285,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
 | open | `details-layer-creation-pipeline` | Detail layer creation pipeline (canvas, style, autocrop, insertion) | golden | keep | med |
-| open | `details-mode-independence-and-selection` | Detail layers ignore selection and ride on the layer stack | unit | keep | low |
+| done | `details-mode-independence-and-selection` | Detail layers ignore selection and ride on the layer stack | unit | keep | low |
 | done | `detail-collar-v` | V-Neck collar geometry | golden | keep | low |
 | done | `detail-collar-crew` | Crew neck geometry (front and back) | golden | keep | low |
 | done | `detail-collar-scoop` | Scoop neck geometry | golden | keep | low |

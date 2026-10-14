@@ -92,6 +92,23 @@ public class GoldenAppTests
     }
 
     [Fact]
+    public void Every_scene_is_run_or_skipped_exactly_once_and_skip_rows_match_PendingOps()
+    {
+        var rows = typeof(GoldenAppTests).GetMethod(nameof(Engine_export_matches_the_frozen_4_1_app_golden))!
+            .GetCustomAttributes(typeof(MemberDataAttribute), false).Cast<MemberDataAttribute>()
+            .Select(a => (Op: (string)a.Parameters[0], a.Skip))
+            .ToList();
+
+        var skipOps = rows.Where(r => r.Skip != null).Select(r => r.Op).ToList();
+        Assert.Equal(PendingOps.OrderBy(o => o), skipOps.OrderBy(o => o));
+        Assert.Single(rows, r => r.Skip == null && r.Op == "");
+
+        var accounted = rows.Sum(r => ((System.Collections.IEnumerable)ScenesBlockedBy(r.Op)).Cast<object>().Count());
+        Assert.Equal(Raw.Value.Count, accounted);
+        Assert.Equal(82, Raw.Value.Count);
+    }
+
+    [Fact]
     public void Every_app_scene_has_a_golden()
     {
         var missing = Raw.Value.Select(NameOf).Where(n => !File.Exists(Path.Combine(Dir, n + ".png"))).ToList();

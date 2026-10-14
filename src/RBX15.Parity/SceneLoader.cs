@@ -23,7 +23,7 @@ public static class SceneLoader
     public sealed record Scene(string Name, Document Document);
 
     /// <summary>Ops the engine runs. Each engine task that implements an op adds it here.</summary>
-    static readonly HashSet<string> SupportedOps = new(StringComparer.Ordinal) { "shape", "erase", "detail", "project" };
+    static readonly HashSet<string> SupportedOps = new(StringComparer.Ordinal) { "shape", "erase", "detail", "project", "wordart" };
 
     public static IReadOnlyList<Scene> LoadAll(string scenesJson, string repoRoot)
     {
@@ -102,6 +102,7 @@ public static class SceneLoader
                 {
                     "shape" => ApplyShape(document, action),
                     "erase" => ApplyErase(document, action, eraseStroking),
+                    "wordart" => ApplyWordArt(document, action),
                     "detail" => ApplyDetail(document, action),
                     "project" => ApplyProject(action, repoRoot),
                     var op => throw new InvalidDataException($"scene {name}: op '{op}' has no handler"),
@@ -172,6 +173,34 @@ public static class SceneLoader
         int id = doc.Layers.IsEmpty ? 1 : doc.Layers.Max(l => l.Id) + 1;
         var layer = Details.Create(type, doc.Mode, style, id);
         return layer is null ? doc : doc with { Layers = doc.Layers.Add(layer) };
+    }
+
+    /// <summary>
+    /// Scene v2 wordart op: <c>{ "op": "wordart", "text", "font", "style", "size", "fill", "stroke",
+    /// "grad", "strokeWidth", "angle" }</c>, every key optional. app-harness.js wordart() sets only
+    /// the controls a scene names, so an omitted key keeps the control's 4.1 default
+    /// (editor.html:229-262; waStyle 'solid', editor.js:2108), then clicks Add to canvas
+    /// (editor.js:2257-2291). The layer goes on top with the next id (nextId++, editor.js:2275).
+    /// </summary>
+    public static Document ApplyWordArt(Document doc, JsonElement a)
+    {
+        string Str(string key, string fallback) => a.TryGetProperty(key, out var v) ? v.GetString()! : fallback;
+        float Num(string key, float fallback) => a.TryGetProperty(key, out var v) ? v.GetSingle() : fallback;
+        var style = Str("style", "solid") switch
+        {
+            "solid" => WordArtStyle.Solid,
+            "gradient" => WordArtStyle.Gradient,
+            "neon" => WordArtStyle.Neon,
+            "shadow" => WordArtStyle.Shadow,
+            "outline" => WordArtStyle.Outline,
+            "retro" => WordArtStyle.Retro,
+            var other => throw new InvalidDataException($"unknown word art style '{other}'"),
+        };
+        var settings = new WordArtSettings(Str("text", "RIZZ"), Str("font", "Anton"), style, Num("size", 64),
+            CssColor.ToSk(Str("fill", "#17d4fa")), CssColor.ToSk(Str("stroke", "#000000")), CssColor.ToSk(Str("grad", "#f22f89")),
+            Num("strokeWidth", 3), Num("angle", 0));
+        int id = doc.Layers.IsEmpty ? 1 : doc.Layers.Max(l => l.Id) + 1;
+        return doc with { Layers = doc.Layers.Add(WordArt.CreateLayer(settings, doc.Mode, id)) };
     }
 
     /// <summary>

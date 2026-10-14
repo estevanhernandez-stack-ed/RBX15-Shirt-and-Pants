@@ -20,8 +20,7 @@ namespace RBX15.Engine.Tests;
 /// </summary>
 public class GoldenAppTests
 {
-    const string WordArtSkip = "op 'wordart' is not run by the engine yet (Engine WordArt, M2b)";
-    static readonly string[] PendingOps = { "wordart" };
+    static readonly string[] PendingOps = { };
 
     static readonly string Root = RepoRoot.Find(AppContext.BaseDirectory);
     static readonly string Dir = Path.Combine(Root, "tests", "goldens", "app");
@@ -35,6 +34,10 @@ public class GoldenAppTests
     static string NameOf(JsonElement e) => e.GetProperty("name").GetString()!;
 
     static JsonElement Scene(string name) => Raw.Value.Single(e => NameOf(e) == name);
+
+    /// <summary>Scenes with a wordart action meet the Word Art rule (ruling R2, GoldenRule.AssertWordArtMatches); every other scene the unchanged rule.</summary>
+    static bool HasWordArt(JsonElement e) =>
+        e.TryGetProperty("actions", out var actions) && actions.EnumerateArray().Any(a => a.GetProperty("op").GetString() == "wordart");
 
     /// <summary>Scenes whose first unsupported op is <paramref name="op"/>; "" selects the scenes the engine runs in full.</summary>
     public static TheoryData<string> ScenesBlockedBy(string op)
@@ -63,11 +66,15 @@ public class GoldenAppTests
 
     [Theory]
     [MemberData(nameof(ScenesBlockedBy), "")]
-    [MemberData(nameof(ScenesBlockedBy), "wordart", Skip = WordArtSkip)]
     public void Engine_export_matches_the_frozen_4_1_app_golden(string name)
     {
         var scene = SceneLoader.Parse(Scene(name), Root, EraseStroking.Replay41);
-        GoldenRule.AssertMatches(name, Path.Combine(Dir, name + ".png"), scene.Document, Path.Combine(Root, "diff-heatmaps", "app", name + ".png"));
+        var golden = Path.Combine(Dir, name + ".png");
+        var heatmap = Path.Combine(Root, "diff-heatmaps", "app", name + ".png");
+        if (HasWordArt(Scene(name)))
+            GoldenRule.AssertWordArtMatches(name, golden, scene.Document, heatmap);
+        else
+            GoldenRule.AssertMatches(name, golden, scene.Document, heatmap);
     }
 
     [Theory]

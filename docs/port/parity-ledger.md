@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**407 rows.** Status: done 55, open 352. Disposition: keep 196, fix 184, drop 26, new 1. Checks: ui-auto 120, unit 110, manual 66, golden 64, none-retired 25, doc 22.
+**408 rows.** Status: done 55, open 353. Disposition: keep 196, fix 185, drop 26, new 1. Checks: ui-auto 120, unit 110, manual 66, golden 65, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -482,6 +482,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `wordart-style-shadow` | Style: Shadow | golden | keep | low |
 | open | `wordart-style-outline` | Style: Outline (hollow, stroked in the Fill color) | golden | keep | low |
 | open | `wordart-style-retro` | Style: Retro stacked 3D | golden | keep | low |
+| open | `wordart-glyph-rasterization` | Word Art glyph rasterization (antialiased glyph edges) | golden | fix | low |
 | open | `wordart-add-to-canvas` | Add to canvas: full-resolution render and new layer | unit | keep | med |
 | open | `wordart-edge-cases` | Word Art edge cases and invalid input | unit | keep | low |
 | open | `font-wordart-runtime-google` | 15 Word Art fonts loaded from Google Fonts | golden | fix | med |

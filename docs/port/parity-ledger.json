@@ -4334,6 +4334,26 @@
    "status": "open"
   },
   {
+   "id": "wordart-glyph-rasterization",
+   "area": "wordart",
+   "name": "Word Art glyph rasterization (antialiased glyph edges)",
+   "source": "gap:m2b-golden",
+   "behavior": "renderWordArt draws its text with fillText and strokeText (editor.js:2166-2236) in the font '900 <size>px \"<family>\", sans-serif' (editor.js:2131-2132). Chromium on Windows rasterizes those glyphs through DirectWrite with ClearType-style coverage: 87 to 184 distinct coverage levels in a fill-only render, and horizontal spreading at stems.",
+   "codeRefs": [
+    "editor.js:2131-2132",
+    "editor.js:2166-2236"
+   ],
+   "quirks": "Measured 2026-10-14 on the 22 frozen Word Art goldens: under the unchanged golden rule every scene fails on glyph edges only (largest edge delta 79). Interior differences are 0 on 21 scenes, and 7 pixels of one level on wordart-outline-anton (x=314, y=147..153). Swapping 4.1's own Word Art bitmap into the engine document matches all 22 goldens exactly.",
+   "portTarget": "WordArt draws HarfBuzz-shaped text blobs with the SkFont Chromium's canvas uses (Fonts.CreateFont). SkiaSharp 4.153.1 exposes no font-manager choice, text gamma or contrast, so its glyph coverage differs from DirectWrite's. Exact parity would need DirectWrite glyph-run analysis through COM interop, which M2b does not take.",
+   "risk": "low",
+   "parityCheck": "GoldenAppTests holds the 22 Word Art scenes to GoldenRule.AssertWordArtMatches: same size, every interior pixel within 1 level per channel, edge pixels unbounded. WordArtSwapTests swaps 4.1's own Word Art bitmap (tests/goldens/app/wordart-ref) into the engine document and requires an exact match under the unchanged GoldenRule.",
+   "owner": "Engine.WordArt",
+   "check": "golden",
+   "disposition": "fix",
+   "divergence": "4.1: Chromium rasterizes Word Art glyphs through DirectWrite with ClearType-style coverage. v5: SkiaSharp's rasterizer smooths glyph edges differently; interiors match within 1 level, layout and placement match exactly (pinned by the 4.1-bitmap swap test).",
+   "status": "open"
+  },
+  {
    "id": "wordart-preview-live",
    "area": "wordart",
    "name": "Live preview wiring",

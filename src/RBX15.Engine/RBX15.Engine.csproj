@@ -10,4 +10,8 @@
     <PackageReference Include="SkiaSharp" Version="4.153.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="RBX15.Engine.Tests" />
+  </ItemGroup>
+
 </Project>

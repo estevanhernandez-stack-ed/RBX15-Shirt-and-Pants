@@ -76,7 +76,7 @@ public static class Template
         return Regions(mode)[i];
     }
 
-    /// <summary>buildMask (editor.js:116-126): white integer rects on transparent; export clips with destination-in.</summary>
+    /// <summary>buildMask (editor.js:116-126): white integer rects on transparent; export clips with destination-in. Cache-owned; callers must not dispose.</summary>
     public static SKImage Mask(TemplateMode mode) => mode == TemplateMode.Shirt ? ShirtMask.Value : PantsMask.Value;
 
     static SKImage BuildMask(IEnumerable<Region> regions)

@@ -6,6 +6,30 @@ namespace RBX15.Engine;
 /// The export composition (editor.js exportPNG, lines 1512-1534). The order is a contract (spec
 /// section 2): clear, background (stretched image, or color, times opacity), region fills, visible
 /// layers bottom to top, then the mask with destination-in. Export always masks.
+/// <para>
+/// Chromium compatibility index. Each row is a place where SkiaSharp does not match Chromium's Skia
+/// by default, and what keeps the renders at 4.1 parity. If a SkiaSharp upgrade breaks goldens, start here.
+/// </para>
+/// <list type="table">
+/// <listheader><term>Point</term><description>Implemented in; exercised by golden scenes</description></listheader>
+/// <item><term>kN32 surface so Skia takes its legacy 8888 blitters</term>
+///   <description><see cref="Export"/>, <c>Images.ForDrawing</c>; every scene, most sensitively bg-color-half-opacity, layer-basic, layers-order-hidden</description></item>
+/// <item><term>Blink ShouldDrawImageAntialiased</term>
+///   <description><c>Renderer.DrawImageAntialiased</c>; layer-rotate-scale-fliph-opacity, layer-rotate-neg-flipv-upscale, rgb-shift-with-adjust-rotated</description></item>
+/// <item><term>FloatPipeline: no-op color filter keeps non scale-translate draws out of lowp</term>
+///   <description><c>Renderer.FloatPipeline</c>; layer-rotate-scale-fliph-opacity, layer-rotate-neg-flipv-upscale, rgb-shift-with-adjust-rotated, full-scene (unit test Rotated_layer_composites_in_float_not_lowp)</description></item>
+/// <item><term>AutoLayerForImageFilter: a filtered draw runs in a draw-sized SaveLayer</term>
+///   <description><c>Renderer.DrawLayer</c> (SaveLayer(dst, filter)); adjust-brightness-150, adjust-contrast-40, adjust-saturate-0, adjust-hue-90, adjust-combo, adjust-extremes, rgb-shift-with-adjust-rotated, full-scene</description></item>
+/// <item><term>cc decode cache: pre-scale at mip level 1 or more (target at or below 0.5)</term>
+///   <description><c>Renderer.DecodeCacheSize</c>, <c>Images.DecodeCacheScaled</c>; full-scene only (scaled-down word art); the background path is pinned by a unit test, no golden</description></item>
+/// <item><term>FEComponentTransfer: float32, truncating brightness and contrast tables</term>
+///   <description><c>Adjust</c> (brightness and contrast tables, <c>FilterChain</c>); adjust-brightness-150, adjust-contrast-40, adjust-combo, adjust-extremes</description></item>
+/// </list>
+/// <para>
+/// Precondition: 4.1 parity holds only on a kN32 premultiplied canvas whose base matrix is template
+/// space (585x559, identity). A zoomed or high-DPI view must render the 585x559 composite at identity
+/// and scale the resulting bitmap, as 4.1 does (nearest at zoom 1 or above).
+/// </para>
 /// </summary>
 public static class Renderer
 {
@@ -33,6 +57,14 @@ public static class Renderer
         return data.ToArray();
     }
 
+    /// <summary>
+    /// Draws the full export composition onto <paramref name="canvas"/>.
+    /// <para>
+    /// Precondition: the canvas is kN32 premultiplied with an identity base matrix in template space
+    /// (585x559). A zoomed or DPI view must render the composite at identity and scale the bitmap; 4.1
+    /// scales the composite (nearest at zoom 1 or above), not each draw.
+    /// </para>
+    /// </summary>
     public static void RenderExport(SKCanvas canvas, Document doc)
     {
         canvas.Clear(SKColors.Transparent);
@@ -82,6 +114,11 @@ public static class Renderer
     /// into it, and the filter applies as the layer composites back. Drawing unfiltered keeps the
     /// inner draw on the same blitter 4.1 used, and the layer's origin sets the sampler's start point,
     /// which decides the 4-bit bilinear weights of the legacy scale-translate sampler.
+    /// <para>
+    /// Precondition: the canvas is kN32 premultiplied with an identity base matrix in template space
+    /// (585x559). A zoomed or DPI view must render the composite at identity and scale the bitmap; 4.1
+    /// scales the composite (nearest at zoom 1 or above), not each draw.
+    /// </para>
     /// </summary>
     public static void DrawLayer(SKCanvas canvas, Layer layer)
     {
@@ -148,7 +185,7 @@ public static class Renderer
     /// the target on both axes. Level 0 draws the original (null); level n pre-scales to the source
     /// ceil-divided by 2^n.
     /// </summary>
-    public static (int Width, int Height)? DecodeCacheSize(int width, int height, double scaleX, double scaleY)
+    internal static (int Width, int Height)? DecodeCacheSize(int width, int height, double scaleX, double scaleY)
     {
         int targetW = (int)Math.Floor(Math.Abs(width * scaleX) + 0.5), targetH = (int)Math.Floor(Math.Abs(height * scaleY) + 0.5);
         if (targetW <= 0 || targetH <= 0) return null;

@@ -26,6 +26,7 @@ public static class Images
     /// <summary>
     /// The premultiplied, platform-native (kN32) copy that drawing uses. kN32 matters: Skia only takes
     /// its legacy 8888 blitters (Chromium's software canvas path) for N32 sources onto N32 devices.
+    /// Cache-owned; callers must not dispose.
     /// </summary>
     public static SKImage ForDrawing(SKImage image) =>
         image.AlphaType == SKAlphaType.Premul && image.ColorType == SKImageInfo.PlatformColorType
@@ -39,8 +40,9 @@ public static class Images
     /// drawn downscaled to a mip level of 1 or more (cc SoftwareImageDecodeCacheUtils::CacheKey::FromDrawImage):
     /// the image pre-scaled to that level's size with SkPixmap::scalePixels at the draw's own
     /// quality, which for canvas 'low' smoothing is bilinear without mipmaps. Cached per image.
+    /// Cache-owned; callers must not dispose.
     /// </summary>
-    public static SKImage DecodeCacheScaled(SKImage premul, int width, int height)
+    internal static SKImage DecodeCacheScaled(SKImage premul, int width, int height)
     {
         if (Scaled.TryGetValue(premul, out var hit) && hit.Width == width && hit.Height == height) return hit.Result;
         var info = new SKImageInfo(width, height, premul.ColorType, SKAlphaType.Premul);

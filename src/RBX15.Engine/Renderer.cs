@@ -15,13 +15,13 @@ namespace RBX15.Engine;
 /// <item><term>kN32 surface so Skia takes its legacy 8888 blitters</term>
 ///   <description><see cref="Export"/>, <c>Images.ForDrawing</c>; every scene, most sensitively bg-color-half-opacity, layer-basic, layers-order-hidden</description></item>
 /// <item><term>Blink ShouldDrawImageAntialiased</term>
-///   <description><c>Renderer.DrawImageAntialiased</c>; layer-rotate-scale-fliph-opacity, layer-rotate-neg-flipv-upscale, rgb-shift-with-adjust-rotated</description></item>
+///   <description><c>Renderer.DrawImageAntialiased</c>; layer-rotate-scale-fliph-opacity, layer-rotate-neg-flipv-upscale, rgb-shift-with-adjust-rotated, gap-layer-rotate-90 (exactly 90: rect stays rect, no antialiasing)</description></item>
 /// <item><term>FloatPipeline: no-op color filter keeps non scale-translate draws out of lowp</term>
-///   <description><c>Renderer.FloatPipeline</c>; layer-rotate-scale-fliph-opacity, layer-rotate-neg-flipv-upscale, rgb-shift-with-adjust-rotated, full-scene (unit test Rotated_layer_composites_in_float_not_lowp)</description></item>
+///   <description><c>Renderer.FloatPipeline</c>; layer-rotate-scale-fliph-opacity, layer-rotate-neg-flipv-upscale, rgb-shift-with-adjust-rotated, full-scene, gap-layer-rotate-90 (unit test Rotated_layer_composites_in_float_not_lowp)</description></item>
 /// <item><term>AutoLayerForImageFilter: a filtered draw runs in a draw-sized SaveLayer</term>
-///   <description><c>Renderer.DrawLayer</c> (SaveLayer(dst, filter)); adjust-brightness-150, adjust-contrast-40, adjust-saturate-0, adjust-hue-90, adjust-combo, adjust-extremes, rgb-shift-with-adjust-rotated, full-scene</description></item>
+///   <description><c>Renderer.DrawLayer</c> (SaveLayer(dst, filter)); adjust-brightness-150, adjust-contrast-40, adjust-saturate-0, adjust-hue-90, adjust-combo, adjust-extremes, rgb-shift-with-adjust-rotated, full-scene, gap-opacity-with-adjust (opacity under a filter)</description></item>
 /// <item><term>cc decode cache: pre-scale at mip level 1 or more (target at or below 0.5)</term>
-///   <description><c>Renderer.DecodeCacheSize</c>, <c>Images.DecodeCacheScaled</c>; full-scene only (scaled-down word art); the background path is pinned by a unit test, no golden</description></item>
+///   <description><c>Renderer.DecodeCacheSize</c>, <c>Images.DecodeCacheScaled</c>; full-scene (scaled-down word art), gap-layer-mip2 (mip level 2), gap-bg-image-prescale (background pre-scale)</description></item>
 /// <item><term>FEComponentTransfer: float32, truncating brightness and contrast tables</term>
 ///   <description><c>Adjust</c> (brightness and contrast tables, <c>FilterChain</c>); adjust-brightness-150, adjust-contrast-40, adjust-combo, adjust-extremes</description></item>
 /// </list>

@@ -7,7 +7,8 @@ namespace RBX15.Engine;
 /// Layer adjustments (editor.js:173-234). 4.1 sets ctx.filter = 'brightness(B%) contrast(C%) saturate(S%)
 /// hue-rotate(Hdeg)' whenever any adjustment, including RGB shift, is off default. Chromium applies the
 /// four functions in order and clamps to [0,1] after each, so this builds one color filter per stage
-/// (Filter Effects spec matrices, translate in 0..1 units) instead of one multiplied matrix.
+/// instead of one multiplied matrix: 8-bit transfer tables for brightness and contrast (Blink's
+/// FEComponentTransfer), Filter Effects spec matrices for saturate and hue-rotate (FEColorMatrix).
 /// </summary>
 public static class Adjust
 {
@@ -17,32 +18,33 @@ public static class Adjust
 
     public static SKColorFilter FilterChain(double brightnessPct, double contrastPct, double saturatePct, double hueDeg)
     {
-        var brightness = SKColorFilter.CreateColorMatrix(Brightness((float)(brightnessPct / 100)));
-        var contrast = SKColorFilter.CreateColorMatrix(Contrast((float)(contrastPct / 100)));
+        float b = (float)(brightnessPct / 100), c = (float)(contrastPct / 100);
+        var brightness = LinearTransfer(b, 0f);
+        var contrast = LinearTransfer(c, -0.5f * c + 0.5f);
         var saturate = SKColorFilter.CreateColorMatrix(Saturate((float)(saturatePct / 100)));
         var hue = SKColorFilter.CreateColorMatrix(HueRotate(hueDeg));
         // CreateCompose(outer, inner) = outer(inner(x)): brightness runs first, hue-rotate last.
         return SKColorFilter.CreateCompose(hue, SKColorFilter.CreateCompose(saturate, SKColorFilter.CreateCompose(contrast, brightness)));
     }
 
-    static float[] Brightness(float b) => new[]
+    /// <summary>
+    /// Blink builds brightness() and contrast() as FEComponentTransfer type linear, an 8-bit lookup
+    /// table per color channel (fe_component_transfer.cc Linear): i * slope + intercept * 255 in
+    /// double, clamped to 0..255, then truncated by static_cast to uint8. Slope and intercept are
+    /// floats. The truncation is the observable part: contrast(40%) maps 250 to 176.5, which 4.1
+    /// stores as 176 where a float matrix rounds to 177. Alpha is untouched.
+    /// </summary>
+    static SKColorFilter LinearTransfer(float slope, float intercept)
     {
-        b, 0, 0, 0, 0,
-        0, b, 0, 0, 0,
-        0, 0, b, 0, 0,
-        0, 0, 0, 1, 0,
-    };
-
-    static float[] Contrast(float c)
-    {
-        float t = 0.5f - 0.5f * c;
-        return new[]
+        var table = new byte[256];
+        var identity = new byte[256];
+        for (int i = 0; i < 256; i++)
         {
-            c, 0, 0, 0, t,
-            0, c, 0, 0, t,
-            0, 0, c, 0, t,
-            0, 0, 0, 1, 0,
-        };
+            double v = Math.Clamp(i * (double)slope + (double)intercept * 255, 0.0, 255.0);
+            table[i] = (byte)v;
+            identity[i] = (byte)i;
+        }
+        return SKColorFilter.CreateTable(identity, table, table, table);
     }
 
     static float[] Saturate(float s) => new[]

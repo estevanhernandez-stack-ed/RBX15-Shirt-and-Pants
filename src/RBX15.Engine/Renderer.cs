@@ -20,8 +20,8 @@ namespace RBX15.Engine;
 ///   <description><c>Renderer.FloatPipeline</c>; layer-rotate-scale-fliph-opacity, layer-rotate-neg-flipv-upscale, rgb-shift-with-adjust-rotated, full-scene, gap-layer-rotate-90 (unit test Rotated_layer_composites_in_float_not_lowp)</description></item>
 /// <item><term>AutoLayerForImageFilter: a filtered draw runs in a draw-sized SaveLayer</term>
 ///   <description><c>Renderer.DrawLayer</c> (SaveLayer(dst, filter)); adjust-brightness-150, adjust-contrast-40, adjust-saturate-0, adjust-hue-90, adjust-combo, adjust-extremes, rgb-shift-with-adjust-rotated, full-scene, gap-opacity-with-adjust (opacity under a filter)</description></item>
-/// <item><term>cc decode cache: pre-scale at mip level 1 or more (target at or below 0.5), medium quality through Skia's mip chain at the geometric-mean level</term>
-///   <description><c>Renderer.DecodeCacheSize</c>, <c>Images.DecodeCacheScaled</c>, <c>Images.SkiaMipLevel</c>; full-scene (scaled-down word art), gap-layer-mip2 (mip level 2), gap-bg-image-prescale (background pre-scale)</description></item>
+/// <item><term>cc decode cache: at cc level 1 or more (target at or below 0.5) pre-scale to the source ceil-divided by 2^level, at medium quality through Skia's mip chain at the geometric-mean Skia mip level. cc levels and Skia mip levels are counted separately. The chain is built with SKImage.ScalePixels at Linear + MipmapNearest, which relies on SkiaSharp resolving a floor-halving to Skia mip level 1 and copying it unscaled</term>
+///   <description><c>Renderer.DecodeCacheSize</c>, <c>Images.DecodeCacheScaled</c>, <c>Images.SkiaMipLevel</c>; full-scene (word art 198x125 at 0.5: cc level 1 to 99x63, Skia mip level 0), gap-layer-mip2 (word art 198x125 at 0.2: cc level 2 to 50x32, Skia mip level 1; the name counts cc levels), gap-bg-image-prescale (2160x2160 to 585x559: cc level 1 to 1080x1080, Skia mip level 1) (unit tests Decode_cache_prescales_only_at_mip_level_one_or_more, Skia_mip_level_matches_the_largest_axis_rule_wherever_both_axes_reach_2_to_the_n)</description></item>
 /// <item><term>Eraser mask draw (lib/erase.js:63): same antialias and float-pipeline rules as a layer draw</term>
 ///   <description><c>Eraser.EraseStroke</c> (reuses <c>DrawImageAntialiased</c>, <c>FloatPipeline</c>); the 8 erase scenes in tests/goldens/app via GoldenAppTests</description></item>
 /// <item><term>FEComponentTransfer: float32, truncating brightness and contrast tables</term>
@@ -183,9 +183,10 @@ public static class Renderer
 
     /// <summary>
     /// cc's software decode cache (CacheKey::FromDrawImage with MipMapUtil): the target is the source
-    /// scaled and rounded; the mip level is how many ceil-halvings of the source stay at or above
-    /// the target on both axes. Level 0 draws the original (null); level n pre-scales to the source
-    /// ceil-divided by 2^n.
+    /// scaled and rounded; the cc level is how many ceil-halvings of the source stay at or above
+    /// the target on both axes. cc level 0 draws the original (null); cc level n pre-scales to the
+    /// source ceil-divided by 2^n. The Skia mip level that pre-scale samples is a separate count
+    /// (<see cref="Images.SkiaMipLevel"/>).
     /// </summary>
     internal static (int Width, int Height)? DecodeCacheSize(int width, int height, double scaleX, double scaleY)
     {

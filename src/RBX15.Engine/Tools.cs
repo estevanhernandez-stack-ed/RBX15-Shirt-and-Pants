@@ -237,10 +237,6 @@ public static class Tools
         using var drawn = RenderStroke(stroke);
         if (Autocrop(drawn) is not { } crop) return null;
         using var premul = crop.Image;
-        var info = new SKImageInfo(premul.Width, premul.Height, SKColorType.Rgba8888, SKAlphaType.Unpremul);
-        using var bmp = new SKBitmap(info);
-        if (!premul.ReadPixels(info, bmp.GetPixels(), bmp.RowBytes, 0, 0))
-            throw new InvalidOperationException("cannot read cropped drawing");
-        return new Layer { Id = id, Name = name, Image = SKImage.FromPixelCopy(bmp.PeekPixels()), X = crop.X, Y = crop.Y, Scale = 1 };
+        return new Layer { Id = id, Name = name, Image = Images.ToUnpremulLayerImage(premul), X = crop.X, Y = crop.Y, Scale = 1 };
     }
 }

@@ -23,7 +23,7 @@ public static class SceneLoader
     public sealed record Scene(string Name, Document Document);
 
     /// <summary>Ops the engine runs. Each engine task that implements an op adds it here.</summary>
-    static readonly HashSet<string> SupportedOps = new(StringComparer.Ordinal) { "shape", "erase" };
+    static readonly HashSet<string> SupportedOps = new(StringComparer.Ordinal) { "shape", "erase", "detail", "project", "wordart" };
 
     public static IReadOnlyList<Scene> LoadAll(string scenesJson, string repoRoot)
     {
@@ -102,6 +102,9 @@ public static class SceneLoader
                 {
                     "shape" => ApplyShape(document, action),
                     "erase" => ApplyErase(document, action, eraseStroking),
+                    "wordart" => ApplyWordArt(document, action),
+                    "detail" => ApplyDetail(document, action),
+                    "project" => ApplyProject(action, repoRoot),
                     var op => throw new InvalidDataException($"scene {name}: op '{op}' has no handler"),
                 };
 
@@ -133,6 +136,71 @@ public static class SceneLoader
         int id = doc.Layers.IsEmpty ? 1 : doc.Layers.Max(l => l.Id) + 1;
         var layer = Tools.CommitDrawing(stroke, id, Tools.DrawingName(tool));
         return layer is null ? doc : doc with { Layers = doc.Layers.Add(layer) };
+    }
+
+    /// <summary>
+    /// Scene v2 project op: <c>{ "op": "project", "file": "&lt;repo-relative .r15proj&gt;" }</c>. 4.1
+    /// (app-harness.js project) feeds the file to #projectFileInput, whose change handler runs
+    /// loadProject (editor.js:2684-2687, 2593-2680), and waits until every image layer and the
+    /// background have loaded. The loaded project replaces the document, so the result is the file's
+    /// document alone. A file that drops a layer is refused: the harness only froze projects whose
+    /// every layer loaded, so a drop would compare a different document against the golden.
+    /// </summary>
+    public static Document ApplyProject(JsonElement action, string repoRoot)
+    {
+        var file = action.GetProperty("file").GetString() ?? throw new InvalidDataException("project: file is null");
+        var load = ProjectIO.Read(File.ReadAllText(Path.Combine(repoRoot, file)));
+        if (!load.DroppedLayers.IsEmpty)
+            throw new InvalidDataException($"project {file}: layers that did not load: {string.Join(", ", load.DroppedLayers)}");
+        return load.Document;
+    }
+
+    /// <summary>
+    /// Scene v2 detail op: <c>{ "op": "detail", "type": id, "color": "#rrggbb", "width": n, "stitch": bool }</c>.
+    /// app-harness.js detail() sets #detailColor, #detailWidth and #detailDash (stitch defaults to
+    /// false) and clicks the button (editor.js:2077-2103), so createDetailLayer reads those values
+    /// (editor.js:1840-1842) and pushes the layer on top with the next id (editor.js:1858-1859).
+    /// The document's mode is passed through, so a Pants scene draws on the pants faces (approved
+    /// divergence details-pants-mode-behavior; the harness refuses Pants because 4.1 throws).
+    /// </summary>
+    public static Document ApplyDetail(Document doc, JsonElement a)
+    {
+        DetailType type;
+        try { type = Details.FromId(a.GetProperty("type").GetString()!); }
+        catch (ArgumentException ex) { throw new InvalidDataException(ex.Message, ex); }
+        bool stitch = a.TryGetProperty("stitch", out var st) && st.GetBoolean();
+        var style = new DetailStyle(CssColor.ToSk(a.GetProperty("color").GetString()!), a.GetProperty("width").GetSingle(), stitch);
+        int id = doc.Layers.IsEmpty ? 1 : doc.Layers.Max(l => l.Id) + 1;
+        var layer = Details.Create(type, doc.Mode, style, id);
+        return layer is null ? doc : doc with { Layers = doc.Layers.Add(layer) };
+    }
+
+    /// <summary>
+    /// Scene v2 wordart op: <c>{ "op": "wordart", "text", "font", "style", "size", "fill", "stroke",
+    /// "grad", "strokeWidth", "angle" }</c>, every key optional. app-harness.js wordart() sets only
+    /// the controls a scene names, so an omitted key keeps the control's 4.1 default
+    /// (editor.html:229-262; waStyle 'solid', editor.js:2108), then clicks Add to canvas
+    /// (editor.js:2257-2291). The layer goes on top with the next id (nextId++, editor.js:2275).
+    /// </summary>
+    public static Document ApplyWordArt(Document doc, JsonElement a)
+    {
+        string Str(string key, string fallback) => a.TryGetProperty(key, out var v) ? v.GetString()! : fallback;
+        float Num(string key, float fallback) => a.TryGetProperty(key, out var v) ? v.GetSingle() : fallback;
+        var style = Str("style", "solid") switch
+        {
+            "solid" => WordArtStyle.Solid,
+            "gradient" => WordArtStyle.Gradient,
+            "neon" => WordArtStyle.Neon,
+            "shadow" => WordArtStyle.Shadow,
+            "outline" => WordArtStyle.Outline,
+            "retro" => WordArtStyle.Retro,
+            var other => throw new InvalidDataException($"unknown word art style '{other}'"),
+        };
+        var settings = new WordArtSettings(Str("text", "RIZZ"), Str("font", "Anton"), style, Num("size", 64),
+            CssColor.ToSk(Str("fill", "#17d4fa")), CssColor.ToSk(Str("stroke", "#000000")), CssColor.ToSk(Str("grad", "#f22f89")),
+            Num("strokeWidth", 3), Num("angle", 0));
+        int id = doc.Layers.IsEmpty ? 1 : doc.Layers.Max(l => l.Id) + 1;
+        return doc with { Layers = doc.Layers.Add(WordArt.CreateLayer(settings, doc.Mode, id)) };
     }
 
     /// <summary>

@@ -8,7 +8,7 @@ namespace RBX15.Engine.Tests;
 /// editor.html) whose actions the engine runs passes the golden rule. A scene holding an op the
 /// engine does not run yet is skipped with a reason that names the op; the task that implements
 /// the op adds it to SceneLoader's SupportedOps and deletes that op's MemberData line here
-/// (M2b for detail, wordart and project).
+/// (M2b enabled detail, wordart and project one task at a time; PendingOps lists what is still skipped).
 /// <para>
 /// Erase actions run through the internal EraseStroking.Replay41, which re-strokes the eraser path
 /// after every mousemove exactly as app-render.js drove 4.1 (mousedown at points[0], one mousemove
@@ -20,10 +20,7 @@ namespace RBX15.Engine.Tests;
 /// </summary>
 public class GoldenAppTests
 {
-    const string DetailSkip = "op 'detail' is not run by the engine yet (Engine Details, M2b)";
-    const string WordArtSkip = "op 'wordart' is not run by the engine yet (Engine WordArt, M2b)";
-    const string ProjectSkip = "op 'project' is not run by the engine yet (Engine ProjectIO, M2b)";
-    static readonly string[] PendingOps = { "detail", "wordart", "project" };
+    static readonly string[] PendingOps = { };
 
     static readonly string Root = RepoRoot.Find(AppContext.BaseDirectory);
     static readonly string Dir = Path.Combine(Root, "tests", "goldens", "app");
@@ -37,6 +34,10 @@ public class GoldenAppTests
     static string NameOf(JsonElement e) => e.GetProperty("name").GetString()!;
 
     static JsonElement Scene(string name) => Raw.Value.Single(e => NameOf(e) == name);
+
+    /// <summary>Scenes with a wordart action meet the Word Art rule (ruling R2, GoldenRule.AssertWordArtMatches); every other scene the unchanged rule.</summary>
+    static bool HasWordArt(JsonElement e) =>
+        e.TryGetProperty("actions", out var actions) && actions.EnumerateArray().Any(a => a.GetProperty("op").GetString() == "wordart");
 
     /// <summary>Scenes whose first unsupported op is <paramref name="op"/>; "" selects the scenes the engine runs in full.</summary>
     public static TheoryData<string> ScenesBlockedBy(string op)
@@ -65,13 +66,15 @@ public class GoldenAppTests
 
     [Theory]
     [MemberData(nameof(ScenesBlockedBy), "")]
-    [MemberData(nameof(ScenesBlockedBy), "detail", Skip = DetailSkip)]
-    [MemberData(nameof(ScenesBlockedBy), "wordart", Skip = WordArtSkip)]
-    [MemberData(nameof(ScenesBlockedBy), "project", Skip = ProjectSkip)]
     public void Engine_export_matches_the_frozen_4_1_app_golden(string name)
     {
         var scene = SceneLoader.Parse(Scene(name), Root, EraseStroking.Replay41);
-        GoldenRule.AssertMatches(name, Path.Combine(Dir, name + ".png"), scene.Document, Path.Combine(Root, "diff-heatmaps", "app", name + ".png"));
+        var golden = Path.Combine(Dir, name + ".png");
+        var heatmap = Path.Combine(Root, "diff-heatmaps", "app", name + ".png");
+        if (HasWordArt(Scene(name)))
+            GoldenRule.AssertWordArtMatches(name, golden, scene.Document, heatmap);
+        else
+            GoldenRule.AssertMatches(name, golden, scene.Document, heatmap);
     }
 
     [Theory]

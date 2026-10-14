@@ -131,6 +131,37 @@ public class RendererTests
     }
 
     /// <summary>
+    /// Pins the bounded uncertainty in Images.SkiaMipLevel. Two goldens fit the geometric-mean rule, and
+    /// the largest-axis rule fits them too. On a cc level-n target whose source is at least 2^n on both
+    /// axes, both axis scales lie in [2^-n, 2^(1-n)), so the two rules pick the same level. They part only
+    /// where a short axis has been clamped to 1 pixel, which no golden exercises.
+    /// </summary>
+    [Fact]
+    public void Skia_mip_level_matches_the_largest_axis_rule_wherever_both_axes_reach_2_to_the_n()
+    {
+        static int LargestAxis(int sw, int sh, int w, int h)
+        {
+            double s = Math.Max((double)w / sw, (double)h / sh);
+            return s >= 1 ? 0 : (int)Math.Floor(Math.Log2(1 / s));
+        }
+        int checkedTargets = 0;
+        for (int sw = 1; sw <= 128; sw++)
+            for (int sh = 1; sh <= 128; sh++)
+                for (int n = 1; (1 << n) <= Math.Min(sw, sh); n++)
+                {
+                    int w = (sw + (1 << n) - 1) >> n, h = (sh + (1 << n) - 1) >> n;   // cc's ceil-halved target
+                    Assert.True(Images.SkiaMipLevel(sw, sh, w, h) == LargestAxis(sw, sh, w, h), $"{sw}x{sh} at cc level {n}");
+                    checkedTargets++;
+                }
+        Assert.Equal(72799, checkedTargets);
+        Assert.Equal(1, Images.SkiaMipLevel(198, 125, 50, 32));   // gap-layer-mip2: cc level 2, Skia mip level 1
+        Assert.Equal(0, Images.SkiaMipLevel(198, 125, 99, 63));    // full-scene: cc level 1, Skia mip level 0
+        Assert.Equal(1, Images.SkiaMipLevel(2160, 2160, 1080, 1080)); // gap-bg-image-prescale: cc level 1, Skia mip level 1
+        Assert.Equal(2, Images.SkiaMipLevel(3, 6, 1, 1));          // outside the bound: largest-axis would pick 1
+        Assert.Equal(1, LargestAxis(3, 6, 1, 1));
+    }
+
+    /// <summary>
     /// Pins Renderer.FloatPipeline. A rotated draw is declined by Skia's legacy blitters, so it
     /// composites in the float pipeline in Chromium (G = 224*0.4 + 46*0.6 = 117.2, 117) but in 8-bit
     /// lowp in SkiaSharp without the no-op color filter (118). If a Skia upgrade drops the trick, this fails.

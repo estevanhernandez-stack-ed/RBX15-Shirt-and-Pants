@@ -81,4 +81,13 @@ public class AdjustTests
         Assert.Same(a, Adjust.ShiftRgb(src, 5, 5, 5));
         Assert.NotSame(a, Adjust.ShiftRgb(src, 6, 5, 5));
     }
+
+    [Fact]
+    public void Rgb_shift_keeps_each_shift_of_one_image_cached_independently()
+    {
+        var src = Raster(new SKColor(1, 2, 3));
+        var first = Adjust.ShiftRgb(src, 5, 5, 5);
+        Adjust.ShiftRgb(src, 9, 0, 0);
+        Assert.Same(first, Adjust.ShiftRgb(src, 5, 5, 5));
+    }
 }

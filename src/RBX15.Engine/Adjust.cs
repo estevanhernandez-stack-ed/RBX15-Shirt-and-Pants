@@ -69,17 +69,20 @@ public static class Adjust
         };
     }
 
-    sealed record ShiftEntry(int R, int G, int B, SKImage Result);
-    static readonly ConditionalWeakTable<SKImage, ShiftEntry> ShiftCache = new();
+    /// <summary>Per source image, one result per (r,g,b); layers sharing a bitmap never evict each other.</summary>
+    static readonly ConditionalWeakTable<SKImage, Dictionary<(int R, int G, int B), SKImage>> ShiftCache = new();
 
     /// <summary>
     /// applyRGBShift on exact un-premultiplied pixels: add per channel, clamp 0..255, skip alpha 0,
-    /// leave alpha alone. Cached per source image. Images are immutable, so a pixel edit is a new
+    /// leave alpha alone. Cached per (source image, shift). Cache-owned; callers must not dispose.
+    /// Images are immutable, so a pixel edit is a new
     /// image and can never be served a stale result (ledger rgb-shift-cache).
     /// </summary>
     public static SKImage ShiftRgb(SKImage source, int r, int g, int b)
     {
-        if (ShiftCache.TryGetValue(source, out var hit) && hit.R == r && hit.G == g && hit.B == b) return hit.Result;
+        var slots = ShiftCache.GetOrCreateValue(source);
+        lock (slots)
+            if (slots.TryGetValue((r, g, b), out var hit)) return hit;
         var info = new SKImageInfo(source.Width, source.Height, SKColorType.Rgba8888, SKAlphaType.Unpremul);
         using var bmp = new SKBitmap(info);
         if (!source.ReadPixels(info, bmp.GetPixels(), bmp.RowBytes, 0, 0))
@@ -93,7 +96,11 @@ public static class Adjust
                 bmp.SetPixel(x, y, new SKColor(Clamp(p.Red + r), Clamp(p.Green + g), Clamp(p.Blue + b), p.Alpha));
             }
         var result = SKImage.FromPixelCopy(bmp.PeekPixels());
-        ShiftCache.AddOrUpdate(source, new ShiftEntry(r, g, b, result));
+        lock (slots)
+        {
+            if (slots.TryGetValue((r, g, b), out var raced)) { result.Dispose(); return raced; }
+            slots[(r, g, b)] = result;
+        }
         return result;
     }
 }

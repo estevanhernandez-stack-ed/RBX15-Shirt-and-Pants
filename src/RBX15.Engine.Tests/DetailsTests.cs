@@ -266,4 +266,21 @@ public class DetailsTests
         Assert.Equal((shirt.X, shirt.Y, shirt.Name), (pants.X, pants.Y, pants.Name));
         Assert.Equal(Alpha(shirt.Image), Alpha(pants.Image));
     }
+
+    // ── Stacking (ledger details-mode-independence-and-selection) ──
+
+    [Theory]
+    [MemberData(nameof(AllTypes))]
+    public void Two_clicks_stack_two_identical_layers(DetailType type)
+    {
+        // Details.Create takes no selection, so creation never depends on one (editor.js:1834-1865).
+        // Repeated clicks are not deduplicated: two layers, same name and position, same pixels, ids apart.
+        var first = Details.Create(type, TemplateMode.Shirt, Style(4, stitch: true), 3)!;
+        var second = Details.Create(type, TemplateMode.Shirt, Style(4, stitch: true), 4)!;
+        Assert.NotEqual(first.Id, second.Id);
+        Assert.NotSame(first.Image, second.Image);
+        Assert.Equal(first with { Id = 4, Image = second.Image }, second);
+        Assert.Equal((first.Image.Width, first.Image.Height), (second.Image.Width, second.Image.Height));
+        Assert.Equal(Alpha(first.Image), Alpha(second.Image));
+    }
 }

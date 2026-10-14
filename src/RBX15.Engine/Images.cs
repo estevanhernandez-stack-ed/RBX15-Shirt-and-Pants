@@ -37,7 +37,7 @@ public static class Images
 
     /// <summary>
     /// The decode Chromium's software image decode cache hands the canvas when an img element is
-    /// drawn downscaled to a mip level of 1 or more (cc SoftwareImageDecodeCacheUtils::CacheKey::FromDrawImage):
+    /// drawn downscaled to a cc level of 1 or more (cc SoftwareImageDecodeCacheUtils::CacheKey::FromDrawImage):
     /// the image pre-scaled to that level's size with SkPixmap::scalePixels at medium quality,
     /// bilinear with nearest mipmaps. Skia then samples from its own mip chain, picked from the
     /// pre-scale's geometric-mean scale and rounded down (<see cref="SkiaMipLevel"/>). Cached per
@@ -58,11 +58,21 @@ public static class Images
     }
 
     /// <summary>
-    /// The mip level Chromium's Skia samples for a medium-quality draw at this size: log2 of the
-    /// inverse geometric-mean scale, rounded down (Chromium builds Skia with
-    /// SK_SUPPORT_LEGACY_ANISOTROPIC_MIPMAP_SCALE; SkiaSharp's Skia takes the smaller axis scale,
+    /// The Skia mip level (not a cc decode-cache level) Chromium's Skia samples for a medium-quality
+    /// draw at this size: log2 of the inverse geometric-mean scale, rounded down (Chromium builds Skia
+    /// with SK_SUPPORT_LEGACY_ANISOTROPIC_MIPMAP_SCALE; SkiaSharp's Skia takes the smaller axis scale,
     /// which mips the full-scene word art at exactly 0.5 where 4.1 does not). 0 means no mipmap.
-    /// Fitted: gap-layer-mip2 (198x125 to 50x32, level 1) and full-scene (198x125 to 99x63, level 0).
+    /// Fitted: gap-layer-mip2 (198x125 to 50x32: cc level 2, Skia mip level 1) and full-scene
+    /// (198x125 to 99x63: cc level 1, Skia mip level 0).
+    /// <para>
+    /// Bounded uncertainty: the largest-axis rule fits both goldens too. The two rules agree on every
+    /// cc level-n target whose source is at least 2^n on both axes, because both axis scales then lie in
+    /// [2^-n, 2^(1-n)). Measured on 2026-10-14, they also agree on every background pre-scale (sources up
+    /// to 4096x4096 stretched to 585x559) and on every uniform-scale layer target whose shorter side is 2
+    /// or more (sources up to 300x300). They differ only where a short axis is clamped to 1 pixel (3x6 to
+    /// 1x1: geometric mean 2, largest axis 1), which no golden exercises. Pinned by
+    /// Skia_mip_level_matches_the_largest_axis_rule_wherever_both_axes_reach_2_to_the_n.
+    /// </para>
     /// </summary>
     internal static int SkiaMipLevel(int srcWidth, int srcHeight, int width, int height)
     {

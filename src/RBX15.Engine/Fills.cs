@@ -65,11 +65,11 @@ public static class Fills
     public static void PaintRegionFill(SKCanvas ctx, SKRect region, Fill f, SKRect? extent = null)
     {
         var ext = extent ?? region;
-        string c1 = f.C1 ?? "#000000";
-        string c2 = f.C2 ?? "#ffffff";
+        string c1 = string.IsNullOrEmpty(f.C1) ? "#000000" : f.C1;
+        string c2 = string.IsNullOrEmpty(f.C2) ? "#ffffff" : f.C2;
         double scaleD = EffectiveScale(f);
         float scale = (float)scaleD;
-        double angle = (f.Angle ?? 0) * Math.PI / 180;
+        double angle = (f.Angle is { } a && !double.IsNaN(a) ? a : 0) * Math.PI / 180;
         float x = region.Left, y = region.Top, w = region.Width, h = region.Height;
 
         ctx.Save();

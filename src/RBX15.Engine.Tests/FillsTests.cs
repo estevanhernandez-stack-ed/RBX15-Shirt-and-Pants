@@ -153,6 +153,24 @@ public class FillsTests
     }
 
     [Fact]
+    public void Empty_colors_default_like_fills_js()
+    {
+        var stripes = Paint(new Fill("stripes", "#ff0000", "", Angle: 0, Scale: 8));
+        Assert.Equal(new SKColor(255, 255, 255), Px.At(stripes, 2, 20));
+        var solid = Paint(new Fill("solid", ""));
+        Assert.Equal(new SKColor(0, 0, 0), Px.At(solid, 20, 20));
+    }
+
+    [Fact]
+    public void Nan_angle_renders_as_zero()
+    {
+        var nan = Paint(new Fill("linear", "#ff0000", "#0000ff", Angle: double.NaN));
+        var zero = Paint(new Fill("linear", "#ff0000", "#0000ff", Angle: 0));
+        Assert.Equal(Px.At(zero, 1, 20), Px.At(nan, 1, 20));
+        Assert.Equal(Px.At(zero, 39, 20), Px.At(nan, 39, 20));
+    }
+
+    [Fact]
     public void Fills_for_regions_the_mode_lacks_are_skipped()
     {
         var img = Px.Render(585, 559, c =>

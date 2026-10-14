@@ -106,19 +106,29 @@ public static class ProjectIO
             long fresh = records.Count == 0 ? 0 : records.Max(r => (long)r.Id);
             var used = new HashSet<int>();
             var layers = ImmutableList.CreateBuilder<Layer>();
-            foreach (var r in records)
+            try
             {
-                // editor.js:2632 skips a record without imgSrc; v5 names it, like any layer that cannot load.
-                var image = string.IsNullOrEmpty(r.Src) || !IsDataUrl(r.Src) ? null : TryDecodeDataUrl(r.Src);
-                if (image is null) { dropped.Add(r.Layer.Name); continue; }
-                int id = r.Id;
-                if (!used.Add(id))
+                foreach (var r in records)
                 {
-                    if (++fresh >= int.MaxValue) throw new ProjectFormatException("layer ids run past the largest id");
-                    id = (int)fresh;
-                    used.Add(id);
+                    // editor.js:2632 skips a record without imgSrc; v5 names it, like any layer that cannot load.
+                    var image = string.IsNullOrEmpty(r.Src) || !IsDataUrl(r.Src) ? null : TryDecodeDataUrl(r.Src);
+                    if (image is null) { dropped.Add(r.Layer.Name); continue; }
+                    int id = r.Id;
+                    if (!used.Add(id))
+                    {
+                        if (++fresh >= int.MaxValue) { image.Dispose(); throw new ProjectFormatException("layer ids run past the largest id"); }
+                        id = (int)fresh;
+                        used.Add(id);
+                    }
+                    layers.Add(r.Layer with { Id = id, Image = image });
                 }
-                layers.Add(r.Layer with { Id = id, Image = image });
+            }
+            catch
+            {
+                // Decoded images are native memory: free them before the refusal leaves.
+                foreach (var l in layers) l.Image.Dispose();
+                bgImage?.Dispose();
+                throw;
             }
 
             // editor.js:2663: nextId = max(layer ids) + 1 over the layers that loaded; a fresh editor's is 1.
@@ -156,6 +166,8 @@ public static class ProjectIO
             if (d.ValueKind != JsonValueKind.Object) throw new ProjectFormatException($"{at} must be an object, not a {Kind(d)}");
             if (!d.TryGetProperty("id", out var idEl) || idEl.ValueKind != JsonValueKind.Number || !idEl.TryGetInt32(out int id) || id < 1)
                 throw new ProjectFormatException($"{at}.id must be a positive whole number");
+            if (id == int.MaxValue)   // nextId = max + 1 would wrap
+                throw new ProjectFormatException($"{at}.id must be at most {int.MaxValue - 1}");
 
             // The coercions of editor.js:2636-2652, field for field. `||` maps 0 and "" to the default;
             // `!= null` keeps 0; `!== false` is true unless the value is false; `!!` is false unless true.

@@ -86,7 +86,6 @@ public sealed class History
         _redo.Clear();
     }
 
-
     /// <summary>
     /// Reverts one step. Returns null, parking nothing, when there is nothing to undo
     /// (lib/history.js:43). Otherwise parks <paramref name="current"/> on redo and returns the

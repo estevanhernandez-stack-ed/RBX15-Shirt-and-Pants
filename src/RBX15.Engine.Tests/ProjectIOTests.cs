@@ -384,6 +384,29 @@ public partial class ProjectIOTests
         Assert.Contains("layers[1].opacity must be a number", ex.Message);
     }
 
+    [Fact] // an id past int.MaxValue after a valid image layer: refused, nothing leaks or crashes
+    public void A_layer_id_past_int_max_after_a_valid_image_layer_refuses_the_file()
+    {
+        var node = Minimal(RedDot, RedDot);
+        node["layers"]![1]!["id"] = 2147483648L;
+        var ex = Assert.Throws<ProjectFormatException>(() => Read(node));
+        Assert.Contains("layers[1].id", ex.Message);
+    }
+
+    [Fact] // int.MaxValue itself would wrap nextId (max + 1), so ids stop at int.MaxValue - 1
+    public void A_layer_id_of_int_max_is_refused_naming_the_layer()
+    {
+        var node = Minimal(RedDot, RedDot);
+        node["layers"]![1]!["id"] = int.MaxValue;
+        var ex = Assert.Throws<ProjectFormatException>(() => Read(node));
+        Assert.Contains("layers[1].id", ex.Message);
+
+        node["layers"]![1]!["id"] = int.MaxValue - 1;
+        var load = Read(node);
+        Assert.Equal(int.MaxValue, load.NextId);
+        foreach (var l in load.Document.Layers) l.Image.Dispose();
+    }
+
     [Fact]
     public void Read_refuses_null() => Assert.Throws<ArgumentNullException>(() => ProjectIO.Read(null!));
 }

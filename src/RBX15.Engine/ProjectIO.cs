@@ -1,4 +1,7 @@
 using System.Collections.Immutable;
+using System.Globalization;
+using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using SkiaSharp;
 
@@ -276,5 +279,111 @@ public static class ProjectIO
         catch (FormatException) { return null; }
         try { return Images.Decode(bytes); }
         catch (InvalidDataException) { return null; }
+    }
+
+    // ---------------------------------------------------------------- write
+
+    /// <summary>
+    /// Serializes <paramref name="doc"/> with saveProject's fields in saveProject's order
+    /// (editor.js:2551-2582), <c>version</c> "5.0", <c>savedAt</c> as JS toISOString of
+    /// <paramref name="savedAt"/> in UTC, every image as a PNG data URL, JSON.stringify's 2-space
+    /// indent and LF line breaks (editor.js:2583). Deterministic for a given savedAt.
+    /// <para>
+    /// A non-null <paramref name="title"/> adds a <c>title</c> field after <c>layers</c>, so 4.1's
+    /// field order stays an exact prefix; 4.1 ignores unknown fields (ledger project-template-name-not-saved).
+    /// Region fills are written as descriptors with only the fields they carry, in lib/fills.js order
+    /// (type, c1, c2, angle, scale); a legacy color string read from a 4.1 file comes back as
+    /// <c>{ "type": "solid", "c1": ... }</c>, which 4.1 reads identically (lib/fills.js normalizeFill).
+    /// </para>
+    /// </summary>
+    public static string Write(Document doc, DateTimeOffset savedAt, string? title = null)
+    {
+        ArgumentNullException.ThrowIfNull(doc);
+        var buffer = new MemoryStream();
+        var options = new JsonWriterOptions { Indented = true, NewLine = "\n", Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+        using (var w = new Utf8JsonWriter(buffer, options))
+        {
+            w.WriteStartObject();
+            w.WriteString("version", Version);
+            w.WriteString("app", AppName);
+            w.WriteString("savedAt", savedAt.UtcDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", CultureInfo.InvariantCulture));
+            w.WriteString("mode", doc.Mode == TemplateMode.Pants ? "Pants" : "Shirt");
+            w.WriteString("bgColor", doc.BgColor);
+            Number(w, "bgOpacity", doc.BgOpacity);
+            if (doc.BgImage is { } bg) w.WriteString("bgImageSrc", PngDataUrl(bg));
+            else w.WriteNull("bgImageSrc");
+
+            w.WriteStartObject("regionColors");
+            foreach (var (region, fill) in MergeLastWins(doc.RegionFills))
+            {
+                w.WriteStartObject(region);
+                w.WriteString("type", fill.Type);
+                if (fill.C1 is { } c1) w.WriteString("c1", c1);
+                if (fill.C2 is { } c2) w.WriteString("c2", c2);
+                if (fill.Angle is { } angle) Number(w, "angle", angle);
+                if (fill.Scale is { } scale) Number(w, "scale", scale);
+                w.WriteEndObject();
+            }
+            w.WriteEndObject();
+
+            w.WriteBoolean("showMask", doc.ShowMask);
+            w.WriteBoolean("showGrid", doc.ShowGrid);
+
+            w.WriteStartArray("layers");
+            foreach (var l in doc.Layers)
+            {
+                w.WriteStartObject();
+                w.WriteNumber("id", l.Id);
+                w.WriteString("name", l.Name);
+                w.WriteBoolean("visible", l.Visible);
+                Number(w, "opacity", l.Opacity);
+                Number(w, "x", l.X);
+                Number(w, "y", l.Y);
+                Number(w, "scale", l.Scale);
+                Number(w, "rotation", l.Rotation);
+                w.WriteBoolean("flipH", l.FlipH);
+                w.WriteBoolean("flipV", l.FlipV);
+                Number(w, "brightness", l.Brightness);
+                Number(w, "contrast", l.Contrast);
+                Number(w, "saturate", l.Saturate);
+                Number(w, "hueRotate", l.HueRotate);
+                w.WriteNumber("rShift", l.RShift);
+                w.WriteNumber("gShift", l.GShift);
+                w.WriteNumber("bShift", l.BShift);
+                w.WriteString("imgSrc", PngDataUrl(l.Image));
+                w.WriteEndObject();
+            }
+            w.WriteEndArray();
+
+            if (title is not null) w.WriteString("title", title);
+            w.WriteEndObject();
+        }
+        return Encoding.UTF8.GetString(buffer.ToArray());
+    }
+
+    /// <summary>JSON.stringify writes -0 as 0 and has no NaN or Infinity (it writes null); neither does a project.</summary>
+    static void Number(Utf8JsonWriter w, string key, double v)
+    {
+        if (!double.IsFinite(v)) { w.WriteNull(key); return; }
+        w.WriteNumber(key, v == 0 ? 0 : v);
+    }
+
+    /// <summary>A JS object keeps a key's first position and its last value.</summary>
+    static IEnumerable<(string Region, Fill Fill)> MergeLastWins(IEnumerable<(string Region, Fill Fill)> fills)
+    {
+        var order = new List<string>();
+        var last = new Dictionary<string, Fill>(StringComparer.Ordinal);
+        foreach (var (region, fill) in fills)
+        {
+            if (!last.ContainsKey(region)) order.Add(region);
+            last[region] = fill;
+        }
+        return order.Select(r => (r, last[r]));
+    }
+
+    static string PngDataUrl(SKImage image)
+    {
+        using var data = image.Encode(SKEncodedImageFormat.Png, 100) ?? throw new InvalidOperationException("PNG encode failed");
+        return "data:image/png;base64," + Convert.ToBase64String(data.AsSpan());
     }
 }

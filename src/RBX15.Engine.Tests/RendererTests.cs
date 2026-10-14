@@ -119,4 +119,14 @@ public class RendererTests
         Assert.Equal("untitled.r15proj", ExportNaming.ProjectFileName(""));
         Assert.Equal("My_Shirt_.r15proj", ExportNaming.ProjectFileName("My Shirt!"));
     }
+
+    [Fact]
+    public void Decode_cache_prescales_only_at_mip_level_one_or_more()
+    {
+        Assert.Equal((99, 63), Renderer.DecodeCacheSize(198, 125, 0.5, 0.5));           // full-scene word art: level 1, ceil sizes
+        Assert.Null(Renderer.DecodeCacheSize(390, 200, 0.6, 0.6));                       // level 0 draws the original
+        Assert.Null(Renderer.DecodeCacheSize(390, 200, 1.5, 2.795));                     // upscale
+        Assert.Equal((1000, 750), Renderer.DecodeCacheSize(4000, 3000, 585 / 4000.0, 559 / 3000.0)); // big background photo: level 2
+        Assert.Null(Renderer.DecodeCacheSize(1920, 1080, 585 / 1920.0, 559 / 1080.0));   // one axis under 2x keeps the original
+    }
 }

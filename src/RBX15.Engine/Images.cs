@@ -31,6 +31,28 @@ public static class Images
         image.AlphaType == SKAlphaType.Premul && image.ColorType == SKImageInfo.PlatformColorType
             ? image : Premultiplied.GetValue(image, ToPremul);
 
+    sealed record ScaledEntry(int Width, int Height, SKImage Result);
+    static readonly ConditionalWeakTable<SKImage, ScaledEntry> Scaled = new();
+
+    /// <summary>
+    /// The decode Chromium's software image decode cache hands the canvas when an img element is
+    /// drawn downscaled to a mip level of 1 or more (cc SoftwareImageDecodeCacheUtils::CacheKey::FromDrawImage):
+    /// the image pre-scaled to that level's size with SkPixmap::scalePixels at the draw's own
+    /// quality, which for canvas 'low' smoothing is bilinear without mipmaps. Cached per image.
+    /// </summary>
+    public static SKImage DecodeCacheScaled(SKImage premul, int width, int height)
+    {
+        if (Scaled.TryGetValue(premul, out var hit) && hit.Width == width && hit.Height == height) return hit.Result;
+        var info = new SKImageInfo(width, height, premul.ColorType, SKAlphaType.Premul);
+        using var bmp = new SKBitmap(info);
+        using (var dst = bmp.PeekPixels())
+            if (!premul.ScalePixels(dst, new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.None)))
+                throw new InvalidOperationException("decode-cache scale failed");
+        var result = SKImage.FromPixelCopy(bmp.PeekPixels());
+        Scaled.AddOrUpdate(premul, new ScaledEntry(width, height, result));
+        return result;
+    }
+
     static SKImage ToPremul(SKImage source)
     {
         var info = new SKImageInfo(source.Width, source.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);

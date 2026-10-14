@@ -302,7 +302,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "rgb-shift-compute",
@@ -2248,7 +2248,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "draw-shape-rect",
@@ -2269,7 +2269,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "draw-shape-ellipse",
@@ -2288,7 +2288,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "draw-preview-composite",
@@ -2487,8 +2487,8 @@
    "parityCheck": "Fixture tests: apply erase stroke (scripted polyline, width 20) to layers with scale 0.5/2, rotation 33, flipH/flipV combos; export pixels match Electron/@napi-rs fixture within 3/255; alpha of erased region matches proportional-alpha rule.",
    "owner": "Engine.Tools",
    "check": "golden",
-   "disposition": "keep",
-   "divergence": "",
+   "disposition": "fix",
+   "divergence": "4.1: the eraser re-strokes its whole path on every mousemove, so the antialiased fringe of a drag of three or more points is erased more the more mouse events the drag produced. v5: the eraser path is stroked once (the eraser half of draw-pen-incremental-stroke); fully covered pixels and two-point drags erase identically, and only that fringe keeps slightly more alpha (measured in M2a Task 6; GoldenAppTests replays 4.1's stroking against the frozen goldens).",
    "status": "open"
   },
   {
@@ -2510,7 +2510,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "eraser-selection-semantics",
@@ -2621,7 +2621,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "undo-snapshot-contents",
@@ -2956,7 +2956,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "history-snapshot-memory",
@@ -2977,7 +2977,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: Undo cap is 30 but the redo stack is unbounded and snapshots embed every layer's PNG data URL. v5: Undo depth stays 30, redo is capped, and snapshots share immutable bitmaps.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "restore-mode-switch-side-effects",
@@ -6732,7 +6732,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "tests-lib-history",
@@ -6754,7 +6754,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "tests-injection",
@@ -7914,7 +7914,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: async image restore lets a rapid second undo corrupt the redo stack. v5: layers share immutable bitmaps and restore is synchronous, so it is atomic.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "undo-restore-ui-side-effects",
@@ -7954,7 +7954,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: redo is uncapped and can push undo past 30. v5: redo capped while undo depth stays 30.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "region-front-highlight-lost",
@@ -8416,7 +8416,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   }
  ]
 }

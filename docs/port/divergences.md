@@ -2,7 +2,7 @@
 
 Every deliberate behavior change in v5, generated from `parity-ledger.json` rows whose disposition is `fix` or `drop`. The bug policy: fix anything clearly unintended, keep anything a user could reasonably rely on. A change that is not in this table is a regression. Rows with a visual effect get a new golden image with a note.
 
-## Fixed in v5 (183)
+## Fixed in v5 (184)
 
 | ID | Owner | Change |
 |---|---|---|
@@ -174,6 +174,7 @@ Every deliberate behavior change in v5, generated from `parity-ledger.json` rows
 | `draw-pen-incremental-stroke` | Engine.Tools | 4.1: Pen and eraser re-stroke the whole path on every mouse event, so edges depend on event frequency. v5: Strokes are drawn once at mouseup for deterministic edges. |
 | `draw-pen-single-click` | Engine.Tools | 4.1: A press with no movement draws nothing and creates no layer. v5: A press with no movement draws a brush-size dot. |
 | `draw-tool-start` | Engine.Tools | 4.1: Every draw mousedown pushes an undo snapshot even if nothing is drawn. v5: Each mutation is exactly one undo step, with no empty steps. |
+| `eraser-apply` | Engine.Tools | 4.1: the eraser re-strokes its whole path on every mousemove, so the antialiased fringe of a drag of three or more points is erased more the more mouse events the drag produced. v5: the eraser path is stroked once (the eraser half of draw-pen-incremental-stroke); fully covered pixels and two-point drags erase identically, and only that fringe keeps slightly more alpha (measured in M2a Task 6; GoldenAppTests replays 4.1's stroking against the frozen goldens). |
 | `select-move-hit-and-drag` | Engine.Tools | 4.1: move drag has no undo step and no capture, so a drag can strand a layer off-canvas by mouse. v5: rect-based hit-test kept, drag is exactly one undo step with capture and selection survives undo. |
 | `select-resize-drag` | Engine.Tools | 4.1: resize has no maximum and no undo step, while '+' caps at 5 and wheel is uncapped. v5: one 1%-500% clamp for all paths and the drag is exactly one undo step. |
 | `select-resize-handles` | Engine.Tools | 4.1: resize has no upper limit and can divide by a near-zero start distance. v5: single 1%-500% scale clamp shared with slider, keys and wheel. |

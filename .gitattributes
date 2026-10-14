@@ -2,3 +2,6 @@
 tests/goldens/** -text
 docs/port/*.md text eol=lf
 docs/port/*.json text eol=lf
+*.ttf binary
+assets/fonts/** -text
+*.sh text eol=lf

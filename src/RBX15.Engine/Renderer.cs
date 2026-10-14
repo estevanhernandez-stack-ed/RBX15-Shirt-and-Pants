@@ -15,13 +15,15 @@ namespace RBX15.Engine;
 /// <item><term>kN32 surface so Skia takes its legacy 8888 blitters</term>
 ///   <description><see cref="Export"/>, <c>Images.ForDrawing</c>; every scene, most sensitively bg-color-half-opacity, layer-basic, layers-order-hidden</description></item>
 /// <item><term>Blink ShouldDrawImageAntialiased</term>
-///   <description><c>Renderer.DrawImageAntialiased</c>; layer-rotate-scale-fliph-opacity, layer-rotate-neg-flipv-upscale, rgb-shift-with-adjust-rotated</description></item>
+///   <description><c>Renderer.DrawImageAntialiased</c>; layer-rotate-scale-fliph-opacity, layer-rotate-neg-flipv-upscale, rgb-shift-with-adjust-rotated, gap-layer-rotate-90 (exactly 90: rect stays rect, no antialiasing)</description></item>
 /// <item><term>FloatPipeline: no-op color filter keeps non scale-translate draws out of lowp</term>
-///   <description><c>Renderer.FloatPipeline</c>; layer-rotate-scale-fliph-opacity, layer-rotate-neg-flipv-upscale, rgb-shift-with-adjust-rotated, full-scene (unit test Rotated_layer_composites_in_float_not_lowp)</description></item>
+///   <description><c>Renderer.FloatPipeline</c>; layer-rotate-scale-fliph-opacity, layer-rotate-neg-flipv-upscale, rgb-shift-with-adjust-rotated, full-scene, gap-layer-rotate-90 (unit test Rotated_layer_composites_in_float_not_lowp)</description></item>
 /// <item><term>AutoLayerForImageFilter: a filtered draw runs in a draw-sized SaveLayer</term>
-///   <description><c>Renderer.DrawLayer</c> (SaveLayer(dst, filter)); adjust-brightness-150, adjust-contrast-40, adjust-saturate-0, adjust-hue-90, adjust-combo, adjust-extremes, rgb-shift-with-adjust-rotated, full-scene</description></item>
-/// <item><term>cc decode cache: pre-scale at mip level 1 or more (target at or below 0.5)</term>
-///   <description><c>Renderer.DecodeCacheSize</c>, <c>Images.DecodeCacheScaled</c>; full-scene only (scaled-down word art); the background path is pinned by a unit test, no golden</description></item>
+///   <description><c>Renderer.DrawLayer</c> (SaveLayer(dst, filter)); adjust-brightness-150, adjust-contrast-40, adjust-saturate-0, adjust-hue-90, adjust-combo, adjust-extremes, rgb-shift-with-adjust-rotated, full-scene, gap-opacity-with-adjust (opacity under a filter)</description></item>
+/// <item><term>cc decode cache: pre-scale at mip level 1 or more (target at or below 0.5), medium quality through Skia's mip chain at the geometric-mean level</term>
+///   <description><c>Renderer.DecodeCacheSize</c>, <c>Images.DecodeCacheScaled</c>, <c>Images.SkiaMipLevel</c>; full-scene (scaled-down word art), gap-layer-mip2 (mip level 2), gap-bg-image-prescale (background pre-scale)</description></item>
+/// <item><term>Eraser mask draw (lib/erase.js:63): same antialias and float-pipeline rules as a layer draw</term>
+///   <description><c>Eraser.EraseStroke</c> (reuses <c>DrawImageAntialiased</c>, <c>FloatPipeline</c>); the 8 erase scenes in tests/goldens/app via GoldenAppTests</description></item>
 /// <item><term>FEComponentTransfer: float32, truncating brightness and contrast tables</term>
 ///   <description><c>Adjust</c> (brightness and contrast tables, <c>FilterChain</c>); adjust-brightness-150, adjust-contrast-40, adjust-combo, adjust-extremes</description></item>
 /// </list>
@@ -99,7 +101,7 @@ public static class Renderer
     /// 8-bit lowp pipeline for the same draw, one level high on blended pixels. A matrix color filter
     /// has no lowp stage, so attaching this one keeps those draws in float, as in 4.1.
     /// </summary>
-    static readonly SKColorFilter FloatPipeline = SKColorFilter.CreateColorMatrix(new float[]
+    internal static readonly SKColorFilter FloatPipeline = SKColorFilter.CreateColorMatrix(new float[]
     {
         1, 0, 0, 0, 0,
         0, 1, 0, 0, 0,
@@ -153,7 +155,7 @@ public static class Renderer
         canvas.RestoreToCount(restoreTo);
     }
 
-    static bool IsScaleTranslate(SKMatrix m) => m.SkewX == 0 && m.SkewY == 0 && m.Persp0 == 0 && m.Persp1 == 0;
+    internal static bool IsScaleTranslate(SKMatrix m) => m.SkewX == 0 && m.SkewY == 0 && m.Persp0 == 0 && m.Persp1 == 0;
 
     static float ColumnLength(float a, float b) => MathF.Sqrt(a * a + b * b);
 
@@ -162,7 +164,7 @@ public static class Renderer
     /// keep rects rects (any rotation off a multiple of 90 degrees), or when the destination is
     /// thinner than one device pixel.
     /// </summary>
-    static bool DrawImageAntialiased(SKMatrix m, float w, float h)
+    internal static bool DrawImageAntialiased(SKMatrix m, float w, float h)
     {
         bool rectStaysRect = (m.SkewX == 0 && m.SkewY == 0 && m.ScaleX != 0 && m.ScaleY != 0) ||
                              (m.ScaleX == 0 && m.ScaleY == 0 && m.SkewX != 0 && m.SkewY != 0);

@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**407 rows.** Status: done 42, open 365. Disposition: keep 197, fix 183, drop 26, new 1. Checks: ui-auto 120, unit 110, manual 66, golden 64, none-retired 25, doc 22.
+**407 rows.** Status: done 55, open 352. Disposition: keep 196, fix 184, drop 26, new 1. Checks: ui-auto 120, unit 110, manual 66, golden 64, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -323,7 +323,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `btn-allover` | Allover (tile on every region) | unit | keep | low |
 | open | `btn-scatter` | Scatter (randomized placement) | unit | keep | low |
 | open | `btn-clear` | Clear (remove all layers) | unit | keep | low |
-| open | `layer-sharing-img` | Cloned layers share the Image object | unit | keep | med |
+| done | `layer-sharing-img` | Cloned layers share the Image object | unit | keep | med |
 | open | `regions-state-model` | Region fill state model (regionColors map and currentFill) | unit | keep | low |
 | open | `regions-click-paint` | Click region button with no layer selected: paint with current fill | unit | fix | low |
 | open | `mode-switch-effects` | What switchMode changes and resets | unit | keep | med |
@@ -380,20 +380,20 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
 | open | `history-snapshot-coupling` | State captured by undo snapshots | unit | keep | med |
-| open | `undo-model` | Undo/redo snapshot model and stack discipline | unit | keep | low |
+| done | `undo-model` | Undo/redo snapshot model and stack discipline | unit | keep | low |
 | open | `undo-snapshot-contents` | What a snapshot captures (and what it does not) | unit | keep | high |
 | open | `undo-restore` | restoreState: order of operations, async image loading | unit | fix | high |
 | open | `undo-coverage-gaps` | Which actions create undo steps | unit | fix | med |
-| open | `history-snapshot-memory` | Snapshot size and 30-step cap behavior | unit | fix | low |
+| done | `history-snapshot-memory` | Snapshot size and 30-step cap behavior | unit | fix | low |
 | open | `restore-mode-switch-side-effects` | Mode switch interplay with undo | unit | keep | med |
 | open | `fillstyle-undo-snapshot-timing` | Undo snapshot timing for fill edits | unit | fix | med |
 | open | `mode-switch-undo-and-callers` | Mode switch undo semantics and other callers | unit | keep | med |
 | open | `file-undo-snapshot-scope` | What undo/redo snapshots and which actions push | unit | fix | med |
-| open | `tests-lib-history` | history.test.js: 7 tests for undo/redo stack semantics | unit | keep | low |
+| done | `tests-lib-history` | history.test.js: 7 tests for undo/redo stack semantics | unit | keep | low |
 | open | `undo-empty-steps` | Actions that push an undo step but change nothing | unit | fix | med |
-| open | `undo-rapid-restore-race` | Rapid undo/redo during async restore corrupts history | unit | fix | med |
+| done | `undo-rapid-restore-race` | Rapid undo/redo during async restore corrupts history | unit | fix | med |
 | open | `undo-restore-ui-side-effects` | Undo/redo drops selection and doesn't touch Fill Style UI | unit | fix | low |
-| open | `history-redo-stack-uncapped` | Redo stack unbounded; redo can push undo past 30 | unit | fix | low |
+| done | `history-redo-stack-uncapped` | Redo stack unbounded; redo can push undo past 30 | unit | fix | low |
 
 ## Engine.ProjectIO
 
@@ -444,7 +444,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
-| open | `autocrop` | autocrop of drawn canvas | unit | keep | low |
+| done | `autocrop` | autocrop of drawn canvas | unit | keep | low |
 | open | `select-hit-test` | Topmost layer hit-testing and deselect | unit | keep | med |
 | open | `select-rotate-drag` | Rotate drag with 45-degree snapping | unit | fix | med |
 | open | `select-resize-handles` | Corner resize handles (uniform scale) | unit | fix | med |
@@ -457,17 +457,17 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `draw-tool-start` | Drawing tools mousedown: snapshot, offscreen canvas, stroke style | unit | fix | med |
 | open | `draw-pen-incremental-stroke` | Pen and eraser incremental stroking | golden | fix | high |
 | open | `draw-pen-single-click` | Single click / zero-length stroke handling | unit | fix | med |
-| open | `draw-shape-line` | Line tool geometry | golden | keep | low |
-| open | `draw-shape-rect` | Rectangle tool geometry | golden | keep | low |
-| open | `draw-shape-ellipse` | Ellipse tool geometry | golden | keep | low |
+| done | `draw-shape-line` | Line tool geometry | golden | keep | low |
+| done | `draw-shape-rect` | Rectangle tool geometry | golden | keep | low |
+| done | `draw-shape-ellipse` | Ellipse tool geometry | golden | keep | low |
 | open | `draw-commit-layer` | Mouseup commit of a drawing as a new layer | unit | keep | med |
 | open | `draw-empty-no-layer` | Nothing drawn means no layer | unit | keep | low |
-| open | `eraser-apply` | Eraser commit: erase from selected layer through inverse transform | golden | keep | high |
-| open | `eraser-math-inverse` | lib/erase.js inverse-transform and destination-out details | golden | keep | high |
+| open | `eraser-apply` | Eraser commit: erase from selected layer through inverse transform | golden | fix | high |
+| done | `eraser-math-inverse` | lib/erase.js inverse-transform and destination-out details | golden | keep | high |
 | open | `canvas-draw-tools` | Drawing tools (pen, line, rect, ellipse) and eraser | golden | fix | high |
-| open | `tests-lib-erase` | erase.test.js: 5 tests for eraser transform math | unit | keep | med |
+| done | `tests-lib-erase` | erase.test.js: 5 tests for eraser transform math | unit | keep | med |
 | open | `select-hit-test-rect-not-alpha` | Hit-test uses the rotated bounding rect, not pixel alpha | unit | keep | low |
-| open | `draw-canvas-template-clip` | Drawings are clipped to the 585x559 template and auto-cropped with 10px pad | golden | keep | low |
+| done | `draw-canvas-template-clip` | Drawings are clipped to the 585x559 template and auto-cropped with 10px pad | golden | keep | low |
 
 ## Engine.WordArt
 

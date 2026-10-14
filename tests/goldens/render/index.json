@@ -243,6 +243,38 @@
       "chrome": "146.0.7680.166",
       "editorJsBlob": "2790c41e418cd5bfea82cf1ae4d71626a7b54e61",
       "fillsJsBlob": "208d3297cb0920974d034639d754a65e75ae14d4"
+    },
+    {
+      "name": "gap-layer-rotate-90",
+      "sha256": "77330b8951aaa760bff18d7e1323f4f374895984f642ebddd6f7a52442b350b5",
+      "electron": "41.1.0",
+      "chrome": "146.0.7680.166",
+      "editorJsBlob": "2790c41e418cd5bfea82cf1ae4d71626a7b54e61",
+      "fillsJsBlob": "208d3297cb0920974d034639d754a65e75ae14d4"
+    },
+    {
+      "name": "gap-bg-image-prescale",
+      "sha256": "b5102970c7d1a038f3bd7c28d7e56399aa90190b83c55f7c1f8082c1e601a76a",
+      "electron": "41.1.0",
+      "chrome": "146.0.7680.166",
+      "editorJsBlob": "2790c41e418cd5bfea82cf1ae4d71626a7b54e61",
+      "fillsJsBlob": "208d3297cb0920974d034639d754a65e75ae14d4"
+    },
+    {
+      "name": "gap-layer-mip2",
+      "sha256": "576295e2c90530e62bebdb3279df1decfb407cccb42f7d8b842f8c1a7af140e1",
+      "electron": "41.1.0",
+      "chrome": "146.0.7680.166",
+      "editorJsBlob": "2790c41e418cd5bfea82cf1ae4d71626a7b54e61",
+      "fillsJsBlob": "208d3297cb0920974d034639d754a65e75ae14d4"
+    },
+    {
+      "name": "gap-opacity-with-adjust",
+      "sha256": "c37d51402898c044d7c19a2da2e609a6486f82701a5165208e41fd948b43ac41",
+      "electron": "41.1.0",
+      "chrome": "146.0.7680.166",
+      "editorJsBlob": "2790c41e418cd5bfea82cf1ae4d71626a7b54e61",
+      "fillsJsBlob": "208d3297cb0920974d034639d754a65e75ae14d4"
     }
   ]
 }

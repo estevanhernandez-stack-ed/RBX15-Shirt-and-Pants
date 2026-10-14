@@ -8,6 +8,7 @@ dist/
 .superpowers/
 *.exe
 Assets/
+!/assets/
 .claude/
 windows/msix/_stage/
 scratch/

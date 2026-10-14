@@ -1,0 +1,97 @@
+{
+  "tool": "tools/parity-ref/wordart-ref.js",
+  "electron": "41.1.0",
+  "editorJsBlob": "2790c41e418cd5bfea82cf1ae4d71626a7b54e61",
+  "editorHtmlBlob": "401a5d5f33c4accbb452cb080c9c544a0f79a6ce",
+  "fontsManifestSha256": "ba0dafad93f0830be40f41301e1169c94730ccb8814d7dd0e9f21040f8813c9a",
+  "scenes": [
+    {
+      "name": "wordart-gradient-135-poppins",
+      "sha256": "d178fd03014bcdcd51d35b56fc9f2ac4742d1069f13e40e098547701e8c0b51a"
+    },
+    {
+      "name": "wordart-gradient-anton",
+      "sha256": "11ba2507d08847ec2bd6a71415d68d6ee0d0464da63404daee3e52f1abd31265"
+    },
+    {
+      "name": "wordart-gradient-dancing",
+      "sha256": "a7f80102760a985029b212a5cc7afd6846010e7a855dd376e01dae7dd97d09cc"
+    },
+    {
+      "name": "wordart-gradient-poppins",
+      "sha256": "4a3732a73a72090b67ca1d6acfc7286b958c0a9c4f90ed241cfa5d43c4d389fe"
+    },
+    {
+      "name": "wordart-multiline-orbitron",
+      "sha256": "526ffc4c81f102c9dbdbabd8c296ac242449d191f5ba8194958b6e0321c00ae6"
+    },
+    {
+      "name": "wordart-neon-anton",
+      "sha256": "2b44733a3daaf10434c2dd26f03bc9f68686ec1fa99d06fd928993ad2375e102"
+    },
+    {
+      "name": "wordart-neon-dancing",
+      "sha256": "d00c1a0721fd90654635334e723038c57dd70da57852dd9a95f0deaa84d17639"
+    },
+    {
+      "name": "wordart-neon-poppins",
+      "sha256": "49a2f5b17a9da9897250b292c69accaae739210e426f6b726bb200f31e0f305c"
+    },
+    {
+      "name": "wordart-outline-anton",
+      "sha256": "1d45496608dde42af77385c1f1ece386d0448cdf4f2fbc7cdc3b0ab3833dd06c"
+    },
+    {
+      "name": "wordart-outline-dancing",
+      "sha256": "f62a3c6e36b486a1043f3cebf1e5209a92712e97fa5b004a943a63467f8b8f91"
+    },
+    {
+      "name": "wordart-outline-poppins",
+      "sha256": "c936f9f641694653068358dbe6766c45ed7a0e3f19c75b8bfc7c91aa607cb80b"
+    },
+    {
+      "name": "wordart-outline-stroke-0-dancing",
+      "sha256": "f62a3c6e36b486a1043f3cebf1e5209a92712e97fa5b004a943a63467f8b8f91"
+    },
+    {
+      "name": "wordart-retro-anton",
+      "sha256": "4b84786c72ffcc85fb4114f8a81a61333904ac0e4f7994321112e3ebd21eb59c"
+    },
+    {
+      "name": "wordart-retro-dancing",
+      "sha256": "9dc80355f1c416ea1012348f44b0fddd3b5caad7021a9bfb82692bcd77578ee9"
+    },
+    {
+      "name": "wordart-retro-poppins",
+      "sha256": "cf63686b00b419b7f9d255bee6a9d40fd5582edda7ff657c9d30929023a8a3b1"
+    },
+    {
+      "name": "wordart-shadow-anton",
+      "sha256": "f6f9f55c790d5ace86ee7763331f346cf5a49b1c35c0f6e9bf6d94c9091f1e01"
+    },
+    {
+      "name": "wordart-shadow-dancing",
+      "sha256": "ec95d925afcf3fa4c34798a0d3d72c81660cf65b11bdb6a21885b0df4b8883c7"
+    },
+    {
+      "name": "wordart-shadow-poppins",
+      "sha256": "3a6064e4434044085342941d2df372dc4a0ae4339bedfc75b16117f04a70d449"
+    },
+    {
+      "name": "wordart-solid-anton",
+      "sha256": "87905056d516fc504bf1687b87172710d1181510e353cdcec6187b55c93eee02"
+    },
+    {
+      "name": "wordart-solid-dancing",
+      "sha256": "4ebb5ed34e037c90c829a5782c12c60863d4554b44342ba65fa5f37c82f34e08"
+    },
+    {
+      "name": "wordart-solid-poppins",
+      "sha256": "e4c1cef3d27758e1522d8b59c5ed1931ec063b37bc08e3ae21e981e51ca19ee1"
+    },
+    {
+      "name": "wordart-stroke-12-anton",
+      "sha256": "ca7a664bc9de6d7f048bc471b577a5def54eabc7fabe9621c4f854ad2a351693"
+    }
+  ]
+}

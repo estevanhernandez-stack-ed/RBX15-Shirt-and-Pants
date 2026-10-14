@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**408 rows.** Status: done 55, open 353. Disposition: keep 196, fix 185, drop 26, new 1. Checks: ui-auto 120, unit 110, manual 66, golden 65, none-retired 25, doc 22.
+**408 rows.** Status: done 80, open 328. Disposition: keep 195, fix 186, drop 26, new 1. Checks: ui-auto 120, unit 110, manual 66, golden 65, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -286,20 +286,20 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 |---|---|---|---|---|---|
 | open | `details-layer-creation-pipeline` | Detail layer creation pipeline (canvas, style, autocrop, insertion) | golden | keep | med |
 | open | `details-mode-independence-and-selection` | Detail layers ignore selection and ride on the layer stack | unit | keep | low |
-| open | `detail-collar-v` | V-Neck collar geometry | golden | keep | low |
-| open | `detail-collar-crew` | Crew neck geometry (front and back) | golden | keep | low |
-| open | `detail-collar-scoop` | Scoop neck geometry | golden | keep | low |
-| open | `detail-collar-henley` | Henley collar (crew plus placket and 3 buttons) | golden | keep | low |
-| open | `detail-cuffs` | Cuff lines (left, right, both) | golden | keep | low |
-| open | `detail-hem` | Hem line | golden | keep | low |
-| open | `detail-seams` | Center seam, side seams | golden | keep | low |
-| open | `detail-pocket` | Chest pocket | golden | keep | low |
-| open | `detail-placket` | Button placket | golden | keep | low |
-| open | `detail-shoulder-stripe` | Shoulder stripe | golden | keep | low |
-| open | `detail-arm-bands` | Arm bands | golden | keep | low |
-| open | `detail-yoke` | Back yoke | golden | keep | low |
-| open | `detail-full-set` | Full Detail Set composite | golden | keep | low |
-| open | `details-pants-mode-behavior` | Details behavior in Pants mode | unit | fix | high |
+| done | `detail-collar-v` | V-Neck collar geometry | golden | keep | low |
+| done | `detail-collar-crew` | Crew neck geometry (front and back) | golden | keep | low |
+| done | `detail-collar-scoop` | Scoop neck geometry | golden | keep | low |
+| done | `detail-collar-henley` | Henley collar (crew plus placket and 3 buttons) | golden | keep | low |
+| done | `detail-cuffs` | Cuff lines (left, right, both) | golden | keep | low |
+| done | `detail-hem` | Hem line | golden | keep | low |
+| done | `detail-seams` | Center seam, side seams | golden | keep | low |
+| done | `detail-pocket` | Chest pocket | golden | keep | low |
+| done | `detail-placket` | Button placket | golden | keep | low |
+| done | `detail-shoulder-stripe` | Shoulder stripe | golden | keep | low |
+| done | `detail-arm-bands` | Arm bands | golden | keep | low |
+| done | `detail-yoke` | Back yoke | golden | keep | low |
+| done | `detail-full-set` | Full Detail Set composite | golden | keep | low |
+| done | `details-pants-mode-behavior` | Details behavior in Pants mode | unit | fix | high |
 | open | `details-buttons` | Details tab: 16 detail generators | golden | fix | med |
 
 ## Engine.Document
@@ -399,11 +399,11 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
-| open | `layer-fields-schema` | Layer field schema and persistence shape | unit | keep | med |
+| done | `layer-fields-schema` | Layer field schema and persistence shape | unit | keep | med |
 | open | `project-save-format` | Save project (.r15proj) JSON format | unit | fix | high |
 | open | `project-load-flow` | Open project: file picker and restore order | unit | fix | high |
 | open | `project-load-layers` | Open project: layer restoration algorithm and ordering | unit | fix | high |
-| open | `project-version-compat` | Project file version compatibility policy | unit | fix | high |
+| done | `project-version-compat` | Project file version compatibility policy | unit | fix | high |
 | open | `file-project-format` | Project save/load (.r15proj) | unit | fix | high |
 | open | `project-format-r15proj` | .r15proj JSON contract (read-compat required, shell-level facts) | unit | fix | high |
 | open | `project-load-untrusted-src` | .r15proj load does no sanitization; image fields accept any URL | unit | fix | med |
@@ -411,7 +411,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `project-template-name-not-saved` | Template name is not stored in .r15proj | unit | keep | low |
 | open | `project-load-error-path-bugs` | Project load: failed or missing images skip finalize (order, nextId, selection, render) | unit | fix | med |
 | open | `project-load-history-interplay` | Open project neither snapshots nor clears undo history | unit | fix | med |
-| open | `project-load-field-coercion` | Project load field coercions and fallbacks | unit | keep | med |
+| done | `project-load-field-coercion` | Project load field coercions and fallbacks | unit | fix | med |
 
 ## Engine.Render
 
@@ -476,16 +476,16 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `wordart-font-list` | Word Art font list (15 fonts) and display labels | golden | keep | med |
 | open | `wordart-font-loading-race` | Font load timing and initial preview | unit | fix | low |
 | open | `wordart-render-measure` | renderWordArt layout: measure, line height, padding, canvas size | golden | keep | high |
-| open | `wordart-style-solid` | Style: Solid (fill then optional stroke then refill) | golden | keep | med |
-| open | `wordart-style-gradient` | Style: Gradient (per-line linear gradient fill + angle slider) | golden | keep | med |
-| open | `wordart-style-neon` | Style: Neon glow | golden | keep | high |
-| open | `wordart-style-shadow` | Style: Shadow | golden | keep | low |
-| open | `wordart-style-outline` | Style: Outline (hollow, stroked in the Fill color) | golden | keep | low |
-| open | `wordart-style-retro` | Style: Retro stacked 3D | golden | keep | low |
-| open | `wordart-glyph-rasterization` | Word Art glyph rasterization (antialiased glyph edges) | golden | fix | low |
+| done | `wordart-style-solid` | Style: Solid (fill then optional stroke then refill) | golden | keep | med |
+| done | `wordart-style-gradient` | Style: Gradient (per-line linear gradient fill + angle slider) | golden | keep | med |
+| done | `wordart-style-neon` | Style: Neon glow | golden | keep | high |
+| done | `wordart-style-shadow` | Style: Shadow | golden | keep | low |
+| done | `wordart-style-outline` | Style: Outline (hollow, stroked in the Fill color) | golden | keep | low |
+| done | `wordart-style-retro` | Style: Retro stacked 3D | golden | keep | low |
+| done | `wordart-glyph-rasterization` | Word Art glyph rasterization (antialiased glyph edges) | golden | fix | low |
 | open | `wordart-add-to-canvas` | Add to canvas: full-resolution render and new layer | unit | keep | med |
 | open | `wordart-edge-cases` | Word Art edge cases and invalid input | unit | keep | low |
-| open | `font-wordart-runtime-google` | 15 Word Art fonts loaded from Google Fonts | golden | fix | med |
+| done | `font-wordart-runtime-google` | 15 Word Art fonts loaded from Google Fonts | golden | fix | med |
 | open | `text-styles` | Word Art styles (6) and render pipeline | golden | keep | high |
 | open | `fonts-google-runtime` | 15 Word Art fonts load from Google Fonts at runtime (offline users get fallbacks) | golden | fix | med |
 | open | `wordart-layer-name-emoji` | Word Art layer name has a sparkle emoji prefix | unit | keep | low |

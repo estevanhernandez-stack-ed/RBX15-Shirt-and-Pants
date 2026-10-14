@@ -2,7 +2,7 @@
 
 Every deliberate behavior change in v5, generated from `parity-ledger.json` rows whose disposition is `fix` or `drop`. The bug policy: fix anything clearly unintended, keep anything a user could reasonably rely on. A change that is not in this table is a regression. Rows with a visual effect get a new golden image with a note.
 
-## Fixed in v5 (185)
+## Fixed in v5 (186)
 
 | ID | Owner | Change |
 |---|---|---|
@@ -160,6 +160,7 @@ Every deliberate behavior change in v5, generated from `parity-ledger.json` rows
 | `file-project-format` | Engine.ProjectIO | 4.1: writes version '4.0', applies state before layers parse (half-loaded documents), and accepts any image source. v5: reads all 4.1 files, writes the same fields with version '5.0', all-or-nothing validated load, data: URLs only, and a visible warning naming dropped layers. |
 | `project-format-r15proj` | Engine.ProjectIO | 4.1: writes version '4.0' and loads unvalidated, trusting imgSrc and numeric fields. v5: reads all 4.1 files, writes version '5.0', all-or-nothing validated load, data: URLs only, visible warning naming dropped layers. |
 | `project-load-error-path-bugs` | Engine.ProjectIO | 4.1: a failed last image skips finalize (order, nextId, selection, render). v5: all-or-nothing validated load with a visible warning naming dropped layers. |
+| `project-load-field-coercion` | Engine.ProjectIO | 4.1: an unknown mode string is applied without validation (editor.js loadProject): switchMode loads the Shirt regions while currentMode holds the bad string. v5: an unknown mode refuses the whole file; nothing is applied. Duplicate layer ids (which 4.1 kept) are renumbered: the first holder keeps the id, later holders take fresh ids above every id in the file. |
 | `project-load-flow` | Engine.ProjectIO | 4.1: load applies fields piecemeal, accepts bad shapes and unknown modes, and leaves the previous project's undo history in place. v5: all-or-nothing validated load with history cleared. |
 | `project-load-history-interplay` | Engine.ProjectIO | 4.1: opening a project leaves undo history so Ctrl+Z restores a pre-load session. v5: history cleared on open. |
 | `project-load-layers` | Engine.ProjectIO | 4.1: layer order, nextId and selection depend on async decode completion and are skipped when the last event is an error. v5: deterministic ordering with nextId and selection always set, and a visible warning naming dropped layers. |

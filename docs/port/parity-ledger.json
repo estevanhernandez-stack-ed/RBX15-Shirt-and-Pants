@@ -282,7 +282,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "autocrop",
@@ -3882,7 +3882,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "detail-collar-crew",
@@ -3901,7 +3901,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "detail-collar-scoop",
@@ -3920,7 +3920,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "detail-collar-henley",
@@ -3939,7 +3939,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "detail-cuffs",
@@ -3958,7 +3958,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "detail-hem",
@@ -3977,7 +3977,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "detail-seams",
@@ -3996,7 +3996,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "detail-pocket",
@@ -4015,7 +4015,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "detail-placket",
@@ -4034,7 +4034,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "detail-shoulder-stripe",
@@ -4053,7 +4053,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "detail-arm-bands",
@@ -4072,7 +4072,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "detail-yoke",
@@ -4091,7 +4091,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "detail-full-set",
@@ -4110,7 +4110,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "details-pants-mode-behavior",
@@ -4131,7 +4131,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: every detail generator throws a TypeError in Pants mode because of hardcoded torso/arm keys. v5: generators resolve semantic slots so they run in Pants; pants-specific details deferred to 5.1.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "wordart-state-defaults",
@@ -4233,7 +4233,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "wordart-style-gradient",
@@ -4253,7 +4253,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "wordart-style-neon",
@@ -4272,7 +4272,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "wordart-style-shadow",
@@ -4292,7 +4292,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "wordart-style-outline",
@@ -4311,7 +4311,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "wordart-style-retro",
@@ -4331,7 +4331,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "wordart-glyph-rasterization",
@@ -4351,7 +4351,7 @@
    "check": "golden",
    "disposition": "fix",
    "divergence": "4.1: Chromium rasterizes Word Art glyphs through DirectWrite with ClearType-style coverage. v5: SkiaSharp's rasterizer smooths glyph edges differently; interiors match within 1 level, layout and placement match exactly (pinned by the 4.1-bitmap swap test).",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "wordart-preview-live",
@@ -4785,7 +4785,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: writer emits version '4.0' and the reader ignores version. v5: reads all 4.1 files and writes version '5.0'.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "project-load-image-layer",
@@ -5038,7 +5038,7 @@
    "check": "golden",
    "disposition": "fix",
    "divergence": "4.1: the 15 Word Art fonts load at runtime from Google Fonts and fall back to sans-serif offline. v5: all 15 are bundled.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "theme-scrollbars",
@@ -8263,9 +8263,9 @@
    "parityCheck": "Golden-file test: a corpus of v4 .r15proj files (including missing fields, scale 0, mode 'pants' lowercase) loads to identical layer state in both builds.",
    "owner": "Engine.ProjectIO",
    "check": "unit",
-   "disposition": "keep",
-   "divergence": "",
-   "status": "open"
+   "disposition": "fix",
+   "divergence": "4.1: an unknown mode string is applied without validation (editor.js loadProject): switchMode loads the Shirt regions while currentMode holds the bad string. v5: an unknown mode refuses the whole file; nothing is applied. Duplicate layer ids (which 4.1 kept) are renumbered: the first holder keeps the id, later holders take fresh ids above every id in the file.",
+   "status": "done"
   },
   {
    "id": "canvas-zoom-clipped-no-pan",

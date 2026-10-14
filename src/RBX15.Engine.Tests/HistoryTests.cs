@@ -291,4 +291,26 @@ public class HistoryTests
         Assert.Throws<ArgumentNullException>(() => h.Undo(null!));
         Assert.Throws<ArgumentNullException>(() => h.Redo(null!));
     }
+
+    [Fact] // spec §3, project-load-history-interplay: opening a project empties both stacks
+    public void Clear_empties_both_stacks_and_history_keeps_working()
+    {
+        var h = new History();
+        h.Record(Snap("A"));
+        h.Record(Snap("B"));
+        h.Undo(Snap("C"));
+        Assert.Equal((1, 1), (h.UndoCount, h.RedoCount));
+
+        h.Clear();
+
+        Assert.Equal((0, 0), (h.UndoCount, h.RedoCount));
+        Assert.False(h.CanUndo);
+        Assert.False(h.CanRedo);
+        Assert.Null(h.Undo(Snap("opened")));
+        Assert.Null(h.Redo(Snap("opened")));
+        Assert.Equal((0, 0), (h.UndoCount, h.RedoCount));
+
+        h.Record(Snap("opened"));
+        Assert.Equal("opened", Label(h.Undo(Snap("edited"))));
+    }
 }

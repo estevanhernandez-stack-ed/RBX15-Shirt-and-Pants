@@ -75,6 +75,19 @@ public sealed class History
     }
 
     /// <summary>
+    /// Empties both stacks. Opening a project calls it (spec §3, divergences
+    /// <c>project-load-history-interplay</c> and <c>project-load-flow</c>): 4.1's loadProject neither
+    /// pushed nor cleared history (editor.js:2593-2680), so undo after an open restored the previous
+    /// session's document.
+    /// </summary>
+    public void Clear()
+    {
+        _undo.Clear();
+        _redo.Clear();
+    }
+
+
+    /// <summary>
     /// Reverts one step. Returns null, parking nothing, when there is nothing to undo
     /// (lib/history.js:43). Otherwise parks <paramref name="current"/> on redo and returns the
     /// previous state with the selection resolved (lib/history.js:44-45).

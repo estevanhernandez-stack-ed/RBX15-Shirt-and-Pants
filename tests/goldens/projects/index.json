@@ -1,0 +1,52 @@
+{
+  "electron": "41.1.0",
+  "chrome": "146.0.7680.166",
+  "editorJsBlob": "2790c41e418cd5bfea82cf1ae4d71626a7b54e61",
+  "editorHtmlBlob": "401a5d5f33c4accbb452cb080c9c544a0f79a6ce",
+  "fillsJsBlob": "208d3297cb0920974d034639d754a65e75ae14d4",
+  "eraseJsBlob": "dbade0ccc28481f05b9c70b941a7587086cbfcdd",
+  "historyJsBlob": "9c5339cadb164db81b779738a0f0046935b79c3e",
+  "savedAtPinned": "2026-10-11T00:00:00.000Z",
+  "fontsManifestSha256": "ba0dafad93f0830be40f41301e1169c94730ccb8814d7dd0e9f21040f8813c9a",
+  "scenes": [
+    {
+      "name": "proj-shirt-rich",
+      "sha256": "0b516855229fd212149ed9254578abe0c0da8a12172b518b3f849dec26ea2497",
+      "electron": "41.1.0",
+      "chrome": "146.0.7680.166",
+      "editorJsBlob": "2790c41e418cd5bfea82cf1ae4d71626a7b54e61",
+      "editorHtmlBlob": "401a5d5f33c4accbb452cb080c9c544a0f79a6ce",
+      "fillsJsBlob": "208d3297cb0920974d034639d754a65e75ae14d4",
+      "eraseJsBlob": "dbade0ccc28481f05b9c70b941a7587086cbfcdd",
+      "historyJsBlob": "9c5339cadb164db81b779738a0f0046935b79c3e",
+      "savedAtPinned": "2026-10-11T00:00:00.000Z",
+      "fontsManifestSha256": "ba0dafad93f0830be40f41301e1169c94730ccb8814d7dd0e9f21040f8813c9a"
+    },
+    {
+      "name": "proj-pants-legacy",
+      "sha256": "d390472384d3eecc2fdac196552a4fd78f55e7b0f9b3fd9d8d5257f2600ecee3",
+      "electron": "41.1.0",
+      "chrome": "146.0.7680.166",
+      "editorJsBlob": "2790c41e418cd5bfea82cf1ae4d71626a7b54e61",
+      "editorHtmlBlob": "401a5d5f33c4accbb452cb080c9c544a0f79a6ce",
+      "fillsJsBlob": "208d3297cb0920974d034639d754a65e75ae14d4",
+      "eraseJsBlob": "dbade0ccc28481f05b9c70b941a7587086cbfcdd",
+      "historyJsBlob": "9c5339cadb164db81b779738a0f0046935b79c3e",
+      "savedAtPinned": "2026-10-11T00:00:00.000Z",
+      "fontsManifestSha256": "ba0dafad93f0830be40f41301e1169c94730ccb8814d7dd0e9f21040f8813c9a"
+    },
+    {
+      "name": "proj-shirt-drawn",
+      "sha256": "5e6ac7efbe9d84da8d5f21c3a602664fcff0acfaee8b76b5b49244aa169717e5",
+      "electron": "41.1.0",
+      "chrome": "146.0.7680.166",
+      "editorJsBlob": "2790c41e418cd5bfea82cf1ae4d71626a7b54e61",
+      "editorHtmlBlob": "401a5d5f33c4accbb452cb080c9c544a0f79a6ce",
+      "fillsJsBlob": "208d3297cb0920974d034639d754a65e75ae14d4",
+      "eraseJsBlob": "dbade0ccc28481f05b9c70b941a7587086cbfcdd",
+      "historyJsBlob": "9c5339cadb164db81b779738a0f0046935b79c3e",
+      "savedAtPinned": "2026-10-11T00:00:00.000Z",
+      "fontsManifestSha256": "ba0dafad93f0830be40f41301e1169c94730ccb8814d7dd0e9f21040f8813c9a"
+    }
+  ]
+}

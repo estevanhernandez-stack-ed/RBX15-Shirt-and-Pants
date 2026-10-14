@@ -1,3 +1,6 @@
+using System.Collections.Concurrent;
+using System.Globalization;
+using System.Text;
 using SkiaSharp;
 using HB = HarfBuzzSharp;
 
@@ -28,8 +31,23 @@ public static class WordArt
     /// <summary>The waSize input's min and max (editor.html:256), enforced (approved divergence; 4.1 accepts any typed value).</summary>
     public const float MinSize = 8, MaxSize = 300;
 
-    /// <summary>One shaped line: glyph ids, each glyph's x from the line's left edge, and the advance width.</summary>
-    internal sealed record ShapedLine(ushort[] Glyphs, float[] Xs, float Width);
+    /// <summary>
+    /// One run of a shaped line, all in one face: the vendored face (<c>Primary</c>) or the system face
+    /// a character the family lacks falls back to. Glyph ids, and each glyph's x from the line's left edge.
+    /// </summary>
+    internal sealed record ShapedRun(SKTypeface Typeface, bool Primary, ushort[] Glyphs, float[] Xs);
+
+    /// <summary>One shaped line: its runs in text order, and the advance width.</summary>
+    internal sealed record ShapedLine(IReadOnlyList<ShapedRun> Runs, float Width);
+
+    /// <summary>A system face a missing character falls back to, with the bytes HarfBuzz shapes from.</summary>
+    internal sealed record FallbackFace(SKTypeface Typeface, byte[] Bytes, int Index);
+
+    static readonly ConcurrentDictionary<(string Family, int Codepoint), FallbackFace?> FallbackByCharacter = new();
+    static readonly ConcurrentDictionary<string, FallbackFace> FallbackFaces = new(StringComparer.Ordinal);
+
+    /// <summary>The style 4.1 asks for (editor.js:2131): weight 900, normal width, upright.</summary>
+    static readonly SKFontStyle RequestStyle = new(SKFontStyleWeight.Black, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
 
     /// <summary>waText || 'TEXT' (editor.js:2121, :2270).</summary>
     internal static string EffectiveText(string text) => text.Length == 0 ? "TEXT" : text;
@@ -64,34 +82,110 @@ public static class WordArt
     static readonly uint Os2Tag = 'O' << 24 | 'S' << 16 | '/' << 8 | '2';
 
     /// <summary>
-    /// Shapes one line with HarfBuzz at the font size in 16.16 fixed point and the request's wght, as
-    /// Blink's HarfBuzzShaper does; advances and offsets come back as floats summed left to right.
+    /// Shapes one line as Blink's HarfBuzzShaper does. The line splits into runs by font coverage, one
+    /// grapheme cluster at a time: a cluster whose first character the vendored face covers stays in it,
+    /// and any other falls back to the system face SKFontManager.MatchCharacter picks for the family at
+    /// weight 900, as Chromium falls back (4.1's font string ends in ", sans-serif", editor.js:2131).
+    /// Each run is shaped with HarfBuzz at the font size in 16.16 fixed point, the vendored run at the
+    /// request's wght; advances and offsets come back as floats summed left to right. Text the vendored
+    /// face covers is one run, shaped exactly as one HarfBuzz call over the whole line.
     /// </summary>
     internal static ShapedLine Shape(string family, float size, string line)
     {
-        using var blob = HB.Blob.FromStream(new MemoryStream(Fonts.FileBytes(family, Weight), writable: false));
-        using var face = new HB.Face(blob, 0);
+        var primary = Fonts.Get(family, Weight);
+        var runs = new List<ShapedRun>();
+        float pen = 0;
+        foreach (var (start, length, fallback) in Segment(primary, family, line))
+        {
+            var text = line.Substring(start, length);
+            var (glyphs, xs, advance) = fallback is null
+                ? ShapeRun(Fonts.FileBytes(family, Weight), 0, Fonts.AxisWeight(family, Weight), size, text, pen)
+                : ShapeRun(fallback.Bytes, fallback.Index, null, size, text, pen);
+            runs.Add(new ShapedRun(fallback?.Typeface ?? primary, fallback is null, glyphs, xs));
+            pen += advance;
+        }
+        return new ShapedLine(runs, pen);
+    }
+
+    /// <summary>Consecutive grapheme clusters that draw in the same face: start, length, and the fallback face (null for the vendored face).</summary>
+    static IEnumerable<(int Start, int Length, FallbackFace? Fallback)> Segment(SKTypeface primary, string family, string line)
+    {
+        int runStart = 0;
+        FallbackFace? runFace = null;
+        for (int i = 0; i < line.Length;)
+        {
+            int length = StringInfo.GetNextTextElementLength(line, i);
+            Rune.DecodeFromUtf16(line.AsSpan(i), out var rune, out _);
+            var face = Covers(primary, rune.Value) ? null : Fallback(family, rune.Value);
+            if (i > runStart && !ReferenceEquals(face, runFace))
+            {
+                yield return (runStart, i - runStart, runFace);
+                runStart = i;
+            }
+            runFace = face;
+            i += length;
+        }
+        if (line.Length > runStart) yield return (runStart, line.Length - runStart, runFace);
+    }
+
+    /// <summary>
+    /// The system face for a character the vendored family lacks, or null when no installed face has it
+    /// (the cluster then stays in the vendored face). Cached per family and character, with one
+    /// <see cref="FallbackFace"/> per distinct face, so neighbouring fallback characters share a run.
+    /// </summary>
+    static FallbackFace? Fallback(string family, int codepoint) => FallbackByCharacter.GetOrAdd((family, codepoint), key =>
+    {
+        var typeface = SKFontManager.Default.MatchCharacter(key.Family, RequestStyle, null, key.Codepoint);
+        if (typeface is null) return null;
+        if (!Covers(typeface, key.Codepoint))
+        {
+            typeface.Dispose();
+            return null;
+        }
+        var id = $"{typeface.FamilyName}|{typeface.FontWeight}|{typeface.FontWidth}|{typeface.FontSlant}";
+        var face = FallbackFaces.GetOrAdd(id, _ =>
+        {
+            using var stream = typeface.OpenStream(out int index) ?? throw new InvalidDataException($"cannot read {typeface.FamilyName}");
+            using var data = SKData.Create(stream);
+            return new FallbackFace(typeface, data.ToArray(), index);
+        });
+        if (!ReferenceEquals(face.Typeface, typeface)) typeface.Dispose();
+        return face;
+    });
+
+    /// <summary>Whether the face has a glyph for the character (SKTypeface.ContainsGlyph is obsolete in 4.153.1).</summary>
+    static bool Covers(SKTypeface typeface, int codepoint)
+    {
+        using var font = new SKFont(typeface);
+        return font.ContainsGlyph(codepoint);
+    }
+
+    /// <summary>One run through HarfBuzz; its glyph x positions start at <paramref name="pen"/>.</summary>
+    static (ushort[] Glyphs, float[] Xs, float Advance) ShapeRun(byte[] fontBytes, int index, float? wght, float size, string text, float pen)
+    {
+        using var blob = HB.Blob.FromStream(new MemoryStream(fontBytes, writable: false));
+        using var face = new HB.Face(blob, index);
         using var font = new HB.Font(face);
         int scale = (int)(size * 65536);
         font.SetScale(scale, scale);
-        if (Fonts.AxisWeight(family, Weight) is { } wght)
-            font.SetVariations(new[] { new HB.Variation { Tag = Fonts.WghtTag, Value = wght } });
+        if (wght is { } w)
+            font.SetVariations(new[] { new HB.Variation { Tag = Fonts.WghtTag, Value = w } });
         using var buffer = new HB.Buffer();
-        buffer.AddUtf16(line);
+        buffer.AddUtf16(text);
         buffer.GuessSegmentProperties();
         font.Shape(buffer);
         var infos = buffer.GetGlyphInfoSpan();
         var positions = buffer.GetGlyphPositionSpan();
         var glyphs = new ushort[infos.Length];
         var xs = new float[infos.Length];
-        float pen = 0;
+        float x = pen;
         for (int i = 0; i < infos.Length; i++)
         {
             glyphs[i] = (ushort)infos[i].Codepoint;
-            xs[i] = pen + positions[i].XOffset / 65536f;
-            pen += positions[i].XAdvance / 65536f;
+            xs[i] = x + positions[i].XOffset / 65536f;
+            x += positions[i].XAdvance / 65536f;
         }
-        return new ShapedLine(glyphs, xs, pen);
+        return (glyphs, xs, x - pen);
     }
 
     /// <summary>
@@ -135,9 +229,18 @@ public static class WordArt
     /// <summary>One line's passes (editor.js:2166-2236).</summary>
     static void DrawLine(SKCanvas canvas, SKFont font, ShapedLine line, WordArtSettings s, double cx, double ty, float middle, int cw, int ch)
     {
-        if (line.Glyphs.Length == 0) return;
+        if (line.Runs.Count == 0) return;
         using var builder = new SKTextBlobBuilder();
-        builder.AddHorizontalRun(line.Glyphs, font, line.Xs, 0);
+        foreach (var run in line.Runs)
+        {
+            if (run.Primary)
+            {
+                builder.AddHorizontalRun(run.Glyphs, font, run.Xs, 0);
+                continue;
+            }
+            using var fallbackFont = FallbackFont(run.Typeface, font.Size);
+            builder.AddHorizontalRun(run.Glyphs, fallbackFont, run.Xs, 0);
+        }
         using var blob = builder.Build();
 
         // fillText/strokeText(line, x, y) with textAlign center and textBaseline middle: Blink takes x
@@ -220,6 +323,20 @@ public static class WordArt
         return SKShader.CreateLinearGradient(new SKPoint((float)(cx - gx), (float)(ty - gy)), new SKPoint((float)(cx + gx), (float)(ty + gy)),
             new[] { s.Fill, s.Grad }, null, SKShaderTileMode.Clamp);
     }
+
+    /// <summary>
+    /// The SkFont for a fallback run: the canvas text settings of <see cref="Fonts.CreateFont"/>, plus
+    /// synthetic bold when the system face is lighter than <see cref="Fonts.BoldThreshold"/>, because the
+    /// request is 900 (Blink applies the same rule to fallback faces).
+    /// </summary>
+    static SKFont FallbackFont(SKTypeface typeface, float size) => new(typeface, size)
+    {
+        Embolden = typeface.FontWeight < Fonts.BoldThreshold,
+        Edging = SKFontEdging.Antialias,
+        Subpixel = true,
+        Hinting = SKFontHinting.None,
+        LinearMetrics = true,
+    };
 
     static SKPaint FillPaint(SKColor color) => new() { Color = color, IsAntialias = true, Style = SKPaintStyle.Fill };
 

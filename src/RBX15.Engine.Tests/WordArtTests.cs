@@ -39,6 +39,36 @@ public class WordArtTests
     public void Lines_are_shaped_to_chromiums_measureText_width(string font, float size, string text, double width) =>
         Assert.Equal(width, WordArt.Shape(font, size, text).Width, 3);
 
+    [Fact]
+    public void Plain_text_shapes_as_one_run_in_the_vendored_face()
+    {
+        var line = WordArt.Shape("Dancing Script", 64, "RIZZ");
+        var run = Assert.Single(line.Runs);
+        Assert.True(run.Primary);
+        Assert.Same(Fonts.Get("Dancing Script", WordArt.Weight), run.Typeface);
+        Assert.Equal(4, run.Glyphs.Length);
+    }
+
+    [Fact]
+    public void A_character_the_family_lacks_is_shaped_in_a_system_fallback_face()
+    {
+        // 4.1's font string ends in ", sans-serif" (editor.js:2131), so Chromium draws a character the
+        // family lacks in a system face, never the family's .notdef glyph (id 0).
+        var a = WordArt.Shape("Anton", 64, "A");
+        var line = WordArt.Shape("Anton", 64, "A\U0001F525");
+        Assert.Equal(2, line.Runs.Count);
+        Assert.True(line.Runs[0].Primary);
+        Assert.Equal("Anton", line.Runs[0].Typeface.FamilyName);
+        var fire = line.Runs[1];
+        Assert.False(fire.Primary);
+        Assert.NotEqual("Anton", fire.Typeface.FamilyName);
+        using (var fallback = new SKFont(fire.Typeface))
+            Assert.True(fallback.ContainsGlyph(0x1F525));
+        Assert.All(line.Runs, r => Assert.DoesNotContain((ushort)0, r.Glyphs));
+        Assert.Equal(a.Width, fire.Xs[0], 3); // the fallback run continues the pen
+        Assert.True(line.Width > a.Width);
+    }
+
     [Theory]
     [InlineData("Anton", 64, 18.015625)]
     [InlineData("Poppins", 64, 16)]

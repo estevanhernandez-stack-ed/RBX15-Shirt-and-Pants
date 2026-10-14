@@ -8,16 +8,22 @@ namespace RBX15.Engine.Tests;
 /// editor.html) whose actions the engine runs passes the golden rule. A scene holding an op the
 /// engine does not run yet is skipped with a reason that names the op; the task that implements
 /// the op adds it to SceneLoader's SupportedOps and deletes that op's MemberData line here
-/// (M2a Task 6 for erase, M2b for detail, wordart and project).
+/// (M2b for detail, wordart and project).
+/// <para>
+/// Erase actions run through the internal EraseStroking.Replay41, which re-strokes the eraser path
+/// after every mousemove exactly as app-render.js drove 4.1 (mousedown at points[0], one mousemove
+/// per later point, mouseup with no stroke), so every erase scene meets the unchanged rule.
+/// Production strokes once (approved divergence draw-pen-incremental-stroke); it is held to the
+/// goldens directly on the two-point drags, where 4.1 strokes once too.
+/// </para>
 /// Goldens are never edited. Heatmaps go to diff-heatmaps/app/.
 /// </summary>
 public class GoldenAppTests
 {
-    const string EraseSkip = "op 'erase' is not run by the engine yet (Engine Eraser, M2a)";
     const string DetailSkip = "op 'detail' is not run by the engine yet (Engine Details, M2b)";
     const string WordArtSkip = "op 'wordart' is not run by the engine yet (Engine WordArt, M2b)";
     const string ProjectSkip = "op 'project' is not run by the engine yet (Engine ProjectIO, M2b)";
-    static readonly string[] PendingOps = { "erase", "detail", "wordart", "project" };
+    static readonly string[] PendingOps = { "detail", "wordart", "project" };
 
     static readonly string Root = RepoRoot.Find(AppContext.BaseDirectory);
     static readonly string Dir = Path.Combine(Root, "tests", "goldens", "app");
@@ -29,6 +35,8 @@ public class GoldenAppTests
     });
 
     static string NameOf(JsonElement e) => e.GetProperty("name").GetString()!;
+
+    static JsonElement Scene(string name) => Raw.Value.Single(e => NameOf(e) == name);
 
     /// <summary>Scenes whose first unsupported op is <paramref name="op"/>; "" selects the scenes the engine runs in full.</summary>
     public static TheoryData<string> ScenesBlockedBy(string op)
@@ -42,16 +50,36 @@ public class GoldenAppTests
         return data;
     }
 
+    /// <summary>Runnable scenes with at least one erase, every erase a two-point drag (one stroke in 4.1).</summary>
+    public static TheoryData<string> TwoPointEraseScenes()
+    {
+        var data = new TheoryData<string>();
+        foreach (var e in Raw.Value)
+        {
+            if (SceneLoader.UnsupportedOps(e).Count != 0 || !e.TryGetProperty("actions", out var actions)) continue;
+            var erases = actions.EnumerateArray().Where(a => a.GetProperty("op").GetString() == "erase").ToList();
+            if (erases.Count > 0 && erases.All(a => a.GetProperty("points").GetArrayLength() == 2)) data.Add(NameOf(e));
+        }
+        return data;
+    }
+
     [Theory]
     [MemberData(nameof(ScenesBlockedBy), "")]
-    [MemberData(nameof(ScenesBlockedBy), "erase", Skip = EraseSkip)]
     [MemberData(nameof(ScenesBlockedBy), "detail", Skip = DetailSkip)]
     [MemberData(nameof(ScenesBlockedBy), "wordart", Skip = WordArtSkip)]
     [MemberData(nameof(ScenesBlockedBy), "project", Skip = ProjectSkip)]
     public void Engine_export_matches_the_frozen_4_1_app_golden(string name)
     {
-        var scene = SceneLoader.Parse(Raw.Value.Single(e => NameOf(e) == name), Root);
+        var scene = SceneLoader.Parse(Scene(name), Root, EraseStroking.Replay41);
         GoldenRule.AssertMatches(name, Path.Combine(Dir, name + ".png"), scene.Document, Path.Combine(Root, "diff-heatmaps", "app", name + ".png"));
+    }
+
+    [Theory]
+    [MemberData(nameof(TwoPointEraseScenes))]
+    public void Production_stroke_once_matches_the_golden_on_two_point_erase_scenes(string name)
+    {
+        var scene = SceneLoader.Parse(Scene(name), Root);
+        GoldenRule.AssertMatches(name, Path.Combine(Dir, name + ".png"), scene.Document, Path.Combine(Root, "diff-heatmaps", "app", name + ".once.png"));
     }
 
     [Fact]

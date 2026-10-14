@@ -15,4 +15,8 @@
     <ProjectReference Include="..\RBX15.Engine\RBX15.Engine.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="RBX15.Engine.Tests" />
+  </ItemGroup>
+
 </Project>

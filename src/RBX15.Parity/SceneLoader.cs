@@ -13,13 +13,17 @@ namespace RBX15.Parity;
 /// The loader runs only the ops the engine implements (SupportedOps). A scene holding any other op
 /// refuses to parse, so no test ever compares a half-built document against a golden.
 /// </para>
+/// <para>
+/// The public API strokes the eraser once, as the editor does. The internal overloads take an
+/// <see cref="EraseStroking"/> so the golden gate can replay 4.1's per-move stroking.
+/// </para>
 /// </summary>
 public static class SceneLoader
 {
     public sealed record Scene(string Name, Document Document);
 
     /// <summary>Ops the engine runs. Each engine task that implements an op adds it here.</summary>
-    static readonly HashSet<string> SupportedOps = new(StringComparer.Ordinal) { "shape" };
+    static readonly HashSet<string> SupportedOps = new(StringComparer.Ordinal) { "shape", "erase" };
 
     public static IReadOnlyList<Scene> LoadAll(string scenesJson, string repoRoot)
     {
@@ -40,7 +44,9 @@ public static class SceneLoader
         return ops;
     }
 
-    public static Scene Parse(JsonElement e, string repoRoot)
+    public static Scene Parse(JsonElement e, string repoRoot) => Parse(e, repoRoot, EraseStroking.Once);
+
+    internal static Scene Parse(JsonElement e, string repoRoot, EraseStroking eraseStroking)
     {
         string? Str(JsonElement o, string k) => o.TryGetProperty(k, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
         double? Num(JsonElement o, string k) => o.TryGetProperty(k, out var v) && v.ValueKind == JsonValueKind.Number ? v.GetDouble() : null;
@@ -95,6 +101,7 @@ public static class SceneLoader
                 document = action.GetProperty("op").GetString() switch
                 {
                     "shape" => ApplyShape(document, action),
+                    "erase" => ApplyErase(document, action, eraseStroking),
                     var op => throw new InvalidDataException($"scene {name}: op '{op}' has no handler"),
                 };
 
@@ -126,5 +133,27 @@ public static class SceneLoader
         int id = doc.Layers.IsEmpty ? 1 : doc.Layers.Max(l => l.Id) + 1;
         var layer = Tools.CommitDrawing(stroke, id, Tools.DrawingName(tool));
         return layer is null ? doc : doc with { Layers = doc.Layers.Add(layer) };
+    }
+
+    /// <summary>
+    /// Scene v2 erase op: <c>{ "op": "erase", "layer": i, "points": [[x,y],...], "size": n }</c>, stroked
+    /// once like the editor. 4.1 (app-render.js) selects layer i, picks the eraser, presses at
+    /// points[0], moves through the rest and releases (editor.js:1120-1146, 1196-1203, 1248-1283).
+    /// Drawings append above the scene's layers (editor.js:534 layers.push), so i indexes the
+    /// document's layers directly.
+    /// </summary>
+    public static Document ApplyErase(Document document, JsonElement action) => ApplyErase(document, action, EraseStroking.Once);
+
+    internal static Document ApplyErase(Document document, JsonElement action, EraseStroking stroking)
+    {
+        int index = action.GetProperty("layer").GetInt32();
+        if (index < 0 || index >= document.Layers.Count)
+            throw new InvalidDataException($"erase: the scene has no layer {index}");
+        var points = action.GetProperty("points").EnumerateArray()
+            .Select(p => new SKPoint((float)p[0].GetDouble(), (float)p[1].GetDouble()))
+            .ToList();
+        float size = (float)action.GetProperty("size").GetDouble();
+        var erased = Eraser.Apply(document.Layers[index], points, size, stroking);
+        return document with { Layers = document.Layers.SetItem(index, erased) };
     }
 }

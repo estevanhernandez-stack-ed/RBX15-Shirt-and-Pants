@@ -129,4 +129,21 @@ public class RendererTests
         Assert.Equal((1000, 750), Renderer.DecodeCacheSize(4000, 3000, 585 / 4000.0, 559 / 3000.0)); // big background photo: level 2
         Assert.Null(Renderer.DecodeCacheSize(1920, 1080, 585 / 1920.0, 559 / 1080.0));   // one axis under 2x keeps the original
     }
+
+    /// <summary>
+    /// Pins Renderer.FloatPipeline. A rotated draw is declined by Skia's legacy blitters, so it
+    /// composites in the float pipeline in Chromium (G = 224*0.4 + 46*0.6 = 117.2, 117) but in 8-bit
+    /// lowp in SkiaSharp without the no-op color filter (118). If a Skia upgrade drops the trick, this fails.
+    /// </summary>
+    [Fact]
+    public void Rotated_layer_composites_in_float_not_lowp()
+    {
+        var info = new SKImageInfo(200, 200, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
+        using var surface = SKSurface.Create(info);
+        surface.Canvas.Clear(new SKColor(0, 224, 0));
+        var layer = new Layer { Id = 1, Image = Solid(100, 100, new SKColor(0, 46, 0)), X = 50, Y = 50, Rotation = 45, Opacity = 0.6 };
+        Renderer.DrawLayer(surface.Canvas, layer);
+        using var result = surface.Snapshot();
+        Assert.Equal(new SKColor(0, 117, 0), Px.At(result, 100, 100));
+    }
 }

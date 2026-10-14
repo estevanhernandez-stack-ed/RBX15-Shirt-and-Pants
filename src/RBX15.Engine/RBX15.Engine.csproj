@@ -8,11 +8,18 @@
 
   <ItemGroup>
     <PackageReference Include="SkiaSharp" Version="4.153.1" />
+    <PackageReference Include="HarfBuzzSharp" Version="14.2.1.301" />
   </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="RBX15.Engine.Tests" />
     <InternalsVisibleTo Include="RBX15.Parity" />
+  </ItemGroup>
+
+  <!-- The vendored fonts (assets/fonts, read-only) ship next to every build output that references
+       the engine, at assets/fonts/<family>/<file>. Fonts resolves them from AppContext.BaseDirectory. -->
+  <ItemGroup>
+    <Content Include="..\..\assets\fonts\**\*" LinkBase="assets\fonts" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

@@ -23,12 +23,17 @@ public static class Images
         return SKImage.FromPixelCopy(bmp.PeekPixels());
     }
 
+    /// <summary>
+    /// The premultiplied, platform-native (kN32) copy that drawing uses. kN32 matters: Skia only takes
+    /// its legacy 8888 blitters (Chromium's software canvas path) for N32 sources onto N32 devices.
+    /// </summary>
     public static SKImage ForDrawing(SKImage image) =>
-        image.AlphaType == SKAlphaType.Premul ? image : Premultiplied.GetValue(image, ToPremul);
+        image.AlphaType == SKAlphaType.Premul && image.ColorType == SKImageInfo.PlatformColorType
+            ? image : Premultiplied.GetValue(image, ToPremul);
 
     static SKImage ToPremul(SKImage source)
     {
-        var info = new SKImageInfo(source.Width, source.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
+        var info = new SKImageInfo(source.Width, source.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
         using var bmp = new SKBitmap(info);
         if (!source.ReadPixels(info, bmp.GetPixels(), bmp.RowBytes, 0, 0))
             throw new InvalidOperationException("premultiply failed");

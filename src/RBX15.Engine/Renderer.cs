@@ -13,9 +13,14 @@ public static class Renderer
     public static readonly SKSamplingOptions LayerSampling = new(SKFilterMode.Linear, SKMipmapMode.None);
     static readonly SKSamplingOptions MaskSampling = new(SKFilterMode.Nearest, SKMipmapMode.None);
 
+    /// <summary>
+    /// Renders on a kN32 (platform-native, BGRA on Windows) surface, as Chromium's software canvas
+    /// does. Skia picks its legacy 8888 blitters only for N32 devices, and those round differently
+    /// from the raster pipeline: src-over is dst*(256-sa)>>8, not the pipeline's (v+255)>>8 divide.
+    /// </summary>
     public static SKImage Export(Document doc)
     {
-        var info = new SKImageInfo(TemplateSize.Width, TemplateSize.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
+        var info = new SKImageInfo(TemplateSize.Width, TemplateSize.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
         using var surface = SKSurface.Create(info) ?? throw new InvalidOperationException("cannot create export surface");
         RenderExport(surface.Canvas, doc);
         return surface.Snapshot();

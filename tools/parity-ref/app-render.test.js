@@ -190,3 +190,23 @@ test('a failing action stops the run with the scene, the action index and the op
     assert.match(r.stderr, pattern);
   }
 });
+
+test('--save-projects output is byte-reproducible: 4.1\'s savedAt timestamp is pinned', () => {
+  const source = {
+    name: 'probe-repro', bgColor: '#0f1f31',
+    layers: [{ image: 'packs/word_art/word_626_anton.png', x: 240, y: 100 }],
+  };
+  const files = [];
+  for (const p of ['pref-repro-a-', 'pref-repro-b-']) {
+    const dir = tmp(p);
+    const scenesFile = path.join(dir, 'in-projects.json');
+    fs.writeFileSync(scenesFile, JSON.stringify([source]));
+    const r = appRender(['--save-projects', scenesFile, '--out-dir', dir]);
+    assert.strictEqual(r.status, 0, `save failed:\n${r.stdout}\n${r.stderr}`);
+    files.push(path.join(dir, 'probe-repro.r15proj'));
+  }
+  assert.deepStrictEqual(fs.readFileSync(files[0]), fs.readFileSync(files[1]));
+  assert.strictEqual(JSON.parse(fs.readFileSync(files[0], 'utf8')).savedAt, '2026-10-11T00:00:00.000Z');
+  const index = JSON.parse(fs.readFileSync(path.join(path.dirname(files[0]), 'index.json'), 'utf8'));
+  assert.strictEqual(index.savedAtPinned, '2026-10-11T00:00:00.000Z');
+});

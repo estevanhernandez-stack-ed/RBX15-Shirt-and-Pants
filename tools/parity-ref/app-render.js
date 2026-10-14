@@ -116,6 +116,7 @@ app.whenReady().then(async () => {
       electron: process.versions.electron, chrome: process.versions.chrome,
       editorJsBlob: blob('editor.js'), editorHtmlBlob: blob('editor.html'), fillsJsBlob: blob('lib/fills.js'),
       eraseJsBlob: blob('lib/erase.js'), historyJsBlob: blob('lib/history.js'),
+      savedAtPinned: '2026-10-11T00:00:00.000Z',
       fontsManifestSha256: sha256(fs.readFileSync(path.join(fonts.FONTS_DIR, 'README.md'))),
     };
     const indexFile = path.join(outDir, 'index.json');

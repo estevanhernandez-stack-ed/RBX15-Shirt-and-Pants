@@ -7,6 +7,7 @@
   'use strict';
   if (window.__pref) return;
 
+  const SAVED_AT_PINNED = '2026-10-11T00:00:00.000Z';
   const alerts = [];
   window.alert = (message) => { alerts.push(String(message)); };
   window.confirm = () => true; // exportPNG's empty-template guard, editor.js:1504-1506
@@ -230,7 +231,14 @@
       const realCreate = URL.createObjectURL;
       let blob = null;
       URL.createObjectURL = (b) => { blob = b; return realCreate.call(URL, b); };
-      try { captureDownload(() => saveProject()); } finally { URL.createObjectURL = realCreate; } // editor.js:2550-2591
+      // saveProject stamps savedAt: new Date().toISOString() (editor.js:2554). Pin it for this call
+      // only so saved projects are byte-reproducible.
+      const realIso = Date.prototype.toISOString;
+      Date.prototype.toISOString = function () { return SAVED_AT_PINNED; };
+      try { captureDownload(() => saveProject()); } finally { // editor.js:2550-2591
+        Date.prototype.toISOString = realIso;
+        URL.createObjectURL = realCreate;
+      }
       if (!blob) throw new Error('saveProject made no blob');
       return blob.text();
     },

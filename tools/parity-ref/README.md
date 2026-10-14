@@ -22,3 +22,7 @@ Renders parity scenes through shipped 4.1 code, lifted verbatim out of `editor.j
 `{ name, mode?, bgColor?, bgOpacity?, bgImage?, regionColors?, layers?: [{ image, x?, y?, scale?, rotation?, flipH?, flipV?, opacity?, visible?, brightness?, contrast?, saturate?, hueRotate?, rShift?, gShift?, bShift? }] }`. Image paths are repo-relative. Defaults match `makeLayer` (`editor.js:134-142`) and the editor's initial state. The output is always the export composition, so the mask is always applied.
 
 Word Art, details, eraser and project round-trip scenes are added at the start of M2, before cutover.
+
+## App-driven renderer (app-render.js)
+
+`electron tools/parity-ref/app-render.js` drives the real 4.1 editor; in `--save-projects` mode it pins `Date.prototype.toISOString` to `2026-10-11T00:00:00.000Z` for the `saveProject()` call only (4.1 stamps `savedAt` from the clock, editor.js:2554), so saved `.r15proj` files are byte-reproducible, and it records the value as `savedAtPinned` in `index.json`.

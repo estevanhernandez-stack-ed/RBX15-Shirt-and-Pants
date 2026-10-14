@@ -38,21 +38,53 @@ public static class Images
     /// <summary>
     /// The decode Chromium's software image decode cache hands the canvas when an img element is
     /// drawn downscaled to a mip level of 1 or more (cc SoftwareImageDecodeCacheUtils::CacheKey::FromDrawImage):
-    /// the image pre-scaled to that level's size with SkPixmap::scalePixels at the draw's own
-    /// quality, which for canvas 'low' smoothing is bilinear without mipmaps. Cached per image.
-    /// Cache-owned; callers must not dispose.
+    /// the image pre-scaled to that level's size with SkPixmap::scalePixels at medium quality,
+    /// bilinear with nearest mipmaps. Skia then samples from its own mip chain, picked from the
+    /// pre-scale's geometric-mean scale and rounded down (<see cref="SkiaMipLevel"/>). Cached per
+    /// image. Cache-owned; callers must not dispose.
     /// </summary>
     internal static SKImage DecodeCacheScaled(SKImage premul, int width, int height)
     {
         if (Scaled.TryGetValue(premul, out var hit) && hit.Width == width && hit.Height == height) return hit.Result;
-        var info = new SKImageInfo(width, height, premul.ColorType, SKAlphaType.Premul);
-        using var bmp = new SKBitmap(info);
-        using (var dst = bmp.PeekPixels())
-            if (!premul.ScalePixels(dst, new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.None)))
-                throw new InvalidOperationException("decode-cache scale failed");
-        var result = SKImage.FromPixelCopy(bmp.PeekPixels());
+        int level = SkiaMipLevel(premul.Width, premul.Height, width, height);
+        var source = premul;
+        var chain = new List<SKImage>();
+        for (int i = 0; i < level && (source.Width > 1 || source.Height > 1); i++)
+            chain.Add(source = ScalePixels(source, Math.Max(1, source.Width / 2), Math.Max(1, source.Height / 2), MipBuild));
+        var result = ScalePixels(source, width, height, new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.None));
+        foreach (var mip in chain) mip.Dispose();
         Scaled.AddOrUpdate(premul, new ScaledEntry(width, height, result));
         return result;
+    }
+
+    /// <summary>
+    /// The mip level Chromium's Skia samples for a medium-quality draw at this size: log2 of the
+    /// inverse geometric-mean scale, rounded down (Chromium builds Skia with
+    /// SK_SUPPORT_LEGACY_ANISOTROPIC_MIPMAP_SCALE; SkiaSharp's Skia takes the smaller axis scale,
+    /// which mips the full-scene word art at exactly 0.5 where 4.1 does not). 0 means no mipmap.
+    /// Fitted: gap-layer-mip2 (198x125 to 50x32, level 1) and full-scene (198x125 to 99x63, level 0).
+    /// </summary>
+    internal static int SkiaMipLevel(int srcWidth, int srcHeight, int width, int height)
+    {
+        double scale = Math.Sqrt((double)width / srcWidth * ((double)height / srcHeight));
+        return scale >= 1 || scale <= 0 ? 0 : (int)Math.Floor(Math.Log2(1 / scale));
+    }
+
+    /// <summary>
+    /// Builds one level of Skia's mip chain (floor-halved, Skia's own downsample filter): scalePixels
+    /// to the halved size resolves to mip level 1 and copies it unscaled. Skia builds level n+1 from
+    /// level n, so successive halvings reproduce its chain.
+    /// </summary>
+    static readonly SKSamplingOptions MipBuild = new(SKFilterMode.Linear, SKMipmapMode.Nearest);
+
+    static SKImage ScalePixels(SKImage source, int width, int height, SKSamplingOptions sampling)
+    {
+        var info = new SKImageInfo(width, height, source.ColorType, SKAlphaType.Premul);
+        using var bmp = new SKBitmap(info);
+        using (var dst = bmp.PeekPixels())
+            if (!source.ScalePixels(dst, sampling))
+                throw new InvalidOperationException("decode-cache scale failed");
+        return SKImage.FromPixelCopy(bmp.PeekPixels());
     }
 
     static SKImage ToPremul(SKImage source)

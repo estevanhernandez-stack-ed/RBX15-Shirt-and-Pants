@@ -1,2 +1,4 @@
 *.png binary
 tests/goldens/** -text
+docs/port/*.md text eol=lf
+docs/port/*.json text eol=lf

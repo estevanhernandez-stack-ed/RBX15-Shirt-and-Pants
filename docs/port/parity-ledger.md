@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**407 rows.** Status: open 407. Disposition: keep 197, fix 183, drop 26, new 1. Checks: ui-auto 120, unit 110, manual 66, golden 64, none-retired 25, doc 22.
+**407 rows.** Status: done 42, open 365. Disposition: keep 197, fix 183, drop 26, new 1. Checks: ui-auto 120, unit 110, manual 66, golden 64, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -272,13 +272,13 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
-| open | `rgb-shift-compute` | RGB channel shift (pixel operation) | golden | fix | high |
-| open | `rgb-shift-cache` | RGB shift single-entry cache | unit | fix | med |
-| open | `has-adjustments` | hasAdjustments predicate | unit | keep | low |
-| open | `css-filter-chain` | CSS ctx.filter brightness/contrast/saturate/hue-rotate | golden | keep | high |
-| open | `rgb-shift-draw-order` | RGB shift applied before CSS filter | golden | keep | med |
-| open | `imgdata-premult-note` | Premultiplied alpha behaviors across adjustments | golden | fix | high |
-| open | `layers-adjust-pipeline` | Adjustment render order and RGB shift cache | golden | fix | high |
+| done | `rgb-shift-compute` | RGB channel shift (pixel operation) | golden | fix | high |
+| done | `rgb-shift-cache` | RGB shift single-entry cache | unit | fix | med |
+| done | `has-adjustments` | hasAdjustments predicate | unit | keep | low |
+| done | `css-filter-chain` | CSS ctx.filter brightness/contrast/saturate/hue-rotate | golden | keep | high |
+| done | `rgb-shift-draw-order` | RGB shift applied before CSS filter | golden | keep | med |
+| done | `imgdata-premult-note` | Premultiplied alpha behaviors across adjustments | golden | fix | high |
+| done | `layers-adjust-pipeline` | Adjustment render order and RGB shift cache | golden | fix | high |
 
 ## Engine.Details
 
@@ -307,8 +307,8 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
 | open | `tpl-active-regions-swap` | Active region reference and mode variable | unit | keep | med |
-| open | `state-defaults` | Initial editor state defaults | unit | keep | low |
-| open | `layer-factory` | makeLayer factory defaults | unit | keep | low |
+| done | `state-defaults` | Initial editor state defaults | unit | keep | low |
+| done | `layer-factory` | makeLayer factory defaults | unit | keep | low |
 | open | `layers-model` | Layer data model and defaults | unit | fix | med |
 | open | `layers-add-placement` | Add image layer: auto-fit and placement | unit | fix | med |
 | open | `layers-add-drawing` | Add drawing layer from stroke canvas | unit | keep | med |
@@ -345,35 +345,35 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
-| open | `export-composite-order` | Export composition: size, order, what is and isn't included | golden | keep | high |
-| open | `export-filename-save` | Export file naming and save dialog | unit | keep | med |
-| open | `export-png-encoding` | PNG encoding and alpha handling | golden | keep | med |
+| done | `export-composite-order` | Export composition: size, order, what is and isn't included | golden | keep | high |
+| done | `export-filename-save` | Export file naming and save dialog | unit | keep | med |
+| done | `export-png-encoding` | PNG encoding and alpha handling | golden | keep | med |
 | open | `canvas-export-pipeline` | Export (Download template) pipeline | golden | keep | high |
-| open | `shell-gpu-canvas-edge-drift` | Export PNG edges depend on Electron GPU canvas vs software canvas | golden | fix | med |
-| open | `io-export-filename` | Filename derivation and sanitization | unit | keep | low |
+| done | `shell-gpu-canvas-edge-drift` | Export PNG edges depend on Electron GPU canvas vs software canvas | golden | fix | med |
+| done | `io-export-filename` | Filename derivation and sanitization | unit | keep | low |
 
 ## Engine.Fills
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
-| open | `fills-normalize` | Fill normalization and legacy string fills | unit | keep | med |
-| open | `fills-hex-parse` | Hex color parse and mix helpers | unit | keep | med |
-| open | `fills-prng` | mulberry32 PRNG and FNV-1a seed | unit | keep | high |
-| open | `fills-defaults` | Fill parameter defaults and clamps | unit | keep | low |
-| open | `fills-solid` | Solid fill | golden | keep | low |
-| open | `fills-linear` | Linear gradient fill | golden | keep | med |
-| open | `fills-radial` | Radial gradient fill | golden | keep | low |
-| open | `fills-stripes` | Stripes fill (global lattice) | golden | keep | med |
-| open | `fills-checker` | Checker fill | golden | keep | low |
-| open | `fills-dots` | Dots fill | golden | keep | med |
-| open | `fills-camo` | Camo fill (seeded blobs on global cells) | golden | keep | high |
-| open | `fills-key` | fillKey grouping identity | unit | keep | med |
-| open | `region-union-rect` | unionRect | unit | keep | low |
-| open | `region-connected-groups` | connectedRegionGroups (gradient spans connected faces) | unit | keep | med |
-| open | `paint-regions-grouping` | paintRegions: group by fill then by connectivity | golden | keep | med |
-| open | `project-and-export-dependency-note` | Export depends on fill/paintRegions code paths (spike-proven) | golden | keep | med |
+| done | `fills-normalize` | Fill normalization and legacy string fills | unit | keep | med |
+| done | `fills-hex-parse` | Hex color parse and mix helpers | unit | keep | med |
+| done | `fills-prng` | mulberry32 PRNG and FNV-1a seed | unit | keep | high |
+| done | `fills-defaults` | Fill parameter defaults and clamps | unit | keep | low |
+| done | `fills-solid` | Solid fill | golden | keep | low |
+| done | `fills-linear` | Linear gradient fill | golden | keep | med |
+| done | `fills-radial` | Radial gradient fill | golden | keep | low |
+| done | `fills-stripes` | Stripes fill (global lattice) | golden | keep | med |
+| done | `fills-checker` | Checker fill | golden | keep | low |
+| done | `fills-dots` | Dots fill | golden | keep | med |
+| done | `fills-camo` | Camo fill (seeded blobs on global cells) | golden | keep | high |
+| done | `fills-key` | fillKey grouping identity | unit | keep | med |
+| done | `region-union-rect` | unionRect | unit | keep | low |
+| done | `region-connected-groups` | connectedRegionGroups (gradient spans connected faces) | unit | keep | med |
+| done | `paint-regions-grouping` | paintRegions: group by fill then by connectivity | golden | keep | med |
+| done | `project-and-export-dependency-note` | Export depends on fill/paintRegions code paths (spike-proven) | golden | keep | med |
 | open | `fillstyle-live-edit-rule` | Live-edit rule: edits retarget every region sharing the current fill key | unit | keep | med |
-| open | `tests-lib-fills` | fills.test.js: 14 tests that define the fill contract | unit | keep | med |
+| done | `tests-lib-fills` | fills.test.js: 14 tests that define the fill contract | unit | keep | med |
 
 ## Engine.History
 
@@ -417,15 +417,15 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
-| open | `mask-build` | Region mask canvas | golden | keep | med |
-| open | `layer-draw-transform` | Layer draw transform and opacity | golden | keep | high |
-| open | `layer-skip-rules` | Layer visibility and null image skip | golden | keep | low |
-| open | `render-offscreen` | Persistent offscreen composite | golden | keep | med |
-| open | `render-background` | Background image vs color with opacity | golden | keep | med |
-| open | `render-region-fills-step` | Region fills painted over background, under layers | golden | keep | low |
+| done | `mask-build` | Region mask canvas | golden | keep | med |
+| done | `layer-draw-transform` | Layer draw transform and opacity | golden | keep | high |
+| done | `layer-skip-rules` | Layer visibility and null image skip | golden | keep | low |
+| done | `render-offscreen` | Persistent offscreen composite | golden | keep | med |
+| done | `render-background` | Background image vs color with opacity | golden | keep | med |
+| done | `render-region-fills-step` | Region fills painted over background, under layers | golden | keep | low |
 | open | `render-live-preview` | Live drawing preview composite | golden | keep | low |
-| open | `render-mask-step` | Mask application (destination-in) | golden | keep | med |
-| open | `render-order-summary` | Full render order (contract) | golden | keep | high |
+| done | `render-mask-step` | Mask application (destination-in) | golden | keep | med |
+| done | `render-order-summary` | Full render order (contract) | golden | keep | high |
 | open | `draw-preview-composite` | Live preview compositing | golden | keep | low |
 | open | `fillstyle-live-render-hook` | Region fills rendered in canvas with connected-component gradient extent | golden | keep | med |
 | open | `canvas-element-render` | Main canvas, zoom and compositing order | golden | keep | high |
@@ -434,9 +434,9 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
-| open | `tpl-canvas-size` | Template canvas size 585x559 | unit | keep | low |
-| open | `tpl-shirt-regions` | Shirt region table (18 regions) | unit | keep | low |
-| open | `tpl-pants-regions` | Pants region table (18 regions) | unit | keep | low |
+| done | `tpl-canvas-size` | Template canvas size 585x559 | unit | keep | low |
+| done | `tpl-shirt-regions` | Shirt region table (18 regions) | unit | keep | low |
+| done | `tpl-pants-regions` | Pants region table (18 regions) | unit | keep | low |
 | open | `mode-pants-crash-hardcoded-keys` | BUG: Pants mode breaks code that hardcodes torso/arm keys | unit | fix | high |
 | open | `bug-pants-mode-region-keys` | Pants mode breaks layer-adding actions (static finding) | unit | fix | high |
 

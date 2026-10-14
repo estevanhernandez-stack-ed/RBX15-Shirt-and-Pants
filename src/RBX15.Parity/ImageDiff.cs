@@ -13,6 +13,20 @@ public sealed record DiffResult(bool SameSize, int MaxDelta, int DifferingPixels
 /// </summary>
 public static class ImageDiff
 {
+    /// <summary>Reads any SKImage (for example a premultiplied engine render) as an un-premultiplied
+    /// RGBA bitmap, the same conversion canvas.toDataURL performs before encoding.</summary>
+    public static SKBitmap FromImage(SKImage image)
+    {
+        var info = new SKImageInfo(image.Width, image.Height, SKColorType.Rgba8888, SKAlphaType.Unpremul);
+        var bmp = new SKBitmap(info);
+        if (!image.ReadPixels(info, bmp.GetPixels(), bmp.RowBytes, 0, 0))
+        {
+            bmp.Dispose();
+            throw new InvalidOperationException("cannot read image pixels");
+        }
+        return bmp;
+    }
+
     /// <summary>
     /// Decodes straight into un-premultiplied RGBA. <c>SKBitmap.Decode</c> forces premultiplied
     /// storage, which quantizes low-alpha pixels (the antialiased edges goldens care about most).

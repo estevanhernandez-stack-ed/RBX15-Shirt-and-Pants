@@ -11,4 +11,8 @@
     <PackageReference Include="SkiaSharp" Version="4.153.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\RBX15.Engine\RBX15.Engine.csproj" />
+  </ItemGroup>
+
 </Project>

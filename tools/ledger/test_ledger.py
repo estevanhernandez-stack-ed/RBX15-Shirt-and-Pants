@@ -64,6 +64,13 @@ class CheckTests(unittest.TestCase):
         md = ledger.render_ledger(data(row(name="a | b")))
         self.assertIn("a \\| b", md)
 
+    def test_mark_done_sets_status_and_rejects_unknown_ids(self):
+        d = data(row(), row(id="fills-camo"))
+        out = ledger.mark_done(d, ["fills-camo"])
+        self.assertEqual([r["status"] for r in out["rows"]], ["open", "done"])
+        with self.assertRaises(KeyError):
+            ledger.mark_done(d, ["no-such-row"])
+
     def test_real_ledger_is_valid(self):
         root = Path(__file__).resolve().parents[2]
         d = ledger.load(root / "docs" / "port" / "parity-ledger.json")

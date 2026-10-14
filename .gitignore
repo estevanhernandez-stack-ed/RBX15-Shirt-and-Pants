@@ -18,3 +18,4 @@ obj/
 .vs/
 TestResults/
 *.user
+diff-heatmaps/

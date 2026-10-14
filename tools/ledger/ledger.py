@@ -137,8 +137,8 @@ def main(argv: list[str]) -> int:
                                                  encoding="utf-8", newline="\n")
         cmd = "render"
     if cmd == "render":
-        (PORT / "parity-ledger.md").write_text(render_ledger(data), encoding="utf-8")
-        (PORT / "divergences.md").write_text(render_divergences(data), encoding="utf-8")
+        (PORT / "parity-ledger.md").write_text(render_ledger(data), encoding="utf-8", newline="\n")
+        (PORT / "divergences.md").write_text(render_divergences(data), encoding="utf-8", newline="\n")
         print("rendered docs/port/parity-ledger.md and docs/port/divergences.md")
         return 0
     if cmd == "check":

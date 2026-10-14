@@ -12,6 +12,19 @@ public static class Images
 {
     static readonly ConditionalWeakTable<SKImage, SKImage> Premultiplied = new();
 
+    /// <summary>
+    /// A premultiplied render as a stored layer image: un-premultiplied RGBA, the form 4.1's toDataURL +
+    /// img decode leaves it in. The caller keeps ownership of <paramref name="premul"/>.
+    /// </summary>
+    internal static SKImage ToUnpremulLayerImage(SKImage premul)
+    {
+        var info = new SKImageInfo(premul.Width, premul.Height, SKColorType.Rgba8888, SKAlphaType.Unpremul);
+        using var bmp = new SKBitmap(info);
+        if (!premul.ReadPixels(info, bmp.GetPixels(), bmp.RowBytes, 0, 0))
+            throw new InvalidOperationException("cannot read layer pixels");
+        return SKImage.FromPixelCopy(bmp.PeekPixels());
+    }
+
     public static SKImage Decode(byte[] encoded)
     {
         using var data = SKData.CreateCopy(encoded);

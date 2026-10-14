@@ -228,9 +228,10 @@ public static class WordArt
     /// renderWordArt (editor.js:2120-2240) on a new surface. With no maxima (null or 0, as 4.1's falsy
     /// check) the surface is the content size cw x ch, as Add to canvas renders it; with maxima it is
     /// min(cw, max) x min(ch, max) and the content is scaled by the smaller ratio, as the preview
-    /// renders it. Returns the image (caller owns it) and cw, ch.
+    /// renders it. Returns the image (caller owns it) and the content size cw, ch, which is the image size only
+    /// when no maximum clamps it.
     /// </summary>
-    public static (SKImage Image, int Width, int Height) Render(WordArtSettings s, int? maxWidth = null, int? maxHeight = null)
+    public static (SKImage Image, int ContentWidth, int ContentHeight) Render(WordArtSettings s, int? maxWidth = null, int? maxHeight = null)
     {
         if (maxWidth < 0 || maxHeight < 0) throw new ArgumentOutOfRangeException(nameof(maxWidth), "maxima are positive, or null or 0 for none");
         string text = EffectiveText(s.Text);
@@ -354,10 +355,19 @@ public static class WordArt
 
     static SKShader Gradient(WordArtSettings s, double cx, double ty, int cw, int ch)
     {
-        double angle = s.Angle * Math.PI / 180;
+        var (from, to) = GradientEndpoints(s.Angle, cx, ty, cw, ch);
+        return SKShader.CreateLinearGradient(from, to, new[] { s.Fill, s.Grad }, null, SKShaderTileMode.Clamp);
+    }
+
+    /// <summary>
+    /// The gradient line (editor.js:2165-2169): the vector (cos a * cw/2, sin a * ch/2) around the line's
+    /// center (cx, ty), so a non-square canvas stretches it; 4.1 scales each axis by its own half-extent.
+    /// </summary>
+    internal static (SKPoint From, SKPoint To) GradientEndpoints(double angleDeg, double cx, double ty, double cw, double ch)
+    {
+        double angle = angleDeg * Math.PI / 180;
         double gx = Math.Cos(angle) * cw / 2, gy = Math.Sin(angle) * ch / 2;
-        return SKShader.CreateLinearGradient(new SKPoint((float)(cx - gx), (float)(ty - gy)), new SKPoint((float)(cx + gx), (float)(ty + gy)),
-            new[] { s.Fill, s.Grad }, null, SKShaderTileMode.Clamp);
+        return (new SKPoint((float)(cx - gx), (float)(ty - gy)), new SKPoint((float)(cx + gx), (float)(ty + gy)));
     }
 
     /// <summary>
@@ -402,17 +412,13 @@ public static class WordArt
         var (rendered, _, _) = Render(s);
         using (rendered)
         {
-            var info = new SKImageInfo(rendered.Width, rendered.Height, SKColorType.Rgba8888, SKAlphaType.Unpremul);
-            using var bmp = new SKBitmap(info);
-            if (!rendered.ReadPixels(info, bmp.GetPixels(), bmp.RowBytes, 0, 0))
-                throw new InvalidOperationException("cannot read word art pixels");
             var front = Template.Slot(mode, BodyPart.Body, Face.Front);
             double scale = Math.Min((double)front.W / rendered.Width, (double)front.H / rendered.Height) * 0.85;
             return new Layer
             {
                 Id = id,
                 Name = LayerName(s.Text, s.Font),
-                Image = SKImage.FromPixelCopy(bmp.PeekPixels()),
+                Image = Images.ToUnpremulLayerImage(rendered),
                 X = front.X + (front.W - rendered.Width * scale) / 2,
                 Y = front.Y + (front.H - rendered.Height * scale) / 2,
                 Scale = scale,

@@ -253,4 +253,21 @@ public class WordArtTests
         Assert.Equal((100.0, 100.0, 100.0, 0.0), (layer.Brightness, layer.Contrast, layer.Saturate, layer.HueRotate));
         Assert.Equal((0, 0, 0), (layer.RShift, layer.GShift, layer.BShift));
     }
+
+    // editor.js:2165-2169 on a 300x100 canvas, cx = 150, ty = 50: gx = cos(a) * 300/2 = 150 cos(a), gy = sin(a) * 100/2 = 50 sin(a),
+    // endpoints (cx - gx, ty - gy) and (cx + gx, ty + gy). The two axes scale differently, so 45 degrees is not a 45 degree line.
+    [Theory]
+    [InlineData(0, 0.0, 50.0, 300.0, 50.0)]                         // gx = 150, gy = 0
+    [InlineData(45, 43.933983, 14.644661, 256.066017, 85.355339)]   // gx = 150 * 0.70710678 = 106.066017, gy = 50 * 0.70710678 = 35.355339
+    [InlineData(90, 150.0, 0.0, 150.0, 100.0)]                      // gx = 0, gy = 50
+    [InlineData(180, 300.0, 50.0, 0.0, 50.0)]                       // gx = -150, gy = 0
+    [InlineData(270, 150.0, 100.0, 150.0, 0.0)]                     // gx = 0, gy = -50
+    public void Gradient_endpoints_scale_each_axis_by_its_own_half_extent(double angle, double x0, double y0, double x1, double y1)
+    {
+        var (from, to) = WordArt.GradientEndpoints(angle, 150, 50, 300, 100);
+        Assert.Equal(x0, from.X, 3);
+        Assert.Equal(y0, from.Y, 3);
+        Assert.Equal(x1, to.X, 3);
+        Assert.Equal(y1, to.Y, 3);
+    }
 }

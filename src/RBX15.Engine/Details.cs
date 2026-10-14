@@ -102,11 +102,7 @@ public static class Details
         using var drawn = Render(type, mode, style);
         if (Tools.Autocrop(drawn) is not { } crop) return null;
         using var premul = crop.Image;
-        var info = new SKImageInfo(premul.Width, premul.Height, SKColorType.Rgba8888, SKAlphaType.Unpremul);
-        using var bmp = new SKBitmap(info);
-        if (!premul.ReadPixels(info, bmp.GetPixels(), bmp.RowBytes, 0, 0))
-            throw new InvalidOperationException("cannot read cropped detail");
-        return new Layer { Id = id, Name = LayerName(type), Image = SKImage.FromPixelCopy(bmp.PeekPixels()), X = crop.X, Y = crop.Y, Scale = 1 };
+        return new Layer { Id = id, Name = LayerName(type), Image = Images.ToUnpremulLayerImage(premul), X = crop.X, Y = crop.Y, Scale = 1 };
     }
 
     static void Draw(DetailType type, Pen p)

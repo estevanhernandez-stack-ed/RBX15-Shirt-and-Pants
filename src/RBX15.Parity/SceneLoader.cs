@@ -23,7 +23,7 @@ public static class SceneLoader
     public sealed record Scene(string Name, Document Document);
 
     /// <summary>Ops the engine runs. Each engine task that implements an op adds it here.</summary>
-    static readonly HashSet<string> SupportedOps = new(StringComparer.Ordinal) { "shape", "erase" };
+    static readonly HashSet<string> SupportedOps = new(StringComparer.Ordinal) { "shape", "erase", "project" };
 
     public static IReadOnlyList<Scene> LoadAll(string scenesJson, string repoRoot)
     {
@@ -102,6 +102,7 @@ public static class SceneLoader
                 {
                     "shape" => ApplyShape(document, action),
                     "erase" => ApplyErase(document, action, eraseStroking),
+                    "project" => ApplyProject(action, repoRoot),
                     var op => throw new InvalidDataException($"scene {name}: op '{op}' has no handler"),
                 };
 
@@ -133,6 +134,23 @@ public static class SceneLoader
         int id = doc.Layers.IsEmpty ? 1 : doc.Layers.Max(l => l.Id) + 1;
         var layer = Tools.CommitDrawing(stroke, id, Tools.DrawingName(tool));
         return layer is null ? doc : doc with { Layers = doc.Layers.Add(layer) };
+    }
+
+    /// <summary>
+    /// Scene v2 project op: <c>{ "op": "project", "file": "&lt;repo-relative .r15proj&gt;" }</c>. 4.1
+    /// (app-harness.js project) feeds the file to #projectFileInput, whose change handler runs
+    /// loadProject (editor.js:2684-2687, 2593-2680), and waits until every image layer and the
+    /// background have loaded. The loaded project replaces the document, so the result is the file's
+    /// document alone. A file that drops a layer is refused: the harness only froze projects whose
+    /// every layer loaded, so a drop would compare a different document against the golden.
+    /// </summary>
+    public static Document ApplyProject(JsonElement action, string repoRoot)
+    {
+        var file = action.GetProperty("file").GetString() ?? throw new InvalidDataException("project: file is null");
+        var load = ProjectIO.Read(File.ReadAllText(Path.Combine(repoRoot, file)));
+        if (!load.DroppedLayers.IsEmpty)
+            throw new InvalidDataException($"project {file}: layers that did not load: {string.Join(", ", load.DroppedLayers)}");
+        return load.Document;
     }
 
     /// <summary>

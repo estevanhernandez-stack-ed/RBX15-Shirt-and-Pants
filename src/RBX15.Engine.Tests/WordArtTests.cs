@@ -40,6 +40,31 @@ public class WordArtTests
         Assert.Equal(width, WordArt.Shape(font, size, text).Width, 3);
 
     [Fact]
+    public void Shaping_from_many_threads_at_once_gives_the_single_threaded_result()
+    {
+        // xUnit runs test classes in parallel, and the golden gates shape Word Art from several at once.
+        // HarfBuzzSharp's Blob.FromStream is not safe there: concurrent shapes read another font's bytes
+        // (wrong glyph ids, .notdef boxes in a golden) or freed memory (0xC0000005 in hb_shape_full).
+        string[] fonts = { "Anton", "Poppins", "Dancing Script", "Orbitron" };
+        static string Signature(WordArt.ShapedLine line) =>
+            string.Join("|", line.Runs.Select(r => string.Join(",", r.Glyphs) + "@" + string.Join(",", r.Xs))) + "=" + line.Width;
+        var expected = fonts.ToDictionary(f => f, f => Signature(WordArt.Shape(f, 64, "RIZZ")));
+        var wrong = new System.Collections.Concurrent.ConcurrentBag<string>();
+        var threads = Enumerable.Range(0, 16).Select(i => new Thread(() =>
+        {
+            for (int k = 0; k < 1000; k++)
+            {
+                var font = fonts[(i + k) % fonts.Length];
+                var got = Signature(WordArt.Shape(font, 64, "RIZZ"));
+                if (got != expected[font]) wrong.Add($"{font}: {got}");
+            }
+        })).ToList();
+        threads.ForEach(t => t.Start());
+        threads.ForEach(t => t.Join());
+        Assert.Empty(wrong);
+    }
+
+    [Fact]
     public void Plain_text_shapes_as_one_run_in_the_vendored_face()
     {
         var line = WordArt.Shape("Dancing Script", 64, "RIZZ");

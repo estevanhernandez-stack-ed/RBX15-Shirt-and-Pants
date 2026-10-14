@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Text;
 using SkiaSharp;
 using HB = HarfBuzzSharp;
@@ -181,10 +182,26 @@ public static class WordArt
         return font.ContainsGlyph(codepoint);
     }
 
+    /// <summary>
+    /// Every font file HarfBuzz shapes from, pinned for the life of the process. The arrays are the
+    /// cache-owned ones (<see cref="Fonts.FileBytes(string, int)"/>, <see cref="FallbackFace.Bytes"/>), so
+    /// there is one handle per file. HarfBuzzSharp's Blob.FromStream is not used: under concurrent
+    /// shaping (xUnit's parallel test classes) it hands HarfBuzz another font's bytes or freed memory,
+    /// measured as wrong glyph ids and as 0xC0000005 in hb_shape_full. A read-only blob over pinned
+    /// bytes is HarfBuzz's own zero-copy form and has no release callback.
+    /// </summary>
+    static readonly ConcurrentDictionary<byte[], Lazy<GCHandle>> Pinned = new(ReferenceEqualityComparer.Instance);
+
+    static HB.Blob BlobOf(byte[] fontBytes)
+    {
+        var handle = Pinned.GetOrAdd(fontBytes, b => new Lazy<GCHandle>(() => GCHandle.Alloc(b, GCHandleType.Pinned))).Value;
+        return new HB.Blob(handle.AddrOfPinnedObject(), fontBytes.Length, HB.MemoryMode.ReadOnly);
+    }
+
     /// <summary>One run through HarfBuzz; its glyph x positions start at <paramref name="pen"/>.</summary>
     static (ushort[] Glyphs, float[] Xs, float Advance) ShapeRun(byte[] fontBytes, int index, float? wght, float size, string text, float pen)
     {
-        using var blob = HB.Blob.FromStream(new MemoryStream(fontBytes, writable: false));
+        using var blob = BlobOf(fontBytes);
         using var face = new HB.Face(blob, index);
         using var font = new HB.Font(face);
         int scale = (int)(size * 65536);

@@ -20,9 +20,8 @@ namespace RBX15.Engine.Tests;
 /// </summary>
 public class GoldenAppTests
 {
-    const string DetailSkip = "op 'detail' is not run by the engine yet (Engine Details, M2b)";
     const string WordArtSkip = "op 'wordart' is not run by the engine yet (Engine WordArt, M2b)";
-    static readonly string[] PendingOps = { "detail", "wordart" };
+    static readonly string[] PendingOps = { "wordart" };
 
     static readonly string Root = RepoRoot.Find(AppContext.BaseDirectory);
     static readonly string Dir = Path.Combine(Root, "tests", "goldens", "app");
@@ -64,7 +63,6 @@ public class GoldenAppTests
 
     [Theory]
     [MemberData(nameof(ScenesBlockedBy), "")]
-    [MemberData(nameof(ScenesBlockedBy), "detail", Skip = DetailSkip)]
     [MemberData(nameof(ScenesBlockedBy), "wordart", Skip = WordArtSkip)]
     public void Engine_export_matches_the_frozen_4_1_app_golden(string name)
     {

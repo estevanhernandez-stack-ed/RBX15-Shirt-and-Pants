@@ -23,7 +23,7 @@ public static class SceneLoader
     public sealed record Scene(string Name, Document Document);
 
     /// <summary>Ops the engine runs. Each engine task that implements an op adds it here.</summary>
-    static readonly HashSet<string> SupportedOps = new(StringComparer.Ordinal) { "shape", "erase", "project" };
+    static readonly HashSet<string> SupportedOps = new(StringComparer.Ordinal) { "shape", "erase", "detail", "project" };
 
     public static IReadOnlyList<Scene> LoadAll(string scenesJson, string repoRoot)
     {
@@ -102,6 +102,7 @@ public static class SceneLoader
                 {
                     "shape" => ApplyShape(document, action),
                     "erase" => ApplyErase(document, action, eraseStroking),
+                    "detail" => ApplyDetail(document, action),
                     "project" => ApplyProject(action, repoRoot),
                     var op => throw new InvalidDataException($"scene {name}: op '{op}' has no handler"),
                 };
@@ -151,6 +152,26 @@ public static class SceneLoader
         if (!load.DroppedLayers.IsEmpty)
             throw new InvalidDataException($"project {file}: layers that did not load: {string.Join(", ", load.DroppedLayers)}");
         return load.Document;
+    }
+
+    /// <summary>
+    /// Scene v2 detail op: <c>{ "op": "detail", "type": id, "color": "#rrggbb", "width": n, "stitch": bool }</c>.
+    /// app-harness.js detail() sets #detailColor, #detailWidth and #detailDash (stitch defaults to
+    /// false) and clicks the button (editor.js:2077-2103), so createDetailLayer reads those values
+    /// (editor.js:1840-1842) and pushes the layer on top with the next id (editor.js:1858-1859).
+    /// The document's mode is passed through, so a Pants scene draws on the pants faces (approved
+    /// divergence details-pants-mode-behavior; the harness refuses Pants because 4.1 throws).
+    /// </summary>
+    public static Document ApplyDetail(Document doc, JsonElement a)
+    {
+        DetailType type;
+        try { type = Details.FromId(a.GetProperty("type").GetString()!); }
+        catch (ArgumentException ex) { throw new InvalidDataException(ex.Message, ex); }
+        bool stitch = a.TryGetProperty("stitch", out var st) && st.GetBoolean();
+        var style = new DetailStyle(CssColor.ToSk(a.GetProperty("color").GetString()!), a.GetProperty("width").GetSingle(), stitch);
+        int id = doc.Layers.IsEmpty ? 1 : doc.Layers.Max(l => l.Id) + 1;
+        var layer = Details.Create(type, doc.Mode, style, id);
+        return layer is null ? doc : doc with { Layers = doc.Layers.Add(layer) };
     }
 
     /// <summary>

@@ -74,15 +74,16 @@ public class SceneLoaderTests
     [Fact]
     public void Unsupported_ops_are_listed_once_in_order_and_refuse_to_parse()
     {
-        // detail stays unsupported through M2a (Engine Details is M2b), so Task 6 adding erase leaves this intact.
+        // "sticker" and "warp" are ops no milestone plans, so enabling detail, wordart and project
+        // in M2b leaves this intact.
         var e = JsonDocument.Parse("""
             { "name": "x", "actions": [
                 { "op": "shape", "tool": "line", "from": [0, 0], "to": [10, 10], "color": "#000000", "width": 2 },
-                { "op": "wordart", "text": "HI" }, { "op": "detail", "type": "hem" }, { "op": "wordart", "text": "YO" } ] }
+                { "op": "sticker", "id": 1 }, { "op": "warp", "amount": 2 }, { "op": "sticker", "id": 2 } ] }
             """).RootElement;
-        Assert.Equal(new[] { "wordart", "detail" }, SceneLoader.UnsupportedOps(e));
+        Assert.Equal(new[] { "sticker", "warp" }, SceneLoader.UnsupportedOps(e));
         var ex = Assert.Throws<NotSupportedException>(() => SceneLoader.Parse(e, Root));
-        Assert.Contains("wordart, detail", ex.Message);
+        Assert.Contains("sticker, warp", ex.Message);
     }
 
     [Fact]

@@ -142,11 +142,8 @@ public static class WordArt
         if (SansSerif.Value is { } sans && Covers(sans, key.Codepoint)) return Register(sans, owned: false);
         var typeface = SKFontManager.Default.MatchCharacter(key.Family, RequestStyle, null, key.Codepoint);
         if (typeface is null) return null;
-        if (!Covers(typeface, key.Codepoint))
-        {
-            typeface.Dispose();
-            return null;
-        }
+        // Not disposed: the wrapper may be a cached face's (one managed wrapper per native face), so it leaks like SansSerif.
+        if (!Covers(typeface, key.Codepoint)) return null;
         return Register(typeface, owned: true);
     });
 
@@ -169,8 +166,9 @@ public static class WordArt
 
     /// <summary>
     /// The face Chromium's generic sans-serif resolves to on Windows: Arial at the request's style
-    /// (weight 900 matches Arial Bold). Null when the machine has no Arial (the font manager's
-    /// substitute is not taken), so the system fallback decides. Lives for the process.
+    /// (weight 900 resolves to Arial Black, ariblk.ttf, which DirectWrite groups into the Arial
+    /// family). Null when the machine has no Arial (the font manager's substitute is not taken), so the
+    /// system fallback decides. Lives for the process.
     /// </summary>
     static readonly Lazy<SKTypeface?> SansSerif = new(() =>
         SKFontManager.Default.MatchFamily("Arial", RequestStyle) is { FamilyName: "Arial" } arial ? arial : null);

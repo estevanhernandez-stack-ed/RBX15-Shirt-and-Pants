@@ -29,10 +29,12 @@ public static class Adjust
 
     /// <summary>
     /// Blink builds brightness() and contrast() as FEComponentTransfer type linear, an 8-bit lookup
-    /// table per color channel (fe_component_transfer.cc Linear): i * slope + intercept * 255 in
-    /// double, clamped to 0..255, then truncated by static_cast to uint8. Slope and intercept are
-    /// floats. The truncation is the observable part: contrast(40%) maps 250 to 176.5, which 4.1
-    /// stores as 176 where a float matrix rounds to 177. Alpha is untouched.
+    /// table per color channel (fe_component_transfer.cc Linear): slope * i + 255 * intercept,
+    /// evaluated in float32 because slope and intercept are float members, then widened to double,
+    /// clamped to 0..255 and truncated by static_cast to uint8. Both the float32 evaluation and the
+    /// truncation are observable: brightness(130%) maps 10 to 13 (1.3f * 10 rounds up to 13.0f, where
+    /// double arithmetic truncates 12.9999995 to 12), and contrast(40%) maps 250 to 176.5, stored as
+    /// 176 where a float matrix rounds to 177. Alpha is untouched.
     /// </summary>
     static SKColorFilter LinearTransfer(float slope, float intercept)
     {
@@ -40,8 +42,8 @@ public static class Adjust
         var identity = new byte[256];
         for (int i = 0; i < 256; i++)
         {
-            double v = Math.Clamp(i * (double)slope + (double)intercept * 255, 0.0, 255.0);
-            table[i] = (byte)v;
+            float v = slope * i + 255f * intercept;
+            table[i] = (byte)Math.Clamp((double)v, 0.0, 255.0);
             identity[i] = (byte)i;
         }
         return SKColorFilter.CreateTable(identity, table, table, table);

@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="RBX15.Engine.Tests" />
+    <InternalsVisibleTo Include="RBX15.Parity" />
   </ItemGroup>
 
 </Project>

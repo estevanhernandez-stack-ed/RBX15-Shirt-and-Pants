@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using RBX15.App.Services;
 using RBX15.App.Tests.Fakes;
 using RBX15.App.ViewModels;
 using RBX15.Engine;
@@ -23,8 +24,14 @@ internal static class HomeTestKit
     public static EditorSession SessionWith(params Layer[] layers) =>
         new(new Document { Layers = layers.ToImmutableList() });
 
-    public static HomeViewModel Home(EditorSession session, FakeColorPicker? picker = null) =>
-        new(session, picker ?? new FakeColorPicker());
+    public static HomeViewModel Home(EditorSession session, FakeColorPicker? picker = null)
+    {
+        var status = new FakeStatus();
+        return new(session, picker ?? new FakeColorPicker())
+        {
+            File = new FileGroupViewModel(session, new FakeFileDialogs(), new FakeDialogService(), status, new ImportService(session, status)),
+        };
+    }
 
     public static RegionTileViewModel Tile(RegionsGroupViewModel regions, string region) =>
         regions.Body.Concat(regions.Limb1).Concat(regions.Limb2).Single(t => t.Region == region);

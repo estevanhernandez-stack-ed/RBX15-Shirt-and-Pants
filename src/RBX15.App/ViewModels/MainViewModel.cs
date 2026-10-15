@@ -37,4 +37,10 @@ public sealed partial class MainViewModel(EditorSession session) : ObservableObj
 
     /// <summary>The Home tab (Task 3).</summary>
     public required HomeViewModel Home { get; init; }
+
+    /// <summary>The drop zone and layers panel (Task 4).</summary>
+    public required LayersViewModel Layers { get; init; }
+
+    /// <summary>The status strip (Task 4).</summary>
+    public required StatusViewModel Status { get; init; }
 }

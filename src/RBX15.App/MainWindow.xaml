@@ -2,8 +2,8 @@
   The shell skeleton (ledger shell-layout-skeleton): header, ribbon, the app row (left panel and
   canvas area), the status strip row, footer, top to bottom (styles.css:99-108, editor.html:15-343).
   4.1 has no right panel: .rpanel (styles.css:462-469) is styled but never used, so it is not ported.
-  Later tasks fill the named regions at their anchors: Task 2 the CanvasArea, Task 3 the RibbonPane,
-  Task 4 the LeftPanelContent and the status strip row. Task 4 Step 21 prints the final file.
+  This is the final M3a file: Task 2's CanvasView in the CanvasArea, Task 3's HomeRibbon in the
+  RibbonPane, and Task 4's drop zone, layers panel and status strip.
 -->
 <Window x:Class="RBX15.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -100,7 +100,8 @@
       </Grid.ColumnDefinitions>
 
       <!-- .panel (styles.css:246-253): 280px (200px at the breakpoint), 180deg navy-deep to ink-900,
-           1px border-1 right, padding 14px, vertical scroll. Task 4 fills LeftPanelContent. -->
+           1px border-1 right, padding 14px, vertical scroll. The drop zone, then the layers
+           (editor.html:311-318), both on the LayersViewModel (Task 4). -->
       <Border x:Name="LeftPanel" Grid.Column="0" BorderBrush="{StaticResource Border1Brush}" BorderThickness="0,0,1,0">
         <Border.Background>
           <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
@@ -109,7 +110,10 @@
           </LinearGradientBrush>
         </Border.Background>
         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
-          <StackPanel x:Name="LeftPanelContent" Margin="14"><!-- T4: left panel --></StackPanel>
+          <StackPanel x:Name="LeftPanelContent" Margin="14">
+            <views:DropZone DataContext="{Binding Layers}" />
+            <views:LayersPanel DataContext="{Binding Layers}" />
+          </StackPanel>
         </ScrollViewer>
       </Border>
 
@@ -119,8 +123,8 @@
       </Grid>
     </Grid>
 
-    <!-- The status strip row (spec §4, new in v5): Task 4 puts the strip here, above the footer. -->
-    <!-- T4: status strip -->
+    <!-- The status strip row (spec §4, new in v5), above the footer; collapsed with no message. -->
+    <views:StatusStrip Grid.Row="3" DataContext="{Binding Status}" />
 
     <!-- footer (styles.css:678-689): 180deg ink-950 to ink-900, 1px border-1 top, padding 7px 24px,
          JetBrains Mono 10px fg-muted uppercase, centered. -->

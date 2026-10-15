@@ -26,4 +26,7 @@ public sealed class HomeViewModel
     public FillStyleViewModel FillStyle { get; }
     public SettingsGroupViewModel Settings { get; }
     public EditGroupViewModel Edit { get; }
+
+    /// <summary>The File group (Task 4): Add image and Download template.</summary>
+    public required FileGroupViewModel File { get; init; }
 }

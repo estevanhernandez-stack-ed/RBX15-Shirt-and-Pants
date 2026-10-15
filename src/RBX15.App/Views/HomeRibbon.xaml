@@ -40,7 +40,8 @@
                 </DockPanel>
             </Border>
 
-            <!-- Task 4: File group (editor.html:85-97) -->
+            <!-- File (editor.html:85-97): Add image and Download template; Save work and Open arrive with M4 -->
+            <views:FileGroup DataContext="{Binding File}" />
 
             <!-- Settings (editor.html:98-107) -->
             <Border Style="{StaticResource RibbonGroup}" DataContext="{Binding Settings}">

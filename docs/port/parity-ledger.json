@@ -3297,11 +3297,11 @@
    "quirks": "No alpha. Native picker has no eyedropper/hex entry beyond Chromium's; the port will likely be nicer, which is fine.",
    "portTarget": "A ColorPicker control (e.g. custom popup with HSV square, hex box, optional eyedropper) or WPF Extended Toolkit ColorPicker; must emit lowercase hex into FillSpec. Add ToolTip text 'Color 1' / 'Color 2'.",
    "risk": "med",
-   "parityCheck": "Set a known hex through UI automation; assert FillSpec.C1 equals it and fill render pixels match the Skia painter output for that hex.",
+   "parityCheck": "Tests: ColorMathTests (HSV/RGB round trips for primaries, grays and edge hues; hex parsing), ColorPickerViewModelTests (preview, keys, hex field, commit, cancel), ColorPickerPopupTests (automation names, arrow keys, Esc/Enter, anchored on-screen placement, theme-only brushes, owner-click detection), FillStyleTests (preview, cancel, commit and unchanged picks as one or zero steps; anchor plumbing; a preview through another region's color leaves it alone), LedgerScenarioTests.A_color_pick_retargets_matching_regions_in_one_step_and_a_cancel_changes_nothing. Smoke: open Color 1 and Color 2, drag the square and hue strip and watch painted regions follow, type a hex, Esc reverts, Enter and a click outside commit, one Ctrl+Z undoes the pick.",
    "owner": "App.Ribbon.Home",
    "check": "manual",
-   "disposition": "keep",
-   "divergence": "",
+   "disposition": "fix",
+   "divergence": "4.1: Color 1 and Color 2 open Chromium's Win32 ChooseColor dialog, which cannot be themed and changes the color only when it closes. v5: a themed in-app picker (saturation/value square, hue strip, #rgb/#rrggbb hex field, old and new swatches, OK and Cancel) opens under the swatch button, previews the color live on the canvas, and records the whole pick as one undo step (none when it ends on its seed, none on Esc or Cancel), per Este's call (2026-10-14).",
    "status": "open"
   },
   {
@@ -4867,11 +4867,11 @@
    "quirks": "Ctrl+R in Electron reloads the page and wipes all work with no confirmation (editor.js:1803 comment shows the author knows). Port should simply not have this. No min window size: at narrow widths the ribbon scrolls horizontally and the canvas area can collapse.",
    "portTarget": "WPF Window Width=1200 Height=800 (client area differs from Electron content area, so match content area ~1200x(800-title bar)), Title string as-is, no MenuBar. Do not carry over browser reload/devtools/zoom accelerators. Decide deliberately: add an unsaved-changes prompt on close (recommended deviation) or keep silent discard.",
    "risk": "low",
-   "parityCheck": "Launch: title bar text matches, no menu, window opens 1200x800, resizes without crash down to ~640x480, closing with edits shows no prompt (or the new prompt if chosen).",
+   "parityCheck": "Launch: title bar text matches, no menu, window opens 1200x800, resizes without crash down to ~640x480, closing with edits shows no prompt (or the new prompt if chosen). The caption reads as one band with the header (brand-navy-deep), its text is light, the caption buttons and snap layouts work, and on Windows without the DWM color attributes the window still opens with the default caption. CaptionThemeTests pin the attribute values.",
    "owner": "App.Shell",
    "check": "manual",
-   "disposition": "keep",
-   "divergence": "",
+   "disposition": "fix",
+   "divergence": "4.1: Electron's default Windows caption, light or dark by the system setting. v5: the native caption is themed through DWM (immersive dark mode, brand-navy-deep caption, ink-100 caption text, brand-navy-soft border) with the system frame, caption buttons and snap layouts kept, per Este's call (2026-10-14); MainWindow, the themed dialog and the color picker all take it.",
    "status": "open"
   },
   {
@@ -4951,12 +4951,12 @@
    "quirks": "",
    "portTarget": "Border + centered TextBlock; store the string already upper-cased or use a converter. Letter-spacing workaround as in header.",
    "risk": "low",
-   "parityCheck": "Screenshot footer matches 4.1 screenshot (y band at bottom) in text, color, centering.",
+   "parityCheck": "ShellTests: FooterText is 'Developed at 626Labs', the uppercase converter renders 'DEVELOPED AT 626LABS', the main window's footer shows it at 10px fg-muted (#5e6b7f), centered, and editor.html's 4.1 footer is unchanged. Letter-spacing has no WPF property and is tracked with the header's look sign-off (shell-header).",
    "owner": "App.Shell",
    "check": "manual",
-   "disposition": "keep",
-   "divergence": "",
-   "status": "open"
+   "disposition": "fix",
+   "divergence": "4.1: the footer reads 'Developed at 626 Labs LLC' (editor.html:343). v5: it reads 'Developed at 626Labs', shown uppercase as 'DEVELOPED AT 626LABS', per Este's call (2026-10-14).",
+   "status": "done"
   },
   {
    "id": "theme-tokens-colors",

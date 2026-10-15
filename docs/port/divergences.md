@@ -2,7 +2,7 @@
 
 Every deliberate behavior change in v5, generated from `parity-ledger.json` rows whose disposition is `fix` or `drop`. The bug policy: fix anything clearly unintended, keep anything a user could reasonably rely on. A change that is not in this table is a regression. Rows with a visual effect get a new golden image with a note.
 
-## Fixed in v5 (192)
+## Fixed in v5 (195)
 
 | ID | Owner | Change |
 |---|---|---|
@@ -79,6 +79,7 @@ Every deliberate behavior change in v5, generated from `parity-ledger.json` rows
 | `layers-list-render` | App.Layers | 4.1: layer rows have no keyboard focus or accessibility. v5: layers panel is keyboard operable with automation names and a cyan focus ring. |
 | `layers-reorder-drag` | App.Layers | 4.1: dropping outside a row reuses the last hovered target (stale drag target). v5: stale drag target is cleared so only a live target reorders. |
 | `layers-reorder-drag-2` | App.Layers | 4.1: reorder is mouse-drag only and can leave a stale drag target. v5: stale drag target fixed and reorder is keyboard operable, with the same above/below z semantics and one undo step. |
+| `fillstyle-color-pickers` | App.Ribbon.Home | 4.1: Color 1 and Color 2 open Chromium's Win32 ChooseColor dialog, which cannot be themed and changes the color only when it closes. v5: a themed in-app picker (saturation/value square, hue strip, #rgb/#rrggbb hex field, old and new swatches, OK and Cancel) opens under the swatch button, previews the color live on the canvas, and records the whole pick as one undo step (none when it ends on its seed, none on Esc or Cancel), per Este's call (2026-10-14). |
 | `fillstyle-type-buttons` | App.Ribbon.Home | 4.1: the active type button and controls can disagree with currentFill after undo or project load. v5: controls are re-synced to the current fill whenever state is restored (unintended). |
 | `home-file-group` | App.Ribbon.Home | 4.1: Save/Open/Download go through anchor downloads and hidden file inputs with no current-file model. v5: native save/open dialogs with a current-file model (Ctrl+S / Ctrl+Shift+S), same default names and 585x559 PNG output. |
 | `home-mode-toggle` | App.Ribbon.Home | 4.1: in Pants mode most layer-adding actions throw because they read the shirt torso_front region. v5: Pants mode works everywhere via semantic slots per mode. |
@@ -104,9 +105,11 @@ Every deliberate behavior change in v5, generated from `parity-ledger.json` rows
 | `font-ui-runtime-google` | App.Shell | 4.1: UI fonts load at runtime from Google Fonts, leaking an IP and falling back offline. v5: Space Grotesk, Inter and JetBrains Mono are bundled with zero network requests. |
 | `font-ui-weight-600` | App.Shell | 4.1: Chromium instances the Google variable fonts at weight 600 for the header title, ribbon tabs, group labels and panel headings (styles.css:142, :175, :220, :261). v5: WPF exposes only the named instances of the vendored variable files, and Space Grotesk and JetBrains Mono have no 600 instance there, so those labels draw at 700. Inter's 600 is exact. |
 | `project-startup` | App.Shell | 4.1: requests Google Fonts at startup and does not remember window size or position. v5: zero network requests and the window remembers size and position. |
+| `shell-footer` | App.Shell | 4.1: the footer reads 'Developed at 626 Labs LLC' (editor.html:343). v5: it reads 'Developed at 626Labs', shown uppercase as 'DEVELOPED AT 626LABS', per Este's call (2026-10-14). |
 | `shell-header-version-hardcoded` | App.Shell | 4.1: header version is hand-typed markup that drifts from docs and package version. v5: header text bound to the assembly/package version. |
 | `shell-layout-skeleton` | App.Shell | 4.1: ribbon height changes per tab, shifting the canvas vertically on tab switch. v5: fixed ribbon height. |
 | `shell-lifecycle-quit` | App.Shell | 4.1: closing the window exits immediately with no unsaved-work prompt and no autosave. v5: save-changes prompt on close with dirty tracking, backed by autosave and crash recovery. |
+| `shell-window-frame` | App.Shell | 4.1: Electron's default Windows caption, light or dark by the system setting. v5: the native caption is themed through DWM (immersive dark mode, brand-navy-deep caption, ink-100 caption text, brand-navy-soft border) with the system frame, caption buttons and snap layouts kept, per Este's call (2026-10-14); MainWindow, the themed dialog and the color picker all take it. |
 | `shell-window-size` | App.Shell | 4.1: fixed 1200x800 centered window with no memory of size or position. v5: window remembers size and position. The window has a 640x480 minimum (4.1 had none, and its panels overlapped when shrunk). |
 | `io-download-save-dialog` | App.Storage | 4.1: Electron anchor-download Save As with no current-file memory and no feedback after saving. v5: native save/open/folder dialogs with a current-file model and a status message. |
 | `shell-no-persistence` | App.Storage | 4.1: zero persisted settings and no hidden data. v5: remembers window rect, autosaves every 60s while dirty for crash recovery, and keeps 10 recent projects and a jump list, with PRIVACY docs updated to match. |

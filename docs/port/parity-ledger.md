@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**413 rows.** Status: done 116, open 297. Disposition: keep 194, fix 192, drop 26, new 1. Checks: ui-auto 120, unit 113, manual 68, golden 65, none-retired 25, doc 22.
+**413 rows.** Status: done 117, open 296. Disposition: fix 195, keep 191, drop 26, new 1. Checks: ui-auto 120, unit 113, manual 68, golden 65, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -162,7 +162,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `regions-right-click-clear` | Right-click region button clears its fill | ui-auto | keep | low |
 | open | `regions-hint-text` | Fill Style hint line | manual | keep | low |
 | open | `fillstyle-type-buttons` | Fill type button strip (7 types) | ui-auto | fix | low |
-| open | `fillstyle-color-pickers` | Color 1 and Color 2 pickers | manual | keep | med |
+| open | `fillstyle-color-pickers` | Color 1 and Color 2 pickers | manual | fix | med |
 | open | `fillstyle-angle-scale` | Angle and Scale sliders | ui-auto | keep | low |
 | done | `project-load-image-layer` | Add image (load image as layer) | ui-auto | fix | med |
 | open | `home-mode-toggle` | Shirt/Pants mode toggle button | ui-auto | fix | low |
@@ -210,11 +210,11 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `ribbon-tab-switch` | Ribbon tab switching | ui-auto | keep | low |
 | open | `mode-toggle-button` | Shirt/Pants toggle button | ui-auto | keep | low |
 | open | `project-startup` | Initial render and startup order | manual | fix | low |
-| open | `shell-window-frame` | Window frame, title, menu, default size | manual | keep | low |
+| open | `shell-window-frame` | Window frame, title, menu, default size | manual | fix | low |
 | open | `shell-layout-skeleton` | Page skeleton and flex layout | manual | fix | low |
 | open | `shell-responsive-breakpoint` | Narrow-window breakpoint | ui-auto | keep | low |
 | open | `shell-header` | Header bar content and styling | manual | keep | med |
-| open | `shell-footer` | Footer line | manual | keep | low |
+| done | `shell-footer` | Footer line | manual | fix | low |
 | open | `theme-tokens-colors` | Color token set (:root) | manual | keep | low |
 | open | `theme-tokens-shape-motion-type` | Radii, shadows, motion, type tokens | manual | keep | med |
 | open | `font-ui-runtime-google` | UI fonts loaded at runtime from Google Fonts | manual | fix | med |

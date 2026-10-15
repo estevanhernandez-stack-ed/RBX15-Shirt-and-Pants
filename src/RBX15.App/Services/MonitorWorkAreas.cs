@@ -23,9 +23,23 @@ internal static class MonitorWorkAreas
             areas.Add(((info.Flags & 1) != 0, new Rect(r.Left / scale, r.Top / scale, (r.Right - r.Left) / scale, (r.Bottom - r.Top) / scale)));
             return true;
         }, IntPtr.Zero);
-        if (areas.Count == 0) return [SystemParameters.WorkArea];
-        return areas.OrderByDescending(a => a.Primary).Select(a => a.Area).ToList();
+        return Usable(areas, SystemParameters.WorkArea);
     }
+
+    /// <summary>
+    /// The usable work areas, primary first: a monitor reporting a zero or negative width or height
+    /// (a disconnecting display) is dropped, since <see cref="PlacementGuard.Resolve"/> refuses it. When
+    /// none survive, <paramref name="fallback"/> if it is usable, else a 1024x768 desktop, so startup always
+    /// has a rectangle to place the window in.
+    /// </summary>
+    internal static IReadOnlyList<Rect> Usable(IEnumerable<(bool Primary, Rect Area)> areas, Rect fallback)
+    {
+        var kept = areas.Where(a => IsUsable(a.Area)).OrderByDescending(a => a.Primary).Select(a => a.Area).ToList();
+        if (kept.Count > 0) return kept;
+        return [IsUsable(fallback) ? fallback : new Rect(0, 0, 1024, 768)];
+    }
+
+    static bool IsUsable(Rect r) => !r.IsEmpty && r.Width > 0 && r.Height > 0;
 
     delegate bool MonitorEnumProc(IntPtr monitor, IntPtr hdc, IntPtr rect, IntPtr data);
 

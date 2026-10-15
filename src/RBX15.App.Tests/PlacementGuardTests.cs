@@ -79,4 +79,23 @@ public class PlacementGuardTests
         Assert.Throws<ArgumentException>(() => PlacementGuard.Resolve(null, []));
         Assert.Throws<ArgumentException>(() => PlacementGuard.Resolve(null, [Rect.Empty]));
     }
+
+    [Fact] // a monitor reporting no width or height (disconnecting) is dropped, never handed to Resolve
+    public void Degenerate_work_areas_are_skipped_and_the_primary_stays_first()
+    {
+        var zero = new Rect(3000, 0, 0, 1000);
+        var flat = new Rect(0, 2000, 800, 0);
+        var usable = MonitorWorkAreas.Usable([(false, LeftMonitor), (false, zero), (true, Primary), (false, flat)], new Rect(0, 0, 640, 480));
+        Assert.Equal(new[] { Primary, LeftMonitor }, usable);
+        Assert.NotNull(PlacementGuard.Resolve(null, usable));
+    }
+
+    [Fact] // nothing usable: the system work area, else a 1024x768 desktop, so startup still places the window
+    public void With_no_usable_work_area_the_fallback_is_used()
+    {
+        var fallback = new Rect(0, 0, 640, 480);
+        Assert.Equal(new[] { fallback }, MonitorWorkAreas.Usable([(true, new Rect(0, 0, 0, 0))], fallback));
+        Assert.Equal(new[] { fallback }, MonitorWorkAreas.Usable([], fallback));
+        Assert.Equal(new[] { new Rect(0, 0, 1024, 768) }, MonitorWorkAreas.Usable([], new Rect(0, 0, 0, 0)));
+    }
 }

@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Automation;
+using System.Windows.Automation.Peers;
 using System.Windows.Controls;
 using System.Windows.Media;
 using RBX15.App.Services;
@@ -62,6 +63,26 @@ public class Task4ViewTests
         var all = Descendants<Button>(panel).Select(b => b.Content as string).ToList();
         Assert.Contains("Up", all);
         Assert.Contains("Down", all);
+    });
+
+    [Fact] // smoke find: a string Content made the button peers strip the first "_" as an access-key marker
+    public void Row_button_names_keep_every_underscore_through_their_automation_peers() => StaThread.Run(() =>
+    {
+        var session = new EditorSession();
+        session.ApplyWithSelection(s =>
+        {
+            using var surface = SKSurface.Create(new SKImageInfo(4, 4));
+            return LayerOps.AddImage(s, surface.Snapshot(), session.TakeId(), "drip_blood_front_v2");
+        });
+        var panel = new LayersPanel { DataContext = Layers(session) };
+        Layout(panel);
+
+        var item = Assert.Single(Descendants<ListBoxItem>(panel));
+        var names = Descendants<Button>(item).Select(b => UIElementAutomationPeer.CreatePeerForElement(b).GetName()).ToList();
+        Assert.Equal(new[] { "Dupe drip_blood_front_v2", "Hide drip_blood_front_v2", "Delete drip_blood_front_v2" }, names);
+        Assert.Equal("drip_blood_front_v2", UIElementAutomationPeer.CreatePeerForElement(item).GetName());
+        var labels = Descendants<Button>(item).Select(b => ((TextBlock)b.Content).Text).ToList();
+        Assert.Equal(new[] { "Dupe", "Hide", "Del" }, labels);
     });
 
     [Fact] // controller ruling 3: drag reorder is M3b, so the heading carries no "(drag to reorder)" hint

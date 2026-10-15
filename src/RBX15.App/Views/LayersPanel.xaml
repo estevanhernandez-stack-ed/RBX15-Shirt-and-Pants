@@ -147,7 +147,9 @@
                                        FontWeight="SemiBold"
                                        TextTrimming="CharacterEllipsis"
                                        ToolTip="{Binding Name}" />
-                            <!-- three equal buttons, gap 3 (editor.js:697-715) -->
+                            <!-- three equal buttons, gap 3 (editor.js:697-715). Their content is a TextBlock, not a string:
+                                 with string content, the button's automation peer strips the first "_" from its
+                                 name as an access-key marker, and layer names like drip_blood_front have them. -->
                             <Grid Margin="0,4,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -157,23 +159,26 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <Button Grid.Column="0"
-                                        Content="Dupe"
                                         ToolTip="Duplicate layer"
                                         Command="{Binding DuplicateCommand}"
                                         Style="{StaticResource DupeButton}"
-                                        AutomationProperties.Name="{Binding Name, StringFormat=Dupe {0}}" />
+                                        AutomationProperties.Name="{Binding Name, StringFormat=Dupe {0}}">
+                                    <TextBlock Text="Dupe" />
+                                </Button>
                                 <Button Grid.Column="2"
-                                        Content="{Binding VisibilityLabel}"
                                         ToolTip="{Binding VisibilityToolTip}"
                                         Command="{Binding ToggleVisibilityCommand}"
                                         Style="{StaticResource VisibilityButton}"
-                                        AutomationProperties.Name="{Binding VisibilityAutomationName}" />
+                                        AutomationProperties.Name="{Binding VisibilityAutomationName}">
+                                    <TextBlock Text="{Binding VisibilityLabel}" />
+                                </Button>
                                 <Button Grid.Column="4"
-                                        Content="Del"
                                         ToolTip="Delete layer"
                                         Command="{Binding DeleteCommand}"
                                         Style="{StaticResource DeleteButton}"
-                                        AutomationProperties.Name="{Binding Name, StringFormat=Delete {0}}" />
+                                        AutomationProperties.Name="{Binding Name, StringFormat=Delete {0}}">
+                                    <TextBlock Text="Del" />
+                                </Button>
                             </Grid>
                         </StackPanel>
                     </Grid>

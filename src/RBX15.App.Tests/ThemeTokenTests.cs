@@ -189,6 +189,31 @@ public partial class ThemeTokenTests
         Assert.Equal(Color.FromRgb(0x22, 0x3a, 0x54), thumb);
     }
 
+    [Fact] // smoke find: with both scrollbars showing, the canvas's corner square was the system white
+    public void The_canvas_scroll_corner_is_the_scrollbar_track()
+    {
+        var (fill, canvasStyle, bothBars) = StaThread.Run(() =>
+        {
+            var style = (Style)Application.Current.FindResource("ThemedScrollViewer");
+            var viewer = new System.Windows.Controls.ScrollViewer
+            {
+                Style = style,
+                HorizontalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Visible,
+                VerticalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Visible,
+                Content = new System.Windows.Controls.Border { Width = 400, Height = 400 },
+            };
+            viewer.Measure(new Size(100, 100));
+            viewer.Arrange(new Rect(0, 0, 100, 100));
+            var corner = (System.Windows.Shapes.Rectangle)viewer.Template.FindName("Corner", viewer);
+            var view = new Views.CanvasView();
+            var scroller = (System.Windows.Controls.ScrollViewer)view.FindName("Scroller");
+            return (((SolidColorBrush)corner.Fill).Color, ReferenceEquals(scroller.Style, style), corner.ActualWidth > 0 && corner.ActualHeight > 0);
+        });
+        Assert.Equal(Color.FromRgb(0x05, 0x0c, 0x18), fill);
+        Assert.True(canvasStyle);
+        Assert.True(bothBars);
+    }
+
     static T? FindVisual<T>(DependencyObject root, Func<T, bool> match) where T : DependencyObject
     {
         for (int i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)

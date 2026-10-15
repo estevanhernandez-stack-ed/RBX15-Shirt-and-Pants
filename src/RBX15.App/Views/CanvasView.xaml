@@ -37,7 +37,7 @@
     </UserControl.Resources>
 
     <Grid>
-        <ScrollViewer x:Name="Scroller"
+        <ScrollViewer x:Name="Scroller" Style="{DynamicResource ThemedScrollViewer}"
                       HorizontalScrollBarVisibility="Auto"
                       VerticalScrollBarVisibility="Auto"
                       Focusable="False">

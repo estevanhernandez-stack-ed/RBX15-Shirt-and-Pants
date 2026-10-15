@@ -109,6 +109,43 @@
     </Style.Triggers>
   </Style>
 
+  <!-- A ScrollViewer whose corner square (shown when both scrollbars are) takes the scrollbar track,
+       ink-950, instead of the system control color (white). The canvas uses it; the parts are the
+       standard ScrollViewer contract (PART_ScrollContentPresenter and the two PART_ scrollbars). -->
+  <Style x:Key="ThemedScrollViewer" TargetType="ScrollViewer">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ScrollViewer">
+          <Grid Background="{TemplateBinding Background}">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="*" />
+              <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <ScrollContentPresenter x:Name="PART_ScrollContentPresenter" Grid.Column="0" Grid.Row="0"
+                                    Margin="{TemplateBinding Padding}" CanContentScroll="{TemplateBinding CanContentScroll}"
+                                    CanHorizontallyScroll="False" CanVerticallyScroll="False"
+                                    Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" />
+            <ScrollBar x:Name="PART_VerticalScrollBar" Grid.Column="1" Grid.Row="0" Orientation="Vertical" Minimum="0"
+                       Maximum="{TemplateBinding ScrollableHeight}" ViewportSize="{TemplateBinding ViewportHeight}"
+                       Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}"
+                       Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}" Cursor="Arrow"
+                       AutomationProperties.AutomationId="VerticalScrollBar" />
+            <ScrollBar x:Name="PART_HorizontalScrollBar" Grid.Column="0" Grid.Row="1" Orientation="Horizontal" Minimum="0"
+                       Maximum="{TemplateBinding ScrollableWidth}" ViewportSize="{TemplateBinding ViewportWidth}"
+                       Value="{Binding HorizontalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}"
+                       Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}" Cursor="Arrow"
+                       AutomationProperties.AutomationId="HorizontalScrollBar" />
+            <Rectangle x:Name="Corner" Grid.Column="1" Grid.Row="1" Fill="{StaticResource Ink950Brush}" />
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
   <!-- .btn (styles.css:375-388) with .btn-secondary (:398-406) and .btn-primary (:389-397);
        :disabled is opacity .4 with no shadow (:414-419; ledger cross-undo-disabled-style). -->
   <Style x:Key="SecondaryButton" TargetType="ButtonBase">

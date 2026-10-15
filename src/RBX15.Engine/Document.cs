@@ -37,4 +37,25 @@ public sealed record Document
     public ImmutableList<Layer> Layers { get; init; } = ImmutableList<Layer>.Empty;
     public bool ShowMask { get; init; } = true;
     public bool ShowGrid { get; init; }
+
+    /// <summary>
+    /// True when <paramref name="other"/> holds the same content: every scalar field equal,
+    /// <see cref="BgImage"/> by reference, <see cref="RegionFills"/> sequence-equal (region key and
+    /// <see cref="Fill"/> value equality) and <see cref="Layers"/> sequence-equal (<see cref="Layer"/>
+    /// record equality, so each layer's image by reference). The compiler's record equality compares
+    /// the two immutable lists by reference, so it calls two equal edits different. The editor session
+    /// records an undo step only when this returns false (spec §5, ledger undo-empty-steps: 4.1 pushed
+    /// a snapshot before no-op actions, editor.js:1117, :1601-1606, :1734-1749).
+    /// </summary>
+    public bool ContentEquals(Document other) =>
+        other is not null &&
+        (ReferenceEquals(this, other) ||
+         Mode == other.Mode &&
+         string.Equals(BgColor, other.BgColor, StringComparison.Ordinal) &&
+         BgOpacity.Equals(other.BgOpacity) &&
+         ReferenceEquals(BgImage, other.BgImage) &&
+         ShowMask == other.ShowMask &&
+         ShowGrid == other.ShowGrid &&
+         RegionFills.SequenceEqual(other.RegionFills) &&
+         Layers.SequenceEqual(other.Layers));
 }

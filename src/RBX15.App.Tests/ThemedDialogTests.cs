@@ -25,6 +25,14 @@ public class ThemedDialogTests
         Assert.True(d.IsConfirm);
     });
 
+    [Fact] // spec §4 accessibility: the peer must report the question, not a fixed label
+    public void The_message_is_read_as_the_question_not_as_a_label() => StaThread.Run(() =>
+    {
+        var d = new ThemedDialog("Sure?", confirm: true);
+        var name = System.Windows.Automation.AutomationProperties.GetName(Find<TextBlock>(d, "MessageText"));
+        Assert.True(name.Length == 0 || name == "Sure?", $"automation name was '{name}'");
+    });
+
     [Fact]
     public void An_alert_has_only_ok() => StaThread.Run(() =>
     {

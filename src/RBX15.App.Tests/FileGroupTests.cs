@@ -99,6 +99,34 @@ public class FileGroupTests
         Assert.False(File.Exists(r.Files.SaveResult));
     }
 
+    [Fact] // atomic write: overwriting replaces the file and leaves no temp file behind
+    public void Overwriting_replaces_the_file_and_leaves_no_temp_file()
+    {
+        using var files = new TestFiles();
+        var r = Make(new Document { BgImage = Img() });
+        var target = Path.Combine(files.Dir, "out.png");
+        File.WriteAllBytes(target, [1, 2, 3]);
+        r.Files.SaveResult = target;
+        r.Vm.DownloadTemplateCommand.Execute(null);
+        Assert.Equal(Renderer.ExportPng(r.Session.Document), File.ReadAllBytes(target));
+        Assert.Equal(new[] { target }, Directory.GetFiles(files.Dir));
+    }
+
+    [Fact] // atomic write: a failure leaves an existing target intact and no temp file
+    public void A_failed_save_keeps_the_existing_file_and_leaves_no_temp_file()
+    {
+        using var files = new TestFiles();
+        var r = Make(new Document { BgImage = Img() });
+        var target = Path.Combine(files.Dir, "locked.png");
+        File.WriteAllBytes(target, [9, 9, 9]);
+        r.Files.SaveResult = target;
+        using (new FileStream(target, FileMode.Open, FileAccess.Read, FileShare.None))
+            r.Vm.DownloadTemplateCommand.Execute(null);
+        Assert.StartsWith("Couldn't save locked.png: ", r.Status.Current);
+        Assert.Equal(new byte[] { 9, 9, 9 }, File.ReadAllBytes(target));
+        Assert.Equal(new[] { target }, Directory.GetFiles(files.Dir));
+    }
+
     [Fact] // export is not a document change
     public void Export_is_not_an_undo_step()
     {

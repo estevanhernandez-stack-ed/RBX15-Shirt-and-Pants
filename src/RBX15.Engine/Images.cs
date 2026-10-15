@@ -34,7 +34,8 @@ public static class Images
 
     /// <summary>
     /// Largest pixel count <see cref="Decode"/> accepts: 50 million. A 48 MP phone photo (8000x6000)
-    /// fits; at 4 bytes a pixel the decode plus its premultiplied drawing copy stay near 400 MB.
+    /// fits; at 4 bytes a pixel (200 MB) a plain decode holds the bitmap and its image copy (about 400 MB), an
+    /// EXIF-rotated decode adds the oriented bitmap (about 600 MB peak), and the premultiplied drawing copy comes later.
     /// </summary>
     public const long MaxPixels = 50_000_000;
 

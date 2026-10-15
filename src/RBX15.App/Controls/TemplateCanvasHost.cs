@@ -199,7 +199,7 @@ public sealed class TemplateCanvasHost : FrameworkElement
     /// The dropped file paths, or null. Shell virtual items and malformed OLE data can throw from
     /// GetData (COMException and others); an unreadable drag is not a file drag, so it yields null.
     /// </summary>
-    static string[]? Files(IDataObject? data)
+    internal static string[]? Files(IDataObject? data)
     {
         if (data is null) return null;
         try

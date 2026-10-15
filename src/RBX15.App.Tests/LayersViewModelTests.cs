@@ -93,7 +93,7 @@ public class LayersViewModelTests
         vm.Selected = vm.Rows[2];
         Assert.Equal(1, session.SelectedLayerId);
         Assert.Equal(new[] { false, false, true }, vm.Rows.Select(r => r.IsSelected));
-        vm.Rows[1].SelectCommand.Execute(null);
+        vm.Selected = vm.Rows[1];
         Assert.Equal(2, session.SelectedLayerId);
         Assert.Same(vm.Rows[1], vm.Selected);
         Assert.Equal(steps, session.UndoCount);

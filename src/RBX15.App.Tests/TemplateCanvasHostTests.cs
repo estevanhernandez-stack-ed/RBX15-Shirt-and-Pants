@@ -252,7 +252,7 @@ public class TemplateCanvasHostTests
     public void The_drag_cursor_is_none_unless_files_are_carried_and_the_command_would_accept_them() => StaThread.Run(() =>
     {
         var host = Host(new Document());
-        var files = new DataObject(DataFormats.FileDrop, new[] { @"C:rt.png" });
+        var files = new DataObject(DataFormats.FileDrop, new[] { @"C:\art.png" });
         var at = new Point(10, 10);
         Assert.Equal(DragDropEffects.None, host.DropEffect(files, at)); // no command
         host.DropCommand = new RecordingCommand(canExecute: false);

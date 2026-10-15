@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using RBX15.App.Controls;
 using RBX15.App.ViewModels;
 
 namespace RBX15.App.Views;
@@ -15,7 +16,7 @@ public partial class DropZone : UserControl
 
     void OnDragOver(object sender, DragEventArgs e)
     {
-        bool files = Files(e.Data) is not null;
+        bool files = TemplateCanvasHost.Files(e.Data) is not null;
         e.Effects = files ? DragDropEffects.Copy : DragDropEffects.None;
         Zone.Tag = files ? "dragover" : null;
         e.Handled = true;
@@ -27,19 +28,6 @@ public partial class DropZone : UserControl
     {
         Zone.Tag = null;
         e.Handled = true;
-        if (Files(e.Data) is { } paths && DataContext is LayersViewModel vm) vm.DropFiles(paths);
-    }
-
-    /// <summary>The dropped paths, or null. Shell virtual items and malformed OLE data can throw (COMException); that is "no files".</summary>
-    static string[]? Files(IDataObject data)
-    {
-        try
-        {
-            return data.GetDataPresent(DataFormats.FileDrop) && data.GetData(DataFormats.FileDrop) is string[] { Length: > 0 } paths ? paths : null;
-        }
-        catch (Exception)
-        {
-            return null;
-        }
+        if (TemplateCanvasHost.Files(e.Data) is { } paths && DataContext is LayersViewModel vm) vm.DropFiles(paths);
     }
 }

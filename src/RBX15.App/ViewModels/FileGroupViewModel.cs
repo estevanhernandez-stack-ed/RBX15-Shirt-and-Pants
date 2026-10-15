@@ -49,13 +49,17 @@ public sealed class FileGroupViewModel : ObservableObject
         var path = _files.SavePng(ExportNaming.PngFileName(_session.TemplateTitle));
         if (path is null) return;
         string name = Path.GetFileName(path);
+        // Atomic: write beside the target, then move over it, so a failed write never truncates an existing file.
+        string tmp = path + "." + Guid.NewGuid().ToString("N")[..8] + ".tmp";
         try
         {
-            File.WriteAllBytes(path, Renderer.ExportPng(doc));
+            File.WriteAllBytes(tmp, Renderer.ExportPng(doc));
+            File.Move(tmp, path, overwrite: true);
             _status.Show($"Saved {name}.");
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
+            try { File.Delete(tmp); } catch (Exception) { /* best effort; the save error below is what matters */ }
             _status.Show($"Couldn't save {name}: {e.Message}");
         }
     }

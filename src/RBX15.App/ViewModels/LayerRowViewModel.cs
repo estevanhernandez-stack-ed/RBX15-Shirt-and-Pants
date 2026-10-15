@@ -24,8 +24,6 @@ public sealed class LayerRowViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(layer);
         _session = session;
         Id = layer.Id;
-        // selectLayer (editor.js:575-580; layers-select): never an undo step.
-        SelectCommand = new RelayCommand(() => _session.Select(Id));
         // toggleLayerVisibility (editor.js:570-573): one undo step in v5 (layers-visibility fix).
         ToggleVisibilityCommand = new RelayCommand(() => _session.Apply(d => LayerOps.ToggleVisibility(d, Id)));
         // duplicateLayer (editor.js:542-560; layers-duplicate).
@@ -58,8 +56,6 @@ public sealed class LayerRowViewModel : ObservableObject
 
     /// <summary>The row's name for assistive tech (spec §4 Accessibility; 4.1 rows had none).</summary>
     public string AutomationName => _visible ? _name : _name + " (hidden)";
-
-    public IRelayCommand SelectCommand { get; }
 
     public IRelayCommand ToggleVisibilityCommand { get; }
 

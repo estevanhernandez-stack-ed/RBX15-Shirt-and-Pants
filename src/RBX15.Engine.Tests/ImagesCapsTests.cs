@@ -113,6 +113,36 @@ public class ImagesCapsTests
         Assert.Equal("The image is 20000 x 20000 pixels; the limit is 16384 pixels on a side.", e.Message);
     }
 
+    /// <summary>A baseline JPEG with only SOI, SOF0 (claiming width x height) and SOS: enough for a codec header read.</summary>
+    static byte[] JpegHeader(int width, int height) =>
+    [
+        0xFF, 0xD8,
+        0xFF, 0xC0, 0x00, 0x0B, 0x08, (byte)(height >> 8), (byte)height, (byte)(width >> 8), (byte)width, 0x01, 0x01, 0x11, 0x00,
+        0xFF, 0xDA, 0x00, 0x08, 0x01, 0x01, 0x00, 0x00, 0x3F, 0x00,
+        0xFF, 0xD9,
+    ];
+
+    /// <summary>A GIF whose screen and first frame claim width x height, with no pixel data.</summary>
+    static byte[] GifHeader(int width, int height) =>
+    [
+        .. "GIF89a"u8,
+        (byte)width, (byte)(width >> 8), (byte)height, (byte)(height >> 8), 0x80, 0x00, 0x00,
+        0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF,
+        0x2C, 0x00, 0x00, 0x00, 0x00, (byte)width, (byte)(width >> 8), (byte)height, (byte)(height >> 8), 0x00,
+        0x02, 0x01, 0x00, 0x00,
+        0x3B,
+    ];
+
+    [Theory] // every format is capped from its header, not just PNG
+    [InlineData("jpeg")]
+    [InlineData("gif")]
+    public void A_side_over_the_cap_is_refused_from_a_jpeg_or_gif_header(string format)
+    {
+        var bytes = format == "jpeg" ? JpegHeader(20000, 20000) : GifHeader(20000, 20000);
+        var e = Assert.Throws<ImageTooLargeException>(() => Images.Decode(bytes));
+        Assert.Equal("The image is 20000 x 20000 pixels; the limit is 16384 pixels on a side.", e.Message);
+    }
+
     [Fact] // under the side cap, over the pixel cap
     public void A_pixel_count_over_the_cap_is_refused_from_the_header()
     {

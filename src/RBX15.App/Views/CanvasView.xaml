@@ -73,7 +73,7 @@
                            MinWidth="36" TextAlignment="Center" VerticalAlignment="Center"
                            FontFamily="{DynamicResource FontMono}" FontSize="11"
                            Foreground="{DynamicResource Fg3Brush}"
-                           AutomationProperties.Name="Zoom level" />
+                           AutomationProperties.Name="{Binding ZoomLabel, StringFormat=Zoom {0}}" />
                 <Button x:Name="ZoomInButton" Style="{StaticResource ZoomButton}" Content="+"
                         Command="{Binding ZoomInCommand}"
                         AutomationProperties.Name="Zoom in" ToolTip="Zoom in" />

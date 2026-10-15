@@ -43,6 +43,7 @@ public class CanvasViewTests
         Assert.Same(vm.DropCommand, host.DropCommand);
         Assert.Same(vm.ClickCommand, host.ClickCommand);
         Assert.Equal("100%", label.Text);
+        Assert.Equal("Zoom 100%", AutomationProperties.GetName(label)); // the name keeps the value
         Assert.Equal(("-", "+"), ((string)zoomOut.Content, (string)zoomIn.Content)); // editor.html:333-335
         Assert.Equal(("Zoom out", "Zoom in"), (AutomationProperties.GetName(zoomOut), AutomationProperties.GetName(zoomIn)));
         Assert.Equal("Template canvas", AutomationProperties.GetName(host));
@@ -50,6 +51,7 @@ public class CanvasViewTests
         zoomIn.Command.Execute(null);
         Assert.Equal(1.25, host.Zoom);
         Assert.Equal("125%", label.Text);
+        Assert.Equal("Zoom 125%", AutomationProperties.GetName(label));
 
         session.Apply(d => d with { ShowGrid = true });
         Assert.Same(session.Document, host.Document);

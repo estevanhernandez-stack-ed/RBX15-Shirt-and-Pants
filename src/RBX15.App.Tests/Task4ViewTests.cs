@@ -58,7 +58,7 @@ public class Task4ViewTests
         Assert.Equal(new[] { "Logo", "Back (hidden)" }, items.Select(AutomationProperties.GetName));
         Assert.True(items[0].IsSelected);
         var buttons = Descendants<Button>(items[1]).Select(AutomationProperties.GetName).ToList();
-        Assert.Equal(new[] { "Duplicate Back", "Show layer", "Delete Back" }, buttons);
+        Assert.Equal(new[] { "Dupe Back", "Show Back", "Delete Back" }, buttons);
         var all = Descendants<Button>(panel).Select(b => b.Content as string).ToList();
         Assert.Contains("Up", all);
         Assert.Contains("Down", all);

@@ -119,10 +119,12 @@ public class HomeRibbonViewTests
         var buttons = Descendants<Button>(view).ToArray();
         var texts = Descendants<TextBlock>(view).Select(t => t.Text).ToArray();
 
-        var mode = buttons.Single(b => AutomationProperties.GetName(b) == "Shirt or Pants mode");
+        var mode = buttons.Single(b => AutomationProperties.GetName(b).StartsWith("Mode:", StringComparison.Ordinal));
         Assert.Equal("SHIRT", mode.Content);
+        Assert.Equal("Mode: SHIRT", AutomationProperties.GetName(mode)); // the name states the current mode
         mode.Command.Execute(null);
         Assert.Equal("PANTS", mode.Content);
+        Assert.Equal("Mode: PANTS", AutomationProperties.GetName(mode));
 
         var undo = buttons.Single(b => (string)b.Content == "Undo");
         Assert.True(undo.IsEnabled);                       // the toggle was one step

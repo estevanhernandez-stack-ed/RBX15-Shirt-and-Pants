@@ -161,13 +161,13 @@
                                         ToolTip="Duplicate layer"
                                         Command="{Binding DuplicateCommand}"
                                         Style="{StaticResource DupeButton}"
-                                        AutomationProperties.Name="{Binding Name, StringFormat=Duplicate {0}}" />
+                                        AutomationProperties.Name="{Binding Name, StringFormat=Dupe {0}}" />
                                 <Button Grid.Column="2"
                                         Content="{Binding VisibilityLabel}"
                                         ToolTip="{Binding VisibilityToolTip}"
                                         Command="{Binding ToggleVisibilityCommand}"
                                         Style="{StaticResource VisibilityButton}"
-                                        AutomationProperties.Name="{Binding VisibilityToolTip}" />
+                                        AutomationProperties.Name="{Binding VisibilityAutomationName}" />
                                 <Button Grid.Column="4"
                                         Content="Del"
                                         ToolTip="Delete layer"

@@ -105,11 +105,11 @@ public class LayersViewModelTests
         var session = Seeded(2);
         var vm = Vm(session);
         var row = vm.Rows[1];
-        Assert.Equal(("Hide", "Hide layer", "A"), (row.VisibilityLabel, row.VisibilityToolTip, row.AutomationName));
+        Assert.Equal(("Hide", "Hide layer", "A", "Hide A"), (row.VisibilityLabel, row.VisibilityToolTip, row.AutomationName, row.VisibilityAutomationName));
         int steps = session.UndoCount;
         row.ToggleVisibilityCommand.Execute(null);
         Assert.False(session.Document.Layers[0].Visible);
-        Assert.Equal(("Show", "Show layer", "A (hidden)"), (row.VisibilityLabel, row.VisibilityToolTip, row.AutomationName));
+        Assert.Equal(("Show", "Show layer", "A (hidden)", "Show A"), (row.VisibilityLabel, row.VisibilityToolTip, row.AutomationName, row.VisibilityAutomationName));
         Assert.Equal(steps + 1, session.UndoCount);
         session.Undo();
         Assert.True(row.Visible);

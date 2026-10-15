@@ -54,6 +54,9 @@ public sealed class LayerRowViewModel : ObservableObject
     /// <summary>editor.js:707: the button title.</summary>
     public string VisibilityToolTip => _visible ? "Hide layer" : "Show layer";
 
+    /// <summary>The visibility button's name for assistive tech: its visible label plus the layer ("Hide Back").</summary>
+    public string VisibilityAutomationName => VisibilityLabel + " " + _name;
+
     /// <summary>The row's name for assistive tech (spec §4 Accessibility; 4.1 rows had none).</summary>
     public string AutomationName => _visible ? _name : _name + " (hidden)";
 
@@ -76,5 +79,6 @@ public sealed class LayerRowViewModel : ObservableObject
             OnPropertyChanged(nameof(VisibilityToolTip));
         }
         if (nameChanged || visibleChanged) OnPropertyChanged(nameof(AutomationName));
+        if (nameChanged || visibleChanged) OnPropertyChanged(nameof(VisibilityAutomationName));
     }
 }

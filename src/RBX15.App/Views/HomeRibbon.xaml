@@ -21,7 +21,7 @@
                     <TextBlock Style="{StaticResource RibbonGroupLabel}" Text="MODE" />
                     <Button x:Name="ModeToggle" DataContext="{Binding Mode}" Style="{StaticResource ModeToggleButton}"
                             Content="{Binding Label}" Command="{Binding ToggleCommand}"
-                            AutomationProperties.Name="Shirt or Pants mode" VerticalAlignment="Top" />
+                            AutomationProperties.Name="{Binding Label, StringFormat=Mode: {0}}" VerticalAlignment="Top" />
                 </DockPanel>
             </Border>
 

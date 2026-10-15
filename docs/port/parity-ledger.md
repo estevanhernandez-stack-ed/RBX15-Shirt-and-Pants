@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**413 rows.** Status: done 117, open 296. Disposition: fix 195, keep 191, drop 26, new 1. Checks: ui-auto 120, unit 114, manual 67, golden 65, none-retired 25, doc 22.
+**413 rows.** Status: done 122, open 291. Disposition: fix 195, keep 191, drop 26, new 1. Checks: ui-auto 120, unit 114, manual 67, golden 65, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -67,15 +67,15 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `zoom-controls` | Zoom buttons and label | ui-auto | keep | med |
 | done | `overlay-grid-checkbox` | Grid checkbox (default off) region outlines | manual | fix | low |
 | open | `render-pipeline-canvas-reset` | Render loop characteristics that affect input | manual | keep | low |
-| open | `canvas-zoom-controls` | Zoom controls | ui-auto | fix | med |
+| done | `canvas-zoom-controls` | Zoom controls | ui-auto | fix | med |
 | open | `canvas-select-gestures` | Select tool gestures: move, resize, rotate, wheel | ui-auto | fix | high |
 | open | `select-hidden-layer-still-handled` | Hidden selected layer keeps box and live handles | ui-auto | fix | low |
 | open | `canvas-mouse-button-agnostic` | Right and middle mouse buttons act like left on canvas | ui-auto | fix | low |
 | open | `wheel-sign-only-and-midstroke` | Wheel uses sign only; wheel mid-shape changes live stroke width | ui-auto | fix | low |
 | done | `layers-multi-file-async-order` | Multi-file add: z-order follows decode completion, one undo per file | ui-auto | fix | low |
-| open | `canvas-zoom-clipped-no-pan` | Zoomed canvas is clipped with no scrollbars or pan | ui-auto | fix | med |
+| done | `canvas-zoom-clipped-no-pan` | Zoomed canvas is clipped with no scrollbars or pan | ui-auto | fix | med |
 | open | `canvas-device-pixel-render` | View canvas rendered at device pixels | manual | fix | low |
-| open | `zoom-pill-limits` | Zoom buttons disabled at 25% and 300% | unit | fix | low |
+| done | `zoom-pill-limits` | Zoom buttons disabled at 25% and 300% | unit | fix | low |
 
 ## App.Dialogs
 
@@ -228,7 +228,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `cross-text-select-and-selection` | Text selection, context menu, tooltips | manual | keep | low |
 | open | `cross-window-dpi-rendering` | Pixel scale / DPI behavior | manual | keep | med |
 | open | `shell-window-size` | Initial window 1200x800, centered, resizable | ui-auto | fix | low |
-| open | `shell-window-title` | Window title is a static product name | ui-auto | keep | low |
+| done | `shell-window-title` | Window title is a static product name | ui-auto | keep | low |
 | open | `shell-lifecycle-quit` | Quit on last window closed; macOS activate branch is dead code | ui-auto | fix | low |
 | open | `shell-single-instance` | No single-instance lock | manual | keep | low |
 | open | `shell-external-drop-guard` | Dropping files outside the drop zone/canvas is swallowed, not navigated | ui-auto | keep | low |
@@ -344,7 +344,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `bg-color-pick-clears-image` | Picking a background color or swatch silently discards the background image | unit | keep | low |
 | open | `image-decode-format-matrix` | Decoder matrix: SVG, BMP, GIF, WebP accepted by extension or MIME | unit | drop | med |
 | done | `image-decode-caps` | Imported image size caps (file bytes, side length, pixel count) | unit | fix | med |
-| open | `image-decode-exif-orientation` | EXIF orientation applied when an image is decoded | unit | keep | med |
+| done | `image-decode-exif-orientation` | EXIF orientation applied when an image is decoded | unit | keep | med |
 
 ## Engine.Export
 

@@ -5726,12 +5726,12 @@
    "quirks": "At 150%+ the canvas is clipped by the 560px-ish tall canvas area at default window size; centered clipping hides the top/bottom/left/right strips equally. Hit-testing math divides by zoom so editing still works for visible parts.",
    "portTarget": "Border overlay in Grid cell with Panel.ZIndex; backdrop blur has no WPF equivalent (use semi-opaque solid; or Acrylic via interop is overkill). Decide: add ScrollViewer/pan for zoom>fit (recommended fix) or keep clipping.",
    "risk": "med",
-   "parityCheck": "Click + five times: 125/150/175/200/225%, max 300%; - to 25% min; canvas visual size = 585*zoom px.",
+   "parityCheck": "Click + five times: 125/150/175/200/225%, max 300%; - to 25% min; canvas visual size = 585*zoom px. M3a smoke S8 (2026-10-14, UI Automation): label stepped to 300% and 25% and stopped; screenshots S08-zoom-*.png.",
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: at zoom above fit the canvas is clipped with no scrollbars or pan so edges are unreachable. v5: scrollbars to pan when zoomed, zoom stays 25-300% in 0.25 steps.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "canvas-select-gestures",
@@ -6023,12 +6023,12 @@
    "quirks": "None. Project name never appears in the title; port may keep that.",
    "portTarget": "Window.Title=\"RBX15 Classic Shirt and Pants Maker\" (use a localizable resource). Keep static unless a deliberate improvement (project name) is approved.",
    "risk": "low",
-   "parityCheck": "Read the top-level window title via UI Automation (Name property) and compare to the exact string.",
+   "parityCheck": "Read the top-level window title via UI Automation (Name property) and compare to the exact string. M3a smoke S1 (2026-10-14, automated via UI Automation): window Name read as \"RBX15 Classic Shirt and Pants Maker\".",
    "owner": "App.Shell",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "shell-window-no-icon",
@@ -8281,12 +8281,12 @@
    "quirks": "Likely a long-standing UX gap. Fix recommended.",
    "portTarget": "ScrollViewer around the SKElement would be an improvement. Parity would be a clipped centered Viewbox. Decision required.",
    "risk": "med",
-   "parityCheck": "At 300% on a 1200x800 window, check whether region torso_up and the pants legs are reachable.",
+   "parityCheck": "At 300% on a 1200x800 window, check whether region torso_up and the pants legs are reachable. M3a smoke S8 (2026-10-14, UI Automation ScrollPattern): at 300% on a 1200x800 window the scrollbars reached torso_up and the bottom limb faces; screenshots S08-300-scroll-*.png.",
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: zoomed canvas is clipped with no way to pan. v5: scrollbars to pan when zoomed, zoom stays 25-300%.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "shell-unsaved-work-loss",
@@ -8512,12 +8512,12 @@
    "quirks": "",
    "portTarget": "CanvasViewModel.ZoomInCommand and ZoomOutCommand cannot execute at MaxZoom and MinZoom; CanvasView's ZoomButton style draws a disabled button at .btn:disabled's opacity .4. An Execute past a limit still clamps.",
    "risk": "low",
-   "parityCheck": "CanvasViewModelTests.Each_button_is_disabled_at_its_limit_and_comes_back: each command is disabled at its limit and enabled again one step in, and an Execute at the limit still clamps. CanvasViewTests.The_host_and_the_pill_follow_the_view_model: the zoom-out button is disabled at 25%.",
+   "parityCheck": "CanvasViewModelTests.Each_button_is_disabled_at_its_limit_and_comes_back: each command is disabled at its limit and enabled again one step in, and an Execute at the limit still clamps. CanvasViewTests.The_host_and_the_pill_follow_the_view_model: the zoom-out button is disabled at 25%. M3a smoke S8 (2026-10-14): both buttons measured at 0.40 opacity at their limits from screenshot pixels.",
    "owner": "App.Canvas",
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: the zoom buttons stay enabled at 25% and 300%, and a click there clamps to a no-op (editor.js:1490-1491). v5: each button is disabled at its limit (opacity .4, styles.css:414-416), so no button is dead.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "image-decode-exif-orientation",
@@ -8532,12 +8532,12 @@
    "quirks": "A plain SKCodec decode returns the stored pixels, which for most phone photos are sideways.",
    "portTarget": "Images.Decode applies SKCodec.EncodedOrigin, so the decoded image has its displayed size; import and M4's project open share the path.",
    "risk": "med",
-   "parityCheck": "ImagesOrientationTests.Exif_orientation_is_applied_like_chromium, 8 orientations. By hand in the M3a smoke checklist: a portrait phone photo imports upright.",
+   "parityCheck": "ImagesOrientationTests.Exif_orientation_is_applied_like_chromium, 8 orientations. By hand in the M3a smoke checklist: a portrait phone photo imports upright. Narrowed: the M3a smoke S5 (2026-10-14) used a synthetic JPEG (pixels stored sideways, EXIF Orientation=6) in place of a real phone photo; it imported upright and was fit by its upright size.",
    "owner": "Engine.Document",
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   }
  ]
 }

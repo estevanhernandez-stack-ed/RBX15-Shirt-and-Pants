@@ -67,14 +67,122 @@ public static class Renderer
     /// scales the composite (nearest at zoom 1 or above), not each draw.
     /// </para>
     /// </summary>
-    public static void RenderExport(SKCanvas canvas, Document doc)
+    public static void RenderExport(SKCanvas canvas, Document doc) => RenderComposite(canvas, doc, applyMask: true);
+
+    /// <summary>
+    /// The offscreen half of render() (editor.js:300-337) without the live drawing preview (M3b):
+    /// clear, background, region fills, visible layers bottom to top, then the mask with
+    /// destination-in only when <paramref name="applyMask"/>. Export always masks
+    /// (<see cref="RenderExport"/>); the view masks when <c>Document.ShowMask</c> (editor.js:332-337).
+    /// Same precondition as <see cref="RenderExport"/>: a kN32 premultiplied canvas in template space.
+    /// </summary>
+    public static void RenderComposite(SKCanvas canvas, Document doc, bool applyMask)
     {
+        ArgumentNullException.ThrowIfNull(canvas);
+        ArgumentNullException.ThrowIfNull(doc);
         canvas.Clear(SKColors.Transparent);
         DrawBackground(canvas, doc);
         Fills.PaintRegions(canvas, doc.Mode, doc.RegionFills);
         foreach (var layer in doc.Layers) DrawLayer(canvas, layer);
+        if (!applyMask) return;
         using var mask = new SKPaint { BlendMode = SKBlendMode.DstIn };
         canvas.DrawImage(Template.Mask(doc.Mode), 0, 0, MaskSampling, mask);
+    }
+
+    /// <summary>
+    /// The view frame's size in device pixels. 4.1 assigns <c>canvas.width = TW * zoom</c>
+    /// (editor.js:340-341), and the browser truncates a fractional width, so zoom 1.5 gives
+    /// 877x838 and zoom 0.25 gives 146x139 (render-zoom-canvas). The frame keeps that truncation,
+    /// with the device scale folded in, because the view goldens freeze 4.1's sizes and the
+    /// composite is stretched to exactly this frame (editor.js:350).
+    /// </summary>
+    public static SKSizeI ViewSize(ViewOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        double scale = options.Scale;
+        int w = (int)Math.Truncate(TemplateSize.Width * scale), h = (int)Math.Truncate(TemplateSize.Height * scale);
+        if (w < 1 || h < 1) throw new ArgumentOutOfRangeException(nameof(options), scale, "the view frame would be empty");
+        return new SKSizeI(w, h);
+    }
+
+    static readonly SKColor CheckerBase = new(0x0f, 0x1f, 0x31);  // editor.js:435
+    static readonly SKColor CheckerSquare = new(0x05, 0x0c, 0x18); // editor.js:436
+    static readonly SKSamplingOptions NearestSampling = new(SKFilterMode.Nearest, SKMipmapMode.None);
+
+    /// <summary>
+    /// Half the checkerboard tile in device pixels: 8 CSS px (editor.js:432-437) times the device
+    /// scale, rounded to a whole pixel and at least 1, so the squares stay crisp at any DPI.
+    /// </summary>
+    internal static int CheckerHalf(double deviceScale) => Math.Max(1, (int)Math.Round(8 * deviceScale, MidpointRounding.AwayFromZero));
+
+    /// <summary>
+    /// The view (render(), editor.js:300-359) minus the live drawing preview and the selection overlay
+    /// (both M3b). The composite renders at 585x559 identity (the Renderer's precondition), masked
+    /// iff <c>doc.ShowMask</c>. The frame then gets:
+    /// <list type="number">
+    /// <item>the checkerboard (editor.js:345-348, :431-438): a tile of 2 x <see cref="CheckerHalf"/> device pixels anchored
+    ///   at the frame origin, base #0f1f31 with #050c18 in the top-left and bottom-right quarters. It does not scale with zoom
+    ///   (render-checkerboard);</item>
+    /// <item>the composite stretched to the whole frame (editor.js:350), bilinear only when <c>Zoom * DeviceScale &lt; 1</c>
+    ///   (editor.js:342; spec §4, nearest at 100% and above);</item>
+    /// <item>when <c>options.ShowGrid</c>, every region of the document's mode stroked with rgba(255,255,0,0.3) at
+    ///   (x, y, w, h) times the scale, unsnapped (editor.js:352-359; render-grid-overlay, overlay-grid-checkbox). The line
+    ///   width is <c>DeviceScale</c>, 4.1's 1 CSS px.</item>
+    /// </list>
+    /// Precondition: <paramref name="canvas"/> is <see cref="ViewSize"/> pixels, kN32 premultiplied, identity matrix.
+    /// </summary>
+    public static void RenderView(SKCanvas canvas, Document doc, ViewOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(canvas);
+        ArgumentNullException.ThrowIfNull(doc);
+        var size = ViewSize(options);
+
+        var info = new SKImageInfo(TemplateSize.Width, TemplateSize.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
+        using var offscreen = SKSurface.Create(info) ?? throw new InvalidOperationException("cannot create the composite surface");
+        RenderComposite(offscreen.Canvas, doc, doc.ShowMask);
+        using var composite = offscreen.Snapshot();
+
+        var frame = SKRect.Create(0, 0, size.Width, size.Height);
+        canvas.Clear(SKColors.Transparent);
+        using (var tile = CheckerTile(CheckerHalf(options.DeviceScale)))
+        using (var shader = tile.ToShader(SKShaderTileMode.Repeat, SKShaderTileMode.Repeat, NearestSampling))
+        using (var checker = new SKPaint { Shader = shader })
+            canvas.DrawRect(frame, checker);
+
+        double scale = options.Scale;
+        canvas.DrawImage(composite, frame, scale < 1 ? LayerSampling : NearestSampling);
+
+        if (!options.ShowGrid) return;
+        using var grid = new SKPaint
+        {
+            Style = SKPaintStyle.Stroke,
+            StrokeWidth = (float)options.DeviceScale,
+            IsAntialias = true,
+            ColorF = new SKColorF(1, 1, 0, 0.3f),
+        };
+        foreach (var r in Template.Regions(doc.Mode))
+            canvas.DrawRect(SKRect.Create((float)(r.X * scale), (float)(r.Y * scale), (float)(r.W * scale), (float)(r.H * scale)), grid);
+    }
+
+    static SKImage CheckerTile(int half)
+    {
+        var info = new SKImageInfo(half * 2, half * 2, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
+        using var surface = SKSurface.Create(info) ?? throw new InvalidOperationException("cannot create the checker tile");
+        surface.Canvas.Clear(CheckerBase);
+        using var square = new SKPaint { Color = CheckerSquare };
+        surface.Canvas.DrawRect(SKRect.Create(0, 0, half, half), square);
+        surface.Canvas.DrawRect(SKRect.Create(half, half, half, half), square);
+        return surface.Snapshot();
+    }
+
+    /// <summary><see cref="RenderView"/> into a new kN32 premultiplied image of <see cref="ViewSize"/>. For tests and goldens; the app renders into its own bitmap.</summary>
+    public static SKImage RenderViewImage(Document doc, ViewOptions options)
+    {
+        var size = ViewSize(options);
+        var info = new SKImageInfo(size.Width, size.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
+        using var surface = SKSurface.Create(info) ?? throw new InvalidOperationException("cannot create the view surface");
+        RenderView(surface.Canvas, doc, options);
+        return surface.Snapshot();
     }
 
     static void DrawBackground(SKCanvas canvas, Document doc)

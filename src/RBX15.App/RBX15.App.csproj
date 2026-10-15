@@ -1,8 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
-  <ItemGroup>
-    <ProjectReference Include="..\RBX15.Engine\RBX15.Engine.csproj" />
-  </ItemGroup>
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -10,6 +6,33 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- The header reads the version from the assembly (ledger shell-header-version-hardcoded).
+         The SDK would append "+<commit sha>" to the informational version; AppInfo shows it bare. -->
+    <Version>5.0.0</Version>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RBX15.Engine\RBX15.Engine.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="RBX15.App.Tests" />
+  </ItemGroup>
+
+  <!-- The 3 UI families (styles.css:6, styles.css:89-91), embedded from the read-only vendored set
+       (assets/fonts/README.md rows inter, spacegrotesk, jetbrainsmono). Link renames each file so the
+       pack URI has no brackets or commas: pack://application:,,,/RBX15.App;component/Fonts/#Inter.
+       Their OFL.txt files reach the output through the engine's Content items. -->
+  <ItemGroup>
+    <Resource Include="..\..\assets\fonts\inter\Inter[opsz,wght].ttf" Link="Fonts\Inter.ttf" />
+    <Resource Include="..\..\assets\fonts\spacegrotesk\SpaceGrotesk[wght].ttf" Link="Fonts\SpaceGrotesk.ttf" />
+    <Resource Include="..\..\assets\fonts\jetbrainsmono\JetBrainsMono[wght].ttf" Link="Fonts\JetBrainsMono.ttf" />
+  </ItemGroup>
 
 </Project>

@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using SkiaSharp;
 
 namespace RBX15.Engine.Tests;
@@ -68,4 +69,70 @@ public class DocumentTests
         var l = new Layer { Id = 1, Image = Images.Decode(Png(SKColors.Red)) };
         Assert.Same(l.Image, (l with { Id = 2, Name = "copy" }).Image);
     }
+
+    // ---- ContentEquals (spec §5: the session records a step only when content changed) ----
+
+    static readonly SKImage Red = Px.Solid(2, 2, SKColors.Red);
+
+    static Document Rich() => new()
+    {
+        BgColor = "#0f1f31",
+        RegionFills = ImmutableList.Create(("torso_front", new Fill("linear", "#17d4fa", "#f22f89", 45, 16))),
+        Layers = ImmutableList.Create(new Layer { Id = 1, Image = Red, Name = "Image 1", X = 10 }),
+    };
+
+    [Fact] // two edits that rebuild equal lists are the same content; record == compares the lists by reference
+    public void Rebuilt_lists_with_equal_items_are_the_same_content()
+    {
+        var a = Rich();
+        var b = Rich();
+        Assert.NotEqual(a, b);
+        Assert.True(a.ContentEquals(b));
+        Assert.True(b.ContentEquals(a));
+        Assert.True(a.ContentEquals(a));
+        Assert.True(new Document().ContentEquals(new Document()));
+    }
+
+    [Fact] // a no-op with expression keeps content (undo-empty-steps)
+    public void A_with_expression_that_sets_the_same_values_keeps_content() =>
+        Assert.True(Rich().ContentEquals(Rich() with { BgColor = "#0f1f31", ShowMask = true, Mode = TemplateMode.Shirt }));
+
+    public static TheoryData<string> Changes => new()
+    {
+        "Mode", "BgColor", "BgOpacity", "BgImage", "ShowMask", "ShowGrid",
+        "fill added", "fill value", "fill order", "layer added", "layer field", "layer image", "layer order",
+    };
+
+    [Theory, MemberData(nameof(Changes))] // file-undo-snapshot-scope: every Document field is content
+    public void Every_document_field_is_content(string change)
+    {
+        var a = Rich();
+        var two = a with
+        {
+            RegionFills = a.RegionFills.Add(("torso_back", Fill.Solid("#333"))),
+            Layers = a.Layers.Add(new Layer { Id = 2, Image = Red }),
+        };
+        var (before, after) = change switch
+        {
+            "Mode" => (a, a with { Mode = TemplateMode.Pants }),
+            "BgColor" => (a, a with { BgColor = "#0F1F31" }),
+            "BgOpacity" => (a, a with { BgOpacity = 0.5 }),
+            "BgImage" => (a, a with { BgImage = Red }),
+            "ShowMask" => (a, a with { ShowMask = false }),
+            "ShowGrid" => (a, a with { ShowGrid = true }),
+            "fill added" => (a, a with { RegionFills = two.RegionFills }),
+            "fill value" => (a, a with { RegionFills = ImmutableList.Create(("torso_front", new Fill("linear", "#17d4fa", "#f22f89", 90, 16))) }),
+            "fill order" => (two, two with { RegionFills = two.RegionFills.Reverse() }),
+            "layer added" => (a, a with { Layers = two.Layers }),
+            "layer field" => (a, a with { Layers = ImmutableList.Create(a.Layers[0] with { Visible = false }) }),
+            "layer image" => (a, a with { Layers = ImmutableList.Create(a.Layers[0] with { Image = Px.Solid(2, 2, SKColors.Red) }) }),
+            "layer order" => (two, two with { Layers = two.Layers.Reverse() }),
+            _ => throw new ArgumentOutOfRangeException(nameof(change)),
+        };
+        Assert.False(before.ContentEquals(after), change);
+        Assert.False(after.ContentEquals(before), change);
+    }
+
+    [Fact] // a null other is never equal content
+    public void Null_is_never_the_same_content() => Assert.False(new Document().ContentEquals(null!));
 }

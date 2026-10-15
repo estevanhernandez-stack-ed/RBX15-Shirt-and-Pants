@@ -1,8 +1,143 @@
+<!--
+  The shell skeleton (ledger shell-layout-skeleton): header, ribbon, the app row (left panel and
+  canvas area), the status strip row, footer, top to bottom (styles.css:99-108, editor.html:15-343).
+  4.1 has no right panel: .rpanel (styles.css:462-469) is styled but never used, so it is not ported.
+  This is the final M3a file: Task 2's CanvasView in the CanvasArea, Task 3's HomeRibbon in the
+  RibbonPane, and Task 4's drop zone, layers panel and status strip.
+-->
 <Window x:Class="RBX15.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="RBX15 Classic Shirt and Pants Maker"
-        Width="1200" Height="800"
-        Background="#050C18">
-    <Grid />
+        xmlns:views="clr-namespace:RBX15.App.Views"
+        xmlns:vm="clr-namespace:RBX15.App.ViewModels"
+        xmlns:app="clr-namespace:RBX15.App"
+        x:Name="Root"
+        Title="{x:Static app:AppInfo.ProductName}"
+        Width="{x:Static app:ShellLayout.DefaultWidth}" Height="{x:Static app:ShellLayout.DefaultHeight}"
+        MinWidth="{x:Static app:ShellLayout.MinWidth}" MinHeight="{x:Static app:ShellLayout.MinHeight}"
+        Background="{StaticResource Bg0Brush}"
+        Foreground="{StaticResource Fg2Brush}"
+        FontFamily="{StaticResource FontBody}"
+        UseLayoutRounding="True"
+        TextOptions.TextRenderingMode="Grayscale"
+        d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d">
+
+  <Grid x:Name="Viewport">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <!-- header (styles.css:129-155): padding 10px 24px, gap 16px, 135deg navy / navy-deep / navy,
+         1px border-accent bottom, shadow 0 2px 8px rgba(0,0,0,.35); drawn above the ribbon. -->
+    <Border x:Name="Header" Grid.Row="0" Panel.ZIndex="1" Padding="24,10"
+            BorderBrush="{StaticResource BorderAccentBrush}" BorderThickness="0,0,0,1">
+      <Border.Background>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+          <GradientStop Offset="0" Color="{StaticResource BrandNavyColor}" />
+          <GradientStop Offset="0.5" Color="{StaticResource BrandNavyDeepColor}" />
+          <GradientStop Offset="1" Color="{StaticResource BrandNavyColor}" />
+        </LinearGradientBrush>
+      </Border.Background>
+      <Border.Effect>
+        <DropShadowEffect Color="Black" Direction="270" ShadowDepth="2" BlurRadius="8" Opacity="0.35" />
+      </Border.Effect>
+      <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+        <!-- header h1 (styles.css:139-148): Space Grotesk 20px 600, text filled with the brand gradient. -->
+        <TextBlock x:Name="HeaderTitle" Text="{Binding HeaderTitle, Mode=OneTime}" VerticalAlignment="Center"
+                   FontFamily="{StaticResource FontDisplay}" FontSize="20" FontWeight="SemiBold"
+                   Foreground="{StaticResource BrandGradientBrush}" />
+        <!-- header span (styles.css:149-155): JetBrains Mono 11px fg-3 uppercase; gap 16px (:133). -->
+        <TextBlock x:Name="HeaderByline" Margin="16,0,0,0" VerticalAlignment="Center"
+                   FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{StaticResource Fg3Brush}"
+                   Text="{Binding HeaderByline, Mode=OneTime, Converter={StaticResource UpperCase}}" />
+      </StackPanel>
+    </Border>
+
+    <!-- .ribbon (styles.css:160-164): 180deg navy-deep to ink-900, 1px border-1 bottom. -->
+    <Border x:Name="Ribbon" Grid.Row="1" BorderBrush="{StaticResource Border1Brush}" BorderThickness="0,0,0,1">
+      <Border.Background>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+          <GradientStop Offset="0" Color="{StaticResource BrandNavyDeepColor}" />
+          <GradientStop Offset="1" Color="{StaticResource Ink900Color}" />
+        </LinearGradientBrush>
+      </Border.Background>
+      <DockPanel>
+        <!-- .ribbon-tabs (styles.css:165-170): padding 0 8px, 180deg ink-950 to ink-900, 1px border-1 bottom.
+             M3a shows Home only (editor.html:23); Layout, Details and Text arrive in M4. -->
+        <Border DockPanel.Dock="Top" Padding="8,0" BorderBrush="{StaticResource Border1Brush}" BorderThickness="0,0,0,1">
+          <Border.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+              <GradientStop Offset="0" Color="{StaticResource Ink950Color}" />
+              <GradientStop Offset="1" Color="{StaticResource Ink900Color}" />
+            </LinearGradientBrush>
+          </Border.Background>
+          <StackPanel x:Name="RibbonTabs" Orientation="Horizontal">
+            <RadioButton x:Name="HomeTab" Style="{StaticResource RibbonTab}" GroupName="RibbonTabs"
+                         Content="Home" IsChecked="True" AutomationProperties.Name="Home tab" />
+          </StackPanel>
+        </Border>
+        <!-- .ribbon-pane.active (styles.css:197-198): padding 8px 12px, groups in a row that never
+             shrink and scroll horizontally (ledger ribbon-overflow-hscroll). Task 3 puts HomeRibbon
+             inside; HomeRibbon is the pane, so it brings its own ScrollViewer and its 12,8 margin. -->
+        <ContentControl x:Name="RibbonPane" Focusable="False">
+          <views:HomeRibbon DataContext="{Binding Home}" />
+        </ContentControl>
+      </DockPanel>
+    </Border>
+
+    <!-- .app (styles.css:241): the left panel and the canvas area. -->
+    <Grid x:Name="AppRow" Grid.Row="2">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition x:Name="PanelColumn" Width="280" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+
+      <!-- .panel (styles.css:246-253): 280px (200px at the breakpoint), 180deg navy-deep to ink-900,
+           1px border-1 right, padding 14px, vertical scroll. The drop zone, then the layers
+           (editor.html:311-318), both on the LayersViewModel (Task 4). -->
+      <Border x:Name="LeftPanel" Grid.Column="0" BorderBrush="{StaticResource Border1Brush}" BorderThickness="0,0,1,0">
+        <Border.Background>
+          <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Offset="0" Color="{StaticResource BrandNavyDeepColor}" />
+            <GradientStop Offset="1" Color="{StaticResource Ink900Color}" />
+          </LinearGradientBrush>
+        </Border.Background>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+          <StackPanel x:Name="LeftPanelContent" Margin="14">
+            <views:DropZone DataContext="{Binding Layers}" />
+            <views:LayersPanel DataContext="{Binding Layers}" />
+          </StackPanel>
+        </ScrollViewer>
+      </Border>
+
+      <!-- .canvas-area (styles.css:441-450): ink-950. Task 2 fills it with the canvas host and zoom pill. -->
+      <Grid x:Name="CanvasArea" Grid.Column="1" Background="{StaticResource Ink950Brush}" ClipToBounds="True">
+        <views:CanvasView DataContext="{Binding Canvas}" />
+      </Grid>
+    </Grid>
+
+    <!-- The status strip row (spec §4, new in v5), above the footer; collapsed with no message. -->
+    <views:StatusStrip Grid.Row="3" DataContext="{Binding Status}" />
+
+    <!-- footer (styles.css:678-689): 180deg ink-950 to ink-900, 1px border-1 top, padding 7px 24px,
+         JetBrains Mono 10px fg-muted uppercase, centered. -->
+    <Border x:Name="Footer" Grid.Row="4" Padding="24,7" BorderBrush="{StaticResource Border1Brush}" BorderThickness="0,1,0,0">
+      <Border.Background>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+          <GradientStop Offset="0" Color="{StaticResource Ink950Color}" />
+          <GradientStop Offset="1" Color="{StaticResource Ink900Color}" />
+        </LinearGradientBrush>
+      </Border.Background>
+      <TextBlock x:Name="FooterText" HorizontalAlignment="Center" FontFamily="{StaticResource FontMono}" FontSize="10"
+                 Foreground="{StaticResource FgMutedBrush}"
+                 Text="{Binding FooterText, Mode=OneTime, Converter={StaticResource UpperCase}}" />
+    </Border>
+  </Grid>
 </Window>

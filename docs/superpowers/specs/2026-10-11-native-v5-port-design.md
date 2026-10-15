@@ -140,7 +140,7 @@ scripts/build-msix.ps1  RoRoRo/Sanduhr pattern; also produces the portable zip
 **Window and layout:**
 
 - **Window:** 1200x800 default; remembers size, position and maximized state.
-- **Layout:** 4.1's, unchanged: header, ribbon tabs (Home, Layout, Details, Text), left panel (drop zone, asset library), center canvas, right panel (layers, selected-layer properties, adjustments).
+- **Layout:** 4.1's, unchanged: header, ribbon tabs (Home, Layout, Details, Text), left panel (asset library, drop zone, layers, selected-layer properties and adjustments; editor.html:288-341), center canvas. 4.1 has no right panel; `.rpanel` in styles.css is dead (corrected 2026-10-14, M3a amendment CA2).
 - **Ribbon groups:** never shrink; the active tab scrolls horizontally when narrow.
 - **Header version:** read from the assembly, not hand-typed.
 

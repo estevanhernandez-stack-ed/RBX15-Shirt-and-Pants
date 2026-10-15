@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using SkiaSharp;
 
@@ -25,15 +26,101 @@ public static class Images
         return SKImage.FromPixelCopy(bmp.PeekPixels());
     }
 
+    /// <summary>Largest encoded file or payload <see cref="Decode"/> accepts: 100 MiB. Checked before any copy or parse.</summary>
+    public const long MaxEncodedBytes = 100L * 1024 * 1024;
+
+    /// <summary>Largest width or height <see cref="Decode"/> accepts: 16384, the common GPU texture limit.</summary>
+    public const int MaxDimension = 16384;
+
+    /// <summary>
+    /// Largest pixel count <see cref="Decode"/> accepts: 50 million. A 48 MP phone photo (8000x6000)
+    /// fits; at 4 bytes a pixel (200 MB) a plain decode holds the bitmap and its image copy (about 400 MB), an
+    /// EXIF-rotated decode adds the oriented bitmap (about 600 MB peak), and the premultiplied drawing copy comes later.
+    /// </summary>
+    public const long MaxPixels = 50_000_000;
+
+    /// <summary>
+    /// Throws <see cref="ImageTooLargeException"/> when an encoded payload is over
+    /// <see cref="MaxEncodedBytes"/>. Import calls it with the file length before reading the file.
+    /// </summary>
+    public static void CheckEncodedSize(long bytes)
+    {
+        if (bytes > MaxEncodedBytes)
+            throw new ImageTooLargeException(string.Create(CultureInfo.InvariantCulture,
+                $"The file is {bytes / 1048576.0:0.#} MB; the limit is {MaxEncodedBytes / 1048576} MB."));
+    }
+
+    /// <summary>
+    /// Throws <see cref="ImageTooLargeException"/> when either side is over <see cref="MaxDimension"/>
+    /// or the pixel count is over <see cref="MaxPixels"/>.
+    /// </summary>
+    public static void CheckDimensions(int width, int height)
+    {
+        if (width > MaxDimension || height > MaxDimension)
+            throw new ImageTooLargeException(string.Create(CultureInfo.InvariantCulture,
+                $"The image is {width} x {height} pixels; the limit is {MaxDimension} pixels on a side."));
+        if ((long)width * height > MaxPixels)
+            throw new ImageTooLargeException(string.Create(CultureInfo.InvariantCulture,
+                $"The image is {width} x {height} pixels ({(long)width * height / 1e6:0.#} megapixels); the limit is {MaxPixels / 1_000_000} megapixels."));
+    }
+
+    /// <summary>
+    /// Decodes an encoded image (PNG, JPEG, WebP, BMP, GIF; the first frame of an animation) to
+    /// un-premultiplied RGBA. Untrusted input: the payload size is checked first, then the
+    /// dimensions from the codec header, both before any pixel memory is allocated (divergence
+    /// <c>image-decode-caps</c>; 4.1 had no caps). An EXIF orientation is applied, as Chromium
+    /// draws an img element (image-orientation: from-image), so the result has the displayed size.
+    /// Throws <see cref="ImageTooLargeException"/> over a cap and <see cref="InvalidDataException"/>
+    /// for bytes it cannot decode.
+    /// </summary>
     public static SKImage Decode(byte[] encoded)
     {
+        ArgumentNullException.ThrowIfNull(encoded);
+        CheckEncodedSize(encoded.LongLength);
         using var data = SKData.CreateCopy(encoded);
         using var codec = SKCodec.Create(data) ?? throw new InvalidDataException("not a supported image");
+        CheckDimensions(codec.Info.Width, codec.Info.Height);
         var info = new SKImageInfo(codec.Info.Width, codec.Info.Height, SKColorType.Rgba8888, SKAlphaType.Unpremul);
         using var bmp = new SKBitmap(info);
         var result = codec.GetPixels(info, bmp.GetPixels());
         if (result != SKCodecResult.Success) throw new InvalidDataException($"image decode failed: {result}");
-        return SKImage.FromPixelCopy(bmp.PeekPixels());
+        return codec.EncodedOrigin == SKEncodedOrigin.TopLeft
+            ? SKImage.FromPixelCopy(bmp.PeekPixels())
+            : Orient(bmp, codec.EncodedOrigin);
+    }
+
+    /// <summary>
+    /// Applies an EXIF orientation as a pure pixel permutation, so the un-premultiplied values stay
+    /// exact. Each case maps a displayed pixel (x, y) back to its stored pixel; 5 to 8 swap the sides.
+    /// </summary>
+    static SKImage Orient(SKBitmap source, SKEncodedOrigin origin)
+    {
+        int w = source.Width, h = source.Height;
+        bool swap = origin is SKEncodedOrigin.LeftTop or SKEncodedOrigin.RightTop or SKEncodedOrigin.RightBottom or SKEncodedOrigin.LeftBottom;
+        int dw = swap ? h : w, dh = swap ? w : h;
+        using var dest = new SKBitmap(new SKImageInfo(dw, dh, SKColorType.Rgba8888, SKAlphaType.Unpremul));
+        using var srcMap = source.PeekPixels();
+        using var dstMap = dest.PeekPixels();
+        var src = srcMap.GetPixelSpan<uint>();
+        var dst = dstMap.GetPixelSpan<uint>();
+        int srcStride = srcMap.RowBytes / 4, dstStride = dstMap.RowBytes / 4;
+        for (int y = 0; y < dh; y++)
+            for (int x = 0; x < dw; x++)
+            {
+                (int sx, int sy) = origin switch
+                {
+                    SKEncodedOrigin.TopRight => (w - 1 - x, y),
+                    SKEncodedOrigin.BottomRight => (w - 1 - x, h - 1 - y),
+                    SKEncodedOrigin.BottomLeft => (x, h - 1 - y),
+                    SKEncodedOrigin.LeftTop => (y, x),
+                    SKEncodedOrigin.RightTop => (y, h - 1 - x),
+                    SKEncodedOrigin.RightBottom => (w - 1 - y, h - 1 - x),
+                    SKEncodedOrigin.LeftBottom => (w - 1 - y, x),
+                    _ => (x, y),
+                };
+                dst[y * dstStride + x] = src[sy * srcStride + sx];
+            }
+        return SKImage.FromPixelCopy(dest.PeekPixels());
     }
 
     /// <summary>
@@ -119,3 +206,10 @@ public static class Images
         return SKImage.FromPixelCopy(bmp.PeekPixels());
     }
 }
+
+/// <summary>
+/// An image over one of the <see cref="Images"/> decode caps. <see cref="InvalidDataException"/> is
+/// sealed, so this derives from <see cref="Exception"/>; every caller that drops undecodable images
+/// (ProjectIO.TryDecodeDataUrl, the App's ImageImporter) catches both.
+/// </summary>
+public sealed class ImageTooLargeException(string message) : Exception(message);

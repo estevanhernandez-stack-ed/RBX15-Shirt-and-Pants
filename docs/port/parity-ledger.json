@@ -184,7 +184,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "state-defaults",
@@ -666,7 +666,7 @@
    "owner": "App.Ribbon.Layout",
    "check": "manual",
    "disposition": "fix",
-   "divergence": "4.1: swatch gradients use the CSS angle convention (0deg is bottom-to-top) so direction can contradict the canvas render (0 is left-to-right). v5: swatches are drawn with the canvas angle convention so they match the render (clearly unintended inconsistency).",
+   "divergence": "4.1: swatch gradients use the CSS angle convention (0deg is bottom-to-top) so direction can contradict the canvas render (0 is left-to-right). v5: swatches are drawn with the canvas angle convention so they match the render (clearly unintended inconsistency). Each swatch is the region painted by the canvas painter with the region as its own gradient extent, so a tile shows the full gradient even where the canvas spans a group.",
    "status": "open"
   },
   {
@@ -876,7 +876,7 @@
    "owner": "App.Canvas",
    "check": "manual",
    "disposition": "fix",
-   "divergence": "4.1: canvas is resized and reset every frame with truncated fractional dimensions, giving a half-pixel edge offset at fractional zoom, and it grows with zoom. v5: exact scaled size in a scroll host with scrollbars to pan, zoom 25-300% in 0.25 steps.",
+   "divergence": "4.1: the canvas is reallocated and cleared on every render and clipped when it outgrows the area. v5: the frame keeps 4.1's truncated size (TW*zoom, editor.js:340-341), renders into a reused bitmap, and sits in a scroll host with scrollbars to pan; zoom stays 25-300% in 0.25 steps.",
    "status": "open"
   },
   {
@@ -892,12 +892,12 @@
    "quirks": "Checkerboard is baked into the visible canvas, so screenshots of the canvas include it, but exports come from the offscreen (no checker). Created at module load via IIFE; declared after render() text but initialized before first call (const TDZ ok because render is called later).",
    "portTarget": "SKShader.CreateBitmap(tile, Repeat, Repeat) on a paint, or a tiled DrawingBrush behind the SKElement; keep tile in device pixels (not scaled by zoom or DPI).",
    "risk": "low",
-   "parityCheck": "Screenshot corner pixels at (0,0),(8,0),(8,8),(0,8) match colors; tile stays 16 px at zoom 4.",
+   "parityCheck": "View goldens: the corner pixels (0,0), (8,0), (8,8) and (0,8) match 4.1 at every captured zoom, and the tile stays 16 px at zoom 3. Narrowed in M3a: zoom 4 is outside v5's 25-300% range.",
    "owner": "App.Canvas",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "render-grid-overlay",
@@ -916,7 +916,7 @@
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "render-selection-box",
@@ -1110,7 +1110,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "tools-set-tool",
@@ -1253,7 +1253,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: default name 'Image N' uses the incremented id, so the first unnamed layer is 'Image 2' with id 1. v5: default layer names match the id.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "layers-add-drawing",
@@ -1294,7 +1294,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "layers-remove",
@@ -1314,7 +1314,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: removeLayer pushes an undo snapshot even when the id is not found, creating an empty step. v5: every mutation is exactly one undo step, with no empty steps.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "layers-visibility",
@@ -1330,12 +1330,12 @@
    "quirks": "Visibility toggle is not undoable though snapshot contains visible; undoing a different change later restores earlier visible state unexpectedly. Also nameSpan opacity 0.4 for hidden is assigned then overwritten by `style.cssText +=` (cssText getter includes the opacity so it actually persists; still dim). Treat as: hidden name text at 40% opacity.",
    "portTarget": "ToggleVisibilityCommand; do not push history to match, or deliberately add undo (decide).",
    "risk": "low",
-   "parityCheck": "Toggle, press undo: visibility remains changed (parity) unless intentionally fixed.",
+   "parityCheck": "Toggle, then Undo: the visibility comes back in one step (LayerOpsTests, LayersViewModelTests, LedgerScenarioTests). Reworded in M3a to the fixed behavior; 4.1's toggle was not undoable.",
    "owner": "Engine.Document",
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: visibility toggle is not undoable. v5: visibility toggle is exactly one undo step.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "layers-select",
@@ -1410,12 +1410,12 @@
    "quirks": "Not undoable (inconsistent with drag-reorder, which is undoable). Recommend fix: push history.",
    "portTarget": "MoveUp/MoveDown commands with CanExecute false at ends (visually enabled in original; either).",
    "risk": "low",
-   "parityCheck": "Swap indexes verified; undo does not revert the move (parity) unless fixed.",
+   "parityCheck": "Up and Down swap with the neighbor and do nothing at the ends; Undo reverts a move in one step (LayerOpsTests, LayersViewModelTests). Reworded in M3a to the fixed behavior; 4.1's Up and Down were not undoable.",
    "owner": "Engine.Document",
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: Up/Down reorder is not undoable, unlike drag-reorder. v5: reorder is exactly one undo step.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "layers-empty-state",
@@ -1732,12 +1732,12 @@
    "quirks": "Same file selected twice in the picker in a row does not re-fire change. dragleave fires when moving over child elements causing highlight flicker.",
    "portTarget": "Border AllowDrop=True with DragEnter/Leave/Drop handling DataFormats.FileDrop; Click opens OpenFileDialog Multiselect.",
    "risk": "low",
-   "parityCheck": "Drop 3 PNGs on zone: 3 layers centered on torso_front each (stacked identically).",
+   "parityCheck": "Drop 3 PNGs through the drop zone's DropFiles path: 3 layers, each placed by LayerOps.Place at the default 0.85 fit centered on torso_front, stacked identically, as one undo step (LayersViewModelTests.A_zone_drop_uses_the_default_placement, ImportServiceTests, LayerOpsTests); a canvas drop centers each on the drop point (ImportServiceTests.A_canvas_drop_centers_every_layer_on_the_drop_point). Narrowed in M3a: the drop zone's own UI (drag-over highlight, Tab and Enter) is the held panel-drop-zone row, checked by hand in the smoke checklist.",
    "owner": "App.AssetLibrary",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "drop-canvas",
@@ -1790,12 +1790,12 @@
    "quirks": "Race: multi-file drop order nondeterministic. Each addLayer call pushes its own undo snapshot (N files = N undo steps). SVG without width/height yields img.width 0 or 150x150 default in Chromium; scale = Infinity possible. File named 'a.b.png' becomes 'a.b'. Silent failures hide errors: add toast in native.",
    "portTarget": "Decoder via SKBitmap.Decode; SVG needs Svg.Skia or rasterize at intrinsic size; animated GIF uses first frame (check Chromium behavior: first frame). Process files sequentially to make order deterministic (deviation).",
    "risk": "med",
-   "parityCheck": "Drop png, jpg, gif, webp, bmp, svg, txt, extensionless file: first six produce layers; svg dimensions equal browser intrinsic size; txt silent.",
+   "parityCheck": "Drop png, jpg, gif, webp, bmp, svg, txt and an extensionless text file: the five raster files become layers named by file name minus the last extension; svg, txt and the extensionless file become no layer and each shows a status message (ImageImporterTests, ImportServiceTests). Reworded in M3a: v5 refuses SVG.",
    "owner": "App.AssetLibrary",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: SVG accepted, multi-file drops load in nondeterministic order with one undo step per file, and non-images are skipped silently. v5: SVG import dropped with a message, multi-file import in pick order as one undo step, and status messages for rejected files.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "select-hit-test",
@@ -2549,12 +2549,12 @@
    "quirks": "Zoom buttons have no disabled state at limits. The canvas is resized on every render (flicker risk in WPF if done naively). Checkerboard cell size is constant on screen, not tied to template. Hit radii and handles are in screen px so UI feels the same at all zooms.",
    "portTarget": "ScaleTransform or explicit surface size; draw offscreen composite to view with SKSamplingOptions: Nearest when zoom>=1, linear/mipmap when <1. Checkerboard via SKShader.CreateBitmap with Repeat tiling in screen space (not scaled).",
    "risk": "med",
-   "parityCheck": "Zoom label text for all 12 levels; screenshot at 25%, 100%, 300% pixel-diff within tolerance (smoothing at 25/50/75 will differ by filter choice: define target filter, Chromium bilinear).",
+   "parityCheck": "Zoom label text for all 12 levels (CanvasViewModelTests); the engine view goldens at zoom 0.25, 1 and 3 (GoldenViewTests) pixel-match 4.1 within tolerance. Narrowed in M3a: no window screenshot is diffed; the smoothing filter below 100% is the engine's, pinned by those goldens.",
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "overlay-mask-checkbox",
@@ -2572,12 +2572,12 @@
    "quirks": "Preview with Mask off does not match the export (WYSIWYG break; keep or add a warning).",
    "portTarget": "SKBlendMode.DstIn with a mask SKBitmap built from region rects (or clip to union path; rects are pixel-aligned so a clip is equivalent). CheckBox bound to ShowMask.",
    "risk": "low",
-   "parityCheck": "Layer dragged beyond regions: hidden with Mask on, visible with off; exported PNG hides it either way.",
+   "parityCheck": "A layer placed outside every region: hidden in the view with Mask on, shown with it off, and the exported PNG hides it either way; each toggle is one undo step (LedgerScenarioTests, SettingsGroupTests, view goldens with Mask on and off). Narrowed in M3a: the layer is placed, not dragged; dragging lands with M3b's select tool.",
    "owner": "App.Ribbon.Home",
    "check": "ui-auto",
-   "disposition": "keep",
-   "divergence": "",
-   "status": "open"
+   "disposition": "fix",
+   "divergence": "4.1: toggling Mask re-renders without an undo step, though showMask is in every undo snapshot and project file, so a later Undo of an unrelated edit flips it back (editor.js:1494, :1404-1415, :1432-1436). v5: each Mask toggle is exactly one undo step.",
+   "status": "done"
   },
   {
    "id": "overlay-grid-checkbox",
@@ -2594,12 +2594,12 @@
    "quirks": "Grid draws region rects of the current mode (variable named SHIRT_REGIONS even in pants mode).",
    "portTarget": "SKPaint stroke 1px, color 0x4DFFFF00 (alpha 0.3 -> 76/255), DrawRect on integer coords reproduces the same AA half coverage; keep coords unshifted.",
    "risk": "low",
-   "parityCheck": "Screenshot: grid lines for pants and shirt mode at zoom 1/2 identical within AA tolerance; not present in exported PNG.",
+   "parityCheck": "View goldens: the grid lines in Shirt and in Pants at zoom 1 match 4.1 under the golden rule; the export with Grid on equals the export with Grid off; each toggle is one undo step (LedgerScenarioTests, SettingsGroupTests). Narrowed in M3a: zoom 2 not captured.",
    "owner": "App.Canvas",
    "check": "manual",
-   "disposition": "keep",
-   "divergence": "",
-   "status": "open"
+   "disposition": "fix",
+   "divergence": "4.1: toggling Grid re-renders without an undo step, though showGrid is in every undo snapshot and project file, so a later Undo of an unrelated edit flips it back (editor.js:1495, :1404-1415, :1432-1436). v5: each Grid toggle is exactly one undo step.",
+   "status": "done"
   },
   {
    "id": "undo-model",
@@ -2659,7 +2659,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: Restore is async with races, silently dropped layers, and selection cleared on every undo. v5: Restore is synchronous over shared immutable bitmaps and selection survives undo.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "undo-buttons-shortcuts",
@@ -2821,12 +2821,12 @@
    "quirks": "No confirmation; button label 'Clear' might suggest clearing everything but region fills and background remain.",
    "portTarget": "Command ClearLayers; no confirm dialog (parity) or optional.",
    "risk": "low",
-   "parityCheck": "After Clear: layer list empty, background/regions intact; Ctrl+Z restores all layers with images; export of empty layers still includes bg/regions.",
+   "parityCheck": "After Clear: no layers and no selection, background and region fills intact; Undo restores every layer with its image; the export of the cleared document still holds the background and region fills (DocumentOpsTests, EditGroupTests, LedgerScenarioTests). Narrowed in M3a: Undo is the Edit group's command; the Ctrl+Z key lands with M4's keyboard.",
    "owner": "Engine.Document",
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "placement-selection-guard",
@@ -2868,7 +2868,7 @@
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "export-composite-order",
@@ -2998,7 +2998,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "keyboard-tool-toggle-interplay",
@@ -3077,12 +3077,12 @@
    "quirks": "fillKey ignores nothing but coerces missing angle/scale to 0 and missing c1/c2 to '' so a descriptor with explicit angle 0 and one with undefined angle share a key. Port should keep key = type|c1|c2|angle|scale exactly (case-sensitive hex strings: '#ABCDEF' and '#abcdef' are different keys; input type=color always yields lowercase, so only loaded projects can hit this).",
    "portTarget": "C# record FillSpec(FillType Type, SKColor C1, SKColor C2, double Angle, double Scale) with value equality; Dictionary<string,FillSpec> RegionFills on the document ViewModel; CurrentFill property on the editor ViewModel. Keep legacy-string loader as a JSON converter that maps a string to Solid.",
    "risk": "low",
-   "parityCheck": "Unit test: new document has empty RegionFills, CurrentFill equals the default tuple; control default values equal XAML defaults. Round-trip a v4 project JSON with string-valued and object-valued region entries.",
+   "parityCheck": "A new document has empty RegionFills, and FillStyleViewModel.Current equals the default (solid, #17d4fa, #f22f89, 45, 16) with Angle held to 0-360 and Scale to 4-48 (FillStyleTests). A v4 project with string- and object-valued region entries round-trips through ProjectIOTests (M2b). Narrowed in M3a: the defaults are asserted on the view-model the XAML binds, not on the XAML.",
    "owner": "Engine.Document",
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "regions-grid-layout-shirt",
@@ -3123,7 +3123,7 @@
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "regions-button-swatch-paint",
@@ -3161,12 +3161,12 @@
    "quirks": "Painting is only reachable when no layer is selected. Selection takes priority. User must deselect first (click empty canvas, which sets selectedLayerId=null elsewhere). Redundant undo entries on repaint: consume the 30-entry history cap.",
    "portTarget": "RelayCommand<string> PaintRegion(regionKey): push snapshot, set RegionFills[key]=CurrentFill with, invalidate canvas.",
    "risk": "low",
-   "parityCheck": "Automated: no selection, click torso_front twice with same style -> 2 undo entries; undo twice returns to empty. Pixel diff of canvas after painting each of 7 types.",
+   "parityCheck": "No selection: paint torso_front twice with the same style through its region tile: 1 undo step, because the repaint changes nothing; Undo returns to empty (RegionsGroupTests, LedgerScenarioTests). The 7 fill types' pixels are the M1 render goldens (fills-* rows). Reworded in M3a to v5's count; 4.1 pushes 2.",
    "owner": "Engine.Document",
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: Repainting a region with an identical fill still pushes an undo entry. v5: A repaint that changes nothing creates no undo step.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "regions-click-fit-layer",
@@ -3262,7 +3262,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "fillstyle-undo-snapshot-timing",
@@ -3277,12 +3277,12 @@
    "quirks": "Keyboard-driven slider changes (arrow keys on a focused range) fire 'input' without pointerdown, so they mutate without any undo entry, and the first color change via picker opened by keyboard likewise. Also undo restores regionColors but NOT currentFill or the controls, so after undoing, controls show the latest values while regions revert and the old key no longer matches. Decide whether to fix (recommended: snapshot on first input after focus).",
    "portTarget": "Slider: handle DragStarted (Thumb.DragStarted) for snapshot, ValueChanged for apply. Color: snapshot when the picker opens, apply on color changed. Keyboard slider changes should snapshot once per focused interaction.",
    "risk": "med",
-   "parityCheck": "Drag fillAngle with a matching painted region: exactly 1 undo entry, Ctrl+Z restores the starting angle fills in one step. Drag with no matching region: 0 entries.",
+   "parityCheck": "Drag fillAngle with a matching painted region: exactly 1 undo step, and Undo restores the starting-angle fills in one step; a drag with no matching region: 0 steps; a keyboard slider change: 1 step (FillStyleTests). Narrowed in M3a: Undo is the Edit group's command; the Ctrl+Z key lands with M4's keyboard.",
    "owner": "Engine.History",
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: keyboard-driven slider or picker changes mutate fills with no undo entry. v5: every document mutation is exactly one undo step, and idle drags still create none.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "fillstyle-color-pickers",
@@ -3297,11 +3297,11 @@
    "quirks": "No alpha. Native picker has no eyedropper/hex entry beyond Chromium's; the port will likely be nicer, which is fine.",
    "portTarget": "A ColorPicker control (e.g. custom popup with HSV square, hex box, optional eyedropper) or WPF Extended Toolkit ColorPicker; must emit lowercase hex into FillSpec. Add ToolTip text 'Color 1' / 'Color 2'.",
    "risk": "med",
-   "parityCheck": "Set a known hex through UI automation; assert FillSpec.C1 equals it and fill render pixels match the Skia painter output for that hex.",
+   "parityCheck": "Tests: ColorMathTests (HSV/RGB round trips for primaries, grays and edge hues; hex parsing), ColorPickerViewModelTests (preview, keys, hex field, commit, cancel), ColorPickerPopupTests (automation names, arrow keys, Esc/Enter, anchored on-screen placement, theme-only brushes, owner-click detection), FillStyleTests (preview, cancel, commit and unchanged picks as one or zero steps; anchor plumbing; a preview through another region's color leaves it alone), LedgerScenarioTests.A_color_pick_retargets_matching_regions_in_one_step_and_a_cancel_changes_nothing. Smoke: open Color 1 and Color 2, drag the square and hue strip and watch painted regions follow, type a hex, Esc reverts, Enter and a click outside commit, one Ctrl+Z undoes the pick.",
    "owner": "App.Ribbon.Home",
    "check": "manual",
-   "disposition": "keep",
-   "divergence": "",
+   "disposition": "fix",
+   "divergence": "4.1: Color 1 and Color 2 open Chromium's Win32 ChooseColor dialog, which cannot be themed and changes the color only when it closes. v5: a themed in-app picker (saturation/value square, hue strip, #rgb/#rrggbb hex field, old and new swatches, OK and Cancel) opens under the swatch button, previews the color live on the canvas, and records the whole pick as one undo step (none when it ends on its seed, none on Esc or Cancel), per Este's call (2026-10-14).",
    "status": "open"
   },
   {
@@ -3382,7 +3382,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "mode-switch-undo-and-callers",
@@ -3398,12 +3398,12 @@
    "quirks": "Snapshots serialize every layer image as a data URL on EVERY saveUndo (30 deep): memory/time heavy in Electron; native should snapshot by reference to immutable bitmaps.",
    "portTarget": "History service stores full-state snapshots (immutable records) including Mode; Restore() sets mode first, then fills.",
    "risk": "med",
-   "parityCheck": "Script: paint, toggle to Pants, Ctrl+Z -> Shirt mode with fills restored; Ctrl+Y -> Pants, empty fills.",
+   "parityCheck": "Paint, toggle to Pants, Undo: Shirt mode with the fills restored; Redo: Pants with empty fills (EditorSession.Undo and Redo; ModeGroupTests, LedgerScenarioTests). Narrowed in M3a: the Ctrl+Z and Ctrl+Y keys land with M4's keyboard.",
    "owner": "Engine.History",
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "mode-pants-crash-hardcoded-keys",
@@ -4801,12 +4801,12 @@
    "quirks": "SVG/BMP are accepted here but not by the asset-library filter. Order of multi-file adds is racy in Electron. Each add pushes one undo snapshot. Same function path as drop zone (handleFiles at editor.js:998) - align semantics in the slice owning drop.",
    "portTarget": "OpenFileDialog Multiselect=true, Filter images (png, jpg, jpeg, gif, webp, bmp, svg). SVG needs Svg.Skia (SkiaSharp.Extended.Svg / Svg.Skia) rasterized at intrinsic size; GIF = first frame (browser Image shows first frame in drawImage). Process files in selection order (deterministic) - fix of racing order.",
    "risk": "med",
-   "parityCheck": "Add a PNG, JPG, SVG, animated GIF, BMP, WEBP, and a .txt; verify which become layers and their names; SVG intrinsic size parity.",
+   "parityCheck": "Add a PNG, JPG, GIF (first frame), BMP and WEBP: each becomes a layer named by its file name minus the last extension; an SVG and a .txt become no layer and each shows a status message (ImageImporterTests, ImportServiceTests). Reworded in M3a: v5 refuses SVG, so there is no SVG intrinsic size to compare.",
    "owner": "App.Ribbon.Home",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: multi-file import order is racy, each file is its own undo step, and SVG is accepted. v5: files import in pick order as one undo step and SVG is dropped with a message.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "project-startup",
@@ -4867,11 +4867,11 @@
    "quirks": "Ctrl+R in Electron reloads the page and wipes all work with no confirmation (editor.js:1803 comment shows the author knows). Port should simply not have this. No min window size: at narrow widths the ribbon scrolls horizontally and the canvas area can collapse.",
    "portTarget": "WPF Window Width=1200 Height=800 (client area differs from Electron content area, so match content area ~1200x(800-title bar)), Title string as-is, no MenuBar. Do not carry over browser reload/devtools/zoom accelerators. Decide deliberately: add an unsaved-changes prompt on close (recommended deviation) or keep silent discard.",
    "risk": "low",
-   "parityCheck": "Launch: title bar text matches, no menu, window opens 1200x800, resizes without crash down to ~640x480, closing with edits shows no prompt (or the new prompt if chosen).",
+   "parityCheck": "Launch: title bar text matches, no menu, window opens 1200x800, resizes without crash down to ~640x480, closing with edits shows no prompt (or the new prompt if chosen). The caption reads as one band with the header (brand-navy-deep), its text is light, the caption buttons and snap layouts work, and on Windows without the DWM color attributes the window still opens with the default caption. CaptionThemeTests pin the attribute values.",
    "owner": "App.Shell",
    "check": "manual",
-   "disposition": "keep",
-   "divergence": "",
+   "disposition": "fix",
+   "divergence": "4.1: Electron's default Windows caption, light or dark by the system setting. v5: the native caption is themed through DWM (immersive dark mode, brand-navy-deep caption, ink-100 caption text, brand-navy-soft border) with the system frame, caption buttons and snap layouts kept, per Este's call (2026-10-14); MainWindow and the themed dialog take it (the borderless color picker has no caption).",
    "status": "open"
   },
   {
@@ -4951,12 +4951,12 @@
    "quirks": "",
    "portTarget": "Border + centered TextBlock; store the string already upper-cased or use a converter. Letter-spacing workaround as in header.",
    "risk": "low",
-   "parityCheck": "Screenshot footer matches 4.1 screenshot (y band at bottom) in text, color, centering.",
+   "parityCheck": "ShellTests: FooterText is 'Developed at 626Labs', the uppercase converter renders 'DEVELOPED AT 626LABS', the main window's footer shows it at 10px fg-muted (#5e6b7f), centered, and editor.html's 4.1 footer is unchanged. Letter-spacing has no WPF property and is tracked with the header's look sign-off (shell-header).",
    "owner": "App.Shell",
-   "check": "manual",
-   "disposition": "keep",
-   "divergence": "",
-   "status": "open"
+   "check": "unit",
+   "disposition": "fix",
+   "divergence": "4.1: the footer reads 'Developed at 626 Labs LLC' (editor.html:343). v5: it reads 'Developed at 626Labs', shown uppercase as 'DEVELOPED AT 626LABS', per Este's call (2026-10-14).",
+   "status": "done"
   },
   {
    "id": "theme-tokens-colors",
@@ -5266,12 +5266,12 @@
    "quirks": "Many edits do NOT push undo (see cross-cutting list). Clear leaves region fills, so 'Clear' does not blank a filled template.",
    "portTarget": "RelayCommands with CanExecute from history stacks; limit 30; snapshots as immutable records (not JSON strings of base64 PNGs; share image buffers by reference to cut memory) while preserving semantics.",
    "risk": "med",
-   "parityCheck": "Scripted sequence from tests/history.test.js re-implemented in C#; after 31 edits only 30 undos available; redo cleared by new edit; disabled visual state matches (40% opacity).",
+   "parityCheck": "The history sequence of tests/history.test.js runs in C# (HistoryTests, M2a). Through the Edit group: Undo and Redo start disabled, after 31 edits only 30 undos are available, and a new edit empties redo (EditGroupTests, LedgerScenarioTests). Narrowed in M3a: the disabled look (opacity .4) is checked on cross-undo-disabled-style.",
    "owner": "App.Ribbon.Home",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "home-file-group",
@@ -5311,12 +5311,12 @@
    "quirks": "The 1px strokeRect on integer coordinates straddles pixel edges producing 2px-wide 50%-alpha lines; Skia with same coordinates reproduces the same AA, so do not 'fix' by pixel-snapping unless you accept a diff.",
    "portTarget": "TextBox with placeholder overlay (WPF has no placeholder: use adorner/watermark), two CheckBoxes bound to VM. Grid overlay drawn in the Skia render pass with the same stroke (SKColor 255,255,0,77; stroke width 1, rect coords r*zoom unsnapped).",
    "risk": "low",
-   "parityCheck": "Toggle Mask off: untemplated areas show background; export is still masked (see canvas-export-pipeline). Grid on: 18 outlines; pixel-diff of grid lines at zoom 1 and 2.",
+   "parityCheck": "Mask off: areas outside the template show in the view and the export is still masked (view goldens with Mask off; LedgerScenarioTests). Grid on: the region outlines match the view goldens at zoom 1 in Shirt and in Pants. Narrowed in M3a: zoom 2 not captured.",
    "owner": "App.Ribbon.Home",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "layout-presets",
@@ -5421,7 +5421,7 @@
    "owner": "App.Ribbon.Layout",
    "check": "ui-auto",
    "disposition": "fix",
-   "divergence": "4.1: region tiles are mouse-only divs and the Front tile permanently loses its built-in tint after any paint or clear. v5: keyboard-reachable tiles with automation names and a consistent Front tile style, with region keys resolved through semantic slots per mode.",
+   "divergence": "4.1: region tiles are mouse-only divs and the Front tile permanently loses its built-in tint after any paint or clear. v5: keyboard-reachable tiles with automation names and a consistent Front tile style, with region keys resolved through semantic slots per mode. Delete, Shift+F10 and the Menu key clear a focused tile, as right-click does.",
    "status": "open"
   },
   {
@@ -5705,12 +5705,12 @@
    "quirks": "The checkerboard stays 16px regardless of zoom. Edge AA differences versus Electron GPU canvas exist (spike finding): port should be consistent software-raster.",
    "portTarget": "SKElement (SkiaSharp.Views.WPF) host drawing in device pixels at zoom; keep the same compositing order, destination-in mask via SKBlendMode.DstIn, nearest-neighbor when zoom>=1 and linear when zoom<1.",
    "risk": "high",
-   "parityCheck": "Pixel-diff the visible canvas at zoom 0.25/0.5/1/2/3 for a scene with fills, layers and Mask on/off; checkerboard tile phase identical (it is NOT scaled with zoom).",
+   "parityCheck": "View goldens (tests/goldens/view): the visible canvas at zoom 0.25, 0.5, 1, 1.5 and 3, with region fills and layers, Mask on and off, under the unchanged golden rule; the checkerboard is not scaled with zoom. Narrowed in M3a: zoom 2 not captured.",
    "owner": "Engine.Render",
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "canvas-zoom-controls",
@@ -5726,12 +5726,12 @@
    "quirks": "At 150%+ the canvas is clipped by the 560px-ish tall canvas area at default window size; centered clipping hides the top/bottom/left/right strips equally. Hit-testing math divides by zoom so editing still works for visible parts.",
    "portTarget": "Border overlay in Grid cell with Panel.ZIndex; backdrop blur has no WPF equivalent (use semi-opaque solid; or Acrylic via interop is overkill). Decide: add ScrollViewer/pan for zoom>fit (recommended fix) or keep clipping.",
    "risk": "med",
-   "parityCheck": "Click + five times: 125/150/175/200/225%, max 300%; - to 25% min; canvas visual size = 585*zoom px.",
+   "parityCheck": "Click + five times: 125/150/175/200/225%, max 300%; - to 25% min; canvas visual size = 585*zoom px. M3a smoke S8 (2026-10-14, UI Automation): label stepped to 300% and 25% and stopped; screenshots S08-zoom-*.png.",
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: at zoom above fit the canvas is clipped with no scrollbars or pan so edges are unreachable. v5: scrollbars to pan when zoomed, zoom stays 25-300% in 0.25 steps.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "canvas-select-gestures",
@@ -5792,7 +5792,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "file-project-format",
@@ -6006,7 +6006,7 @@
    "owner": "App.Shell",
    "check": "ui-auto",
    "disposition": "fix",
-   "divergence": "4.1: fixed 1200x800 centered window with no memory of size or position. v5: window remembers size and position.",
+   "divergence": "4.1: fixed 1200x800 centered window with no memory of size or position. v5: window remembers size and position. The window has a 640x480 minimum (4.1 had none, and its panels overlapped when shrunk).",
    "status": "open"
   },
   {
@@ -6023,12 +6023,12 @@
    "quirks": "None. Project name never appears in the title; port may keep that.",
    "portTarget": "Window.Title=\"RBX15 Classic Shirt and Pants Maker\" (use a localizable resource). Keep static unless a deliberate improvement (project name) is approved.",
    "risk": "low",
-   "parityCheck": "Read the top-level window title via UI Automation (Name property) and compare to the exact string.",
+   "parityCheck": "Read the top-level window title via UI Automation (Name property) and compare to the exact string. M3a smoke S1 (2026-10-14, automated via UI Automation): window Name read as \"RBX15 Classic Shirt and Pants Maker\".",
    "owner": "App.Shell",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "shell-window-no-icon",
@@ -6269,12 +6269,12 @@
    "quirks": "Electron confirm() dialog has no title text (shows app title); WPF MessageBox should use product title.",
    "portTarget": "MessageBox.Show(owner, text, title, OKCancel, Question). Same exact text. Condition: layers.Any(l=>l.Visible && l.Image!=null) || regionColors.Count>0 || bgImage!=null.",
    "risk": "low",
-   "parityCheck": "Fresh app -> Download: prompt appears; Cancel -> no dialog for save; OK -> save dialog. Set only a BG swatch -> prompt still appears. Hidden-only layers -> prompt.",
+   "parityCheck": "Fresh document, Download: the confirm appears; Cancel: no save dialog; OK: the save dialog. A background color alone, and hidden-only layers, still prompt (FileGroupTests, LedgerScenarioTests). Narrowed in M3a: the background color is set on the document; the Layout tab's swatches land with M4.",
    "owner": "App.Dialogs",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "io-alert-inventory",
@@ -6341,7 +6341,7 @@
    "owner": "App.AssetLibrary",
    "check": "manual",
    "disposition": "fix",
-   "divergence": "4.1: accept=image/* silently lets SVG/AVIF through the picker. v5: explicit PNG/JPG/GIF/WEBP filter, SVG import dropped with a message, first frame only for animated files.",
+   "divergence": "4.1: accept=image/* silently lets SVG/AVIF through the picker. v5: explicit PNG/JPG/GIF/WEBP/BMP filter, SVG import dropped with a message, first frame only for animated files.",
    "status": "open"
   },
   {
@@ -7565,7 +7565,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "shell-header-version-hardcoded",
@@ -7950,12 +7950,12 @@
    "quirks": "",
    "portTarget": "Same semantics in the C# undo model, or improve by restoring the selection (decision).",
    "risk": "low",
-   "parityCheck": "Select a layer, nudge with arrow plus a region paint, undo, and check the selection state and fill controls.",
+   "parityCheck": "Select a layer, paint a region, Undo: the layer is still selected (EditorSessionTests, LedgerScenarioTests). Narrowed in M3a: the arrow nudge lands with M4's keyboard, and the Fill Style controls after an undo are checked on fillstyle-type-buttons.",
    "owner": "Engine.History",
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: every undo/redo deselects the layer. v5: selection survives undo.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "history-redo-stack-uncapped",
@@ -8057,7 +8057,7 @@
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: multi-file add orders layers by decode completion with one undo per file. v5: layers added in pick order as one undo step.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "file-input-same-file-reselect",
@@ -8281,12 +8281,12 @@
    "quirks": "Likely a long-standing UX gap. Fix recommended.",
    "portTarget": "ScrollViewer around the SKElement would be an improvement. Parity would be a clipped centered Viewbox. Decision required.",
    "risk": "med",
-   "parityCheck": "At 300% on a 1200x800 window, check whether region torso_up and the pants legs are reachable.",
+   "parityCheck": "At 300% on a 1200x800 window, check whether region torso_up and the pants legs are reachable. M3a smoke S8 (2026-10-14, UI Automation ScrollPattern): at 300% on a 1200x800 window the scrollbars reached torso_up and the bottom limb faces; screenshots S08-300-scroll-*.png.",
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: zoomed canvas is clipped with no way to pan. v5: scrollbars to pan when zoomed, zoom stays 25-300%.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "shell-unsaved-work-loss",
@@ -8434,6 +8434,107 @@
    "parityCheck": "Pixel-diff the drawing layer bitmap and crop origin for a scripted stroke crossing the canvas edge.",
    "owner": "Engine.Tools",
    "check": "golden",
+   "disposition": "keep",
+   "divergence": "",
+   "status": "done"
+  },
+  {
+   "id": "image-decode-caps",
+   "area": "file-drop",
+   "name": "Imported image size caps (file bytes, side length, pixel count)",
+   "source": "gap:m3a-import",
+   "behavior": "4.1 reads every dropped or picked image whole with FileReader and decodes it with an Image element (editor.js:992-1011, :2692-2707). It sets no limit of its own on file size, image dimensions or pixel count.",
+   "codeRefs": [
+    "editor.js:992-1011",
+    "editor.js:2692-2707"
+   ],
+   "quirks": "Cap rationale: 50,000,000 pixels admits 48 MP phone photos (8000x6000); at 4 bytes per pixel a plain decode holds the bitmap and its image copy (about 400 MB), an EXIF-rotated decode peaks near 600 MB, and the premultiplied draw copy comes later. 16384 per side bounds long strips that stay under the pixel cap. The 100 MiB file cap is checked from the file length before any byte is read.",
+   "portTarget": "Images.Decode reads SKCodec.Info and refuses before allocating: MaxEncodedBytes 100 MiB, MaxDimension 16384 per side, MaxPixels 50,000,000. It throws ImageTooLargeException, which ProjectIO's layer decode catches alongside InvalidDataException: an over-cap layer is dropped and named in ProjectLoad.DroppedLayers, so M4's Open inherits the caps.",
+   "risk": "med",
+   "parityCheck": "ImagesCapsTests: a payload over 100 MiB, a side over 16384 and a pixel count over 50,000,000 are each refused before decode, and images at the caps decode. ImageImporterTests and LedgerScenarioTests: an over-cap file in a batch is reported on the status strip by file name while the other files import as one undo step.",
+   "owner": "Engine.Document",
+   "check": "unit",
+   "disposition": "fix",
+   "divergence": "4.1: imports set no limit on file size, image dimensions or pixel count. v5: an image file over 100 MiB, with a side over 16384 px, or over 50,000,000 pixels is refused before decoding, with a status message naming the file; 48 MP phone photos fit.",
+   "status": "done"
+  },
+  {
+   "id": "canvas-device-pixel-render",
+   "area": "canvas",
+   "name": "View canvas rendered at device pixels",
+   "source": "gap:m3a-view",
+   "behavior": "The view canvas backing store is TW*zoom x TH*zoom CSS pixels (editor.js:339-341) with no devicePixelRatio handling, so above 100% display scale Chromium stretches it onto the device pixels: at 150% and zoom 1 a 585-pixel bitmap covers 877 device pixels (cross-window-dpi-rendering).",
+   "codeRefs": [
+    "editor.js:339-350"
+   ],
+   "quirks": "",
+   "portTarget": "Renderer.RenderView with ViewOptions.DeviceScale set to the monitor's DPI scale; TemplateCanvasHost shows the frame 1:1 in device pixels under per-monitor DPI v2 and re-renders on DPI change. The checker half-tile is round(8 x scale) device px and the grid line is one CSS px wide.",
+   "risk": "low",
+   "parityCheck": "RendererViewTests: the frame is Renderer.ViewSize at DeviceScale 1.25, 1.5 and 2, and at DeviceScale 1 it equals the view goldens. By hand at 125% or 150% display scale: template edges are crisp at zoom 1, and the export stays 585x559.",
+   "owner": "App.Canvas",
+   "check": "manual",
+   "disposition": "fix",
+   "divergence": "4.1: above 100% display scale the view canvas is a CSS-pixel bitmap stretched by Chromium, so the template, checker and grid look soft. v5: the view is rendered at device pixels and stays crisp at every display scale; at 100% it equals 4.1's view, and the export is unchanged.",
+   "status": "open"
+  },
+  {
+   "id": "font-ui-weight-600",
+   "area": "fonts",
+   "name": "UI labels at CSS weight 600 in the vendored variable fonts",
+   "source": "gap:m3a-theme",
+   "behavior": "Chromium instances the Google variable fonts at weight 600 for the header title, the ribbon tabs, the ribbon group labels and the panel headings (styles.css:142, :175, :220, :261).",
+   "codeRefs": [
+    "styles.css:142",
+    "styles.css:175",
+    "styles.css:220",
+    "styles.css:261"
+   ],
+   "quirks": "WPF exposes only the named instances of a variable font file. Space Grotesk lists Light, Regular, Medium and Bold; JetBrains Mono lists Thin through ExtraBold without SemiBold. Inter has a real SemiBold.",
+   "portTarget": "The theme asks for SemiBold; WPF resolves it to the Bold (700) instance of Space Grotesk and JetBrains Mono and to Inter SemiBold. Vendoring static 600 cuts would mean new font files and manifest rows.",
+   "risk": "low",
+   "parityCheck": "ThemeTokenTests.Ui_fonts_resolve_to_the_vendored_files pins the face each family resolves to; the M3b side-by-side sign-off compares the header title, ribbon tabs, group labels and panel headings.",
+   "owner": "App.Shell",
+   "check": "manual",
+   "disposition": "fix",
+   "divergence": "4.1: Chromium instances the Google variable fonts at weight 600 for the header title, ribbon tabs, group labels and panel headings (styles.css:142, :175, :220, :261). v5: WPF exposes only the named instances of the vendored variable files, and Space Grotesk and JetBrains Mono have no 600 instance there, so those labels draw at 700. Inter's 600 is exact.",
+   "status": "open"
+  },
+  {
+   "id": "zoom-pill-limits",
+   "area": "zoom",
+   "name": "Zoom buttons disabled at 25% and 300%",
+   "source": "gap:m3a-view",
+   "behavior": "4.1's zoom buttons stay enabled at 25% and 300%; a click there clamps to a no-op (editor.js:1490-1491; zoom-controls quirks: no disabled state at limits).",
+   "codeRefs": [
+    "editor.js:1490-1491",
+    "styles.css:414-416"
+   ],
+   "quirks": "",
+   "portTarget": "CanvasViewModel.ZoomInCommand and ZoomOutCommand cannot execute at MaxZoom and MinZoom; CanvasView's ZoomButton style draws a disabled button at .btn:disabled's opacity .4. An Execute past a limit still clamps.",
+   "risk": "low",
+   "parityCheck": "CanvasViewModelTests.Each_button_is_disabled_at_its_limit_and_comes_back: each command is disabled at its limit and enabled again one step in, and an Execute at the limit still clamps. CanvasViewTests.The_host_and_the_pill_follow_the_view_model: the zoom-out button is disabled at 25%. M3a smoke S8 (2026-10-14): both buttons measured at 0.40 opacity at their limits from screenshot pixels.",
+   "owner": "App.Canvas",
+   "check": "unit",
+   "disposition": "fix",
+   "divergence": "4.1: the zoom buttons stay enabled at 25% and 300%, and a click there clamps to a no-op (editor.js:1490-1491). v5: each button is disabled at its limit (opacity .4, styles.css:414-416), so no button is dead.",
+   "status": "done"
+  },
+  {
+   "id": "image-decode-exif-orientation",
+   "area": "file-io",
+   "name": "EXIF orientation applied when an image is decoded",
+   "source": "gap:m3a-import",
+   "behavior": "Chromium draws img elements with the EXIF orientation applied (image-orientation: from-image), so 4.1 shows a portrait phone photo upright and addLayer fits it by its displayed size (img.width and img.height, editor.js:503). A 4.1 project stores the original data URL (editor.js:2580), so the photo is upright again on load.",
+   "codeRefs": [
+    "editor.js:500-526",
+    "editor.js:2580"
+   ],
+   "quirks": "A plain SKCodec decode returns the stored pixels, which for most phone photos are sideways.",
+   "portTarget": "Images.Decode applies SKCodec.EncodedOrigin, so the decoded image has its displayed size; import and M4's project open share the path.",
+   "risk": "med",
+   "parityCheck": "ImagesOrientationTests.Exif_orientation_is_applied_like_chromium, 8 orientations. By hand in the M3a smoke checklist: a portrait phone photo imports upright. Narrowed: the M3a smoke S5 (2026-10-14) used a synthetic JPEG (pixels stored sideways, EXIF Orientation=6) in place of a real phone photo; it imported upright and was fit by its upright size.",
+   "owner": "Engine.Document",
+   "check": "unit",
    "disposition": "keep",
    "divergence": "",
    "status": "done"

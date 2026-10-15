@@ -1,0 +1,310 @@
+<!--
+  Shared control styles over Tokens.xaml. Later tasks consume these keys; every value cites styles.css.
+  Not in M3a: hover transitions (styles.css:182, :232, :385; 120/220 ms) and CSS letter-spacing, which
+  WPF has no property for. Both belong to the M3b look sign-off (ledger theme-tokens-shape-motion-type
+  and shell-header stay open until then).
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:conv="clr-namespace:RBX15.App.Converters">
+
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceDictionary Source="Tokens.xaml" />
+  </ResourceDictionary.MergedDictionaries>
+
+  <conv:UpperCaseConverter x:Key="UpperCase" />
+
+  <!-- Keyboard focus ring: outline 2px solid cyan, offset 2px (styles.css:357-367; ledger
+       a11y-focus-rings). WPF draws FocusVisualStyle for keyboard focus only, like :focus-visible. -->
+  <Style x:Key="FocusRing">
+    <Setter Property="Control.Template">
+      <Setter.Value>
+        <ControlTemplate>
+          <Rectangle Margin="-4" Stroke="{StaticResource BrandCyanBrush}" StrokeThickness="2" SnapsToDevicePixels="True" />
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- Thin scrollbars: thumb brand-navy-soft on an ink-950 track, no hover recolor. Electron 41 ignores
+       the ::-webkit-scrollbar rules once scrollbar-color/width are set (styles.css:115; ledger
+       theme-scrollbars: match the effective thin flat look, not the dead gradient).
+       The 8 DIP width and the 1 DIP thumb inset have no 4.1 measurement (ruling 10): new v5 surface;
+       provisional; M3b look sign-off. The colors are exact and tested. -->
+  <Style x:Key="ThinScrollThumb" TargetType="Thumb">
+    <Setter Property="OverridesDefaultStyle" Value="True" />
+    <Setter Property="IsTabStop" Value="False" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Thumb">
+          <Border Margin="1" Background="{StaticResource BrandNavySoftBrush}" CornerRadius="{StaticResource RXsRadius}" />
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style x:Key="ThinScrollPage" TargetType="RepeatButton">
+    <Setter Property="OverridesDefaultStyle" Value="True" />
+    <Setter Property="IsTabStop" Value="False" />
+    <Setter Property="Focusable" Value="False" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="RepeatButton">
+          <Border Background="Transparent" />
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style TargetType="ScrollBar">
+    <Setter Property="OverridesDefaultStyle" Value="True" />
+    <Setter Property="Background" Value="{StaticResource Ink950Brush}" />
+    <Setter Property="Width" Value="8" />
+    <Setter Property="MinWidth" Value="8" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ScrollBar">
+          <Border Background="{TemplateBinding Background}">
+            <Track x:Name="PART_Track" IsDirectionReversed="True">
+              <Track.DecreaseRepeatButton>
+                <RepeatButton Style="{StaticResource ThinScrollPage}" Command="ScrollBar.PageUpCommand" />
+              </Track.DecreaseRepeatButton>
+              <Track.Thumb>
+                <Thumb Style="{StaticResource ThinScrollThumb}" />
+              </Track.Thumb>
+              <Track.IncreaseRepeatButton>
+                <RepeatButton Style="{StaticResource ThinScrollPage}" Command="ScrollBar.PageDownCommand" />
+              </Track.IncreaseRepeatButton>
+            </Track>
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+    <Style.Triggers>
+      <Trigger Property="Orientation" Value="Horizontal">
+        <Setter Property="Width" Value="Auto" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="Height" Value="8" />
+        <Setter Property="MinHeight" Value="8" />
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="ScrollBar">
+              <Border Background="{TemplateBinding Background}">
+                <Track x:Name="PART_Track" IsDirectionReversed="False">
+                  <Track.DecreaseRepeatButton>
+                    <RepeatButton Style="{StaticResource ThinScrollPage}" Command="ScrollBar.PageLeftCommand" />
+                  </Track.DecreaseRepeatButton>
+                  <Track.Thumb>
+                    <Thumb Style="{StaticResource ThinScrollThumb}" />
+                  </Track.Thumb>
+                  <Track.IncreaseRepeatButton>
+                    <RepeatButton Style="{StaticResource ThinScrollPage}" Command="ScrollBar.PageRightCommand" />
+                  </Track.IncreaseRepeatButton>
+                </Track>
+              </Border>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Trigger>
+    </Style.Triggers>
+  </Style>
+
+  <!-- A ScrollViewer whose corner square (shown when both scrollbars are) takes the scrollbar track,
+       ink-950, instead of the system control color (white). The canvas uses it; the parts are the
+       standard ScrollViewer contract (PART_ScrollContentPresenter and the two PART_ scrollbars). -->
+  <Style x:Key="ThemedScrollViewer" TargetType="ScrollViewer">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ScrollViewer">
+          <Grid Background="{TemplateBinding Background}">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="*" />
+              <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <ScrollContentPresenter x:Name="PART_ScrollContentPresenter" Grid.Column="0" Grid.Row="0"
+                                    Margin="{TemplateBinding Padding}" CanContentScroll="{TemplateBinding CanContentScroll}"
+                                    CanHorizontallyScroll="False" CanVerticallyScroll="False"
+                                    Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" />
+            <ScrollBar x:Name="PART_VerticalScrollBar" Grid.Column="1" Grid.Row="0" Orientation="Vertical" Minimum="0"
+                       Maximum="{TemplateBinding ScrollableHeight}" ViewportSize="{TemplateBinding ViewportHeight}"
+                       Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}"
+                       Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}" Cursor="Arrow"
+                       AutomationProperties.AutomationId="VerticalScrollBar" />
+            <ScrollBar x:Name="PART_HorizontalScrollBar" Grid.Column="0" Grid.Row="1" Orientation="Horizontal" Minimum="0"
+                       Maximum="{TemplateBinding ScrollableWidth}" ViewportSize="{TemplateBinding ViewportWidth}"
+                       Value="{Binding HorizontalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}"
+                       Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}" Cursor="Arrow"
+                       AutomationProperties.AutomationId="HorizontalScrollBar" />
+            <Rectangle x:Name="Corner" Grid.Column="1" Grid.Row="1" Fill="{StaticResource Ink950Brush}" />
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- .btn (styles.css:375-388) with .btn-secondary (:398-406) and .btn-primary (:389-397);
+       :disabled is opacity .4 with no shadow (:414-419; ledger cross-undo-disabled-style). -->
+  <Style x:Key="SecondaryButton" TargetType="ButtonBase">
+    <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRing}" />
+    <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{StaticResource Fg1Brush}" />
+    <Setter Property="BorderBrush" Value="{StaticResource Border1Brush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="16,8" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Background">
+      <Setter.Value>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+          <GradientStop Offset="0" Color="{StaticResource BrandNavySoftColor}" />
+          <GradientStop Offset="1" Color="{StaticResource BrandNavyColor}" />
+        </LinearGradientBrush>
+      </Setter.Value>
+    </Setter>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ButtonBase">
+          <Border x:Name="Chrome" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{StaticResource RSmRadius}"
+                  Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="False" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource BrandCyanBrush}" />
+              <Setter TargetName="Chrome" Property="Effect">
+                <Setter.Value>
+                  <DropShadowEffect Color="{StaticResource BrandCyanColor}" ShadowDepth="0" BlurRadius="8" Opacity="0.15" />
+                </Setter.Value>
+              </Setter>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter Property="Opacity" Value="0.4" />
+              <Setter Property="Cursor" Value="Arrow" />
+              <Setter TargetName="Chrome" Property="Effect" Value="{x:Null}" />
+              <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource Border1Brush}" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style x:Key="PrimaryButton" TargetType="ButtonBase" BasedOn="{StaticResource SecondaryButton}">
+    <Setter Property="Foreground" Value="{StaticResource Ink950Brush}" />
+    <Setter Property="Background" Value="{StaticResource BrandGradientBrush}" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ButtonBase">
+          <Border x:Name="Chrome" Background="{TemplateBinding Background}" CornerRadius="{StaticResource RSmRadius}"
+                  Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+            <Border.Effect>
+              <DropShadowEffect Color="{StaticResource BrandCyanColor}" Direction="270" ShadowDepth="2" BlurRadius="8" Opacity="0.25" />
+            </Border.Effect>
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="False" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Chrome" Property="RenderTransform">
+                <Setter.Value>
+                  <TranslateTransform Y="-1" />
+                </Setter.Value>
+              </Setter>
+              <Setter TargetName="Chrome" Property="Effect" Value="{StaticResource GlowDuoEffect}" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter Property="Opacity" Value="0.4" />
+              <Setter Property="Cursor" Value="Arrow" />
+              <Setter TargetName="Chrome" Property="RenderTransform" Value="{x:Null}" />
+              <Setter TargetName="Chrome" Property="Effect" Value="{x:Null}" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- .btn-sm (styles.css:407) -->
+  <Style x:Key="SecondaryButtonSm" TargetType="ButtonBase" BasedOn="{StaticResource SecondaryButton}">
+    <Setter Property="Padding" Value="10,5" />
+    <Setter Property="FontSize" Value="11" />
+  </Style>
+  <Style x:Key="PrimaryButtonSm" TargetType="ButtonBase" BasedOn="{StaticResource PrimaryButton}">
+    <Setter Property="Padding" Value="10,5" />
+    <Setter Property="FontSize" Value="11" />
+  </Style>
+
+  <!-- .ribbon-tab (styles.css:171-196): mono 11px 600 uppercase, padding 6px 16px, fg-3; hover fg-2;
+       active cyan on navy-deep with a 2px brand-gradient underline at bottom -1px. -->
+  <Style x:Key="RibbonTab" TargetType="RadioButton">
+    <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRing}" />
+    <Setter Property="FontFamily" Value="{StaticResource FontMono}" />
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{StaticResource Fg3Brush}" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Padding" Value="16,6" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="RadioButton">
+          <Grid>
+            <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+              <TextBlock Text="{Binding Content, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource UpperCase}}" />
+            </Border>
+            <Rectangle x:Name="Underline" Height="2" VerticalAlignment="Bottom" Margin="0,0,0,-1"
+                       Fill="{StaticResource BrandGradientBrush}" Visibility="Collapsed" />
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter Property="Foreground" Value="{StaticResource Fg2Brush}" />
+            </Trigger>
+            <Trigger Property="IsChecked" Value="True">
+              <Setter Property="Foreground" Value="{StaticResource BrandCyanBrush}" />
+              <Setter Property="Background" Value="{StaticResource BrandNavyDeepBrush}" />
+              <Setter TargetName="Underline" Property="Visibility" Value="Visible" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- .ribbon-group (styles.css:200-207): padding 0 10px, 1px right divider border-1; the last group
+       sets BorderThickness 0 (:207). A group is this Border around a DockPanel whose first child is
+       the RibbonGroupLabel TextBlock (docked bottom) and whose second child is the items.
+       Tasks 3 and 4 share it (one definition; the critic's C7). -->
+  <Style x:Key="RibbonGroup" TargetType="Border">
+    <Setter Property="Padding" Value="10,0" />
+    <Setter Property="BorderThickness" Value="0,0,1,0" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Border1Brush}" />
+  </Style>
+
+  <!-- .ribbon-group-label (styles.css:211-221): mono 10px, fg-muted, 600, padding-top 5. Labels write
+       their text upper case (CSS text-transform: uppercase). -->
+  <Style x:Key="RibbonGroupLabel" TargetType="TextBlock">
+    <Setter Property="DockPanel.Dock" Value="Bottom" />
+    <Setter Property="FontFamily" Value="{DynamicResource FontMono}" />
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource FgMutedBrush}" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="Padding" Value="0,5,0,0" />
+  </Style>
+
+  <!-- .panel h3 (styles.css:254-263): mono 11px 600 uppercase fg-3, margin 14px 0 8px (0 on the first). -->
+  <Style x:Key="PanelHeading" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource FontMono}" />
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{StaticResource Fg3Brush}" />
+    <Setter Property="Margin" Value="0,14,0,8" />
+  </Style>
+
+</ResourceDictionary>

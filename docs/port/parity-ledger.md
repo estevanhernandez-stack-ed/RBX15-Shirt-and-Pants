@@ -2,14 +2,14 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**408 rows.** Status: done 81, open 327. Disposition: keep 195, fix 186, drop 26, new 1. Checks: ui-auto 120, unit 110, manual 66, golden 65, none-retired 25, doc 22.
+**413 rows.** Status: done 122, open 291. Disposition: fix 195, keep 191, drop 26, new 1. Checks: ui-auto 120, unit 114, manual 67, golden 65, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
-| open | `drop-panel` | Drop zone panel: click-to-browse and drag-over highlight | ui-auto | keep | low |
-| open | `drop-filetypes` | Image file acceptance and naming | ui-auto | fix | med |
+| done | `drop-panel` | Drop zone panel: click-to-browse and drag-over highlight | ui-auto | keep | low |
+| done | `drop-filetypes` | Image file acceptance and naming | ui-auto | fix | med |
 | open | `packs-resolve-dir` | Packs directory resolution: dev vs packaged | manual | keep | low |
 | open | `packs-load-builtin` | Load built-in pack into asset browser | ui-auto | fix | low |
 | open | `asset-open-folder` | Open folder (webkitdirectory) and image filtering | ui-auto | keep | low |
@@ -36,8 +36,8 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
 | open | `render-zoom-canvas` | Zoom resize and smoothing rule | manual | fix | med |
-| open | `render-checkerboard` | Transparency checkerboard | manual | keep | low |
-| open | `render-grid-overlay` | Region grid overlay | manual | keep | low |
+| done | `render-checkerboard` | Transparency checkerboard | manual | keep | low |
+| done | `render-grid-overlay` | Region grid overlay | manual | keep | low |
 | open | `render-selection-box` | Selection bounding box | manual | fix | med |
 | open | `render-resize-handles` | Corner resize handles | manual | keep | low |
 | open | `render-rotation-handle` | Rotation handle (stem, knob, glyph) | manual | keep | med |
@@ -64,24 +64,26 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `wheel-brush-size` | Wheel with draw tools changes brush size | ui-auto | keep | low |
 | open | `eraser-cursor` | Eraser ring cursor | manual | keep | low |
 | open | `eraser-selection-semantics` | Eraser operates on selection, not on topmost under cursor | ui-auto | fix | low |
-| open | `zoom-controls` | Zoom buttons and label | ui-auto | keep | med |
-| open | `overlay-grid-checkbox` | Grid checkbox (default off) region outlines | manual | keep | low |
+| done | `zoom-controls` | Zoom buttons and label | ui-auto | keep | med |
+| done | `overlay-grid-checkbox` | Grid checkbox (default off) region outlines | manual | fix | low |
 | open | `render-pipeline-canvas-reset` | Render loop characteristics that affect input | manual | keep | low |
-| open | `canvas-zoom-controls` | Zoom controls | ui-auto | fix | med |
+| done | `canvas-zoom-controls` | Zoom controls | ui-auto | fix | med |
 | open | `canvas-select-gestures` | Select tool gestures: move, resize, rotate, wheel | ui-auto | fix | high |
 | open | `select-hidden-layer-still-handled` | Hidden selected layer keeps box and live handles | ui-auto | fix | low |
 | open | `canvas-mouse-button-agnostic` | Right and middle mouse buttons act like left on canvas | ui-auto | fix | low |
 | open | `wheel-sign-only-and-midstroke` | Wheel uses sign only; wheel mid-shape changes live stroke width | ui-auto | fix | low |
-| open | `layers-multi-file-async-order` | Multi-file add: z-order follows decode completion, one undo per file | ui-auto | fix | low |
-| open | `canvas-zoom-clipped-no-pan` | Zoomed canvas is clipped with no scrollbars or pan | ui-auto | fix | med |
+| done | `layers-multi-file-async-order` | Multi-file add: z-order follows decode completion, one undo per file | ui-auto | fix | low |
+| done | `canvas-zoom-clipped-no-pan` | Zoomed canvas is clipped with no scrollbars or pan | ui-auto | fix | med |
+| open | `canvas-device-pixel-render` | View canvas rendered at device pixels | manual | fix | low |
+| done | `zoom-pill-limits` | Zoom buttons disabled at 25% and 300% | unit | fix | low |
 
 ## App.Dialogs
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
-| open | `export-png-guard` | Empty-template confirm before export | manual | keep | low |
+| done | `export-png-guard` | Empty-template confirm before export | manual | keep | low |
 | open | `dialogs-inventory` | All dialogs, prompts, toasts (complete list) | ui-auto | fix | low |
-| open | `io-empty-export-confirm` | Blank-export guard confirm() | ui-auto | keep | low |
+| done | `io-empty-export-confirm` | Blank-export guard confirm() | ui-auto | keep | low |
 | open | `io-alert-inventory` | All user-facing alert() prompts (exact strings) | ui-auto | fix | low |
 | open | `file-input-same-file-reselect` | Drop-zone and Background pickers ignore re-picking the same file | manual | fix | low |
 | open | `diag-console-only-errors` | Image decode/read failures are console-only (silent to user) | manual | fix | low |
@@ -152,24 +154,24 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 |---|---|---|---|---|---|
 | open | `tools-draw-props` | Draw color, size, fill controls | ui-auto | keep | low |
 | open | `draw-brush-controls` | Brush color, size, fill controls and defaults | manual | keep | low |
-| open | `overlay-mask-checkbox` | Mask checkbox (default on) | ui-auto | keep | low |
+| done | `overlay-mask-checkbox` | Mask checkbox (default on) | ui-auto | fix | low |
 | open | `regions-grid-layout-shirt` | Template Regions grid layout (Shirt) | ui-auto | keep | low |
-| open | `regions-grid-layout-pants` | Template Regions grid in Pants mode (labels and keys) | ui-auto | keep | low |
+| done | `regions-grid-layout-pants` | Template Regions grid in Pants mode (labels and keys) | ui-auto | keep | low |
 | open | `regions-button-swatch-paint` | Region button swatch preview (paintRegionButton) | manual | fix | med |
 | open | `regions-click-fit-layer` | Click region button with a layer selected: fit layer into region | unit | fix | low |
 | open | `regions-right-click-clear` | Right-click region button clears its fill | ui-auto | keep | low |
 | open | `regions-hint-text` | Fill Style hint line | manual | keep | low |
 | open | `fillstyle-type-buttons` | Fill type button strip (7 types) | ui-auto | fix | low |
-| open | `fillstyle-color-pickers` | Color 1 and Color 2 pickers | manual | keep | med |
+| open | `fillstyle-color-pickers` | Color 1 and Color 2 pickers | manual | fix | med |
 | open | `fillstyle-angle-scale` | Angle and Scale sliders | ui-auto | keep | low |
-| open | `project-load-image-layer` | Add image (load image as layer) | ui-auto | fix | med |
+| done | `project-load-image-layer` | Add image (load image as layer) | ui-auto | fix | med |
 | open | `home-mode-toggle` | Shirt/Pants mode toggle button | ui-auto | fix | low |
 | open | `home-tool-buttons` | Tool buttons: Select, Draw, Line, Rect, Ellipse, Eraser | ui-auto | keep | low |
 | open | `home-brush-group` | Brush group: color, size, fill | ui-auto | keep | med |
 | open | `home-placement-group` | Placement buttons: Fit Front, F+B, Stretch, Allover, Scatter | ui-auto | fix | low |
-| open | `home-edit-group` | Edit group: Undo, Redo, Clear | ui-auto | keep | med |
+| done | `home-edit-group` | Edit group: Undo, Redo, Clear | ui-auto | keep | med |
 | open | `home-file-group` | File group: Save work, Open, Add image, Download template | manual | fix | med |
-| open | `home-settings-group` | Settings group: Template name, Mask, Grid | ui-auto | keep | low |
+| done | `home-settings-group` | Settings group: Template name, Mask, Grid | ui-auto | keep | low |
 | open | `region-front-highlight-lost` | Front region button loses its purple base highlight once cleared | ui-auto | fix | low |
 | open | `fillstyle-ui-not-synced-from-region` | Fill Style controls are one-way (never read back from regions) | manual | keep | low |
 
@@ -208,11 +210,11 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `ribbon-tab-switch` | Ribbon tab switching | ui-auto | keep | low |
 | open | `mode-toggle-button` | Shirt/Pants toggle button | ui-auto | keep | low |
 | open | `project-startup` | Initial render and startup order | manual | fix | low |
-| open | `shell-window-frame` | Window frame, title, menu, default size | manual | keep | low |
+| open | `shell-window-frame` | Window frame, title, menu, default size | manual | fix | low |
 | open | `shell-layout-skeleton` | Page skeleton and flex layout | manual | fix | low |
 | open | `shell-responsive-breakpoint` | Narrow-window breakpoint | ui-auto | keep | low |
 | open | `shell-header` | Header bar content and styling | manual | keep | med |
-| open | `shell-footer` | Footer line | manual | keep | low |
+| done | `shell-footer` | Footer line | unit | fix | low |
 | open | `theme-tokens-colors` | Color token set (:root) | manual | keep | low |
 | open | `theme-tokens-shape-motion-type` | Radii, shadows, motion, type tokens | manual | keep | med |
 | open | `font-ui-runtime-google` | UI fonts loaded at runtime from Google Fonts | manual | fix | med |
@@ -226,11 +228,12 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `cross-text-select-and-selection` | Text selection, context menu, tooltips | manual | keep | low |
 | open | `cross-window-dpi-rendering` | Pixel scale / DPI behavior | manual | keep | med |
 | open | `shell-window-size` | Initial window 1200x800, centered, resizable | ui-auto | fix | low |
-| open | `shell-window-title` | Window title is a static product name | ui-auto | keep | low |
+| done | `shell-window-title` | Window title is a static product name | ui-auto | keep | low |
 | open | `shell-lifecycle-quit` | Quit on last window closed; macOS activate branch is dead code | ui-auto | fix | low |
 | open | `shell-single-instance` | No single-instance lock | manual | keep | low |
 | open | `shell-external-drop-guard` | Dropping files outside the drop zone/canvas is swallowed, not navigated | ui-auto | keep | low |
 | open | `shell-header-version-hardcoded` | Header version string is hand-typed and drifts from docs | manual | fix | low |
+| open | `font-ui-weight-600` | UI labels at CSS weight 600 in the vendored variable fonts | manual | fix | low |
 
 ## App.Storage
 
@@ -306,27 +309,27 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
-| open | `tpl-active-regions-swap` | Active region reference and mode variable | unit | keep | med |
+| done | `tpl-active-regions-swap` | Active region reference and mode variable | unit | keep | med |
 | done | `state-defaults` | Initial editor state defaults | unit | keep | low |
 | done | `layer-factory` | makeLayer factory defaults | unit | keep | low |
 | open | `layers-model` | Layer data model and defaults | unit | fix | med |
-| open | `layers-add-placement` | Add image layer: auto-fit and placement | unit | fix | med |
+| done | `layers-add-placement` | Add image layer: auto-fit and placement | unit | fix | med |
 | open | `layers-add-drawing` | Add drawing layer from stroke canvas | unit | keep | med |
-| open | `layers-duplicate` | Duplicate layer | unit | keep | low |
-| open | `layers-remove` | Delete layer and reselection | unit | fix | low |
-| open | `layers-visibility` | Toggle layer visibility | unit | fix | low |
-| open | `layers-move-updown` | Up/Down buttons | unit | fix | low |
+| done | `layers-duplicate` | Duplicate layer | unit | keep | low |
+| done | `layers-remove` | Delete layer and reselection | unit | fix | low |
+| done | `layers-visibility` | Toggle layer visibility | unit | fix | low |
+| done | `layers-move-updown` | Up/Down buttons | unit | fix | low |
 | open | `props-flip` | Flip H / Flip V | unit | fix | low |
 | open | `btn-fit-front` | Fit Front | unit | fix | med |
 | open | `btn-fit-fb` | F+B (front and back) | unit | fix | med |
 | open | `btn-stretch` | Stretch (across torso) | unit | fix | low |
 | open | `btn-allover` | Allover (tile on every region) | unit | keep | low |
 | open | `btn-scatter` | Scatter (randomized placement) | unit | keep | low |
-| open | `btn-clear` | Clear (remove all layers) | unit | keep | low |
+| done | `btn-clear` | Clear (remove all layers) | unit | keep | low |
 | done | `layer-sharing-img` | Cloned layers share the Image object | unit | keep | med |
-| open | `regions-state-model` | Region fill state model (regionColors map and currentFill) | unit | keep | low |
-| open | `regions-click-paint` | Click region button with no layer selected: paint with current fill | unit | fix | low |
-| open | `mode-switch-effects` | What switchMode changes and resets | unit | keep | med |
+| done | `regions-state-model` | Region fill state model (regionColors map and currentFill) | unit | keep | low |
+| done | `regions-click-paint` | Click region button with no layer selected: paint with current fill | unit | fix | low |
+| done | `mode-switch-effects` | What switchMode changes and resets | unit | keep | med |
 | open | `preset-meme` | Meme Tee preset | unit | fix | low |
 | open | `preset-allover` | Allover preset | unit | fix | low |
 | open | `preset-sleeve-pop` | Sleeve Pop preset | unit | fix | low |
@@ -335,11 +338,13 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `preset-fullbleed` | Fullbleed preset | unit | keep | low |
 | open | `asset-click-add` | Click thumbnail: add as layer (fit 85% in front region) | unit | keep | low |
 | open | `asset-rightclick-full` | Right-click thumbnail: add at full template size | unit | keep | low |
-| open | `claim-mode-per-mode-region-data` | CHANGELOG 3.0 'per-mode region data' is false: a mode switch wipes fills | unit | keep | low |
+| done | `claim-mode-per-mode-region-data` | CHANGELOG 3.0 'per-mode region data' is false: a mode switch wipes fills | unit | keep | low |
 | open | `props-scale-clamp-inconsistency` | Scale bounds differ by input path | unit | fix | low |
 | open | `layers-default-name-offbyone` | Default layer names are off by one from the id | unit | fix | low |
 | open | `bg-color-pick-clears-image` | Picking a background color or swatch silently discards the background image | unit | keep | low |
 | open | `image-decode-format-matrix` | Decoder matrix: SVG, BMP, GIF, WebP accepted by extension or MIME | unit | drop | med |
+| done | `image-decode-caps` | Imported image size caps (file bytes, side length, pixel count) | unit | fix | med |
+| done | `image-decode-exif-orientation` | EXIF orientation applied when an image is decoded | unit | keep | med |
 
 ## Engine.Export
 
@@ -348,7 +353,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `export-composite-order` | Export composition: size, order, what is and isn't included | golden | keep | high |
 | done | `export-filename-save` | Export file naming and save dialog | unit | keep | med |
 | done | `export-png-encoding` | PNG encoding and alpha handling | golden | keep | med |
-| open | `canvas-export-pipeline` | Export (Download template) pipeline | golden | keep | high |
+| done | `canvas-export-pipeline` | Export (Download template) pipeline | golden | keep | high |
 | done | `shell-gpu-canvas-edge-drift` | Export PNG edges depend on Electron GPU canvas vs software canvas | golden | fix | med |
 | done | `io-export-filename` | Filename derivation and sanitization | unit | keep | low |
 
@@ -372,27 +377,27 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `region-connected-groups` | connectedRegionGroups (gradient spans connected faces) | unit | keep | med |
 | done | `paint-regions-grouping` | paintRegions: group by fill then by connectivity | golden | keep | med |
 | done | `project-and-export-dependency-note` | Export depends on fill/paintRegions code paths (spike-proven) | golden | keep | med |
-| open | `fillstyle-live-edit-rule` | Live-edit rule: edits retarget every region sharing the current fill key | unit | keep | med |
+| done | `fillstyle-live-edit-rule` | Live-edit rule: edits retarget every region sharing the current fill key | unit | keep | med |
 | done | `tests-lib-fills` | fills.test.js: 14 tests that define the fill contract | unit | keep | med |
 
 ## Engine.History
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
-| open | `history-snapshot-coupling` | State captured by undo snapshots | unit | keep | med |
+| done | `history-snapshot-coupling` | State captured by undo snapshots | unit | keep | med |
 | done | `undo-model` | Undo/redo snapshot model and stack discipline | unit | keep | low |
 | open | `undo-snapshot-contents` | What a snapshot captures (and what it does not) | unit | keep | high |
-| open | `undo-restore` | restoreState: order of operations, async image loading | unit | fix | high |
+| done | `undo-restore` | restoreState: order of operations, async image loading | unit | fix | high |
 | open | `undo-coverage-gaps` | Which actions create undo steps | unit | fix | med |
 | done | `history-snapshot-memory` | Snapshot size and 30-step cap behavior | unit | fix | low |
-| open | `restore-mode-switch-side-effects` | Mode switch interplay with undo | unit | keep | med |
-| open | `fillstyle-undo-snapshot-timing` | Undo snapshot timing for fill edits | unit | fix | med |
-| open | `mode-switch-undo-and-callers` | Mode switch undo semantics and other callers | unit | keep | med |
+| done | `restore-mode-switch-side-effects` | Mode switch interplay with undo | unit | keep | med |
+| done | `fillstyle-undo-snapshot-timing` | Undo snapshot timing for fill edits | unit | fix | med |
+| done | `mode-switch-undo-and-callers` | Mode switch undo semantics and other callers | unit | keep | med |
 | open | `file-undo-snapshot-scope` | What undo/redo snapshots and which actions push | unit | fix | med |
 | done | `tests-lib-history` | history.test.js: 7 tests for undo/redo stack semantics | unit | keep | low |
 | open | `undo-empty-steps` | Actions that push an undo step but change nothing | unit | fix | med |
 | done | `undo-rapid-restore-race` | Rapid undo/redo during async restore corrupts history | unit | fix | med |
-| open | `undo-restore-ui-side-effects` | Undo/redo drops selection and doesn't touch Fill Style UI | unit | fix | low |
+| done | `undo-restore-ui-side-effects` | Undo/redo drops selection and doesn't touch Fill Style UI | unit | fix | low |
 | done | `history-redo-stack-uncapped` | Redo stack unbounded; redo can push undo past 30 | unit | fix | low |
 
 ## Engine.ProjectIO
@@ -428,7 +433,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `render-order-summary` | Full render order (contract) | golden | keep | high |
 | open | `draw-preview-composite` | Live preview compositing | golden | keep | low |
 | open | `fillstyle-live-render-hook` | Region fills rendered in canvas with connected-component gradient extent | golden | keep | med |
-| open | `canvas-element-render` | Main canvas, zoom and compositing order | golden | keep | high |
+| done | `canvas-element-render` | Main canvas, zoom and compositing order | golden | keep | high |
 
 ## Engine.Template
 

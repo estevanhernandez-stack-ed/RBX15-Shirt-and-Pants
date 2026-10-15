@@ -59,6 +59,48 @@ public class FillStyleTests
         Assert.Same(other, DocumentOps.RegionFill(session.Document, "torso_up"));
     }
 
+    [Fact] // fillstyle-live-edit-rule parityCheck, the whole sequence, compared as the exact RegionFills list
+    public void The_row_scenario_runs_to_the_end_with_exact_region_fills()
+    {
+        var (session, fill, regions) = Make();
+        fill.SetTypeCommand.Execute("linear");
+        Paint(regions, "torso_front", "torso_back");                    // A, B: linear 45
+        // C is another style. Painting it through the controls would move A and B with them
+        // (identity is by value), so it is applied to the document directly, as in the first test.
+        var c = Fill.Solid("#123456");
+        session.Apply(d => DocumentOps.PaintRegion(d, "torso_up", c));
+        var linear45 = new Fill("linear", "#17d4fa", "#f22f89", 45, 16);
+
+        fill.Angle = 90;                                                // A, B -> 90, C unchanged
+        var linear90 = linear45 with { Angle = 90 };
+        Assert.Equal([("torso_front", linear90), ("torso_back", linear90), ("torso_up", c)], session.Document.RegionFills);
+
+        Paint(regions, "rarm_front");                                   // D at angle 90
+        fill.Angle = 10;                                                // A, B, D -> 10, C unchanged
+        var linear10 = linear45 with { Angle = 10 };
+        Assert.Equal([("torso_front", linear10), ("torso_back", linear10), ("torso_up", c), ("rarm_front", linear10)],
+                     session.Document.RegionFills);
+
+        fill.SetTypeCommand.Execute("radial");                          // change type: all three follow, C still not
+        var radial10 = linear10 with { Type = "radial" };
+        Assert.Equal([("torso_front", radial10), ("torso_back", radial10), ("torso_up", c), ("rarm_front", radial10)],
+                     session.Document.RegionFills);
+
+        Paint(regions, "larm_front");                                   // E joins the group, then the type changes after
+        fill.SetTypeCommand.Execute("stripes");
+        var stripes10 = linear10 with { Type = "stripes" };
+        Assert.Equal(
+            [("torso_front", stripes10), ("torso_back", stripes10), ("torso_up", c), ("rarm_front", stripes10), ("larm_front", stripes10)],
+            session.Document.RegionFills);
+
+        fill.SetTypeCommand.Execute("solid");                           // C's own style is a different key: not merged
+        var solid10 = linear10 with { Type = "solid" };
+        Assert.Equal(
+            [("torso_front", solid10), ("torso_back", solid10), ("torso_up", c), ("rarm_front", solid10), ("larm_front", solid10)],
+            session.Document.RegionFills);
+        Assert.NotEqual(c.Key, solid10.Key);
+    }
+
     [Fact] // undo-empty-steps: re-clicking the active type changes nothing, so no step
     public void Reclicking_the_active_type_records_nothing()
     {

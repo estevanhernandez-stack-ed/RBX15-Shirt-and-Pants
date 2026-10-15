@@ -1732,7 +1732,7 @@
    "quirks": "Same file selected twice in the picker in a row does not re-fire change. dragleave fires when moving over child elements causing highlight flicker.",
    "portTarget": "Border AllowDrop=True with DragEnter/Leave/Drop handling DataFormats.FileDrop; Click opens OpenFileDialog Multiselect.",
    "risk": "low",
-   "parityCheck": "Drop 3 PNGs on zone: 3 layers centered on torso_front each (stacked identically).",
+   "parityCheck": "Drop 3 PNGs through the drop zone's DropFiles path: 3 layers, each placed by LayerOps.Place at the default 0.85 fit centered on torso_front, stacked identically, as one undo step (LayersViewModelTests.A_zone_drop_uses_the_default_placement, ImportServiceTests, LayerOpsTests); a canvas drop centers each on the drop point (ImportServiceTests.A_canvas_drop_centers_every_layer_on_the_drop_point). Narrowed in M3a: the drop zone's own UI (drag-over highlight, Tab and Enter) is the held panel-drop-zone row, checked by hand in the smoke checklist.",
    "owner": "App.AssetLibrary",
    "check": "ui-auto",
    "disposition": "keep",

@@ -22,28 +22,41 @@ static class GoldenRule
 
     public static void AssertMatches(string name, string goldenPath, Document document, string heatmapPath)
     {
-        using var golden = ImageDiff.Load(goldenPath);
         using var rendered = Renderer.Export(document);
-        using var candidate = ImageDiff.FromImage(rendered);
-
         bool rgbShift = document.Layers.Any(l => l.RShift != 0 || l.GShift != 0 || l.BShift != 0);
-        DiffResult result;
-        if (rgbShift)
+        if (!rgbShift)
         {
-            using var g = OpaqueOnly(golden, golden);
-            using var c = OpaqueOnly(candidate, golden);
-            result = ImageDiff.Compare(g, c);
-            int worstAlpha = 0;
-            for (int y = 0; y < golden.Height; y++)
-                for (int x = 0; x < golden.Width; x++)
-                    worstAlpha = Math.Max(worstAlpha, Math.Abs(golden.GetPixel(x, y).Alpha - candidate.GetPixel(x, y).Alpha));
-            Assert.True(worstAlpha <= 1, $"{name}: RGB shift must never change alpha (worst alpha delta {worstAlpha})");
-        }
-        else
-        {
-            result = ImageDiff.Compare(golden, candidate);
+            AssertImageMatches(name, goldenPath, rendered, heatmapPath);
+            return;
         }
 
+        using var golden = ImageDiff.Load(goldenPath);
+        using var candidate = ImageDiff.FromImage(rendered);
+        using var g = OpaqueOnly(golden, golden);
+        using var c = OpaqueOnly(candidate, golden);
+        var result = ImageDiff.Compare(g, c);
+        int worstAlpha = 0;
+        for (int y = 0; y < golden.Height; y++)
+            for (int x = 0; x < golden.Width; x++)
+                worstAlpha = Math.Max(worstAlpha, Math.Abs(golden.GetPixel(x, y).Alpha - candidate.GetPixel(x, y).Alpha));
+        Assert.True(worstAlpha <= 1, $"{name}: RGB shift must never change alpha (worst alpha delta {worstAlpha})");
+        Report(name, golden, candidate, result, heatmapPath);
+    }
+
+    /// <summary>
+    /// The unchanged rule on any rendered image: zero interior differences and edge deltas of 3 or less
+    /// (<see cref="ImageDiff.Compare"/> with its default tolerance). The export gates reach it through
+    /// <see cref="AssertMatches"/>; the view gate (GoldenViewTests) calls it with Renderer.RenderViewImage.
+    /// </summary>
+    public static void AssertImageMatches(string name, string goldenPath, SKImage rendered, string heatmapPath)
+    {
+        using var golden = ImageDiff.Load(goldenPath);
+        using var candidate = ImageDiff.FromImage(rendered);
+        Report(name, golden, candidate, ImageDiff.Compare(golden, candidate), heatmapPath);
+    }
+
+    static void Report(string name, SKBitmap golden, SKBitmap candidate, DiffResult result, string heatmapPath)
+    {
         if (!result.Pass)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(heatmapPath)!);

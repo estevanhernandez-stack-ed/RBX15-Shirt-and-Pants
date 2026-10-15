@@ -40,6 +40,7 @@ public sealed class FillStyleViewModel : ObservableObject
     readonly EditorSession _session;
     readonly IColorPicker _picker;
     Fill _current = DefaultFill;
+    IDisposable? _sliderDrag;
 
     public FillStyleViewModel(EditorSession session, IColorPicker picker)
     {
@@ -116,7 +117,7 @@ public sealed class FillStyleViewModel : ObservableObject
     /// Opens one slider gesture (Thumb.DragStarted). Dispose it on DragCompleted: the drag records one
     /// undo step iff it changed a region (editor.js:1570-1579, :1611). Wraps <see cref="EditorSession.BeginGesture"/>.
     /// </summary>
-    public IDisposable BeginSliderDrag() => _session.BeginGesture();
+    public IDisposable BeginSliderDrag() => _sliderDrag = _session.BeginGesture();
 
     /// <summary>
     /// One color pick as one gesture. applyFillEdit's rule picks the regions once, at the open: those
@@ -126,6 +127,10 @@ public sealed class FillStyleViewModel : ObservableObject
     /// </summary>
     void Pick(bool second, object? anchor)
     {
+        // A slider gesture still open (its release never arrived) is stale: close it, as the next slider
+        // press would, so the pick is its own undo step. Its owner's later Dispose does nothing.
+        _sliderDrag?.Dispose();
+        _sliderDrag = null;
         var seed = _current;
         var start = _session.Document;
         string seedHex = second ? seed.C2! : seed.C1!;

@@ -1,8 +1,11 @@
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Automation;
+using System.Windows.Automation.Peers;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using RBX15.App.Controls;
 using RBX15.App.ViewModels;
 
 namespace RBX15.App.Views;
@@ -22,12 +25,17 @@ public partial class ColorPickerPopup : Window
     /// <summary>The gap between the anchor button and the popup, in DIPs.</summary>
     public const double AnchorGap = 4;
 
+    double _spokenHue;
+    string _spokenSv;
+
     public ColorPickerPopup(ColorPickerViewModel viewModel)
     {
         ViewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         DataContext = viewModel;
         InitializeComponent();
         Title = "Color picker";
+        _spokenHue = viewModel.Hue;
+        _spokenSv = SaturationValueSurface.Describe(viewModel.Saturation, viewModel.Value);
         viewModel.PropertyChanged += OnViewModelChanged;
         PlaceMarkers();
         PreviewKeyDown += (_, e) => e.Handled = HandleKey(e.Key == Key.System ? e.SystemKey : e.Key, Keyboard.Modifiers, Keyboard.FocusedElement);
@@ -138,8 +146,21 @@ public partial class ColorPickerPopup : Window
 
     void OnViewModelChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(ColorPickerViewModel.Hue) or nameof(ColorPickerViewModel.Saturation) or nameof(ColorPickerViewModel.Value))
-            PlaceMarkers();
+        if (e.PropertyName is not (nameof(ColorPickerViewModel.Hue) or nameof(ColorPickerViewModel.Saturation) or nameof(ColorPickerViewModel.Value)))
+            return;
+        PlaceMarkers();
+        // Tell UI Automation clients that are listening (a screen reader) about the new value.
+        if (e.PropertyName == nameof(ColorPickerViewModel.Hue))
+        {
+            UIElementAutomationPeer.FromElement(HueStrip)?.RaisePropertyChangedEvent(RangeValuePatternIdentifiers.ValueProperty, _spokenHue, ViewModel.Hue);
+            _spokenHue = ViewModel.Hue;
+        }
+        else
+        {
+            string now = SaturationValueSurface.Describe(ViewModel.Saturation, ViewModel.Value);
+            UIElementAutomationPeer.FromElement(SvSquare)?.RaisePropertyChangedEvent(ValuePatternIdentifiers.ValueProperty, _spokenSv, now);
+            _spokenSv = now;
+        }
     }
 
     void PlaceMarkers()

@@ -320,6 +320,25 @@ public class FillStyleTests
         Assert.Equal(steps, session.UndoCount);
     }
 
+    [Fact] // a slider gesture whose release never arrived is closed first, so the pick is its own step
+    public void A_pick_closes_a_stale_slider_gesture_first()
+    {
+        var picker = new FakeColorPicker().Answer("#00ff00", "#00ff00");
+        var (session, fill, regions) = Make(picker);
+        Paint(regions, "torso_front");
+        var stale = fill.BeginSliderDrag();
+        fill.Angle = 90;                                       // inside the stale drag
+
+        fill.PickColor1Command.Execute(null);
+
+        Assert.False(session.InGesture);
+        Assert.Equal(3, session.UndoCount);                   // paint, the drag, the pick
+        stale.Dispose();                                      // the view's late release does nothing
+        Assert.Equal(3, session.UndoCount);
+        session.Undo();
+        Assert.Equal(("#17d4fa", 90.0), (DocumentOps.RegionFill(session.Document, "torso_front")!.C1, DocumentOps.RegionFill(session.Document, "torso_front")!.Angle!.Value));
+    }
+
     [Fact] // the swatch button reaches the picker as its anchor
     public void The_command_parameter_is_the_pickers_anchor()
     {

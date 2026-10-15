@@ -2,6 +2,8 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Automation;
+using System.Windows.Automation.Peers;
+using System.Windows.Automation.Provider;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -33,7 +35,7 @@ public class ColorPickerPopupTests
         foreach (var (element, name) in new (FrameworkElement, string)[]
                  {
                      (p, "Color picker"), (p.SvSquare, "Saturation and brightness"), (p.HueStrip, "Hue"),
-                     (p.HexBox, "Hex color"), (p.OldSwatch, "Original color"), (p.NewSwatch, "New color"),
+                     (p.HexBox, "Hex color"),
                      (p.OkButton, "OK"), (p.CancelButton, "Cancel"),
                  })
             Assert.Equal(name, AutomationProperties.GetName(element));
@@ -43,6 +45,38 @@ public class ColorPickerPopupTests
         Assert.Equal(vm.Hex, ColorMath.ToHex(now.R, now.G, now.B));
         Assert.NotEqual("#17d4fa", vm.Hex);
         Assert.Equal(vm.Hex, p.HexBox.Text);
+        Assert.Equal("New color; original color #17d4fa", AutomationProperties.GetHelpText(p.HexBox));   // the swatches' meaning
+    });
+
+    [Fact] // spec §4: the square and the strip reach UI Automation with a name and a value
+    public void The_square_and_the_strip_have_peers_with_readable_values() => StaThread.Run(() =>
+    {
+        var vm = new ColorPickerViewModel("#ff0000");
+        var p = new ColorPickerPopup(vm);
+        StaThread.Pump();
+        var sv = UIElementAutomationPeer.CreatePeerForElement(p.SvSquare);
+        var hue = UIElementAutomationPeer.CreatePeerForElement(p.HueStrip);
+        Assert.NotNull(sv);
+        Assert.NotNull(hue);
+        Assert.Equal("Saturation and brightness", sv.GetName());
+        Assert.Equal("Hue", hue.GetName());
+        Assert.Equal(AutomationControlType.Slider, hue.GetAutomationControlType());
+
+        var value = Assert.IsAssignableFrom<IValueProvider>(sv.GetPattern(PatternInterface.Value));
+        Assert.Equal("saturation 100%, brightness 100%", value.Value);
+        Assert.True(value.IsReadOnly);
+        vm.SetSvFromPoint(0.5, 0.25);
+        Assert.Equal("saturation 50%, brightness 75%", value.Value);
+        Assert.Throws<ElementNotEnabledException>(() => value.SetValue("x"));
+
+        var range = Assert.IsAssignableFrom<IRangeValueProvider>(hue.GetPattern(PatternInterface.RangeValue));
+        Assert.Equal((0.0, 360.0, 1.0, 10.0, 0.0, false), (range.Minimum, range.Maximum, range.SmallChange, range.LargeChange, range.Value, range.IsReadOnly));
+        range.SetValue(120);                                       // settable: the color follows
+        Assert.Equal(120, vm.Hue);
+        Assert.Equal(120, range.Value);
+        Assert.Throws<ArgumentOutOfRangeException>(() => range.SetValue(361));
+        vm.Cancel();
+        Assert.True(range.IsReadOnly);
     });
 
     [Fact]
@@ -129,9 +163,16 @@ public class ColorPickerPopupTests
     [InlineData(0x0020, unchecked((int)0x0201FFFE), true)]
     [InlineData(0x0020, unchecked((int)0x0204FFFE), true)]
     [InlineData(0x0020, unchecked((int)0x0207FFFE), true)]
+    [InlineData(0x0020, unchecked((int)0x020BFFFE), true)]    // X buttons
     [InlineData(0x0020, unchecked((int)0x0200FFFE), false)]   // a mouse move over it
     [InlineData(0x0020, unchecked((int)0x02010001), false)]   // HTCLIENT: an enabled window's ordinary click
     [InlineData(0x0201, unchecked((int)0x0201FFFE), false)]
-    public void A_click_on_the_disabled_owner_is_recognized(int msg, int lParam, bool expected) =>
+    public void A_click_on_the_disabled_owner_commits_and_is_handled_so_windows_does_not_beep(int msg, int lParam, bool expected)
+    {
         Assert.Equal(expected, ThemedColorPicker.IsClickOnDisabledOwner(msg, new IntPtr(lParam)));
+        int commits = 0;
+        bool handled = false;
+        var result = ThemedColorPicker.OwnerHook(msg, new IntPtr(lParam), ref handled, () => commits++);
+        Assert.Equal((expected ? 1 : 0, expected, new IntPtr(expected ? 1 : 0)), (commits, handled, result));
+    }
 }

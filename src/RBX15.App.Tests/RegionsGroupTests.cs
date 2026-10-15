@@ -65,8 +65,23 @@ public class RegionsGroupTests
 
         Assert.Equal(14, names.Distinct().Count());
         Assert.Equal("Torso Front", Tile(regions, "torso_front").AutomationName);
-        Assert.Equal("Right Arm Back", Tile(regions, "rarm_back").AutomationName);
-        Assert.Equal("Left Arm Front", Tile(regions, "larm_front").AutomationName);
+        Assert.Equal("Torso Top", Tile(regions, "torso_up").AutomationName);
+        Assert.Equal("Torso Bot (Bottom)", Tile(regions, "torso_down").AutomationName);
+        Assert.Equal("Torso R (Right)", Tile(regions, "torso_right").AutomationName);
+        Assert.Equal("Right Arm Bk (Back)", Tile(regions, "rarm_back").AutomationName);
+        Assert.Equal("Left Arm Fr (Front)", Tile(regions, "larm_front").AutomationName);
+    }
+
+    [Fact] // WCAG 2.5.3: the accessible name contains the visible label, in both modes
+    public void Every_automation_name_contains_the_visible_label()
+    {
+        var (session, regions, _) = Make();
+        foreach (var _ in new[] { 0, 1 })
+        {
+            var tiles = regions.Body.Concat(regions.Limb1).Concat(regions.Limb2).ToArray();
+            Assert.All(tiles, t => Assert.Contains(t.Label, t.AutomationName, StringComparison.OrdinalIgnoreCase));
+            session.Apply(DocumentOps.ToggleMode);
+        }
     }
 
     [Fact] // only the body front carries the resting tint (editor.js:1627)

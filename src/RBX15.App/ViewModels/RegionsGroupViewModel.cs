@@ -79,11 +79,21 @@ public sealed class RegionsGroupViewModel : ObservableObject
         Limb2 = Tiles(BodyPart.LeftLimb, LimbLabel2, Limb2Faces);
     }
 
+    /// <summary>
+    /// Contains the tile's visible text (WCAG 2.5.3 label in name): "Torso Front", "Torso Bot (Bottom)",
+    /// "Right Arm Bk (Back)". The spelled-out face follows only when the tile abbreviates it.
+    /// </summary>
+    static string AutomationName(string partLabel, Face face, string label)
+    {
+        string full = face switch { Face.Up => "Top", Face.Down => "Bottom", _ => face.ToString() };
+        return label == full ? $"{partLabel} {label}" : $"{partLabel} {label} ({full})";
+    }
+
     RegionTileViewModel[] Tiles(BodyPart part, string partLabel, (Face Face, string Label)[] faces) =>
         faces.Select(f => new RegionTileViewModel(
             _session, _fillStyle, _mode,
             Template.Slot(_mode, part, f.Face).Name,
             f.Label,
-            $"{partLabel} {f.Face}",
+            AutomationName(partLabel, f.Face, f.Label),
             isFront: part == BodyPart.Body && f.Face == Face.Front)).ToArray();
 }

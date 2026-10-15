@@ -6,10 +6,12 @@ using RBX15.App.ViewModels;
 namespace RBX15.App.Views;
 
 /// <summary>
-/// The Fill Style group. A slider thumb drag is one undo gesture: DragStarted opens it and
-/// DragCompleted (which also fires when capture is lost) closes it (interfaces sheet §1,
-/// <c>fillstyle-undo-snapshot-timing</c>). Keyboard and track-click changes arrive outside a drag, so
-/// each is its own step.
+/// The Fill Style group. A slider press is one undo gesture, as in 4.1, which snapshots once on pointerdown
+/// whether the press lands on the thumb or the track (editor.js:1611). The press (PreviewMouseLeftButtonDown)
+/// opens it; the first of LostMouseCapture, DragCompleted or the button release closes it. WPF's Thumb
+/// releases capture before it raises DragCompleted, so LostMouseCapture normally comes first; the others
+/// are backstops. Holding the track fires LargeChange repeatedly, and all of it is the one step (spec §5:
+/// no history flood). Keyboard changes arrive outside a press, so each is its own step.
 /// </summary>
 public partial class FillStyleGroup : UserControl
 {
@@ -17,18 +19,21 @@ public partial class FillStyleGroup : UserControl
 
     public FillStyleGroup() => InitializeComponent();
 
-    void OnSliderDragStarted(object sender, DragStartedEventArgs e)
-    {
-        _drag?.Dispose();
-        _drag = (DataContext as FillStyleViewModel)?.BeginSliderDrag();
-    }
+    void OnSliderPressed(object sender, MouseButtonEventArgs e) => Begin();
+
+    // Thumb.DragStarted follows the press that already opened the gesture; opening a second one is skipped.
+    void OnSliderDragStarted(object sender, DragStartedEventArgs e) => Begin();
+
+    void OnSliderReleased(object sender, MouseButtonEventArgs e) => EndDrag();
 
     void OnSliderDragCompleted(object sender, DragCompletedEventArgs e) => EndDrag();
 
-    // A thumb that loses mouse capture without a DragCompleted (focus stolen mid-drag, a dialog, Alt+Tab)
+    // A press that loses mouse capture without a DragCompleted (focus stolen mid-drag, a dialog, Alt+Tab)
     // would leave the gesture open and fold every later edit into one undo step. After a normal drag
-    // this fires once more with nothing open, which is a no-op.
+    // this fires first, and the later events find nothing open.
     void OnSliderLostMouseCapture(object sender, MouseEventArgs e) => EndDrag();
+
+    void Begin() => _drag ??= (DataContext as FillStyleViewModel)?.BeginSliderDrag();
 
     void EndDrag()
     {

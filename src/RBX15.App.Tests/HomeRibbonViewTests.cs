@@ -169,4 +169,58 @@ public class HomeRibbonViewTests
         LoseCapture();
         Assert.Equal(4, session.UndoCount);
     });
+
+    [Fact] // fix round 1: press-and-hold on the track repeats LargeChange; the press is one gesture, one step
+    public void A_pressed_slider_is_one_step_however_many_changes_it_repeats() => StaThread.Run(() =>
+    {
+        var session = new EditorSession();
+        var home = Home(session);
+        var view = Load(home);
+        Tile(home.Regions, "torso_front").PaintCommand.Execute(null);
+        var angle = Descendants<Slider>(view).Single(s => AutomationProperties.GetName(s) == "Angle");
+
+        angle.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, Environment.TickCount, MouseButton.Left) { RoutedEvent = UIElement.PreviewMouseLeftButtonDownEvent });
+        for (int a = 50; a < 80; a++) home.FillStyle.Angle = a;   // the repeat button's LargeChange ticks
+        Assert.Equal(1, session.UndoCount);
+        angle.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice, Environment.TickCount) { RoutedEvent = Mouse.LostMouseCaptureEvent });
+        Assert.Equal(2, session.UndoCount);
+
+        // a thumb press also raises DragStarted: no second gesture, and the release closes it exactly once
+        angle.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, Environment.TickCount, MouseButton.Left) { RoutedEvent = UIElement.PreviewMouseLeftButtonDownEvent });
+        angle.RaiseEvent(new DragStartedEventArgs(0, 0) { RoutedEvent = Thumb.DragStartedEvent });
+        home.FillStyle.Angle = 100;
+        home.FillStyle.Angle = 110;
+        angle.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice, Environment.TickCount) { RoutedEvent = Mouse.LostMouseCaptureEvent });
+        angle.RaiseEvent(new DragCompletedEventArgs(0, 0, false) { RoutedEvent = Thumb.DragCompletedEvent });
+        Assert.Equal(3, session.UndoCount);
+        Assert.False(session.InGesture);
+
+        // keyboard arrows: outside any press, one step each
+        home.FillStyle.Angle = 111;
+        home.FillStyle.Angle = 112;
+        Assert.Equal(5, session.UndoCount);
+    });
+
+    [Fact] // fix round 1: Ctrl+click on the selected type deselects; the list snaps back to the active type
+    public void Deselecting_the_fill_type_keeps_the_type_and_the_selection() => StaThread.Run(() =>
+    {
+        var home = Home(new EditorSession());
+        var view = Load(home);
+        var list = Descendants<ListBox>(view).Single(l => AutomationProperties.GetName(l) == "Fill type");
+
+        list.SelectedItem = null;
+        StaThread.Pump();
+
+        Assert.Equal("solid", home.FillStyle.Type);
+        Assert.Equal("solid", list.SelectedValue);
+    });
+
+    [Fact] // fix round 1: hide-until-it-works, no shortcut text before M4 ships the keyboard
+    public void Undo_and_redo_tooltips_name_no_shortcut_yet() => StaThread.Run(() =>
+    {
+        var view = Load(Home(new EditorSession()));
+        var buttons = Descendants<Button>(view);
+        Assert.Equal("Undo", buttons.Single(b => (string)b.Content == "Undo").ToolTip);
+        Assert.Equal("Redo", buttons.Single(b => (string)b.Content == "Redo").ToolTip);
+    });
 }

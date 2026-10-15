@@ -36,12 +36,14 @@
                     <Slider x:Name="AngleSlider" Width="44" Minimum="0" Maximum="360" SmallChange="1" LargeChange="1"
                             TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Angle}" VerticalAlignment="Center"
                             ToolTip="Angle" AutomationProperties.Name="Angle" Margin="0,0,4,0"
+                            PreviewMouseLeftButtonDown="OnSliderPressed" PreviewMouseLeftButtonUp="OnSliderReleased"
                             Thumb.DragStarted="OnSliderDragStarted" Thumb.DragCompleted="OnSliderDragCompleted"
                             LostMouseCapture="OnSliderLostMouseCapture" />
                     <TextBlock Style="{StaticResource MiniLabel}" Text="Scale" Margin="0,0,4,0" />
                     <Slider x:Name="ScaleSlider" Width="44" Minimum="4" Maximum="48" SmallChange="1" LargeChange="1"
                             TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Scale}" VerticalAlignment="Center"
                             ToolTip="Pattern scale" AutomationProperties.Name="Pattern scale"
+                            PreviewMouseLeftButtonDown="OnSliderPressed" PreviewMouseLeftButtonUp="OnSliderReleased"
                             Thumb.DragStarted="OnSliderDragStarted" Thumb.DragCompleted="OnSliderDragCompleted"
                             LostMouseCapture="OnSliderLostMouseCapture" />
                 </StackPanel>

@@ -68,6 +68,8 @@ public sealed class FillStyleViewModel : ObservableObject
         get => _current.Type;
         set
         {
+            // A ListBox deselect (Ctrl+click, Ctrl+Space) pushes null. Keep the type and snap the list back.
+            if (value is null) { OnPropertyChanged(nameof(Type)); return; }
             if (!Types.Any(t => t.Type == value)) throw new ArgumentException($"Unknown fill type '{value}'.", nameof(value));
             Edit(_current with { Type = value });
         }

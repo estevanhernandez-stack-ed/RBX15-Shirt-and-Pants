@@ -31,4 +31,7 @@ public sealed partial class MainViewModel(EditorSession session) : ObservableObj
         var parts = version.Split('.');
         return parts.Length >= 2 ? parts[0] + "." + parts[1] : version;
     }
+
+    /// <summary>The canvas area (Task 2). Required, so the composition root cannot forget it.</summary>
+    public required CanvasViewModel Canvas { get; init; }
 }

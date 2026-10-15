@@ -112,7 +112,9 @@
       </Border>
 
       <!-- .canvas-area (styles.css:441-450): ink-950. Task 2 fills it with the canvas host and zoom pill. -->
-      <Grid x:Name="CanvasArea" Grid.Column="1" Background="{StaticResource Ink950Brush}" ClipToBounds="True" />
+      <Grid x:Name="CanvasArea" Grid.Column="1" Background="{StaticResource Ink950Brush}" ClipToBounds="True">
+        <views:CanvasView DataContext="{Binding Canvas}" />
+      </Grid>
     </Grid>
 
     <!-- The status strip row (spec §4, new in v5): Task 4 puts the strip here, above the footer. -->

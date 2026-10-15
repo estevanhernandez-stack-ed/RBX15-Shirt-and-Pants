@@ -1,0 +1,83 @@
+<UserControl x:Class="RBX15.App.Views.CanvasView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:RBX15.App.Controls"
+             UseLayoutRounding="True"
+             Background="{DynamicResource Ink950Brush}">
+    <!-- .canvas-area (styles.css:441-450): ink-950, the frame centered. v5 adds scrollbars when the
+         frame is larger than the area (canvas-zoom-clipped-no-pan); 4.1 clipped it (overflow: hidden). -->
+    <UserControl.Resources>
+        <!-- .zoom-controls background rgba(15,31,49,.85) (styles.css:546). No backdrop blur in WPF (canvas-zoom-controls). -->
+        <SolidColorBrush x:Key="ZoomPillBackground" Color="#D90F1F31" />
+        <!-- .zoom-controls button (styles.css:552-559): no background or border, fg-1, 16px, padding 2px 6px.
+             Disabled at a limit with .btn:disabled's opacity .4 (styles.css:414-416). -->
+        <Style x:Key="ZoomButton" TargetType="Button">
+            <Setter Property="Foreground" Value="{DynamicResource Fg1Brush}" />
+            <Setter Property="FontFamily" Value="{DynamicResource FontBody}" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="Padding" Value="6,2" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{DynamicResource FocusRing}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="Transparent" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4" />
+                                <Setter Property="Cursor" Value="Arrow" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <ScrollViewer x:Name="Scroller"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto"
+                      Focusable="False">
+            <!-- .canvas-wrap (styles.css:451-456): 1px border-1 and shadow-2 (0 4px 16px rgba(0,0,0,.45)).
+                 The shadow sits on a sibling, so no effect ever re-rasterizes the frame. -->
+            <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Border Background="{DynamicResource Ink950Brush}">
+                    <Border.Effect>
+                        <DropShadowEffect Color="Black" Opacity="0.45" BlurRadius="16" ShadowDepth="4" Direction="270" />
+                    </Border.Effect>
+                </Border>
+                <Border BorderBrush="{DynamicResource Border1Brush}" BorderThickness="1">
+                    <controls:TemplateCanvasHost x:Name="Host"
+                                                 Document="{Binding Document}"
+                                                 Zoom="{Binding Zoom}"
+                                                 DropCommand="{Binding DropCommand}"
+                                                 ClickCommand="{Binding ClickCommand}" />
+                </Border>
+            </Grid>
+        </ScrollViewer>
+
+        <!-- .zoom-controls (editor.html:332-336, styles.css:537-564): bottom 12, right 12, pill, padding 4px 8px,
+             gap 8px, 1px border-1; "-" and "+" around a mono 11px fg-3 label at least 36px wide, centered. -->
+        <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,12,12"
+                Background="{StaticResource ZoomPillBackground}"
+                BorderBrush="{DynamicResource Border1Brush}" BorderThickness="1"
+                CornerRadius="999" Padding="8,4">
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="ZoomOutButton" Style="{StaticResource ZoomButton}" Content="-"
+                        Command="{Binding ZoomOutCommand}"
+                        AutomationProperties.Name="Zoom out" ToolTip="Zoom out" />
+                <TextBlock x:Name="ZoomLabel" Text="{Binding ZoomLabel}" Margin="8,0"
+                           MinWidth="36" TextAlignment="Center" VerticalAlignment="Center"
+                           FontFamily="{DynamicResource FontMono}" FontSize="11"
+                           Foreground="{DynamicResource Fg3Brush}"
+                           AutomationProperties.Name="Zoom level" />
+                <Button x:Name="ZoomInButton" Style="{StaticResource ZoomButton}" Content="+"
+                        Command="{Binding ZoomInCommand}"
+                        AutomationProperties.Name="Zoom in" ToolTip="Zoom in" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

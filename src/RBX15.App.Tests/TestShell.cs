@@ -14,9 +14,11 @@ internal static class TestShell
 #pragma warning restore CS0028
     {
         ArgumentNullException.ThrowIfNull(session);
+        var canvas = new CanvasViewModel(session);
         // M3a: construction lines above this line.
         return new MainViewModel(session)
         {
+            Canvas = canvas,
             // M3a: required members above this line.
         };
     }

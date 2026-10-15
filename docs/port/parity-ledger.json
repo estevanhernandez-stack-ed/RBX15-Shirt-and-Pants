@@ -4871,7 +4871,7 @@
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "fix",
-   "divergence": "4.1: Electron's default Windows caption, light or dark by the system setting. v5: the native caption is themed through DWM (immersive dark mode, brand-navy-deep caption, ink-100 caption text, brand-navy-soft border) with the system frame, caption buttons and snap layouts kept, per Este's call (2026-10-14); MainWindow, the themed dialog and the color picker all take it.",
+   "divergence": "4.1: Electron's default Windows caption, light or dark by the system setting. v5: the native caption is themed through DWM (immersive dark mode, brand-navy-deep caption, ink-100 caption text, brand-navy-soft border) with the system frame, caption buttons and snap layouts kept, per Este's call (2026-10-14); MainWindow and the themed dialog take it (the borderless color picker has no caption).",
    "status": "open"
   },
   {
@@ -4953,7 +4953,7 @@
    "risk": "low",
    "parityCheck": "ShellTests: FooterText is 'Developed at 626Labs', the uppercase converter renders 'DEVELOPED AT 626LABS', the main window's footer shows it at 10px fg-muted (#5e6b7f), centered, and editor.html's 4.1 footer is unchanged. Letter-spacing has no WPF property and is tracked with the header's look sign-off (shell-header).",
    "owner": "App.Shell",
-   "check": "manual",
+   "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: the footer reads 'Developed at 626 Labs LLC' (editor.html:343). v5: it reads 'Developed at 626Labs', shown uppercase as 'DEVELOPED AT 626LABS', per Este's call (2026-10-14).",
    "status": "done"

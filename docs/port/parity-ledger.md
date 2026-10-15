@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**413 rows.** Status: done 117, open 296. Disposition: fix 195, keep 191, drop 26, new 1. Checks: ui-auto 120, unit 113, manual 68, golden 65, none-retired 25, doc 22.
+**413 rows.** Status: done 117, open 296. Disposition: fix 195, keep 191, drop 26, new 1. Checks: ui-auto 120, unit 114, manual 67, golden 65, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -214,7 +214,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `shell-layout-skeleton` | Page skeleton and flex layout | manual | fix | low |
 | open | `shell-responsive-breakpoint` | Narrow-window breakpoint | ui-auto | keep | low |
 | open | `shell-header` | Header bar content and styling | manual | keep | med |
-| done | `shell-footer` | Footer line | manual | fix | low |
+| done | `shell-footer` | Footer line | unit | fix | low |
 | open | `theme-tokens-colors` | Color token set (:root) | manual | keep | low |
 | open | `theme-tokens-shape-motion-type` | Radii, shadows, motion, type tokens | manual | keep | med |
 | open | `font-ui-runtime-google` | UI fonts loaded at runtime from Google Fonts | manual | fix | med |

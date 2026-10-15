@@ -1,0 +1,31 @@
+<UserControl x:Class="RBX15.App.Views.FileGroup"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- The Home tab's File group (editor.html:85-97; ledger home-file-group). DataContext:
+         FileGroupViewModel. M3a shows Add image and Download template; Save work and Open (M4) stay
+         hidden until they work. .ribbon-group-items.vert: column, stretch, gap 4 (styles.css:207-208);
+         each row is a flex row with gap 3 (editor.html:87, :92); .btn-sm is padding 5px 10px, 11px (styles.css:407). -->
+    <Border Style="{DynamicResource RibbonGroup}">
+        <DockPanel>
+            <TextBlock DockPanel.Dock="Bottom" Text="FILE" Style="{DynamicResource RibbonGroupLabel}" />
+            <StackPanel VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                    <Button Content="Add image"
+                            ToolTip="Add an image file as a layer."
+                            Command="{Binding AddImageCommand}"
+                            Padding="10,5"
+                            FontSize="11"
+                            Style="{DynamicResource SecondaryButton}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="Download template"
+                            ToolTip="Export the finished 585x559 PNG. Ready to upload to Roblox."
+                            Command="{Binding DownloadTemplateCommand}"
+                            Padding="10,5"
+                            FontSize="11"
+                            Style="{DynamicResource PrimaryButton}" />
+                </StackPanel>
+            </StackPanel>
+        </DockPanel>
+    </Border>
+</UserControl>

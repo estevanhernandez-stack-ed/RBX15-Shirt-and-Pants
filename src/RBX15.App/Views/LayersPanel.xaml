@@ -1,0 +1,214 @@
+<UserControl x:Class="RBX15.App.Views.LayersPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:RBX15.App.ViewModels">
+    <!-- The basic layers panel (editor.html:317-318; editor.js:671-744; styles.css:287-319; ledger
+         layers-list, layers-list-render). DataContext: LayersViewModel. Top row = highest z. Arrow keys
+         move the selection; Tab walks each row's buttons. No drag reorder in M3a, so the heading drops
+         4.1's "(drag to reorder)" hint until it works. -->
+    <UserControl.Resources>
+        <!-- Row action buttons: 4.1's inline styles, editor.js:703, :709, :715 (flex:1; padding 3px 0;
+             font-size 10px; radius 3px; weight 600). -->
+        <Style x:Key="RowActionButton" TargetType="Button">
+            <Setter Property="Padding" Value="0,3" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontFamily" Value="{DynamicResource FontBody}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{DynamicResource FocusRing}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="3"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!-- Dupe: rgba(23,212,250,.1) on #17d4fa (editor.js:703) -->
+        <Style x:Key="DupeButton" TargetType="Button" BasedOn="{StaticResource RowActionButton}">
+            <Setter Property="Background" Value="#1A17D4FA" />
+            <Setter Property="BorderBrush" Value="#17D4FA" />
+            <Setter Property="Foreground" Value="#17D4FA" />
+        </Style>
+        <!-- Hide/Show: rgba(255,255,255,.04), border rgba(255,255,255,.14), text #c4cdda or #5e6b7f (editor.js:709) -->
+        <Style x:Key="VisibilityButton" TargetType="Button" BasedOn="{StaticResource RowActionButton}">
+            <Setter Property="Background" Value="#0AFFFFFF" />
+            <Setter Property="BorderBrush" Value="#24FFFFFF" />
+            <Setter Property="Foreground" Value="#C4CDDA" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Visible}" Value="False">
+                    <Setter Property="Foreground" Value="#5E6B7F" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <!-- Del: rgba(255,84,114,.1) on #ff5472 (editor.js:715) -->
+        <Style x:Key="DeleteButton" TargetType="Button" BasedOn="{StaticResource RowActionButton}">
+            <Setter Property="Background" Value="#1AFF5472" />
+            <Setter Property="BorderBrush" Value="#FF5472" />
+            <Setter Property="Foreground" Value="#FF5472" />
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel>
+        <TextBlock Text="Layers" Style="{DynamicResource PanelHeading}" />
+        <!-- .layer-list: column, gap 4px, min-height 20px (styles.css:287). The template has no
+             ScrollViewer, so the left panel scrolls the list and the wheel is never swallowed. -->
+        <ListBox x:Name="LayerList"
+                 ItemsSource="{Binding Rows}"
+                 SelectedItem="{Binding Selected, Mode=TwoWay}"
+                 SelectionMode="Single"
+                 MinHeight="20"
+                 KeyboardNavigation.TabNavigation="Continue"
+                 AutomationProperties.Name="Layers, top layer first">
+            <ListBox.Template>
+                <ControlTemplate TargetType="ListBox">
+                    <ItemsPresenter />
+                </ControlTemplate>
+            </ListBox.Template>
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="AutomationProperties.Name" Value="{Binding AutomationName}" />
+                    <Setter Property="Margin" Value="0,0,0,4" />
+                    <Setter Property="FocusVisualStyle" Value="{DynamicResource FocusRing}" />
+                    <Setter Property="Foreground" Value="{DynamicResource Fg2Brush}" />
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListBoxItem">
+                                <!-- .layer-item: padding 6, min-height 56, radius r-sm 6, 1px transparent
+                                     border, navy-soft to navy gradient (styles.css:289-302) -->
+                                <Border x:Name="Row"
+                                        Padding="6"
+                                        MinHeight="56"
+                                        CornerRadius="6"
+                                        BorderThickness="1"
+                                        BorderBrush="Transparent"
+                                        Cursor="Hand">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                            <GradientStop Color="#223A54" Offset="0" />
+                                            <GradientStop Color="#192E44" Offset="1" />
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <ContentPresenter />
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <!-- :hover: border-accent rgba(23,212,250,.45) (styles.css:304) -->
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Row" Property="BorderBrush" Value="#7317D4FA" />
+                                    </Trigger>
+                                    <!-- .selected: cyan border, rgba(23,212,250,.15) to rgba(242,47,137,.08),
+                                         glow-duo (styles.css:305-309; the duo glow is drawn as its cyan half) -->
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter TargetName="Row" Property="BorderBrush" Value="#17D4FA" />
+                                        <Setter TargetName="Row" Property="Background">
+                                            <Setter.Value>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                    <GradientStop Color="#2617D4FA" Offset="0" />
+                                                    <GradientStop Color="#14F22F89" Offset="1" />
+                                                </LinearGradientBrush>
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Setter TargetName="Row" Property="Effect">
+                                            <Setter.Value>
+                                                <DropShadowEffect Color="#17D4FA" BlurRadius="24" ShadowDepth="0" Opacity="0.25" />
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ListBox.ItemContainerStyle>
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:LayerRowViewModel}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="48" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <!-- 48x48, object-fit contain, #000, radius 4 (editor.js:685) -->
+                        <Border Width="48" Height="48" CornerRadius="4" Background="#000000" VerticalAlignment="Center">
+                            <Image Source="{Binding Thumbnail}" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" />
+                        </Border>
+                        <!-- column, gap 4, padding-left 8, centered (editor.js:688) -->
+                        <StackPanel Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center">
+                            <!-- 12px, weight 600, ellipsis; 40% opacity when hidden (editor.js:693-694) -->
+                            <TextBlock x:Name="NameText"
+                                       Text="{Binding Name}"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       TextTrimming="CharacterEllipsis"
+                                       ToolTip="{Binding Name}" />
+                            <!-- three equal buttons, gap 3 (editor.js:697-715) -->
+                            <Grid Margin="0,4,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="3" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="3" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Button Grid.Column="0"
+                                        Content="Dupe"
+                                        ToolTip="Duplicate layer"
+                                        Command="{Binding DuplicateCommand}"
+                                        Style="{StaticResource DupeButton}"
+                                        AutomationProperties.Name="{Binding Name, StringFormat=Duplicate {0}}" />
+                                <Button Grid.Column="2"
+                                        Content="{Binding VisibilityLabel}"
+                                        ToolTip="{Binding VisibilityToolTip}"
+                                        Command="{Binding ToggleVisibilityCommand}"
+                                        Style="{StaticResource VisibilityButton}"
+                                        AutomationProperties.Name="{Binding VisibilityToolTip}" />
+                                <Button Grid.Column="4"
+                                        Content="Del"
+                                        ToolTip="Delete layer"
+                                        Command="{Binding DeleteCommand}"
+                                        Style="{StaticResource DeleteButton}"
+                                        AutomationProperties.Name="{Binding Name, StringFormat=Delete {0}}" />
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
+                    <DataTemplate.Triggers>
+                        <DataTrigger Binding="{Binding Visible}" Value="False">
+                            <Setter TargetName="NameText" Property="Opacity" Value="0.4" />
+                        </DataTrigger>
+                    </DataTemplate.Triggers>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <!-- Up / Down (editor.js:773-774, titles "Move layer up." / "Move layer down."). 4.1 put them in the
+             Selected layer panel, which is M3b; M3a shows them under the list. .row gap 8 (styles.css:369). -->
+        <Grid Margin="0,4,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="8" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0"
+                    Content="Up"
+                    ToolTip="Move layer up."
+                    Command="{Binding MoveUpCommand}"
+                    Padding="10,5"
+                    FontSize="11"
+                    Style="{DynamicResource SecondaryButton}"
+                    AutomationProperties.Name="Move selected layer up" />
+            <Button Grid.Column="2"
+                    Content="Down"
+                    ToolTip="Move layer down."
+                    Command="{Binding MoveDownCommand}"
+                    Padding="10,5"
+                    FontSize="11"
+                    Style="{DynamicResource SecondaryButton}"
+                    AutomationProperties.Name="Move selected layer down" />
+        </Grid>
+    </StackPanel>
+</UserControl>

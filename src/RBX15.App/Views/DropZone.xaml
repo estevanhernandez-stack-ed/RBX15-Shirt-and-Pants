@@ -1,0 +1,58 @@
+<UserControl x:Class="RBX15.App.Views.DropZone"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- "Drop art here" (editor.html:311-315; ledger panel-drop-zone, drop-panel). DataContext:
+         LayersViewModel. A Button, so it is keyboard-reachable (Enter/Space browse), which 4.1's div was
+         not. Values: styles.css:265-282. The inset glow (box-shadow inset 0 0 20px) and the 220 ms
+         transition are not reproduced; M3b's side-by-side sign-off judges the look. -->
+    <StackPanel>
+        <!-- The panel's first heading: .panel h3:first-child has no top margin (styles.css:263). -->
+        <TextBlock Text="Drop art here" Style="{DynamicResource PanelHeading}" Margin="0,0,0,8" />
+        <Button x:Name="Zone"
+                Command="{Binding BrowseCommand}"
+                AllowDrop="True"
+                Cursor="Hand"
+                Margin="0,0,0,8"
+                FocusVisualStyle="{DynamicResource FocusRing}"
+                AutomationProperties.Name="Drop art here. Drag and drop images, or press to browse."
+                DragEnter="OnDragOver"
+                DragOver="OnDragOver"
+                DragLeave="OnDragLeave"
+                Drop="OnDrop">
+            <Button.Template>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <!-- border: 2px dashed border-2 rgba(255,255,255,.14); radius r-md 10;
+                             background rgba(25,46,68,.5) (styles.css:266-267, :275) -->
+                        <Rectangle x:Name="Box"
+                                   RadiusX="10" RadiusY="10"
+                                   StrokeThickness="2"
+                                   StrokeDashArray="3 3"
+                                   Stroke="#24FFFFFF"
+                                   Fill="#80192E44" />
+                        <!-- padding 24px 12px; 13px; fg-muted #5e6b7f; centered (styles.css:268-271) -->
+                        <TextBlock x:Name="Label"
+                                   Margin="12,24"
+                                   TextAlignment="Center"
+                                   FontSize="13"
+                                   FontFamily="{DynamicResource FontBody}"
+                                   Foreground="#5E6B7F">Drag &amp; drop PNG images<LineBreak />or click to browse.</TextBlock>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <!-- :hover and .dragover: brand-cyan border and text, rgba(23,212,250,.05) (styles.css:277-282) -->
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Box" Property="Stroke" Value="#17D4FA" />
+                            <Setter TargetName="Box" Property="Fill" Value="#0D17D4FA" />
+                            <Setter TargetName="Label" Property="Foreground" Value="#17D4FA" />
+                        </Trigger>
+                        <Trigger Property="Tag" Value="dragover">
+                            <Setter TargetName="Box" Property="Stroke" Value="#17D4FA" />
+                            <Setter TargetName="Box" Property="Fill" Value="#0D17D4FA" />
+                            <Setter TargetName="Label" Property="Foreground" Value="#17D4FA" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Button.Template>
+        </Button>
+    </StackPanel>
+</UserControl>

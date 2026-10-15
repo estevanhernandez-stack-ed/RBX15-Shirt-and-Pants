@@ -1,0 +1,37 @@
+<UserControl x:Class="RBX15.App.Views.StatusStrip"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- The status strip (spec §4, new in v5). DataContext: StatusViewModel. Collapsed when there is
+         no message. New look, built from 4.1 tokens: bg-1 and border-accent (styles.css:51, :65). The
+         12,6 padding, the 12px text and its 12 DIP gap to the button have no 4.1 source: new v5
+         surface; provisional; M3b look sign-off. Dismiss is .btn-sm (padding 5px 10px, 11px, styles.css:407). -->
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    </UserControl.Resources>
+    <Border x:Name="Strip"
+            Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibility}}"
+            Background="{DynamicResource Bg1Brush}"
+            BorderBrush="{DynamicResource BorderAccentBrush}"
+            BorderThickness="0,1,0,0"
+            Padding="12,6">
+        <DockPanel LastChildFill="True">
+            <Button DockPanel.Dock="Right"
+                    Content="Dismiss"
+                    Command="{Binding DismissCommand}"
+                    Padding="10,5"
+                    FontSize="11"
+                    Style="{DynamicResource SecondaryButton}"
+                    AutomationProperties.Name="Dismiss message" />
+            <TextBlock x:Name="MessageText"
+                       Text="{Binding Message, NotifyOnTargetUpdated=True}"
+                       TargetUpdated="OnMessageUpdated"
+                       TextWrapping="Wrap"
+                       VerticalAlignment="Center"
+                       Margin="0,0,12,0"
+                       FontSize="12"
+                       FontFamily="{DynamicResource FontBody}"
+                       Foreground="{DynamicResource Fg2Brush}"
+                       AutomationProperties.LiveSetting="Polite" />
+        </DockPanel>
+    </Border>
+</UserControl>

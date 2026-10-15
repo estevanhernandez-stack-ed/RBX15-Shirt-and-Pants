@@ -1,0 +1,138 @@
+{
+  "tool": "tools/parity-ref/view-ref.js",
+  "electron": "41.1.0",
+  "chrome": "146.0.7680.166",
+  "editorJsBlob": "2790c41e418cd5bfea82cf1ae4d71626a7b54e61",
+  "editorHtmlBlob": "401a5d5f33c4accbb452cb080c9c544a0f79a6ce",
+  "fillsJsBlob": "208d3297cb0920974d034639d754a65e75ae14d4",
+  "appHarnessBlob": "fa7b41a07a2c618d629c83880d8204dab038d82f",
+  "fontsManifestSha256": "ba0dafad93f0830be40f41301e1169c94730ccb8814d7dd0e9f21040f8813c9a",
+  "scenes": [
+    {
+      "name": "view-shirt-z25",
+      "sha256": "28a7a6235a96dc22116d29b0f781b599978b52c91998e4353590cb57e7e98eae",
+      "width": 146,
+      "height": 139,
+      "zoom": 0.25,
+      "mask": true,
+      "grid": false
+    },
+    {
+      "name": "view-shirt-z50",
+      "sha256": "53cde0ee07093e35a7f05d0e9bc0c5c1ecffbe501d14558250d11519b66fdef8",
+      "width": 292,
+      "height": 279,
+      "zoom": 0.5,
+      "mask": true,
+      "grid": false
+    },
+    {
+      "name": "view-shirt-z100",
+      "sha256": "bdc5c70baedc92dc43d53966b76209d2c756aea81dfaf7279d664db73fa9999f",
+      "width": 585,
+      "height": 559,
+      "zoom": 1,
+      "mask": true,
+      "grid": false
+    },
+    {
+      "name": "view-shirt-z150",
+      "sha256": "9780218b6bb87027593bded63d3b947f5b878eeb92f52d7df0b0d00b0d502d28",
+      "width": 877,
+      "height": 838,
+      "zoom": 1.5,
+      "mask": true,
+      "grid": false
+    },
+    {
+      "name": "view-shirt-flat-z300",
+      "sha256": "60af494b817240fc086d2998f61736c4362468d413f7003b63f2c804179b1d92",
+      "width": 1755,
+      "height": 1677,
+      "zoom": 3,
+      "mask": true,
+      "grid": false
+    },
+    {
+      "name": "view-shirt-z25-nomask",
+      "sha256": "b8fadb093df22cab7df2bc1329a78949cbc0db07b8ea9f8cb4f5e5b045279f04",
+      "width": 146,
+      "height": 139,
+      "zoom": 0.25,
+      "mask": false,
+      "grid": false
+    },
+    {
+      "name": "view-shirt-z100-nomask",
+      "sha256": "fac51ea8c5508b135c975d74f43efd09a36b8fe12b3ea5d47a7b18b448209654",
+      "width": 585,
+      "height": 559,
+      "zoom": 1,
+      "mask": false,
+      "grid": false
+    },
+    {
+      "name": "view-shirt-z150-nomask",
+      "sha256": "667d6d0dc846e03b4144392d9a00da5f2fa65315d63c9b7d51a20db892a10463",
+      "width": 877,
+      "height": 838,
+      "zoom": 1.5,
+      "mask": false,
+      "grid": false
+    },
+    {
+      "name": "view-shirt-z50-grid",
+      "sha256": "b87fc6dc7eb4efaf401fbd9801187325e5bab1058ee2ca4c5838cc6eeedbde9f",
+      "width": 292,
+      "height": 279,
+      "zoom": 0.5,
+      "mask": true,
+      "grid": true
+    },
+    {
+      "name": "view-shirt-z100-grid",
+      "sha256": "672ab23ffb2768dc92181e73f05bc6892aeb0b715b30ea152045a0f7e8753cf7",
+      "width": 585,
+      "height": 559,
+      "zoom": 1,
+      "mask": true,
+      "grid": true
+    },
+    {
+      "name": "view-shirt-z150-grid",
+      "sha256": "3ec3e057315889d849a7247b16b5b818609c391f31e5e4097834d303d3578846",
+      "width": 877,
+      "height": 838,
+      "zoom": 1.5,
+      "mask": true,
+      "grid": true
+    },
+    {
+      "name": "view-pants-z100-grid",
+      "sha256": "86b5a91d26b3ca90bbafa74c5bcbfc66c96f8c49aa0e6be5bbb2b410da4bd6a0",
+      "width": 585,
+      "height": 559,
+      "zoom": 1,
+      "mask": true,
+      "grid": true
+    },
+    {
+      "name": "view-pants-flat-z300-grid-nomask",
+      "sha256": "3c8f0f98ddbfbbc711a738a2585398001c804d67c266a4c7dddd6c5a1f17e52f",
+      "width": 1755,
+      "height": 1677,
+      "zoom": 3,
+      "mask": false,
+      "grid": true
+    },
+    {
+      "name": "view-empty-z100",
+      "sha256": "ae7f4332c040612f562d4ba95b62bb3256cf88958a57a32dd984c7ac13b681ff",
+      "width": 585,
+      "height": 559,
+      "zoom": 1,
+      "mask": true,
+      "grid": false
+    }
+  ]
+}

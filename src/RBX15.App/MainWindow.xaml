@@ -86,7 +86,9 @@
         <!-- .ribbon-pane.active (styles.css:197-198): padding 8px 12px, groups in a row that never
              shrink and scroll horizontally (ledger ribbon-overflow-hscroll). Task 3 puts HomeRibbon
              inside; HomeRibbon is the pane, so it brings its own ScrollViewer and its 12,8 margin. -->
-        <ContentControl x:Name="RibbonPane" Focusable="False" />
+        <ContentControl x:Name="RibbonPane" Focusable="False">
+          <views:HomeRibbon DataContext="{Binding Home}" />
+        </ContentControl>
       </DockPanel>
     </Border>
 

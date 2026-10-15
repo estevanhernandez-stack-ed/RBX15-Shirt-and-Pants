@@ -34,4 +34,7 @@ public sealed partial class MainViewModel(EditorSession session) : ObservableObj
 
     /// <summary>The canvas area (Task 2). Required, so the composition root cannot forget it.</summary>
     public required CanvasViewModel Canvas { get; init; }
+
+    /// <summary>The Home tab (Task 3).</summary>
+    public required HomeViewModel Home { get; init; }
 }

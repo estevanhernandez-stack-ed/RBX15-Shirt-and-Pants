@@ -1,0 +1,54 @@
+<UserControl x:Class="RBX15.App.Views.FillStyleGroup"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="HomeStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <!-- Fill Style (editor.html:145-167) -->
+    <Border Style="{StaticResource RibbonGroup}">
+        <DockPanel>
+            <TextBlock Style="{StaticResource RibbonGroupLabel}" Text="FILL STYLE" />
+            <StackPanel VerticalAlignment="Top">
+                <!-- 7 type buttons, 4 columns, 2px gap (editor.html:147-155); the selection is Type -->
+                <ListBox x:Name="Types" ItemsSource="{Binding Types}" SelectedValuePath="Type"
+                         SelectedValue="{Binding Type}" ItemContainerStyle="{StaticResource FillTypeItem}"
+                         AutomationProperties.Name="Fill type" Background="Transparent" BorderThickness="0" Padding="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Columns="4" />
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                </ListBox>
+
+                <!-- Colors, Ang and Scale (editor.html:156-163): 4px gap, 2px top margin -->
+                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                    <Button x:Name="Color1" Style="{StaticResource ColorSwatchButton}" Background="{Binding Color1}"
+                            Command="{Binding PickColor1Command}" ToolTip="Color 1" AutomationProperties.Name="Color 1" Margin="0,0,4,0" />
+                    <Button x:Name="Color2" Style="{StaticResource ColorSwatchButton}" Background="{Binding Color2}"
+                            Command="{Binding PickColor2Command}" ToolTip="Color 2" AutomationProperties.Name="Color 2" Margin="0,0,4,0" />
+                    <TextBlock Style="{StaticResource MiniLabel}" Text="Ang" Margin="0,0,4,0" />
+                    <Slider x:Name="AngleSlider" Width="44" Minimum="0" Maximum="360" SmallChange="1" LargeChange="1"
+                            TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Angle}" VerticalAlignment="Center"
+                            ToolTip="Angle" AutomationProperties.Name="Angle" Margin="0,0,4,0"
+                            Thumb.DragStarted="OnSliderDragStarted" Thumb.DragCompleted="OnSliderDragCompleted"
+                            LostMouseCapture="OnSliderLostMouseCapture" />
+                    <TextBlock Style="{StaticResource MiniLabel}" Text="Scale" Margin="0,0,4,0" />
+                    <Slider x:Name="ScaleSlider" Width="44" Minimum="4" Maximum="48" SmallChange="1" LargeChange="1"
+                            TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Scale}" VerticalAlignment="Center"
+                            ToolTip="Pattern scale" AutomationProperties.Name="Pattern scale"
+                            Thumb.DragStarted="OnSliderDragStarted" Thumb.DragCompleted="OnSliderDragCompleted"
+                            LostMouseCapture="OnSliderLostMouseCapture" />
+                </StackPanel>
+
+                <TextBlock x:Name="Hint" Style="{StaticResource HintText}"
+                           Text="Set a style, then click a region to paint it. Right-click clears." />
+            </StackPanel>
+        </DockPanel>
+    </Border>
+</UserControl>

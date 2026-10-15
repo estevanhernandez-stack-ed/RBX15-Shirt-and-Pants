@@ -1,0 +1,221 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:engine="clr-namespace:RBX15.Engine;assembly=RBX15.Engine">
+    <!--
+      Home tab styles. Token brushes, fonts, radii, SecondaryButton and FocusRing come from Task 1's
+      Themes as DynamicResource. RibbonGroup, RibbonGroupLabel and the UpperCase converter are Task 1's
+      Controls.xaml styles, shared with Task 4's File group; they resolve from the application's
+      resources (StaThread holds the same theme in tests). Literal colors below are 4.1 inline styles
+      that are not :root tokens; each cites its source line.
+    -->
+
+    <!-- #btnModeToggle (editor.html:33; editor.js:1703, :1707): 13px/700, padding 6x18, min-width 80, radius 6, text #050c18, 135deg cyan to magenta; Pants reverses -->
+    <Style x:Key="ModeToggleButton" TargetType="Button">
+        <Setter Property="FontFamily" Value="{DynamicResource FontBody}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{DynamicResource Ink950Brush}" />
+        <Setter Property="MinWidth" Value="80" />
+        <Setter Property="Padding" Value="18,6" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{DynamicResource FocusRing}" />
+        <Setter Property="Background">
+            <Setter.Value>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#17D4FA" Offset="0" />
+                    <GradientStop Color="#F22F89" Offset="1" />
+                </LinearGradientBrush>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Mode}" Value="{x:Static engine:TemplateMode.Pants}">
+                <Setter Property="Background">
+                    <Setter.Value>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#F22F89" Offset="0" />
+                            <GradientStop Color="#17D4FA" Offset="1" />
+                        </LinearGradientBrush>
+                    </Setter.Value>
+                </Setter>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!--
+      .region-btn (styles.css:475-496): padding 4, mono 9px uppercase, navy, 1px border-1, fg-3, radius 4;
+      hover cyan border and text; .filled (declared after :hover, so it wins) magenta border, fg-1 text,
+      background = the swatch (the inline style, editor.js:1558). The body front rests on #2a1040
+      (editor.js:1627) whenever it is unfilled (region-front-highlight-lost fix).
+    -->
+    <Style x:Key="RegionTile" TargetType="Button">
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Margin" Value="1" />
+        <Setter Property="FocusVisualStyle" Value="{DynamicResource FocusRing}" />
+        <Setter Property="AutomationProperties.Name" Value="{Binding AutomationName}" />
+        <Setter Property="Command" Value="{Binding PaintCommand}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="SwatchLayer" CornerRadius="{DynamicResource RXsRadius}" Visibility="Collapsed">
+                            <Border.Background>
+                                <ImageBrush ImageSource="{Binding Swatch}" Stretch="UniformToFill" />
+                            </Border.Background>
+                        </Border>
+                        <Border x:Name="Bd" CornerRadius="{DynamicResource RXsRadius}" BorderThickness="1" Padding="4"
+                                Background="{DynamicResource BrandNavyBrush}" BorderBrush="{DynamicResource Border1Brush}">
+                            <TextBlock x:Name="Text" Text="{Binding Label, Converter={StaticResource UpperCase}}"
+                                       FontFamily="{DynamicResource FontMono}" FontSize="9"
+                                       Foreground="{DynamicResource Fg3Brush}" HorizontalAlignment="Center" />
+                        </Border>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <DataTrigger Binding="{Binding IsFront}" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#2A1040" />
+                        </DataTrigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource BrandCyanBrush}" />
+                            <Setter TargetName="Text" Property="Foreground" Value="{DynamicResource BrandCyanBrush}" />
+                        </Trigger>
+                        <DataTrigger Binding="{Binding IsFilled}" Value="True">
+                            <Setter TargetName="SwatchLayer" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="Bd" Property="Background" Value="Transparent" />
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource BrandMagentaBrush}" />
+                            <Setter TargetName="Text" Property="Foreground" Value="{DynamicResource Fg1Brush}" />
+                        </DataTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+      A tile with its clear gestures. Right-click is 4.1's contextmenu (editor.js:1677); Delete,
+      Shift+F10 and the Menu key reach the same command from the keyboard (spec §4 accessibility).
+    -->
+    <DataTemplate x:Key="RegionTileTemplate">
+        <Button Style="{StaticResource RegionTile}">
+            <Button.InputBindings>
+                <MouseBinding Gesture="RightClick" Command="{Binding ClearCommand}" />
+                <KeyBinding Key="Delete" Command="{Binding ClearCommand}" />
+                <KeyBinding Key="F10" Modifiers="Shift" Command="{Binding ClearCommand}" />
+                <KeyBinding Key="Apps" Command="{Binding ClearCommand}" />
+            </Button.InputBindings>
+        </Button>
+    </DataTemplate>
+
+    <!-- Limb headings (editor.js:1632, :1641): 9px #666 centered -->
+    <Style x:Key="LimbLabel" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="9" />
+        <Setter Property="Foreground" Value="#666666" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+    </Style>
+
+    <!-- .fill-type-btn (styles.css:518-532) at editor.html:148's padding 3x4 and 9px; .active = cyan border, rgba(23,212,250,.12), cyan text -->
+    <Style x:Key="FillTypeItem" TargetType="ListBoxItem">
+        <Setter Property="Margin" Value="1" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{DynamicResource FocusRing}" />
+        <Setter Property="AutomationProperties.Name" Value="{Binding Label}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border x:Name="Bd" CornerRadius="{DynamicResource RXsRadius}" BorderThickness="1" Padding="4,3"
+                            Background="{DynamicResource BrandNavyBrush}" BorderBrush="{DynamicResource Border1Brush}">
+                        <TextBlock x:Name="Text" Text="{Binding Label}" FontFamily="{DynamicResource FontBody}" FontSize="9"
+                                   FontWeight="Medium" Foreground="{DynamicResource Fg2Brush}" HorizontalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource BrandCyanBrush}" />
+                            <Setter TargetName="Text" Property="Foreground" Value="{DynamicResource BrandCyanBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource BrandCyanBrush}" />
+                            <Setter TargetName="Bd" Property="Background" Value="#1F17D4FA" />
+                            <Setter TargetName="Text" Property="Foreground" Value="{DynamicResource BrandCyanBrush}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- #fillColor1/#fillColor2 (editor.html:157-158): 26x22, no border; the face shows the color.
+         The 2 DIP corner has no 4.1 source (the input has border:none and no radius): new v5 surface;
+         provisional; M3b look sign-off. -->
+    <Style x:Key="ColorSwatchButton" TargetType="Button">
+        <Setter Property="Width" Value="26" />
+        <Setter Property="Height" Value="22" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{DynamicResource FocusRing}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="2" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 'Ang' and 'Scale' (editor.html:159, :161): 9px #888 -->
+    <Style x:Key="MiniLabel" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="9" />
+        <Setter Property="Foreground" Value="#888888" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- The fill hint (editor.html:164): 9px #555 -->
+    <Style x:Key="HintText" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="9" />
+        <Setter Property="Foreground" Value="#555555" />
+    </Style>
+
+    <!-- #exportTitle (editor.html:100): #1a1a2e, 1px #333, #e0e0e0, 11px, radius 4, padding 3x8, width 140; the hint text in Chromium's darkGray -->
+    <Style x:Key="TemplateNameBox" TargetType="TextBox">
+        <Setter Property="Width" Value="140" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="Padding" Value="8,3" />
+        <Setter Property="Background" Value="#1A1A2E" />
+        <Setter Property="BorderBrush" Value="#333333" />
+        <Setter Property="Foreground" Value="#E0E0E0" />
+        <Setter Property="CaretBrush" Value="#E0E0E0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="1" CornerRadius="4">
+                        <Grid>
+                            <ScrollViewer x:Name="PART_ContentHost" Padding="{TemplateBinding Padding}" Focusable="False"
+                                          HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden" />
+                            <TextBlock x:Name="Placeholder" Text="{TemplateBinding Tag}" Foreground="#A9A9A9"
+                                       Margin="10,3,8,3" IsHitTestVisible="False" Visibility="Collapsed" />
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Text" Value="">
+                            <Setter TargetName="Placeholder" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Mask and Grid labels (editor.html:102-103): 10px #999 -->
+    <Style x:Key="SettingsCheckBox" TargetType="CheckBox">
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="Foreground" Value="#999999" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="FocusVisualStyle" Value="{DynamicResource FocusRing}" />
+    </Style>
+</ResourceDictionary>

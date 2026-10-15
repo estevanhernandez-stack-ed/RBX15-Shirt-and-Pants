@@ -15,10 +15,13 @@ internal static class Composition
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(owner);
         var canvas = new CanvasViewModel(session);
+        var home = new RBX15.App.ViewModels.HomeViewModel(session, new RBX15.App.Services.Win32ColorPicker(
+            () => owner() is { } w ? new System.Windows.Interop.WindowInteropHelper(w).Handle : IntPtr.Zero));
         // M3a: construction lines above this line.
         return new MainViewModel(session)
         {
             Canvas = canvas,
+            Home = home,
             // M3a: required members above this line.
         };
     }

@@ -19,6 +19,7 @@ internal static class TestShell
         return new MainViewModel(session)
         {
             Canvas = canvas,
+            Home = new RBX15.App.ViewModels.HomeViewModel(session, new RBX15.App.Tests.Fakes.FakeColorPicker()),
             // M3a: required members above this line.
         };
     }

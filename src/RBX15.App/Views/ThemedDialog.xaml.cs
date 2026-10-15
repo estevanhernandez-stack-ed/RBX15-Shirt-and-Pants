@@ -13,6 +13,7 @@ public partial class ThemedDialog : Window
     {
         ArgumentException.ThrowIfNullOrEmpty(message);
         InitializeComponent();
+        Services.CaptionTheme.Apply(this);
         Title = AppInfo.ProductName;
         MessageText.Text = message;
         IsConfirm = confirm;

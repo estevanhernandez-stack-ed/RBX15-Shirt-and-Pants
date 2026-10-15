@@ -21,6 +21,7 @@ public partial class MainWindow : Window
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         DataContext = viewModel;
         InitializeComponent();
+        CaptionTheme.Apply(this);
         ApplyPlacement(PlacementGuard.Resolve(settings.LoadWindowPlacement(), workAreas ?? MonitorWorkAreas.Get(),
                                               ShellLayout.DefaultWidth, ShellLayout.DefaultHeight));
         Viewport.SizeChanged += (_, e) => PanelColumn.Width = new GridLength(ShellLayout.PanelWidthFor(e.NewSize.Width));

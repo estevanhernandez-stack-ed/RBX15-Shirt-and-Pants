@@ -40,13 +40,13 @@ env -u ELECTRON_RUN_AS_NODE ./node_modules/electron/dist/electron.exe tools/pari
   --scenes tools/parity-ref/view-scenes.json --out <dir> [--only name1,name2]
 ```
 
-Each `index.json` records, per golden, its SHA-256, the Electron and Chrome versions, and the git blob hashes of the shipped files that produced it. `app-render.js` also records `editor.html`, `lib/erase.js` and `lib/history.js`, plus the SHA-256 of the font manifest. A run with `--only` merges into the existing index and never drops other goldens' records.
+Each `index.json` records, per golden, its SHA-256, the Electron and Chrome versions, and the git blob hashes of the shipped files that produced it. `app-render.js` also records `editor.html`, `lib/erase.js` and `lib/history.js`, plus the SHA-256 of the font manifest. With `render.js` and `app-render.js`, a run with `--only` merges into the existing index and never drops other goldens' records; `view-ref.js` writes a fresh `index.json`.
 
 ## Scene format
 
 `{ name, mode?, bgColor?, bgOpacity?, bgImage?, regionColors?, layers?: [{ image, x?, y?, scale?, rotation?, flipH?, flipV?, opacity?, visible?, brightness?, contrast?, saturate?, hueRotate?, rShift?, gShift?, bShift? }], actions? }`
 
-- Image paths are repo-relative. Defaults match `makeLayer` (`editor.js:134-142`) and the editor's initial state. The output is always the export composition, so the mask is always applied.
+- Image paths are repo-relative. Defaults match `makeLayer` (`editor.js:134-142`) and the editor's initial state. For `render.js` and `app-render.js` the output is always the export composition, so the mask is always applied; a view scene may be unmasked (`view.mask`).
 - `actions` (v2, `app-render.js` only) run in order after the base fields:
   - `{ op: "shape", tool: "line"|"rect"|"ellipse", from: [x,y], to: [x,y], color: "#rrggbb", width, fill }` sends mousedown, one mousemove and mouseup through the real canvas handlers.
   - `{ op: "erase", layer, points: [[x,y], ...], size }` selects base layer `layer` (0-based), switches to the eraser and drags through `points`. At least two points are required.

@@ -23,8 +23,11 @@ public sealed partial class MainViewModel(EditorSession session) : ObservableObj
     /// </summary>
     public string HeaderByline => "ItsjustEste | v" + MajorMinor(AppInfo.Version);
 
-    /// <summary>The footer, verbatim (editor.html:343; ledger shell-footer). The view upper-cases it (styles.css:686).</summary>
-    public string FooterText => "Developed at 626 Labs LLC";
+    /// <summary>
+    /// The footer (ledger shell-footer, fix): 4.1's "Developed at 626 Labs LLC" (editor.html:343) reads
+    /// "Developed at 626Labs" in v5 (Este, 2026-10-14). The view upper-cases it (styles.css:686).
+    /// </summary>
+    public string FooterText => "Developed at 626Labs";
 
     static string MajorMinor(string version)
     {

@@ -30,8 +30,9 @@ public class ShellTests
         Assert.Contains("<title>RBX15 Classic Shirt and Pants Maker</title>", File.ReadAllText(Path.Combine(Root, "editor.html")));
     }
 
-    [Fact] // shell-header, shell-footer: editor.html:16-17, :343 verbatim; the byline's version is major.minor
-    public void Header_and_footer_text_match_4_1()
+    [Fact] // shell-header: editor.html:16-17 verbatim, the byline's version is major.minor; shell-footer (fix): 4.1's
+           // editor.html:343 is unchanged, and v5 reads "Developed at 626Labs" (Este, 2026-10-14)
+    public void Header_and_footer_text_match_4_1_and_the_footer_credit()
     {
         var vm = TestShell.Main(new EditorSession());
         var html = File.ReadAllText(Path.Combine(Root, "editor.html"));
@@ -42,7 +43,7 @@ public class ShellTests
         Assert.Equal(AppInfo.ProductName, vm.Title);
         Assert.Equal("RBX15 Classic Shirt & Pants Maker", vm.HeaderTitle);
         Assert.Equal("ItsjustEste | v5.0", vm.HeaderByline);
-        Assert.Equal("Developed at 626 Labs LLC", vm.FooterText);
+        Assert.Equal("Developed at 626Labs", vm.FooterText);
     }
 
     [Fact] // text-transform: uppercase (styles.css:153, :686)
@@ -50,7 +51,7 @@ public class ShellTests
     {
         var c = new UpperCaseConverter();
         Assert.Equal("ITSJUSTESTE | V5.0", c.Convert("ItsjustEste | v5.0", typeof(string), null, CultureInfo.InvariantCulture));
-        Assert.Equal("DEVELOPED AT 626 LABS LLC", c.Convert("Developed at 626 Labs LLC", typeof(string), null, CultureInfo.InvariantCulture));
+        Assert.Equal("DEVELOPED AT 626LABS", c.Convert("Developed at 626Labs", typeof(string), null, CultureInfo.InvariantCulture));
         Assert.Null(c.Convert(null, typeof(string), null, CultureInfo.InvariantCulture));
         Assert.Throws<NotSupportedException>(() => c.ConvertBack("X", typeof(string), null, CultureInfo.InvariantCulture));
     }
@@ -85,6 +86,9 @@ public class ShellTests
                 Header = Text("HeaderTitle"),
                 Byline = Text("HeaderByline"),
                 Footer = Text("FooterText"),
+                FooterLook = ((TextBlock)w.FindName("FooterText")) is var f
+                    ? (f.FontSize, ((System.Windows.Media.SolidColorBrush)f.Foreground).Color.ToString(), f.HorizontalAlignment)
+                    : default,
                 Tabs = tabs.Children.OfType<RadioButton>().Select(r => ((string)r.Content, r.IsChecked)).ToArray(),
                 Panel = ((ColumnDefinition)w.FindName("PanelColumn")).Width.Value,
                 Regions = new[] { "RibbonPane", "LeftPanelContent", "CanvasArea" }.All(n => w.FindName(n) is not null),
@@ -97,7 +101,8 @@ public class ShellTests
         Assert.Equal((640.0, 480.0), facts.Min);
         Assert.Equal("RBX15 Classic Shirt & Pants Maker", facts.Header);
         Assert.Equal("ITSJUSTESTE | V5.0", facts.Byline);
-        Assert.Equal("DEVELOPED AT 626 LABS LLC", facts.Footer);
+        Assert.Equal("DEVELOPED AT 626LABS", facts.Footer);
+        Assert.Equal((10.0, "#FF5E6B7F", HorizontalAlignment.Center), facts.FooterLook);   // styles.css:678-689: 10px fg-muted, centered
         Assert.Equal([("Home", (bool?)true)], facts.Tabs);
         Assert.Equal(280, facts.Panel);
         Assert.True(facts.Regions);

@@ -30,6 +30,9 @@ public sealed class StatusViewModel : ObservableObject, IStatus
     public void Show(string message)
     {
         ArgumentException.ThrowIfNullOrEmpty(message);
+        // The strip's live region announces on a change; the same text twice would not raise one, so a
+        // repeat clears first and the second show is announced again.
+        if (_message == message) Message = null;
         Message = message;
     }
 

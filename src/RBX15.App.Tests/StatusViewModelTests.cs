@@ -43,4 +43,18 @@ public class StatusViewModelTests
         Assert.Throws<ArgumentException>(() => s.Show(""));
         Assert.Throws<ArgumentNullException>(() => s.Show(null!));
     }
+
+    [Fact] // the live region only announces on a change, so the same text shown twice must be seen as a change
+    public void Showing_the_same_message_again_raises_a_change()
+    {
+        var s = new StatusViewModel();
+        s.Show("Saved.");
+        var raised = new List<string?>();
+        s.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+        s.Show("Saved.");
+        Assert.Equal("Saved.", s.Message);
+        Assert.True(s.IsVisible);
+        Assert.Contains("Message", raised);
+        Assert.Equal("Saved.", s.Message);
+    }
 }

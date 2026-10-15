@@ -263,4 +263,29 @@ public class FillStyleTests
         Assert.Equal(hex, Win32ColorPicker.FromColorRef(colorRef));
         Assert.Equal(hex, Win32ColorPicker.FromColorRef(colorRef | 0xFF000000u));
     }
+
+    [Fact] // a press whose release never arrived leaves a stale gesture; the next press closes it first
+    public void A_stale_slider_gesture_is_closed_when_the_next_press_begins() => StaThread.Run(() =>
+    {
+        var (session, fill, regions) = Make();
+        Paint(regions, "torso_front");
+        bool down = true;
+        var group = new Views.FillStyleGroup(() => down) { DataContext = fill };
+
+        group.Begin(freshPress: true);
+        fill.Angle = 90;
+        Assert.Equal(1, session.UndoCount);              // the paint; the drag is still open
+        down = false;                                    // released without any closing event
+
+        group.Begin(freshPress: false);                  // DragStarted-style begin with the button up: stale, closed
+        Assert.Equal(2, session.UndoCount);
+        fill.Angle = 120;
+        Assert.Equal(2, session.UndoCount);              // the new gesture is open
+        down = true;
+        group.Begin(freshPress: true);                   // a fresh press closes whatever is open
+        Assert.Equal(3, session.UndoCount);
+        group.Begin(freshPress: false);                  // same press, button down: left alone
+        fill.Angle = 150;
+        Assert.Equal(3, session.UndoCount);
+    });
 }

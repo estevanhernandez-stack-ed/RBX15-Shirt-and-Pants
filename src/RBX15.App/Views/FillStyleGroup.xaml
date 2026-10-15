@@ -29,9 +29,9 @@
                 <!-- Colors, Ang and Scale (editor.html:156-163): 4px gap, 2px top margin -->
                 <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
                     <Button x:Name="Color1" Style="{StaticResource ColorSwatchButton}" Background="{Binding Color1}"
-                            Command="{Binding PickColor1Command}" ToolTip="Color 1" AutomationProperties.Name="Color 1" Margin="0,0,4,0" />
+                            Command="{Binding PickColor1Command}" CommandParameter="{Binding RelativeSource={RelativeSource Self}}" ToolTip="Color 1" AutomationProperties.Name="Color 1" Margin="0,0,4,0" />
                     <Button x:Name="Color2" Style="{StaticResource ColorSwatchButton}" Background="{Binding Color2}"
-                            Command="{Binding PickColor2Command}" ToolTip="Color 2" AutomationProperties.Name="Color 2" Margin="0,0,4,0" />
+                            Command="{Binding PickColor2Command}" CommandParameter="{Binding RelativeSource={RelativeSource Self}}" ToolTip="Color 2" AutomationProperties.Name="Color 2" Margin="0,0,4,0" />
                     <TextBlock Style="{StaticResource MiniLabel}" Text="Ang" Margin="0,0,4,0" />
                     <Slider x:Name="AngleSlider" Width="44" Minimum="0" Maximum="360" SmallChange="1" LargeChange="1"
                             TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Angle}" VerticalAlignment="Center"

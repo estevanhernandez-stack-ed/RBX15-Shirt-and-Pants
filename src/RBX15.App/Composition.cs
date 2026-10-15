@@ -1,5 +1,4 @@
 using System.Windows;
-using System.Windows.Interop;
 using RBX15.App.Services;
 using RBX15.App.ViewModels;
 using RBX15.Engine;
@@ -9,20 +8,19 @@ namespace RBX15.App;
 /// <summary>
 /// Builds the view-models over one <see cref="EditorSession"/>. Each task that adds a required member
 /// to MainViewModel adds its construction line and its member here, at the two anchors, and the tests'
-/// TestShell reuses them through the injectable overload. <paramref name="owner"/> returns the window native
-/// dialogs are owned by.
+/// TestShell reuses them through the injectable overload. <paramref name="owner"/> returns the window dialogs and
+/// the color picker are owned by.
 /// </summary>
 internal static class Composition
 {
     public static MainViewModel Build(EditorSession session, Func<Window?> owner)
     {
         ArgumentNullException.ThrowIfNull(owner);
-        return Build(session, new Win32FileDialogs(owner), new ThemedDialogService(owner), new Win32ColorPicker(
-            () => owner() is { } w ? new WindowInteropHelper(w).Handle : IntPtr.Zero));
+        return Build(session, new Win32FileDialogs(owner), new ThemedDialogService(owner), new ThemedColorPicker(owner));
     }
 
     /// <summary>
-    /// The wiring, once: the native services come in, so the app passes the Win32 ones and the tests'
+    /// The wiring, once: the native services come in, so the app passes the real ones and the tests'
     /// TestShell passes fakes. Every line that connects view-models lives here and nowhere else.
     /// </summary>
     public static MainViewModel Build(EditorSession session, IFileDialogs fileDialogs, IDialogService dialogs, IColorPicker colorPicker)

@@ -16,8 +16,10 @@ public sealed record FillTypeOption(string Type, string Label);
 /// <para>
 /// Undo (interfaces sheet §1, <c>fillstyle-undo-snapshot-timing</c>, fix): a slider thumb drag is one
 /// gesture (<see cref="BeginSliderDrag"/>), so it records one step at the end, and only if a region
-/// changed. Anything else (a type click, a picked color, a keyboard or track-click slider change) is one
-/// <c>Apply</c>, so one step when a region changed and none otherwise.
+/// changed. A color pick is one gesture too (<c>fillstyle-color-pickers</c>, fix): its live preview
+/// repaints as the color moves, a cancel puts the seed back, and the pick records one step, or none when
+/// the color ends where it started. Anything else (a type click, a keyboard or track-click slider change)
+/// is one <c>Apply</c>, so one step when a region changed and none otherwise.
 /// </para>
 /// <para>
 /// One-way (<c>fillstyle-ui-not-synced-from-region</c>, keep): <see cref="Current"/> lives only here.
@@ -44,8 +46,8 @@ public sealed class FillStyleViewModel : ObservableObject
         _session = session ?? throw new ArgumentNullException(nameof(session));
         _picker = picker ?? throw new ArgumentNullException(nameof(picker));
         SetTypeCommand = new RelayCommand<string>(t => Type = t ?? throw new ArgumentNullException(nameof(t)));
-        PickColor1Command = new RelayCommand(() => { if (Pick(Color1) is { } hex) Color1 = hex; });
-        PickColor2Command = new RelayCommand(() => { if (Pick(Color2) is { } hex) Color2 = hex; });
+        PickColor1Command = new RelayCommand<object?>(anchor => Pick(second: false, anchor));
+        PickColor2Command = new RelayCommand<object?>(anchor => Pick(second: true, anchor));
     }
 
     /// <summary>The seven type buttons in 4.1's order (editor.html:148-154).</summary>
@@ -104,8 +106,11 @@ public sealed class FillStyleViewModel : ObservableObject
     }
 
     public IRelayCommand<string> SetTypeCommand { get; }
-    public IRelayCommand PickColor1Command { get; }
-    public IRelayCommand PickColor2Command { get; }
+    /// <summary>Opens the Color 1 picker; the parameter is the element it opens under (the swatch button), or null.</summary>
+    public IRelayCommand<object?> PickColor1Command { get; }
+
+    /// <summary>Opens the Color 2 picker; the parameter is the element it opens under (the swatch button), or null.</summary>
+    public IRelayCommand<object?> PickColor2Command { get; }
 
     /// <summary>
     /// Opens one slider gesture (Thumb.DragStarted). Dispose it on DragCompleted: the drag records one
@@ -113,10 +118,29 @@ public sealed class FillStyleViewModel : ObservableObject
     /// </summary>
     public IDisposable BeginSliderDrag() => _session.BeginGesture();
 
-    string? Pick(string seed)
+    /// <summary>
+    /// One color pick as one gesture. applyFillEdit's rule picks the regions once, at the open: those
+    /// painted with the current fill's key. Each preview repaints exactly those regions from the document
+    /// as it was at the open, so a preview that passes through another region's color never captures that
+    /// region. Cancel (or a picker that throws) shows the seed again, which restores the open's document, so nothing is recorded.
+    /// </summary>
+    void Pick(bool second, object? anchor)
     {
-        var hex = _picker.Pick(seed);
-        return hex is null ? null : NormalizeHex(hex);
+        var seed = _current;
+        var start = _session.Document;
+        string seedHex = second ? seed.C2! : seed.C1!;
+        using (_session.BeginGesture())
+        {
+            void Show(string hex)
+            {
+                var next = second ? seed with { C2 = NormalizeHex(hex) } : seed with { C1 = NormalizeHex(hex) };
+                SetCurrent(next);
+                _session.Apply(_ => DocumentOps.RetargetFill(start, seed.Key, next));
+            }
+            string? picked = null;
+            try { picked = _picker.Pick(seedHex, Show, anchor); }
+            finally { Show(picked ?? seedHex); }                 // a cancel, or a picker that throws, reverts
+        }
     }
 
     /// <summary>applyFillEdit (editor.js:1581-1598): mutate currentFill, then retarget the regions that had its old key.</summary>
@@ -124,6 +148,14 @@ public sealed class FillStyleViewModel : ObservableObject
     {
         if (next == _current) return;
         string beforeKey = _current.Key;
+        SetCurrent(next);
+        _session.Apply(d => DocumentOps.RetargetFill(d, beforeKey, next));
+    }
+
+    /// <summary>Makes <paramref name="next"/> the current fill and raises the controls that changed.</summary>
+    void SetCurrent(Fill next)
+    {
+        if (next == _current) return;
         var before = _current;
         _current = next;
         OnPropertyChanged(nameof(Current));
@@ -132,7 +164,6 @@ public sealed class FillStyleViewModel : ObservableObject
         if (before.C2 != next.C2) OnPropertyChanged(nameof(Color2));
         if (before.Angle != next.Angle) OnPropertyChanged(nameof(Angle));
         if (before.Scale != next.Scale) OnPropertyChanged(nameof(Scale));
-        _session.Apply(d => DocumentOps.RetargetFill(d, beforeKey, next));
     }
 
     static double Whole(double value, double min, double max)

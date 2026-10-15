@@ -252,16 +252,100 @@ public class FillStyleTests
         Assert.Equal(new[] { nameof(FillStyleViewModel.Current), nameof(FillStyleViewModel.Type) }, raised);
     }
 
-    [Theory] // ChooseColorW speaks COLORREF 0x00BBGGRR; the picker answers lowercase #rrggbb
-    [InlineData("#17d4fa", 0x00FAD417u)]
-    [InlineData("#f22f89", 0x00892FF2u)]
-    [InlineData("#000000", 0x00000000u)]
-    [InlineData("#ffffff", 0x00FFFFFFu)]
-    public void Hex_and_COLORREF_round_trip(string hex, uint colorRef)
+    [Fact] // fillstyle-color-pickers (fix): the preview repaints live, and the commit is one step
+    public void A_previewed_pick_repaints_live_and_commits_as_one_step()
     {
-        Assert.Equal(colorRef, Win32ColorPicker.ToColorRef(hex));
-        Assert.Equal(hex, Win32ColorPicker.FromColorRef(colorRef));
-        Assert.Equal(hex, Win32ColorPicker.FromColorRef(colorRef | 0xFF000000u));
+        var picker = new FakeColorPicker().Answer("#00ff00", "#ff0000", "#ffff00", "#00ff00");
+        var (session, fill, regions) = Make(picker);
+        Paint(regions, "torso_front", "torso_back");
+        var mid = default((string, string?, int, bool));
+        picker.DuringPick = () => mid = (fill.Color1, DocumentOps.RegionFill(session.Document, "torso_back")!.C1, session.UndoCount, session.InGesture);
+
+        fill.PickColor1Command.Execute(null);
+
+        Assert.Equal(("#00ff00", "#00ff00", 2, true), mid);   // live: control and canvas, nothing recorded yet
+        Assert.Equal("#00ff00", fill.Color1);
+        Assert.Equal(3, session.UndoCount);                   // the whole pick is one step
+        Assert.False(session.InGesture);
+        session.Undo();
+        Assert.Equal("#17d4fa", DocumentOps.RegionFill(session.Document, "torso_front")!.C1);
+        Assert.Equal("#17d4fa", DocumentOps.RegionFill(session.Document, "torso_back")!.C1);
+    }
+
+    [Fact] // fillstyle-color-pickers (fix): a cancel puts the seed back and records nothing
+    public void A_cancelled_pick_reverts_the_preview_and_records_nothing()
+    {
+        var picker = new FakeColorPicker().Answer(null, "#123456", "#654321");
+        var (session, fill, regions) = Make(picker);
+        Paint(regions, "torso_front");
+        var raised = Track(fill);
+
+        fill.PickColor2Command.Execute(null);
+
+        Assert.Equal("#f22f89", fill.Color2);
+        Assert.Equal(FillStyleViewModel.DefaultFill, fill.Current);
+        Assert.Equal(FillStyleViewModel.DefaultFill, DocumentOps.RegionFill(session.Document, "torso_front"));
+        Assert.Equal((1, 0), (session.UndoCount, session.RedoCount));
+        Assert.Contains(nameof(FillStyleViewModel.Color2), raised);   // the swatch followed the preview and came back
+    }
+
+    [Fact] // fillstyle-color-pickers (fix): previews that end on the seed record nothing
+    public void A_pick_that_ends_on_its_seed_records_nothing()
+    {
+        var picker = new FakeColorPicker().Answer("#17D4FA", "#000000", "#17d4fa").Answer("#17d4fa");
+        var (session, fill, regions) = Make(picker);
+        Paint(regions, "torso_front");
+
+        fill.PickColor1Command.Execute(null);
+        fill.PickColor1Command.Execute(null);
+
+        Assert.Equal("#17d4fa", fill.Color1);
+        Assert.Equal((1, 0), (session.UndoCount, session.RedoCount));
+    }
+
+    [Fact] // a preview passing through another region's color must not capture that region
+    public void A_preview_through_another_regions_color_leaves_that_region_alone()
+    {
+        var picker = new FakeColorPicker().Answer(null).Answer(null, "#ff0000");
+        var (session, fill, regions) = Make(picker);
+        Paint(regions, "torso_front");                        // the current fill, solid #17d4fa
+        session.Apply(d => DocumentOps.PaintRegion(d, "torso_back", FillStyleViewModel.DefaultFill with { C1 = "#ff0000" }));
+        int steps = session.UndoCount;
+
+        fill.PickColor1Command.Execute(null);                 // a plain cancel
+        fill.PickColor1Command.Execute(null);                 // previews #ff0000 (torso_back's color), then cancels
+
+        Assert.Equal("#17d4fa", DocumentOps.RegionFill(session.Document, "torso_front")!.C1);
+        Assert.Equal("#ff0000", DocumentOps.RegionFill(session.Document, "torso_back")!.C1);
+        Assert.Equal(steps, session.UndoCount);
+    }
+
+    [Fact] // the swatch button reaches the picker as its anchor
+    public void The_command_parameter_is_the_pickers_anchor()
+    {
+        var picker = new FakeColorPicker();
+        var (_, fill, _) = Make(picker);
+        var anchor = new object();
+        fill.PickColor2Command.Execute(anchor);
+        fill.PickColor1Command.Execute(null);
+        Assert.Equal(new[] { anchor, null }, picker.Anchors);
+        Assert.Equal(new[] { "#f22f89", "#17d4fa" }, picker.Seeds);
+    }
+
+    [Fact] // a picker that throws mid-pick leaves no preview behind and no gesture open
+    public void A_picker_failure_reverts_the_preview()
+    {
+        var picker = new FakeColorPicker().Answer("#00ff00", "#abcdef");
+        picker.DuringPick = () => throw new InvalidOperationException("boom");
+        var (session, fill, regions) = Make(picker);
+        Paint(regions, "torso_front");
+
+        Assert.Throws<InvalidOperationException>(() => fill.PickColor1Command.Execute(null));
+
+        Assert.Equal("#17d4fa", fill.Color1);
+        Assert.Equal("#17d4fa", DocumentOps.RegionFill(session.Document, "torso_front")!.C1);
+        Assert.Equal(1, session.UndoCount);
+        Assert.False(session.InGesture);
     }
 
     [Fact] // a press whose release never arrived leaves a stale gesture; the next press closes it first

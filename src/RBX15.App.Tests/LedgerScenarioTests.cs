@@ -460,7 +460,7 @@ public sealed class LedgerScenarioTests : IDisposable
         readonly Queue<string?> _answers = new(answers);
         public List<string> Opened { get; } = [];
 
-        public string? Pick(string initialHex)
+        public string? Pick(string initialHex, Action<string>? preview = null, object? anchor = null)
         {
             Opened.Add(initialHex);
             return _answers.Count > 0 ? _answers.Dequeue() : null;

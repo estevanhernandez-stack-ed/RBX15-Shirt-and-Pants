@@ -2549,7 +2549,7 @@
    "quirks": "Zoom buttons have no disabled state at limits. The canvas is resized on every render (flicker risk in WPF if done naively). Checkerboard cell size is constant on screen, not tied to template. Hit radii and handles are in screen px so UI feels the same at all zooms.",
    "portTarget": "ScaleTransform or explicit surface size; draw offscreen composite to view with SKSamplingOptions: Nearest when zoom>=1, linear/mipmap when <1. Checkerboard via SKShader.CreateBitmap with Repeat tiling in screen space (not scaled).",
    "risk": "med",
-   "parityCheck": "Zoom label text for all 12 levels; screenshot at 25%, 100%, 300% pixel-diff within tolerance (smoothing at 25/50/75 will differ by filter choice: define target filter, Chromium bilinear).",
+   "parityCheck": "Zoom label text for all 12 levels (CanvasViewModelTests); the engine view goldens at zoom 0.25, 1 and 3 (GoldenViewTests) pixel-match 4.1 within tolerance. Narrowed in M3a: no window screenshot is diffed; the smoothing filter below 100% is the engine's, pinned by those goldens.",
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "keep",

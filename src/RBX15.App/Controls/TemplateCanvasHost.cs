@@ -21,8 +21,8 @@ namespace RBX15.App.Controls;
 ///   UseLayoutRounding, so the frame lands on whole device pixels.</item>
 /// <item>Files dropped on it run DropCommand with a <see cref="CanvasDrop"/> (drop-canvas). Every drop is handled, so
 ///   none falls through to the window (shell-external-drop-guard).</item>
-/// <item>A left press and release within the system drag distance runs ClickCommand with the template point
-///   (canvas-coord-map). Task 4 wires it to select the topmost layer there, or none (editor.js:1100-1116). The drag
+/// <item>A left press and release within the system drag distance runs ClickCommand with the template point of
+///   the press (canvas-coord-map; 4.1 selects on mousedown). Task 4 wires it to select the topmost layer there, or none (editor.js:1100-1116). The drag
 ///   gestures are M3b's select tool.</item>
 /// </list>
 /// </summary>
@@ -158,10 +158,21 @@ public sealed class TemplateCanvasHost : FrameworkElement
 
     protected override void OnDragOver(DragEventArgs e) => ShowDropEffect(e);
 
-    static void ShowDropEffect(DragEventArgs e)
+    void ShowDropEffect(DragEventArgs e)
     {
-        e.Effects = Files(e.Data) is null ? DragDropEffects.None : DragDropEffects.Copy;
+        e.Effects = DropEffect(e.Data, e.GetPosition(this));
         e.Handled = true;
+    }
+
+    /// <summary>
+    /// The cursor a drag shows over the canvas: Copy only when the data carries files and DropCommand
+    /// would accept them, otherwise None, so the cursor never promises a drop that does nothing.
+    /// </summary>
+    internal DragDropEffects DropEffect(IDataObject data, Point inHost)
+    {
+        if (Files(data) is not { } paths) return DragDropEffects.None;
+        var drop = new CanvasDrop(paths, CanvasCoordinates.ToTemplate(inHost, Zoom));
+        return DropCommand is { } command && command.CanExecute(drop) ? DragDropEffects.Copy : DragDropEffects.None;
     }
 
     protected override void OnDrop(DragEventArgs e)
@@ -184,9 +195,23 @@ public sealed class TemplateCanvasHost : FrameworkElement
         return true;
     }
 
-    static string[]? Files(IDataObject? data) =>
-        data is not null && data.GetDataPresent(DataFormats.FileDrop) && data.GetData(DataFormats.FileDrop) is string[] { Length: > 0 } paths
-            ? paths : null;
+    /// <summary>
+    /// The dropped file paths, or null. Shell virtual items and malformed OLE data can throw from
+    /// GetData (COMException and others); an unreadable drag is not a file drag, so it yields null.
+    /// </summary>
+    static string[]? Files(IDataObject? data)
+    {
+        if (data is null) return null;
+        try
+        {
+            return data.GetDataPresent(DataFormats.FileDrop) && data.GetData(DataFormats.FileDrop) is string[] { Length: > 0 } paths
+                ? paths : null;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
 
     protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
     {
@@ -202,10 +227,15 @@ public sealed class TemplateCanvasHost : FrameworkElement
         if (_pressedAt is not { } down) return;
         _pressedAt = null;
         ReleaseMouseCapture();
-        var up = e.GetPosition(this);
-        if (IsClick(down, up)) HandleClick(up);
+        CompleteClick(down, e.GetPosition(this));
         e.Handled = true;
     }
+
+    /// <summary>
+    /// A press and release that is a click hit-tests at the PRESS point: 4.1 selects on mousedown
+    /// (editor.js:1100-1116), so a slight slide before release never changes what was picked.
+    /// </summary>
+    internal bool CompleteClick(Point down, Point up) => IsClick(down, up) && HandleClick(down);
 
     protected override void OnLostMouseCapture(MouseEventArgs e)
     {

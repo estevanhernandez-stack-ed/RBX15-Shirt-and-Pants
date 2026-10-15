@@ -202,4 +202,63 @@ public class TemplateCanvasHostTests
         Assert.False(TemplateCanvasHost.IsClick(down, new Point(11 + SystemParameters.MinimumHorizontalDragDistance, 10)));
         Assert.False(TemplateCanvasHost.IsClick(down, new Point(10, 11 + SystemParameters.MinimumVerticalDragDistance)));
     });
+
+    [Fact] // controller ruling 2a: 4.1 selects on mousedown, so the PRESS point is hit-tested, not the release point
+    public void A_click_hit_tests_at_the_press_point_not_the_release_point() => StaThread.Run(() =>
+    {
+        var host = Host(new Document(), zoom: 2);
+        var command = new RecordingCommand();
+        host.ClickCommand = command;
+        Assert.True(host.CompleteClick(new Point(100, 50), new Point(102, 51)));
+        Assert.Equal(new Point(50, 25), Assert.IsType<Point>(Assert.Single(command.Executed)));
+        // A drag runs nothing.
+        Assert.False(host.CompleteClick(new Point(100, 50), new Point(300, 50)));
+        Assert.Single(command.Executed);
+    });
+
+    /// <summary>An IDataObject whose reads throw, like a shell virtual item or malformed OLE data.</summary>
+    sealed class ThrowingData : IDataObject
+    {
+        public bool PresentThrows { get; init; }
+        public object GetData(string format, bool autoConvert) => throw new System.Runtime.InteropServices.COMException("bad OLE data");
+        public object GetData(string format) => throw new System.Runtime.InteropServices.COMException("bad OLE data");
+        public object GetData(Type format) => throw new System.Runtime.InteropServices.COMException("bad OLE data");
+        public bool GetDataPresent(string format, bool autoConvert) => PresentThrows ? throw new System.Runtime.InteropServices.COMException("bad OLE data") : true;
+        public bool GetDataPresent(string format) => PresentThrows ? throw new System.Runtime.InteropServices.COMException("bad OLE data") : true;
+        public bool GetDataPresent(Type format) => true;
+        public string[] GetFormats(bool autoConvert) => [DataFormats.FileDrop];
+        public string[] GetFormats() => [DataFormats.FileDrop];
+        public void SetData(string format, object data, bool autoConvert) { }
+        public void SetData(string format, object data) { }
+        public void SetData(Type format, object data) { }
+        public void SetData(object data) { }
+    }
+
+    [Fact] // controller ruling 2b: a COMException from GetData is "no files", never a crash
+    public void An_unreadable_drag_is_not_a_file_drag_and_never_throws() => StaThread.Run(() =>
+    {
+        var host = Host(new Document());
+        var command = new RecordingCommand();
+        host.DropCommand = command;
+        foreach (var data in new[] { new ThrowingData(), new ThrowingData { PresentThrows = true } })
+        {
+            Assert.False(host.HandleDrop(data, new Point(10, 10)));
+            Assert.Equal(DragDropEffects.None, host.DropEffect(data, new Point(10, 10)));
+        }
+        Assert.Empty(command.Executed);
+    });
+
+    [Fact] // controller ruling 2c: Copy only when the drop would do something
+    public void The_drag_cursor_is_none_unless_files_are_carried_and_the_command_would_accept_them() => StaThread.Run(() =>
+    {
+        var host = Host(new Document());
+        var files = new DataObject(DataFormats.FileDrop, new[] { @"C:rt.png" });
+        var at = new Point(10, 10);
+        Assert.Equal(DragDropEffects.None, host.DropEffect(files, at)); // no command
+        host.DropCommand = new RecordingCommand(canExecute: false);
+        Assert.Equal(DragDropEffects.None, host.DropEffect(files, at)); // command cannot run
+        host.DropCommand = new RecordingCommand();
+        Assert.Equal(DragDropEffects.Copy, host.DropEffect(files, at));
+        Assert.Equal(DragDropEffects.None, host.DropEffect(new DataObject(DataFormats.UnicodeText, "x"), at)); // not files
+    });
 }

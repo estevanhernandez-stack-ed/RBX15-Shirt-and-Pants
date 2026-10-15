@@ -290,7 +290,7 @@ public static class ProjectIO
         try { bytes = Convert.FromBase64String(url[(comma + 1)..]); }
         catch (FormatException) { return null; }
         try { return Images.Decode(bytes); }
-        catch (InvalidDataException) { return null; }
+        catch (Exception e) when (e is InvalidDataException or ImageTooLargeException) { return null; }
     }
 
     // ---------------------------------------------------------------- write

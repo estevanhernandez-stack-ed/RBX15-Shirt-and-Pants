@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using SkiaSharp;
 
@@ -25,10 +26,57 @@ public static class Images
         return SKImage.FromPixelCopy(bmp.PeekPixels());
     }
 
+    /// <summary>Largest encoded file or payload <see cref="Decode"/> accepts: 100 MiB. Checked before any copy or parse.</summary>
+    public const long MaxEncodedBytes = 100L * 1024 * 1024;
+
+    /// <summary>Largest width or height <see cref="Decode"/> accepts: 16384, the common GPU texture limit.</summary>
+    public const int MaxDimension = 16384;
+
+    /// <summary>
+    /// Largest pixel count <see cref="Decode"/> accepts: 50 million. A 48 MP phone photo (8000x6000)
+    /// fits; at 4 bytes a pixel the decode plus its premultiplied drawing copy stay near 400 MB.
+    /// </summary>
+    public const long MaxPixels = 50_000_000;
+
+    /// <summary>
+    /// Throws <see cref="ImageTooLargeException"/> when an encoded payload is over
+    /// <see cref="MaxEncodedBytes"/>. Import calls it with the file length before reading the file.
+    /// </summary>
+    public static void CheckEncodedSize(long bytes)
+    {
+        if (bytes > MaxEncodedBytes)
+            throw new ImageTooLargeException(string.Create(CultureInfo.InvariantCulture,
+                $"The file is {bytes / 1048576.0:0.#} MB; the limit is {MaxEncodedBytes / 1048576} MB."));
+    }
+
+    /// <summary>
+    /// Throws <see cref="ImageTooLargeException"/> when either side is over <see cref="MaxDimension"/>
+    /// or the pixel count is over <see cref="MaxPixels"/>.
+    /// </summary>
+    public static void CheckDimensions(int width, int height)
+    {
+        if (width > MaxDimension || height > MaxDimension)
+            throw new ImageTooLargeException(string.Create(CultureInfo.InvariantCulture,
+                $"The image is {width} x {height} pixels; the limit is {MaxDimension} pixels on a side."));
+        if ((long)width * height > MaxPixels)
+            throw new ImageTooLargeException(string.Create(CultureInfo.InvariantCulture,
+                $"The image is {width} x {height} pixels ({(long)width * height / 1e6:0.#} megapixels); the limit is {MaxPixels / 1_000_000} megapixels."));
+    }
+
+    /// <summary>
+    /// Decodes an encoded image (PNG, JPEG, WebP, BMP, GIF; the first frame of an animation) to
+    /// un-premultiplied RGBA. Untrusted input: the payload size is checked first, then the
+    /// dimensions from the codec header, both before any pixel memory is allocated (divergence
+    /// <c>image-decode-caps</c>; 4.1 had no caps). Throws <see cref="ImageTooLargeException"/> over a
+    /// cap and <see cref="InvalidDataException"/> for bytes it cannot decode.
+    /// </summary>
     public static SKImage Decode(byte[] encoded)
     {
+        ArgumentNullException.ThrowIfNull(encoded);
+        CheckEncodedSize(encoded.LongLength);
         using var data = SKData.CreateCopy(encoded);
         using var codec = SKCodec.Create(data) ?? throw new InvalidDataException("not a supported image");
+        CheckDimensions(codec.Info.Width, codec.Info.Height);
         var info = new SKImageInfo(codec.Info.Width, codec.Info.Height, SKColorType.Rgba8888, SKAlphaType.Unpremul);
         using var bmp = new SKBitmap(info);
         var result = codec.GetPixels(info, bmp.GetPixels());
@@ -119,3 +167,10 @@ public static class Images
         return SKImage.FromPixelCopy(bmp.PeekPixels());
     }
 }
+
+/// <summary>
+/// An image over one of the <see cref="Images"/> decode caps. <see cref="InvalidDataException"/> is
+/// sealed, so this derives from <see cref="Exception"/>; every caller that drops undecodable images
+/// (ProjectIO.TryDecodeDataUrl, the App's ImageImporter) catches both.
+/// </summary>
+public sealed class ImageTooLargeException(string message) : Exception(message);

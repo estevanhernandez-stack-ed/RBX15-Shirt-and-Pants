@@ -1,0 +1,219 @@
+<UserControl x:Class="RBX15.App.Views.LayerPropertiesPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- "Selected layer" (editor.html:320-323; updateUI's controls, editor.js:746-912; ledger layers-selected-panel).
+         DataContext: LayerPropertiesViewModel. Built once and bound, never rebuilt (props-panel-rebuild-resets).
+         "Center on front torso" (editor.js:776-778, props-center-front) is M4's Layout tab and is absent.
+         The sliders keep WPF's own chrome, as the Fill Style sliders do: 4.1's accent-color (styles.css:333,
+         editor.js:795-799) is part of the M3b look sign-off. -->
+    <UserControl.Resources>
+        <!-- .controls label (styles.css:324-332): mono 10px fg-3, margin 8px 0 3px, uppercase (written upper case). -->
+        <Style x:Key="PropLabel" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{DynamicResource FontMono}" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="Foreground" Value="{DynamicResource Fg3Brush}" />
+            <Setter Property="Margin" Value="0,8,0,3" />
+        </Style>
+        <!-- .controls input[type=text|number] (styles.css:335-352): navy, 1px border-1, fg-1, padding 5px 8px,
+             radius r-xs 4, 12px body font; focus border cyan. -->
+        <Style x:Key="PropTextBox" TargetType="TextBox">
+            <Setter Property="FontFamily" Value="{DynamicResource FontBody}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource Fg1Brush}" />
+            <Setter Property="CaretBrush" Value="{DynamicResource Fg1Brush}" />
+            <Setter Property="Background" Value="{DynamicResource BrandNavyBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Border1Brush}" />
+            <Setter Property="Padding" Value="8,5" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="Box" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="1" CornerRadius="{DynamicResource RXsRadius}" SnapsToDevicePixels="True">
+                            <ScrollViewer x:Name="PART_ContentHost" Padding="{TemplateBinding Padding}" Focusable="False"
+                                          HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource BrandCyanBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!-- .controls input[type=range] (styles.css:333): full width, whole-number steps (a step-1 range).
+             PageUp/PageDown and a track press move a tenth of the range: Chromium's range big step,
+             max((max - min) / 10, step) (RangeInputType::HandleKeydownEvent), snapped to a whole number.
+             WPF's track press steps toward the point instead of jumping to it (IsMoveToPointEnabled marks the
+             press handled and ends the drag there); the Fill Style sliders behave the same way. -->
+        <Style x:Key="PropSlider" TargetType="Slider">
+            <Setter Property="SmallChange" Value="1" />
+            <Setter Property="TickFrequency" Value="1" />
+            <Setter Property="IsSnapToTickEnabled" Value="True" />
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel>
+        <TextBlock Text="Selected layer" Style="{DynamicResource PanelHeading}" />
+
+        <!-- The empty state (editor.js:750; layers-empty-state): .info, mono 10px fg-muted, margin 4px 0,
+             uppercase (styles.css:640-647). -->
+        <TextBlock x:Name="EmptyState" Text="{Binding EmptyText, Mode=OneTime, Converter={StaticResource UpperCase}}"
+                   FontFamily="{DynamicResource FontMono}" FontSize="10" Foreground="{DynamicResource FgMutedBrush}" Margin="0,4">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding HasSelection}" Value="True">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+
+        <StackPanel x:Name="Controls">
+            <StackPanel.Style>
+                <Style TargetType="StackPanel">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding HasSelection}" Value="True">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
+
+            <!-- Name (editor.js:754-755, :825): commits on Enter or focus loss. -->
+            <TextBlock Style="{StaticResource PropLabel}" Text="NAME" />
+            <TextBox x:Name="NameBox" Style="{StaticResource PropTextBox}" KeyDown="OnTextKeyDown"
+                     Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Layer name" />
+
+            <!-- X and Y (editor.js:756-760, :826-827): "X: n   Y: n", then a .row of two fields, gap 8 (styles.css:369-370). -->
+            <TextBlock x:Name="PositionText" Style="{StaticResource PropLabel}" Text="{Binding PositionLabel, Mode=OneWay}" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="8" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="XBox" Grid.Column="0" Style="{StaticResource PropTextBox}" KeyDown="OnTextKeyDown"
+                         Text="{Binding XText, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="X position" />
+                <TextBox x:Name="YBox" Grid.Column="2" Style="{StaticResource PropTextBox}" KeyDown="OnTextKeyDown"
+                         Text="{Binding YText, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Y position" />
+            </Grid>
+
+            <!-- Scale 1..500 (editor.js:761-762), Rotation -180..180 (:763-764), Opacity 0..100 (:765-766). -->
+            <TextBlock Style="{StaticResource PropLabel}"><Run Text="SCALE: " /><Run x:Name="ScaleText" Text="{Binding ScaleLabel, Mode=OneWay}" /></TextBlock>
+            <Slider x:Name="ScaleSlider" Style="{StaticResource PropSlider}" Minimum="1" Maximum="500" LargeChange="50"
+                    Value="{Binding ScalePercent}" AutomationProperties.Name="Scale percent" />
+            <TextBlock Style="{StaticResource PropLabel}"><Run Text="ROTATION: " /><Run x:Name="RotationText" Text="{Binding RotationLabel, Mode=OneWay}" /></TextBlock>
+            <Slider x:Name="RotationSlider" Style="{StaticResource PropSlider}" Minimum="-180" Maximum="180" LargeChange="36"
+                    Value="{Binding Rotation}" AutomationProperties.Name="Rotation degrees" />
+            <TextBlock Style="{StaticResource PropLabel}"><Run Text="OPACITY: " /><Run x:Name="OpacityText" Text="{Binding OpacityLabel, Mode=OneWay}" /></TextBlock>
+            <Slider x:Name="OpacitySlider" Style="{StaticResource PropSlider}" Minimum="0" Maximum="100" LargeChange="10"
+                    Value="{Binding OpacityPercent}" AutomationProperties.Name="Opacity percent" />
+
+            <!-- Flip H, Flip V, Duplicate (editor.js:767-771): .row, margin-top 6, btn-sm btn-secondary. -->
+            <Grid Margin="0,6,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="8" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="8" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Button x:Name="FlipHButton" Grid.Column="0" Style="{DynamicResource SecondaryButtonSm}" Command="{Binding FlipHCommand}"
+                        Content="Flip H" ToolTip="Flip horizontally." AutomationProperties.Name="Flip horizontally" />
+                <Button x:Name="FlipVButton" Grid.Column="2" Style="{DynamicResource SecondaryButtonSm}" Command="{Binding FlipVCommand}"
+                        Content="Flip V" ToolTip="Flip vertically." AutomationProperties.Name="Flip vertically" />
+                <Button x:Name="DuplicateButton" Grid.Column="4" Style="{DynamicResource SecondaryButtonSm}" Command="{Binding DuplicateCommand}"
+                        Content="Duplicate" ToolTip="Duplicate layer." AutomationProperties.Name="Duplicate layer" />
+            </Grid>
+
+            <!-- Up, Down (editor.js:772-775): .row, margin-top 4 (moved here from under the list; interface R13). -->
+            <Grid Margin="0,4,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="8" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Button x:Name="UpButton" Grid.Column="0" Style="{DynamicResource SecondaryButtonSm}" Command="{Binding MoveUpCommand}"
+                        Content="Up" ToolTip="Move layer up." AutomationProperties.Name="Move layer up" />
+                <Button x:Name="DownButton" Grid.Column="2" Style="{DynamicResource SecondaryButtonSm}" Command="{Binding MoveDownCommand}"
+                        Content="Down" ToolTip="Move layer down." AutomationProperties.Name="Move layer down" />
+            </Grid>
+
+            <!-- Image adjustments (editor.js:779-803, :861-872): margin-top 8; the header row is padding 4px 0,
+                 "Image adjustments" mono 11px 600 cyan uppercase with a cyan 10px arrow, ▶ closed and ▼ open.
+                 An Expander, so assistive tech gets the expand/collapse pattern; open state is the view-model's. -->
+            <Expander x:Name="Adjustments" Margin="0,8,0,0" Focusable="False" AutomationProperties.Name="Image adjustments" IsExpanded="{Binding AdjustmentsExpanded, Mode=TwoWay}">
+                <Expander.Template>
+                    <ControlTemplate TargetType="Expander">
+                        <DockPanel>
+                            <ToggleButton x:Name="AdjToggle" DockPanel.Dock="Top" Padding="0,4" Cursor="Hand"
+                                          FocusVisualStyle="{DynamicResource FocusRing}" AutomationProperties.Name="Image adjustments"
+                                          IsChecked="{Binding IsExpanded, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border Background="Transparent" Padding="{TemplateBinding Padding}">
+                                            <DockPanel>
+                                                <TextBlock x:Name="Arrow" DockPanel.Dock="Right" Text="&#x25B6;" FontSize="10"
+                                                           Foreground="{DynamicResource BrandCyanBrush}" VerticalAlignment="Center" />
+                                                <TextBlock Text="IMAGE ADJUSTMENTS" FontFamily="{DynamicResource FontMono}" FontSize="11"
+                                                           FontWeight="SemiBold" Foreground="{DynamicResource BrandCyanBrush}" />
+                                            </DockPanel>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="Arrow" Property="Text" Value="&#x25BC;" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <ContentPresenter x:Name="ExpandSite" Visibility="Collapsed" />
+                        </DockPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsExpanded" Value="True">
+                                <Setter TargetName="ExpandSite" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Expander.Template>
+                <StackPanel>
+                    <!-- Brightness, Contrast, Saturation 0..200 %, Hue rotate 0..360 ° (editor.js:785-792). -->
+                    <TextBlock Style="{StaticResource PropLabel}"><Run Text="BRIGHTNESS: " /><Run x:Name="BrightnessText" Text="{Binding BrightnessLabel, Mode=OneWay}" /></TextBlock>
+                    <Slider x:Name="BrightnessSlider" Style="{StaticResource PropSlider}" Minimum="0" Maximum="200" LargeChange="20"
+                            Value="{Binding Brightness}" AutomationProperties.Name="Brightness percent" />
+                    <TextBlock Style="{StaticResource PropLabel}"><Run Text="CONTRAST: " /><Run x:Name="ContrastText" Text="{Binding ContrastLabel, Mode=OneWay}" /></TextBlock>
+                    <Slider x:Name="ContrastSlider" Style="{StaticResource PropSlider}" Minimum="0" Maximum="200" LargeChange="20"
+                            Value="{Binding Contrast}" AutomationProperties.Name="Contrast percent" />
+                    <TextBlock Style="{StaticResource PropLabel}"><Run Text="SATURATION: " /><Run x:Name="SaturateText" Text="{Binding SaturateLabel, Mode=OneWay}" /></TextBlock>
+                    <Slider x:Name="SaturateSlider" Style="{StaticResource PropSlider}" Minimum="0" Maximum="200" LargeChange="20"
+                            Value="{Binding Saturate}" AutomationProperties.Name="Saturation percent" />
+                    <TextBlock Style="{StaticResource PropLabel}"><Run Text="HUE ROTATE: " /><Run x:Name="HueText" Text="{Binding HueLabel, Mode=OneWay}" /></TextBlock>
+                    <Slider x:Name="HueSlider" Style="{StaticResource PropSlider}" Minimum="0" Maximum="360" LargeChange="36"
+                            Value="{Binding HueRotate}" AutomationProperties.Name="Hue rotate degrees" />
+
+                    <!-- R, G, B shift -100..100 (editor.js:793-800): margin-top 6; labels #ff5472, #4f4, #66f. -->
+                    <StackPanel Margin="0,6,0,0">
+                        <TextBlock Style="{StaticResource PropLabel}" Foreground="#FF5472"><Run Text="R: " /><Run x:Name="RText" Text="{Binding RLabel, Mode=OneWay}" /></TextBlock>
+                        <Slider x:Name="RSlider" Style="{StaticResource PropSlider}" Minimum="-100" Maximum="100" LargeChange="20"
+                                Value="{Binding RShift}" AutomationProperties.Name="Red shift" />
+                        <TextBlock Style="{StaticResource PropLabel}" Foreground="#44FF44"><Run Text="G: " /><Run x:Name="GText" Text="{Binding GLabel, Mode=OneWay}" /></TextBlock>
+                        <Slider x:Name="GSlider" Style="{StaticResource PropSlider}" Minimum="-100" Maximum="100" LargeChange="20"
+                                Value="{Binding GShift}" AutomationProperties.Name="Green shift" />
+                        <TextBlock Style="{StaticResource PropLabel}" Foreground="#6666FF"><Run Text="B: " /><Run x:Name="BText" Text="{Binding BLabel, Mode=OneWay}" /></TextBlock>
+                        <Slider x:Name="BSlider" Style="{StaticResource PropSlider}" Minimum="-100" Maximum="100" LargeChange="20"
+                                Value="{Binding BShift}" AutomationProperties.Name="Blue shift" />
+                    </StackPanel>
+
+                    <!-- Reset adjustments (editor.js:801): full width, margin-top 6, border #f22f89, text #ff5aa3. -->
+                    <Button x:Name="ResetButton" Margin="0,6,0,0" Style="{DynamicResource SecondaryButtonSm}" Command="{Binding ResetAdjustmentsCommand}"
+                            BorderBrush="{DynamicResource BrandMagentaBrush}" Foreground="{DynamicResource BrandMagentaBrightBrush}"
+                            Content="Reset adjustments" AutomationProperties.Name="Reset adjustments" />
+                </StackPanel>
+            </Expander>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

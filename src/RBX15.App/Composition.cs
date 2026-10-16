@@ -43,6 +43,8 @@ internal static class Composition
         layers.LayerPicked += (_, _) => tools.Set(Tool.Select);
         // A canvas drop lands every file on the drop point (editor.js:961-986, drop-canvas).
         canvas.DropHandler = d => import.Import(d.Paths, (d.TemplatePoint.X, d.TemplatePoint.Y));
+        // M3b Task 3: the "Selected layer" panel (editor.html:320-323).
+        var layerProperties = new LayerPropertiesViewModel(session);
         var home = new HomeViewModel(session, colorPicker)
         {
             Tools = tools,
@@ -56,6 +58,7 @@ internal static class Composition
             Home = home,
             Layers = layers,
             Status = status,
+            LayerProperties = layerProperties,
             // M3a: required members above this line.
         };
     }

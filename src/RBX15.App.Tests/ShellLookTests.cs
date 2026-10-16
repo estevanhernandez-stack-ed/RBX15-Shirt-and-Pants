@@ -16,7 +16,7 @@ namespace RBX15.App.Tests;
 /// 1200x800 window (the M3a smoke's UIA tree: 47 header + 28 tabs + 122 ribbon pane + 536 canvas area + 28 footer),
 /// and at 624x441, the client area of the 640x480 minimum.
 /// </summary>
-[Collection("MainWindow")] // MainWindow tabs share a global RadioButton group; windows built in parallel uncheck each other
+[Collection("MainWindow")] // MainWindow-building tests run one at a time; the tabs once shared a process-wide RadioButton group (fixed, ShellTests.Ribbon_tabs_are_grouped_per_window), kept as a guard
 public class ShellLookTests
 {
     const double ClientWidth = 1184, ClientHeight = 761;

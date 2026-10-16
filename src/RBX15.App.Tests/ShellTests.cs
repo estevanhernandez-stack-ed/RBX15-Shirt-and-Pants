@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Xml.Linq;
+using RBX15.App.Controls;
 using RBX15.App.Converters;
 using RBX15.App.Services;
 using RBX15.App.Tests.Fakes;
@@ -166,6 +167,56 @@ public class ShellTests
         var window = new MainWindow(main, new FakeSettingsStore(), [Primary]);
         StaThread.Pump();
         var binding = Assert.Single(window.InputBindings.OfType<KeyBinding>(), b => b.Key == Key.Z && b.Modifiers == ModifierKeys.Control);
-        Assert.Same(main.Home.Edit.UndoCommand, binding.Command);
+        // final fix wave 5: the binding's command is the Edit group's Undo behind the text-field guard
+        Assert.Same(main.Home.Edit.UndoCommand, Assert.IsType<TextFieldShortcutCommand>(binding.Command).Inner);
+    });
+
+    /// <summary>What WPF's input binding does on its gesture: run the command iff it can execute (and only then handle the key).</summary>
+    static bool Press(KeyBinding binding)
+    {
+        if (!binding.Command.CanExecute(binding.CommandParameter)) return false;
+        binding.Command.Execute(binding.CommandParameter);
+        return true;
+    }
+
+    [Fact] // final fix wave 5 (spec §4: text fields trap shortcuts): Ctrl+Z in a text box with nothing to undo never undoes the document
+    public void Ctrl_Z_in_a_focused_text_box_never_falls_through_to_the_document() => StaThread.Run(() =>
+    {
+        var session = new EditorSession();
+        var main = TestShell.Main(session);
+        var window = new MainWindow(main, new FakeSettingsStore(), [Primary]);
+        StaThread.Pump();
+        var binding = window.InputBindings.OfType<KeyBinding>().Single(b => b.Key == Key.Z && b.Modifiers == ModifierKeys.Control);
+        Assert.True(session.Apply(d => d with { ShowGrid = true }));
+        var box = new TextBox();                                    // its own undo stack is empty
+        Assert.False(box.CanUndo);
+
+        window.FocusedElement = () => box;
+        Assert.False(Press(binding));                               // not handled: the key stays the text box's
+        Assert.Equal(1, session.UndoCount);
+        window.FocusedElement = () => new RichTextBox();            // any TextBoxBase
+        Assert.False(Press(binding));
+        Assert.Equal(1, session.UndoCount);
+
+        window.FocusedElement = () => null;                         // focus elsewhere: the window's Undo
+        Assert.True(Press(binding));
+        Assert.Equal(0, session.UndoCount);
+        Assert.True(TextFieldShortcutCommand.TextFieldHasFocus(box));
+        Assert.False(TextFieldShortcutCommand.TextFieldHasFocus(new Button()));
+    });
+
+    [Fact] // final fix wave 6: each window's ribbon tabs are their own group; one window's tab never unchecks another's
+    public void Ribbon_tabs_are_grouped_per_window() => StaThread.Run(() =>
+    {
+        var first = new MainWindow(TestShell.Main(new EditorSession()), new FakeSettingsStore(), [Primary]);
+        var second = new MainWindow(TestShell.Main(new EditorSession()), new FakeSettingsStore(), [Primary]);
+        StaThread.Pump();
+        var a = (RadioButton)first.FindName("HomeTab");
+        var b = (RadioButton)second.FindName("HomeTab");
+        Assert.Equal((true, true), (a.IsChecked, b.IsChecked));
+        var select = (System.Windows.Automation.Provider.ISelectionItemProvider)System.Windows.Automation.Peers.UIElementAutomationPeer
+            .CreatePeerForElement(a).GetPattern(System.Windows.Automation.Peers.PatternInterface.SelectionItem);
+        select.Select();                                            // a click on the first window's tab
+        Assert.Equal((true, true), (a.IsChecked, b.IsChecked));
     });
 }

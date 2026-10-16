@@ -1,5 +1,7 @@
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Input;
+using RBX15.App.Controls;
 using RBX15.App.Services;
 using RBX15.App.ViewModels;
 
@@ -25,10 +27,16 @@ public partial class MainWindow : Window
         ApplyPlacement(PlacementGuard.Resolve(settings.LoadWindowPlacement(), workAreas ?? MonitorWorkAreas.Get(),
                                               ShellLayout.DefaultWidth, ShellLayout.DefaultHeight));
         Viewport.SizeChanged += (_, e) => PanelColumn.Width = new GridLength(ShellLayout.PanelWidthFor(e.NewSize.Width));
+        // Ctrl+Z is M3b's one shortcut (planning contract: shortcuts are M4 except Ctrl+Z). A focused text field keeps
+        // the key even when its own undo stack is empty (final fix wave 5); anywhere else it is the Edit group's Undo.
+        InputBindings.Add(new KeyBinding(new TextFieldShortcutCommand(viewModel.Home.Edit.UndoCommand, () => FocusedElement()), Key.Z, ModifierKeys.Control));
         StateChanged += (_, _) => { if (WindowState != WindowState.Minimized) _maximizedBeforeMinimize = WindowState == WindowState.Maximized; };
     }
 
     public MainViewModel ViewModel => (MainViewModel)DataContext;
+
+    /// <summary>The element with keyboard focus, as the window's shortcuts see it. Tests replace it; nothing else does.</summary>
+    internal Func<IInputElement?> FocusedElement { get; set; } = () => Keyboard.FocusedElement;
 
     internal void ApplyPlacement(WindowPlacement placement)
     {

@@ -243,6 +243,79 @@ public class CanvasInteractionTests
         Assert.Equal(1, rig.Session.UndoCount);
     }
 
+    [Fact] // final fix wave 7: a keyboard edit mid drag is its own step; drag part 1, the edit and drag part 2 are three
+    public void A_panel_slider_keyboard_change_mid_move_splits_the_drag_into_three_steps()
+    {
+        var rig = new Rig(Box());
+        var props = new LayerPropertiesViewModel(rig.Session);
+        rig.I.PointerDown(new Point(120, 110), 1);
+        rig.I.PointerMove(new Point(130, 110), 1);
+        props.Rotation = 30;                                    // a keyboard step on the Rotation slider, outside any slider press
+        Assert.Equal(CanvasGesture.Move, rig.I.Gesture);        // the drag goes on
+        rig.I.PointerMove(new Point(150, 130), 1);              // still applied from the press state
+        rig.I.PointerUp(new Point(150, 130), 1);
+
+        Assert.Equal((130.0, 120.0, 30.0), (rig.L(1).X, rig.L(1).Y, rig.L(1).Rotation));
+        Assert.Equal((3, false), (rig.Session.UndoCount, rig.Session.InGesture));
+        Assert.True(rig.Session.Undo());
+        Assert.Equal((110.0, 100.0, 30.0), (rig.L(1).X, rig.L(1).Y, rig.L(1).Rotation));
+        Assert.True(rig.Session.Undo());
+        Assert.Equal((110.0, 100.0, 0.0), (rig.L(1).X, rig.L(1).Y, rig.L(1).Rotation));
+        Assert.True(rig.Session.Undo());
+        Assert.Equal((100.0, 100.0, 0.0), (rig.L(1).X, rig.L(1).Y, rig.L(1).Rotation));
+    }
+
+    [Fact] // final fix wave 10: Ctrl+Z after the drag moved records part 1 and undoes it; the rest of the drag is one step
+    public void Undo_mid_move_after_movement_leaves_one_step()
+    {
+        var rig = new Rig(Box());
+        rig.I.PointerDown(new Point(120, 110), 1);
+        rig.I.PointerMove(new Point(130, 110), 1);
+        Assert.True(rig.Session.Undo());
+        Assert.Equal((100.0, 100.0), (rig.L(1).X, rig.L(1).Y));
+        rig.I.PointerMove(new Point(150, 130), 1);
+        rig.I.PointerUp(new Point(150, 130), 1);
+
+        Assert.Equal((130.0, 120.0), (rig.L(1).X, rig.L(1).Y));
+        Assert.Equal((1, 0, false), (rig.Session.UndoCount, rig.Session.RedoCount, rig.Session.InGesture));
+        Assert.True(rig.Session.Undo());
+        Assert.Equal((100.0, 100.0), (rig.L(1).X, rig.L(1).Y));
+    }
+
+    [Fact] // final fix wave 10: Ctrl+Z before the drag moved undoes the prior step (here the layer's add); the drag then does nothing
+    public void Undo_mid_move_before_movement_undoes_the_prior_step_and_the_drag_records_nothing()
+    {
+        var rig = new Rig();
+        rig.Session.ApplyWithSelection(s => LayerOps.AddImage(s, LayerOf(1, 100, 50).Image, rig.Session.TakeId(), "art"));
+        var (cx, cy) = SelectionGeometry.Center(rig.Session.SelectedLayer!);
+        Assert.True(rig.I.PointerDown(new Point(cx, cy), 1));
+        Assert.True(rig.Session.Undo());
+        Assert.Empty(rig.Session.Document.Layers);
+        rig.I.PointerMove(new Point(cx + 30, cy + 20), 1);
+        rig.I.PointerUp(new Point(cx + 30, cy + 20), 1);
+
+        Assert.Empty(rig.Session.Document.Layers);
+        Assert.Equal((0, 1, false), (rig.Session.UndoCount, rig.Session.RedoCount, rig.Session.InGesture));
+    }
+
+    [Fact] // final fix wave 10: Ctrl+Z mid erase that removes the pressed layer; the release records nothing
+    public void Undo_mid_erase_that_removes_the_pressed_layer_makes_the_release_record_nothing()
+    {
+        var rig = new Rig();
+        rig.Session.ApplyWithSelection(s => LayerOps.AddImage(s, LayerOf(1, 100, 50).Image, rig.Session.TakeId(), "art"));
+        var (cx, cy) = SelectionGeometry.Center(rig.Session.SelectedLayer!);
+        rig.Tools.Set(Tool.Eraser);
+        Assert.True(rig.I.PointerDown(new Point(cx - 20, cy), 1));
+        rig.I.PointerMove(new Point(cx + 20, cy), 1);
+        Assert.True(rig.Session.Undo());
+        Assert.Empty(rig.Session.Document.Layers);
+        rig.I.PointerUp(new Point(cx + 20, cy), 1);
+
+        Assert.Equal(CanvasGesture.None, rig.I.Gesture);
+        Assert.Empty(rig.Session.Document.Layers);
+        Assert.Equal((0, 1), (rig.Session.UndoCount, rig.Session.RedoCount));
+    }
+
     // ---- Wheel ----
 
     [Fact] // wheel-scale-layer, wheel-sign-only-and-midstroke fixes: centered, x1.05 / /1.05, a burst is one step (R6, R7)

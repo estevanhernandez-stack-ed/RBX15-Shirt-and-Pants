@@ -19,7 +19,8 @@ public enum CanvasGesture { None, Move, Resize, Rotate, Draw, Erase }
 ///   SelectionGeometry.HitTest (rotate handle, corners TL TR BR BL, then the topmost visible box, else
 ///   deselect). A drag is one EditorSession gesture, opened at the press, closed at the release, the
 ///   capture loss or a cancel: one undo step iff the content changed (R7; select-move, select-resize-drag,
-///   select-rotate-drag fixes). Each move applies from the press state, as 4.1 does.</item>
+///   select-rotate-drag fixes). Each move applies from the press state, as 4.1 does. Any other edit mid drag (a
+///   panel key, Undo) closes the gesture first and the next move reopens it, so the edit is its own step.</item>
 /// <item><b>Draw</b> (Pen, Line, Rect, Ellipse; editor.js:1120-1146, :1196-1236, :1249-1293): no undo at the
 ///   press (draw-tool-start fix). The preview is the stroke the commit draws (R12). Pen color and width are
 ///   fixed at the press; shapes re-read color, size and fill on every move and wheel step (R11). The release
@@ -48,7 +49,7 @@ public sealed class CanvasInteraction
     readonly List<SKPoint> _points = [];
     IDisposable? _drag;
     IDisposable? _wheel;
-    bool _ownChange;   // true while Wheel itself changes the session, so its own Changing does not close its burst
+    bool _ownChange;   // true while Wheel or a select drag changes the session, so its own Changing does not close it
     int _layerId;
     Point _press;
     Point _last;
@@ -78,9 +79,13 @@ public sealed class CanvasInteraction
         };
         // R7 (critic MJ1): any other change entry point (a panel field or slider, Flip, Reset, a region paint, an
         // import, Undo, Redo) closes the burst before it changes anything, so it is never folded into the wheel's step.
+        // Final fix wave 7: it closes an open select-drag gesture the same way, so a keyboard edit mid drag is its own
+        // step. The drag itself goes on: its next move reopens the gesture (drag part 1, the edit, drag part 2 are three).
         _session.Changing += (_, _) =>
         {
-            if (!_ownChange) EndWheelBurst();
+            if (_ownChange) return;
+            EndWheelBurst();
+            EndDrag();
         };
     }
 
@@ -174,7 +179,7 @@ public sealed class CanvasInteraction
                 cursor = CanvasCursorKind.Move;
                 break;
         }
-        _drag = _session.BeginGesture();
+        OpenDrag();
         Update(gesture, null, CanvasCursor.Of(cursor));
         return true;
     }
@@ -198,15 +203,15 @@ public sealed class CanvasInteraction
         {
             case CanvasGesture.Move:   // editor.js:1169-1171
                 double x = _layerStart.X + (template.X - _press.X), y = _layerStart.Y + (template.Y - _press.Y);
-                _session.Apply(d => LayerOps.MoveTo(d, _layerId, x, y));
+                ApplyDrag(d => LayerOps.MoveTo(d, _layerId, x, y));
                 break;
             case CanvasGesture.Rotate: // editor.js:1172-1180, normalized (R5)
                 double angle = SelectionGeometry.RotateAngle(_center, _startOffset, template.X, template.Y);
-                _session.Apply(d => LayerOps.SetRotation(d, _layerId, angle));
+                ApplyDrag(d => LayerOps.SetRotation(d, _layerId, angle));
                 break;
             case CanvasGesture.Resize: // editor.js:1181-1190, clamped 1..500% (R6)
                 double scale = SelectionGeometry.ResizeScale(_startScale, _startDistance, Distance(template, _center));
-                _session.Apply(d => LayerOps.ScaleAboutCenter(d, _layerId, scale));
+                ApplyDrag(d => LayerOps.ScaleAboutCenter(d, _layerId, scale));
                 break;
             case CanvasGesture.Draw:   // pen: every point; shapes: the press and the latest point (editor.js:1200-1234)
                 if (_shape != ShapeTool.Pen && _points.Count > 1) _points[^1] = ToSk(template);
@@ -316,6 +321,24 @@ public sealed class CanvasInteraction
             float size = _eraseSize;
             _session.Apply(d => Eraser.ApplyTo(d, id, points, size));
         }
+    }
+
+    /// <summary>Opens the select drag's gesture if it is not open (at the press, and lazily after an unrelated edit closed it).</summary>
+    void OpenDrag()
+    {
+        if (_drag is not null) return;
+        _ownChange = true;
+        try { _drag = _session.BeginGesture(); }
+        finally { _ownChange = false; }
+    }
+
+    /// <summary>One select-drag move inside the drag's gesture, flagged as the drag's own change.</summary>
+    void ApplyDrag(Func<Document, Document> change)
+    {
+        OpenDrag();
+        _ownChange = true;
+        try { _session.Apply(change); }
+        finally { _ownChange = false; }
     }
 
     void EndDrag()

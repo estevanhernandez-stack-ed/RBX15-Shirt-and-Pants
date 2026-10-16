@@ -7991,12 +7991,12 @@
    "quirks": "Bug, fix.",
    "portTarget": "Region button style via DataTemplate with an IsFront trigger. Fix by construction.",
    "risk": "low",
-   "parityCheck": "Paint Front, right-click it, and screenshot the region grid.",
+   "parityCheck": "Paint Front, right-click it, and screenshot the region grid. Narrowed (M3b close-out, 2026-10-16): the tint return was observed after clearing Front with the Delete key, which runs the same clear command as right-click (pixels 67,51,92 -> 90,224,251 -> 67,51,92); the real mouse right-click clearing Front was observed in the 2026-10-16 computer-use smoke.",
    "owner": "App.Ribbon.Home",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: front region button loses its purple base highlight once cleared. v5: highlight is a persistent template trigger.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "fillstyle-ui-not-synced-from-region",

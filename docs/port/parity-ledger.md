@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**417 rows.** Status: done 187, open 230. Disposition: fix 200, keep 190, drop 26, new 1. Checks: ui-auto 120, unit 117, manual 67, golden 66, none-retired 25, doc 22.
+**417 rows.** Status: done 188, open 229. Disposition: fix 200, keep 190, drop 26, new 1. Checks: ui-auto 120, unit 117, manual 67, golden 66, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -174,7 +174,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `home-edit-group` | Edit group: Undo, Redo, Clear | ui-auto | keep | med |
 | open | `home-file-group` | File group: Save work, Open, Add image, Download template | manual | fix | med |
 | done | `home-settings-group` | Settings group: Template name, Mask, Grid | ui-auto | keep | low |
-| open | `region-front-highlight-lost` | Front region button loses its purple base highlight once cleared | ui-auto | fix | low |
+| done | `region-front-highlight-lost` | Front region button loses its purple base highlight once cleared | ui-auto | fix | low |
 | open | `fillstyle-ui-not-synced-from-region` | Fill Style controls are one-way (never read back from regions) | manual | keep | low |
 
 ## App.Ribbon.Layout

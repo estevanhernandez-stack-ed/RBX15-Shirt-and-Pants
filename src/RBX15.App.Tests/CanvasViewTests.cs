@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Media;
 using RBX15.App.Controls;
 using RBX15.App.ViewModels;
 using RBX15.App.Views;
@@ -31,7 +32,7 @@ public class CanvasViewTests
     public void The_host_and_the_pill_follow_the_view_model() => StaThread.Run(() =>
     {
         var session = new EditorSession();
-        var vm = new CanvasViewModel(session);
+        var vm = CanvasViewModelTests.Vm(session);
         var view = Load(vm);
         var host = (TemplateCanvasHost)view.FindName("Host");
         var label = (TextBlock)view.FindName("ZoomLabel");
@@ -41,7 +42,8 @@ public class CanvasViewTests
         Assert.Same(session.Document, host.Document);
         Assert.Equal(1, host.Zoom);
         Assert.Same(vm.DropCommand, host.DropCommand);
-        Assert.Same(vm.ClickCommand, host.ClickCommand);
+        Assert.Same(vm.Interaction, host.Interaction);
+        Assert.Equal((vm.Overlay, vm.Cursor, vm.AutomationValue), (host.Overlay, host.CanvasCursor, host.AutomationValue));
         Assert.Equal("100%", label.Text);
         Assert.Equal("Zoom 100%", AutomationProperties.GetName(label)); // the name keeps the value
         Assert.Equal(("-", "+"), ((string)zoomOut.Content, (string)zoomIn.Content)); // editor.html:333-335
@@ -64,7 +66,7 @@ public class CanvasViewTests
     [Fact] // canvas-zoom-clipped-no-pan: scrollbars appear only when the frame outgrows the area
     public void The_frame_scrolls_when_it_outgrows_the_area_and_centers_when_it_fits() => StaThread.Run(() =>
     {
-        var vm = new CanvasViewModel(new EditorSession());
+        var vm = CanvasViewModelTests.Vm(new EditorSession());
         var view = Load(vm);
         var host = (TemplateCanvasHost)view.FindName("Host");
         host.ApplyDpi(1);
@@ -74,8 +76,14 @@ public class CanvasViewTests
         view.Arrange(new Rect(0, 0, 901, 701));
         Assert.Equal(0, scroller.ScrollableWidth);
         Assert.Equal(0, scroller.ScrollableHeight);
-        // The 587x561 wrap (585x559 and its 1px border) is centered, so the frame starts 1px inside it.
-        Assert.Equal(new Point((901 - 587) / 2 + 1, (701 - 561) / 2 + 1), host.TranslatePoint(new Point(0, 0), view));
+        // The 587x561 wrap (585x559 and its 1px border) is centered, so the frame starts 1px inside it. Layout rounding
+        // snaps to the view's device pixels, so off 100% the offset lands within one device pixel of the DIP value
+        // (measured at 125%: (157.6, 71.2) for (158, 71)); compare in device pixels (pre-flight M2).
+        double scale = VisualTreeHelper.GetDpi(view).DpiScaleX;
+        var expected = new Point((901 - 587) / 2 + 1, (701 - 561) / 2 + 1);
+        var at = host.TranslatePoint(new Point(0, 0), view);
+        Assert.True(Math.Abs(at.X - expected.X) * scale < 1 && Math.Abs(at.Y - expected.Y) * scale < 1,
+            $"the frame is at {at}, not within one device pixel of {expected} at display scale {scale}");
 
         for (int i = 0; i < 8; i++) vm.ZoomInCommand.Execute(null); // 300%: 1755x1677
         view.UpdateLayout(); // the host invalidated its measure; run the queued layout pass

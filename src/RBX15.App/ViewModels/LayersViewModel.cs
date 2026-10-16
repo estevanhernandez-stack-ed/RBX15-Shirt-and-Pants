@@ -40,7 +40,10 @@ public sealed class LayersViewModel : ObservableObject
     /// <summary>Top first: Rows[0] is the last layer in Document.Layers.</summary>
     public ObservableCollection<LayerRowViewModel> Rows { get; } = [];
 
-    /// <summary>The selected row; setting it selects that layer (selectLayer, editor.js:575; never an undo step).</summary>
+    /// <summary>
+    /// The selected row; setting it selects that layer (selectLayer, editor.js:575; never an undo step). A user
+    /// pick of a row raises <see cref="LayerPicked"/>; a sync, or a deselect, does not.
+    /// </summary>
     public LayerRowViewModel? Selected
     {
         get => _selected;
@@ -48,8 +51,12 @@ public sealed class LayersViewModel : ObservableObject
         {
             if (_syncing || ReferenceEquals(value, _selected)) return;
             _session.Select(value?.Id);
+            if (value is not null) LayerPicked?.Invoke(this, EventArgs.Empty);
         }
     }
+
+    /// <summary>A user picked a row: selectLayer sets the Select tool (editor.js:577; R8). Composition wires it.</summary>
+    public event EventHandler? LayerPicked;
 
     /// <summary>btnMoveUp (editor.js:846-849): one undo step in v5 (layers-move-updown fix). Disabled at the top.</summary>
     public IRelayCommand MoveUpCommand { get; }

@@ -3,7 +3,10 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using RBX15.App.Canvas;
 using RBX15.App.Controls;
+using RBX15.App.Tests.Fakes;
+using RBX15.App.ViewModels;
 using RBX15.Engine;
 using SkiaSharp;
 
@@ -182,38 +185,151 @@ public class TemplateCanvasHostTests
         Assert.False(host.HandleDrop(new DataObject(DataFormats.FileDrop, new[] { @"C:\art\a.png" }), new Point(10, 10)));
     });
 
-    [Fact] // ruling R5 (critic C13): a left click without a drag runs ClickCommand with position / zoom (editor.js:1058-1061, :1100-1116)
-    public void A_click_runs_the_click_command_with_the_template_point_and_a_drag_does_not() => StaThread.Run(() =>
+    /// <summary>A host at <paramref name="zoom"/> over <paramref name="session"/>'s document, wired to a fresh interaction.</summary>
+    static (TemplateCanvasHost Host, CanvasInteraction Interaction, ToolsViewModel Tools) Wired(EditorSession session, double zoom = 1)
     {
-        var host = Host(new Document(), zoom: 2);
-        Assert.False(host.HandleClick(new Point(100, 50))); // no command yet
+        var tools = new ToolsViewModel();
+        var interaction = new CanvasInteraction(session, tools, new BrushViewModel(new FakeColorPicker()), new FakeStatus());
+        var host = Host(session.Document, zoom);
+        host.Interaction = interaction;
+        session.Changed += (_, _) => host.Document = session.Document;
+        return (host, interaction, tools);
+    }
 
-        var command = new RecordingCommand();
-        host.ClickCommand = command;
-        Assert.True(host.HandleClick(new Point(100, 50)));
-        Assert.Equal(new Point(50, 25), Assert.IsType<Point>(Assert.Single(command.Executed)));
+    static Layer Box() => new() { Id = 1, Image = Solid(100, 50, new SKColor(242, 47, 137)), X = 100, Y = 100 };
 
-        host.ClickCommand = new RecordingCommand(canExecute: false);
-        Assert.False(host.HandleClick(new Point(100, 50)));
+    [Fact] // select-move parityCheck: drag by (50,30) screen px at zoom 2 moves (25,15); canvas-coord-map: position / zoom
+    public void Pointer_seams_map_by_zoom_and_drive_the_interaction() => StaThread.Run(() =>
+    {
+        var session = new EditorSession(new Document { Layers = ImmutableList.Create(Box()) });
+        var (host, interaction, _) = Wired(session, zoom: 2);
+        Assert.True(host.HandlePointerDown(new Point(240, 220)));   // template (120, 110): on the layer
+        Assert.Equal(CanvasGesture.Move, interaction.Gesture);
+        host.HandlePointerMove(new Point(290, 250));
+        host.HandlePointerUp(new Point(290, 250));
+        var l = session.Document.Layers[0];
+        Assert.Equal((125.0, 115.0), (l.X, l.Y));
+        Assert.Equal(1, session.UndoCount);
+        Assert.False(host.IsMouseCaptured);
 
-        // A press and release farther apart than the system drag distance is a drag (M3b), not a click.
-        var down = new Point(10, 10);
-        Assert.True(TemplateCanvasHost.IsClick(down, new Point(10 + SystemParameters.MinimumHorizontalDragDistance, 10)));
-        Assert.False(TemplateCanvasHost.IsClick(down, new Point(11 + SystemParameters.MinimumHorizontalDragDistance, 10)));
-        Assert.False(TemplateCanvasHost.IsClick(down, new Point(10, 11 + SystemParameters.MinimumVerticalDragDistance)));
+        Assert.False(host.HandlePointerDown(new Point(20, 1000)));  // empty canvas: deselect, no gesture
+        Assert.Null(session.SelectedLayerId);
+        host.HandleLostCapture();                                   // idle: nothing
+        host.HandlePointerLeave();
+        Assert.Equal(1, session.UndoCount);
+
+        host.Interaction = null;                                    // no interaction: input is ignored
+        Assert.False(host.HandlePointerDown(new Point(240, 220)));
+        host.HandlePointerMove(new Point(10, 10));
+        host.HandlePointerUp(new Point(10, 10));
+        host.HandleWheel(120);
     });
 
-    [Fact] // controller ruling 2a: 4.1 selects on mousedown, so the PRESS point is hit-tested, not the release point
-    public void A_click_hit_tests_at_the_press_point_not_the_release_point() => StaThread.Run(() =>
+    [Fact] // canvas-mouse-button-agnostic fix (R10): only the left button reaches the interaction; right and middle stay unhandled
+    public void Only_the_left_button_reaches_the_interaction() => StaThread.Run(() =>
     {
-        var host = Host(new Document(), zoom: 2);
-        var command = new RecordingCommand();
-        host.ClickCommand = command;
-        Assert.True(host.CompleteClick(new Point(100, 50), new Point(102, 51)));
-        Assert.Equal(new Point(50, 25), Assert.IsType<Point>(Assert.Single(command.Executed)));
-        // A drag runs nothing.
-        Assert.False(host.CompleteClick(new Point(100, 50), new Point(300, 50)));
-        Assert.Single(command.Executed);
+        var layer = new Layer { Id = 1, Image = Solid(100, 50, SKColors.Red), X = 0, Y = 0 };
+        var session = new EditorSession(new Document { Layers = ImmutableList.Create(layer) });
+        var (host, interaction, _) = Wired(session);
+        MouseButtonEventArgs Press(MouseButton button) =>
+            new(Mouse.PrimaryDevice, Environment.TickCount, button) { RoutedEvent = Mouse.MouseDownEvent };
+
+        foreach (var button in new[] { MouseButton.Right, MouseButton.Middle })
+        {
+            var e = Press(button);
+            host.RaiseEvent(e);
+            Assert.False(e.Handled);
+            Assert.Equal((CanvasGesture.None, (int?)null), (interaction.Gesture, session.SelectedLayerId));
+        }
+        var left = Press(MouseButton.Left);
+        host.RaiseEvent(left);                                      // an element outside a window reads the position as (0, 0)
+        Assert.True(left.Handled);
+        // critic mn2 (pre-flight B1): an unparented host cannot capture the mouse, so the guard ends the started gesture
+        Assert.Equal((CanvasGesture.None, (int?)1), (interaction.Gesture, session.SelectedLayerId));
+        Assert.False(session.InGesture);
+    });
+
+    [Fact] // wheel-sign-only-and-midstroke fix: sign only, Delta >= 0 grows; a 400 ms quiet period closes the burst (R7)
+    public void The_wheel_is_sign_only_and_a_quiet_period_closes_the_burst() => StaThread.Run(() =>
+    {
+        var session = new EditorSession(new Document { Layers = ImmutableList.Create(Box()) });
+        session.Select(1);
+        var (host, _, _) = Wired(session);
+        host.HandleWheel(120);
+        host.HandleWheel(1);
+        host.HandleWheel(0);
+        Assert.Equal(Math.Pow(1.05, 3), session.Document.Layers[0].Scale, 12);
+        host.HandleWheel(-480);
+        Assert.Equal(Math.Pow(1.05, 2), session.Document.Layers[0].Scale, 12);
+        Assert.True(host.WheelBurstPending);
+        Assert.Equal(TimeSpan.FromMilliseconds(400), TemplateCanvasHost.WheelBurstDelay);
+        Assert.Equal(0, session.UndoCount);
+        host.FlushWheelBurst();                                     // the timer's tick
+        Assert.False(host.WheelBurstPending);
+        Assert.Equal(1, session.UndoCount);
+    });
+
+    [Fact] // render coalescing: N frame-input changes in one dispatcher turn render once, and the result is the last state
+    public void Many_frame_input_changes_render_once() => StaThread.Run(() =>
+    {
+        var host = Host(Sample());
+        _ = host.Frame;
+        int before = host.RenderCount;
+        for (int i = 0; i < 20; i++)
+            host.Document = Sample() with { BgOpacity = i / 20.0 };
+        host.Overlay = new ViewOverlay(1, null);
+        Assert.Equal(before, host.RenderCount);                     // nothing rendered yet: one Rendering tick is pending
+        var frame = Pixels(host.Frame!);
+        Assert.Equal(before + 1, host.RenderCount);
+        _ = host.Frame;
+        Assert.Equal(before + 1, host.RenderCount);                 // nothing pending: no render
+        var last = Sample() with { BgOpacity = 19 / 20.0 };
+        Assert.Equal(EngineFrame(last, new ViewOptions(1, 1) { SelectedLayerId = 1 }), frame);
+    });
+
+    [Fact] // a drag changes only the frame's content: no layout pass per mouse event; a zoom resizes it
+    public void Content_changes_keep_the_measure_and_a_zoom_invalidates_it() => StaThread.Run(() =>
+    {
+        var host = Host(Sample());
+        Assert.True(host.IsMeasureValid);
+        host.Document = Sample(grid: true);
+        host.Overlay = new ViewOverlay(1, null);
+        Assert.True(host.IsMeasureValid);
+        host.Zoom = 2;
+        Assert.False(host.IsMeasureValid);
+        host.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        Assert.Equal(new Size(1170, 1118), host.DesiredSize);
+    });
+
+    [Fact] // the overlay and the preview reach the engine: ViewOptions.SelectedLayerId and Preview (interfaces section 2)
+    public void The_overlay_reaches_the_engine_frame() => StaThread.Run(() =>
+    {
+        var doc = Sample();
+        var host = Host(doc, zoom: 1.5);
+        var plain = Pixels(host.Frame!);
+        var preview = LivePreview.Draw(new Stroke(ShapeTool.Line, [new SKPoint(20, 20), new SKPoint(300, 300)], SKColors.Lime, 8, false));
+        host.Overlay = new ViewOverlay(1, preview);
+        var shown = Pixels(host.Frame!);
+        Assert.Equal(EngineFrame(doc, new ViewOptions(1.5, 1) { SelectedLayerId = 1, Preview = preview }), shown);
+        Assert.NotEqual(plain, shown);
+        host.Overlay = ViewOverlay.None;
+        Assert.Equal(plain, Pixels(host.Frame!));
+    });
+
+    [Fact] // tools-cursor fix: the cursor follows the canvas cursor, and the eraser ring follows zoom and the device scale
+    public void The_cursor_follows_the_canvas_cursor_zoom_and_device_scale() => StaThread.Run(() =>
+    {
+        var host = Host(new Document());
+        Assert.Same(Cursors.Cross, host.Cursor);
+        host.CanvasCursor = CanvasCursor.Of(CanvasCursorKind.Move);
+        Assert.Same(Cursors.SizeAll, host.Cursor);
+        host.CanvasCursor = CanvasCursor.Ring(20);
+        var ring = host.Cursor;
+        Assert.Same(CanvasCursors.ToWpf(CanvasCursor.Ring(20), 1, 1), ring);
+        host.Zoom = 2;
+        Assert.Same(CanvasCursors.ToWpf(CanvasCursor.Ring(20), 2, 1), host.Cursor);
+        host.ApplyDpi(1.5);
+        Assert.Same(CanvasCursors.ToWpf(CanvasCursor.Ring(20), 2, 1.5), host.Cursor);
     });
 
     /// <summary>An IDataObject whose reads throw, like a shell virtual item or malformed OLE data.</summary>

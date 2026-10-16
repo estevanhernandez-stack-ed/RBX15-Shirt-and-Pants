@@ -2,7 +2,6 @@ using System.Windows;
 using RBX15.App.Canvas;
 using RBX15.App.Services;
 using RBX15.App.ViewModels;
-using RBX15.Engine;
 
 namespace RBX15.App;
 
@@ -30,18 +29,20 @@ internal static class Composition
         ArgumentNullException.ThrowIfNull(fileDialogs);
         ArgumentNullException.ThrowIfNull(dialogs);
         ArgumentNullException.ThrowIfNull(colorPicker);
-        var canvas = new CanvasViewModel(session);
-        // Task 4: import, export, layers and status (one ImportService serves Add image, the drop zone and the canvas).
+        // M3b: the status strip, the tool and the brush come first; the canvas, the Home tab and the eraser share them.
         var status = new StatusViewModel();
-        var import = new ImportService(session, status);
-        var fileGroup = new FileGroupViewModel(session, fileDialogs, dialogs, status, import);
-        var layers = new LayersViewModel(session, import, fileDialogs);
-        // A canvas drop lands every file on the drop point (editor.js:961-986, drop-canvas).
-        canvas.DropHandler = d => import.Import(d.Paths, (d.TemplatePoint.X, d.TemplatePoint.Y));
-        // A canvas click selects the topmost visible layer under it, or none (editor.js:1100-1116; Task 2 ruling R5).
-        canvas.ClickHandler = p => session.Select(LayerOps.HitTest(session.Document, p.X, p.Y));
         var tools = new ToolsViewModel();
         var brush = new BrushViewModel(colorPicker);
+        var canvas = new CanvasViewModel(session, tools, brush, status);
+        // Task 4: import, export, layers and status (one ImportService serves Add image, the drop zone and the canvas).
+        var import = new ImportService(session, status);
+        // addLayer and selectLayer set the Select tool; a drawing commit keeps the drawing tool (editor.js:523, :577; R8).
+        import.LayersAdded += (_, _) => tools.Set(Tool.Select);
+        var fileGroup = new FileGroupViewModel(session, fileDialogs, dialogs, status, import);
+        var layers = new LayersViewModel(session, import, fileDialogs);
+        layers.LayerPicked += (_, _) => tools.Set(Tool.Select);
+        // A canvas drop lands every file on the drop point (editor.js:961-986, drop-canvas).
+        canvas.DropHandler = d => import.Import(d.Paths, (d.TemplatePoint.X, d.TemplatePoint.Y));
         var home = new HomeViewModel(session, colorPicker)
         {
             Tools = tools,

@@ -60,9 +60,10 @@ public class Task4ViewTests
         Assert.True(items[0].IsSelected);
         var buttons = Descendants<Button>(items[1]).Select(AutomationProperties.GetName).ToList();
         Assert.Equal(new[] { "Dupe Back", "Show Back", "Delete Back" }, buttons);
+        // Up and Down moved into the Selected layer panel (Task 3; editor.js:773-774), so the list has none (R13).
         var all = Descendants<Button>(panel).Select(b => b.Content as string).ToList();
-        Assert.Contains("Up", all);
-        Assert.Contains("Down", all);
+        Assert.DoesNotContain("Up", all);
+        Assert.DoesNotContain("Down", all);
     });
 
     [Fact] // smoke find: a string Content made the button peers strip the first "_" as an access-key marker
@@ -85,14 +86,16 @@ public class Task4ViewTests
         Assert.Equal(new[] { "Dupe", "Hide", "Del" }, labels);
     });
 
-    [Fact] // controller ruling 3: drag reorder is M3b, so the heading carries no "(drag to reorder)" hint
-    public void The_layers_panel_header_shows_no_drag_to_reorder_hint() => StaThread.Run(() =>
+    [Fact] // editor.html:317: drag reorder works in M3b, so the heading carries 4.1's hint (10px, #555, the heading's mono 600)
+    public void The_layers_heading_shows_4_1s_drag_to_reorder_hint() => StaThread.Run(() =>
     {
         var panel = new LayersPanel { DataContext = Layers(new EditorSession()) };
         Layout(panel);
-        var texts = Descendants<TextBlock>(panel).Select(t => t.Text).ToList();
-        Assert.Contains("Layers", texts);
-        Assert.DoesNotContain(texts, t => t.Contains("drag", StringComparison.OrdinalIgnoreCase) || t.Contains("reorder", StringComparison.OrdinalIgnoreCase));
+        var heading = (TextBlock)panel.FindName("LayersHeading");
+        Assert.Equal("Layers (drag to reorder)", string.Concat(heading.Inlines.OfType<System.Windows.Documents.Run>().Select(r => r.Text)));
+        var hint = (System.Windows.Documents.Run)panel.FindName("ReorderHintRun");
+        Assert.Equal((10.0, "#FF555555"), (hint.FontSize, ((SolidColorBrush)hint.Foreground).Color.ToString()));
+        Assert.Equal((FontWeights.SemiBold, heading.FontFamily), (hint.FontWeight, hint.FontFamily));
     });
 
     [Fact]

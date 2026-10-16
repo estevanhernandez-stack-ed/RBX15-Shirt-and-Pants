@@ -55,6 +55,30 @@ static class GoldenRule
         Report(name, golden, candidate, ImageDiff.Compare(golden, candidate), heatmapPath);
     }
 
+    /// <summary>
+    /// The unchanged rule with some rectangles left out (M3b ruling R4): every pixel of <paramref name="excluded"/>
+    /// (device px, clipped to the image) is set to transparent in both the golden and the candidate, then
+    /// <see cref="ImageDiff.Compare"/> runs with its default tolerance as in <see cref="AssertImageMatches"/>. The
+    /// view-select gate passes the rotation label's box (<c>SelectionGeometry.LabelBounds</c>); everything else in the
+    /// frame, the box, dashes, handles, stem, knob and glyph included, is held to the unchanged rule. An empty list is
+    /// exactly <see cref="AssertImageMatches"/>.
+    /// </summary>
+    public static void AssertImageMatchesExcept(string name, string goldenPath, SKImage rendered, string heatmapPath, IReadOnlyList<SKRectI> excluded)
+    {
+        ArgumentNullException.ThrowIfNull(excluded);
+        using var golden = ImageDiff.Load(goldenPath);
+        using var candidate = ImageDiff.FromImage(rendered);
+        foreach (var bitmap in new[] { golden, candidate })
+            foreach (var rect in excluded)
+            {
+                var r = SKRectI.Intersect(rect, new SKRectI(0, 0, bitmap.Width, bitmap.Height));
+                for (int y = r.Top; y < r.Bottom; y++)
+                    for (int x = r.Left; x < r.Right; x++)
+                        bitmap.SetPixel(x, y, SKColors.Transparent);
+            }
+        Report(name, golden, candidate, ImageDiff.Compare(golden, candidate), heatmapPath);
+    }
+
     static void Report(string name, SKBitmap golden, SKBitmap candidate, DiffResult result, string heatmapPath)
     {
         if (!result.Pass)

@@ -3199,12 +3199,12 @@
    "quirks": "Hint text 'Set a style, then click a region to paint it. Right-click clears.' is the only in-app documentation (editor.html:164); keep verbatim.",
    "portTarget": "MouseRightButtonUp on region button, set e.Handled=true; same logic.",
    "risk": "low",
-   "parityCheck": "Right-click unpainted region: undo stack size unchanged. Right-click painted: stack +1, swatch cleared, canvas pixels revert.",
+   "parityCheck": "Right-click unpainted region: undo stack size unchanged. Right-click painted: stack +1, swatch cleared, canvas pixels revert. M3a smoke 2026-10-14 (UI Automation: undo counts) and 2026-10-16 (real mouse via computer use): right-click on painted FRONT cleared it as one step; right-click on unpainted BACK changed nothing.",
    "owner": "App.Ribbon.Home",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "regions-hint-text",
@@ -5625,12 +5625,12 @@
    "quirks": "Row is not keyboard operable. Layer name tooltips absent. Hidden layers are still hit-tested? No: canvas hit-test skips !visible layers.",
    "portTarget": "ListBox/ItemsControl (virtualized not needed) with a DataTemplate replicating the row; thumbnails as small cached BitmapSource (checkerboard not used, bg black). Rebuild strategy: the original rebuilds the entire list on every updateUI; in WPF bind to ObservableCollection (reverse view).",
    "risk": "med",
-   "parityCheck": "Add 3 layers: newest on top and selected; Hide dims name to 40% and flips label to 'Show'; Dupe inserts above original; list order equals z-order of canvas.",
+   "parityCheck": "Add 3 layers: newest on top and selected; Hide dims name to 40% and flips label to 'Show'; Dupe inserts above original; list order equals z-order of canvas. M3a smoke S6 2026-10-14 (UI Automation: newest on top and selected, Hide dims to 0.40 and reads Show, Dupe above original, list order = z-order) and 2026-10-16 (real mouse: canvas click deselects, canvas click on the layer reselects).",
    "owner": "App.Layers",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: rows are not keyboard operable and Hide/Show pushes no undo. v5: keyboard-operable rows with automation names and visibility toggles are undoable (one step each).",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "layers-reorder-drag-2",

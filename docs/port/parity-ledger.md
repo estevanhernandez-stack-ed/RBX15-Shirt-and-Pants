@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**413 rows.** Status: done 122, open 291. Disposition: fix 195, keep 191, drop 26, new 1. Checks: ui-auto 120, unit 114, manual 67, golden 65, none-retired 25, doc 22.
+**413 rows.** Status: done 124, open 289. Disposition: fix 195, keep 191, drop 26, new 1. Checks: ui-auto 120, unit 114, manual 67, golden 65, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -136,7 +136,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `layers-select` | Select layer | ui-auto | keep | low |
 | open | `layers-list-render` | Layer list rows (top = highest z) | ui-auto | fix | med |
 | open | `layers-reorder-drag` | Drag-to-reorder layers in panel | ui-auto | fix | med |
-| open | `layers-list` | Layer list rows | ui-auto | fix | med |
+| done | `layers-list` | Layer list rows | ui-auto | fix | med |
 | open | `layers-reorder-drag-2` | Drag to reorder layers | ui-auto | fix | med |
 | open | `layer-reorder-dragging-class-timer` | Layer drag ghost styling via setTimeout(0) and native drag image | ui-auto | keep | low |
 
@@ -159,7 +159,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `regions-grid-layout-pants` | Template Regions grid in Pants mode (labels and keys) | ui-auto | keep | low |
 | open | `regions-button-swatch-paint` | Region button swatch preview (paintRegionButton) | manual | fix | med |
 | open | `regions-click-fit-layer` | Click region button with a layer selected: fit layer into region | unit | fix | low |
-| open | `regions-right-click-clear` | Right-click region button clears its fill | ui-auto | keep | low |
+| done | `regions-right-click-clear` | Right-click region button clears its fill | ui-auto | keep | low |
 | open | `regions-hint-text` | Fill Style hint line | manual | keep | low |
 | open | `fillstyle-type-buttons` | Fill type button strip (7 types) | ui-auto | fix | low |
 | open | `fillstyle-color-pickers` | Color 1 and Color 2 pickers | manual | fix | med |

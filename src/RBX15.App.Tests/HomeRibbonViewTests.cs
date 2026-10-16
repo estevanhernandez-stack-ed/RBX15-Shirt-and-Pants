@@ -177,6 +177,23 @@ public class HomeRibbonViewTests
         Assert.Equal(4, session.UndoCount);
     });
 
+    [Fact] // final fix wave 15: the Fill Style sliders go through SliderGestureTracker.Attach, so a press a template marks handled still opens the one gesture
+    public void A_press_already_marked_handled_still_opens_the_fill_style_slider_gesture() => StaThread.Run(() =>
+    {
+        var session = new EditorSession();
+        var home = Home(session);
+        Tile(home.Regions, "torso_front").PaintCommand.Execute(null);
+        var group = new FillStyleGroup(() => true) { DataContext = home.FillStyle };
+        var scale = (Slider)group.FindName("ScaleSlider");
+
+        scale.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, Environment.TickCount, MouseButton.Left) { RoutedEvent = UIElement.PreviewMouseLeftButtonDownEvent, Handled = true });
+        home.FillStyle.Scale = 20;
+        home.FillStyle.Scale = 24;
+        Assert.Equal(1, session.UndoCount);                         // the paint; the drag is open
+        scale.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, Environment.TickCount, MouseButton.Left) { RoutedEvent = UIElement.PreviewMouseLeftButtonUpEvent, Handled = true });
+        Assert.Equal((2, false), (session.UndoCount, session.InGesture));
+    });
+
     [Fact] // fix round 1: press-and-hold on the track repeats LargeChange; the press is one gesture, one step
     public void A_pressed_slider_is_one_step_however_many_changes_it_repeats() => StaThread.Run(() =>
     {

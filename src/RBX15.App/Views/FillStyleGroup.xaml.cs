@@ -1,6 +1,4 @@
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Input;
 using RBX15.App.Controls;
 using RBX15.App.ViewModels;
 
@@ -22,20 +20,11 @@ public partial class FillStyleGroup : UserControl
     {
         _tracker = new SliderGestureTracker(() => (DataContext as FillStyleViewModel)?.BeginSliderDrag(), leftButtonDown);
         InitializeComponent();
+        // The same press, release, drag and capture-loss routing as LayerPropertiesPanel, press included when a
+        // template marks it handled (final fix wave 15; the five XAML forwarding handlers are gone).
+        _tracker.Attach(AngleSlider);
+        _tracker.Attach(ScaleSlider);
     }
-
-    void OnSliderPressed(object sender, MouseButtonEventArgs e) => Begin(freshPress: true);
-
-    // Thumb.DragStarted follows the press that already opened the gesture; opening a second one is skipped.
-    void OnSliderDragStarted(object sender, DragStartedEventArgs e) => Begin(freshPress: false);
-
-    void OnSliderReleased(object sender, MouseButtonEventArgs e) => _tracker.End();
-
-    void OnSliderDragCompleted(object sender, DragCompletedEventArgs e) => _tracker.End();
-
-    // A press that loses mouse capture without a DragCompleted (focus stolen mid-drag, a dialog, Alt+Tab)
-    // would leave the gesture open and fold every later edit into one undo step.
-    void OnSliderLostMouseCapture(object sender, MouseEventArgs e) => _tracker.End();
 
     /// <param name="freshPress">True for the press itself: any gesture still open then missed its release.</param>
     internal void Begin(bool freshPress) => _tracker.Begin(freshPress);

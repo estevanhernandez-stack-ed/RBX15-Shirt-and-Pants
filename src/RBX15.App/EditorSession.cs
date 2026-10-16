@@ -102,6 +102,15 @@ public sealed class EditorSession
 
     public event EventHandler<SessionChangedEventArgs>? Changed;
 
+    /// <summary>
+    /// Raised first by every change entry point (<see cref="Apply"/>, <see cref="ApplyWithSelection"/>,
+    /// <see cref="BeginGesture"/>, <see cref="Undo"/>, <see cref="Redo"/>), before it changes anything. The canvas
+    /// closes an open wheel burst on it, so an unrelated edit is never folded into the burst's step (M3b R7).
+    /// </summary>
+    public event EventHandler? Changing;
+
+    void RaiseChanging() => Changing?.Invoke(this, EventArgs.Empty);
+
     EditorSnapshot Snapshot => new(Document, SelectedLayerId);
 
     bool GestureChanged => _gestureStart is not null && !_gestureStart.Document.ContentEquals(Document);
@@ -118,6 +127,7 @@ public sealed class EditorSession
     public bool Apply(Func<Document, Document> change)
     {
         ArgumentNullException.ThrowIfNull(change);
+        RaiseChanging();
         var before = Snapshot;
         var after = change(before.Document) ?? throw new InvalidOperationException("A document change returned null.");
         return Adopt(before, new EditorSnapshot(after, before.SelectedLayerId));
@@ -132,6 +142,7 @@ public sealed class EditorSession
     public bool ApplyWithSelection(Func<EditorSnapshot, EditorSnapshot> change)
     {
         ArgumentNullException.ThrowIfNull(change);
+        RaiseChanging();
         var before = Snapshot;
         var after = change(before) ?? throw new InvalidOperationException("A document change returned null.");
         if (after.Document is null) throw new InvalidOperationException("A document change returned a null document.");
@@ -159,6 +170,7 @@ public sealed class EditorSession
     /// </summary>
     public IDisposable BeginGesture()
     {
+        RaiseChanging();
         if (_gestureDepth++ == 0) _gestureStart = Snapshot;
         return new GestureScope(this);
     }
@@ -175,6 +187,7 @@ public sealed class EditorSession
 
     bool Step(bool redo)
     {
+        RaiseChanging();
         var what = RecordGesture();
         var current = Snapshot;
         var target = redo ? _history.Redo(current) : _history.Undo(current);

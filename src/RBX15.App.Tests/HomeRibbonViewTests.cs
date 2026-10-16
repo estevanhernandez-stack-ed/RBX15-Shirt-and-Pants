@@ -148,9 +148,11 @@ public class HomeRibbonViewTests
     {
         var session = new EditorSession();
         var home = Home(session);
-        var view = Load(home);
         Tile(home.Regions, "torso_front").PaintCommand.Execute(null);
-        var angle = Descendants<Slider>(view).Single(s => AutomationProperties.GetName(s) == "Angle");
+        // The group with the button held, as during a real press: Mouse.LeftButton always reads up in a test, and
+        // SliderGestureTracker ignores a DragStarted that arrives with the button up (M3b Task 3).
+        var group = new FillStyleGroup(() => true) { DataContext = home.FillStyle };
+        var angle = (Slider)group.FindName("AngleSlider");
 
         void Start() => angle.RaiseEvent(new DragStartedEventArgs(0, 0) { RoutedEvent = Thumb.DragStartedEvent });
         void Complete() => angle.RaiseEvent(new DragCompletedEventArgs(0, 0, false) { RoutedEvent = Thumb.DragCompletedEvent });
@@ -179,9 +181,11 @@ public class HomeRibbonViewTests
     {
         var session = new EditorSession();
         var home = Home(session);
-        var view = Load(home);
         Tile(home.Regions, "torso_front").PaintCommand.Execute(null);
-        var angle = Descendants<Slider>(view).Single(s => AutomationProperties.GetName(s) == "Angle");
+        // The group with the button held, as during a real press: Mouse.LeftButton always reads up in a test, and
+        // SliderGestureTracker ignores a DragStarted that arrives with the button up (M3b Task 3).
+        var group = new FillStyleGroup(() => true) { DataContext = home.FillStyle };
+        var angle = (Slider)group.FindName("AngleSlider");
 
         angle.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, Environment.TickCount, MouseButton.Left) { RoutedEvent = UIElement.PreviewMouseLeftButtonDownEvent });
         for (int a = 50; a < 80; a++) home.FillStyle.Angle = a;   // the repeat button's LargeChange ticks

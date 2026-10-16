@@ -284,4 +284,73 @@ public class EraserTests
         }
         Assert.True(fullyErased > 0);
     }
+
+    // ---- M3b: the eraser on the selection ----
+
+    static Document TwoLayers(bool firstVisible = true) => new()
+    {
+        Layers = System.Collections.Immutable.ImmutableList.Create(
+            At(SolidLayer(100, 100), x: 50, y: 50, id: 1) with { Visible = firstVisible },
+            At(SolidLayer(100, 100), x: 300, y: 50, id: 2)),
+    };
+
+    [Fact] // ruling R3: a press without movement erases nothing and changes no document (no undo step)
+    public void A_press_without_movement_erases_nothing()
+    {
+        var doc = TwoLayers();
+        Assert.Same(doc, Eraser.ApplyTo(doc, 1, [new SKPoint(100, 100)], 20));
+        Assert.Same(doc, Eraser.ApplyTo(doc, 1, [], 20));
+        using var surface = SKSurface.Create(new SKImageInfo(TW, TH, SKImageInfo.PlatformColorType, SKAlphaType.Premul));
+        surface.Canvas.Clear(SKColors.Transparent);
+        Eraser.DrawStroke(surface.Canvas, [new SKPoint(100, 100)], 20, EraseStroking.Once);
+        using var blank = surface.Snapshot();
+        Assert.False(Eraser.HasContent(blank));
+    }
+
+    [Fact] // eraser-apply, eraser-selection-semantics: only the given layer changes; the rest keep their instances
+    public void ApplyTo_erases_the_given_layer_and_keeps_the_rest()
+    {
+        var doc = TwoLayers();
+        var erased = Eraser.ApplyTo(doc, 1, [new SKPoint(60, 100), new SKPoint(140, 100)], 10);
+        Assert.NotSame(doc, erased);
+        Assert.Equal(new[] { 1, 2 }, erased.Layers.Select(l => l.Id));
+        Assert.NotSame(doc.Layers[0].Image, erased.Layers[0].Image);
+        Assert.Same(doc.Layers[1], erased.Layers[1]);
+        Assert.Equal(0, AlphaAt(erased.Layers[0].Image, 50, 50));   // template (100, 100) is image (50, 50)
+        Assert.Equal(255, AlphaAt(erased.Layers[0].Image, 50, 10));
+        Assert.Equal((50.0, 50.0, 1.0), (erased.Layers[0].X, erased.Layers[0].Y, erased.Layers[0].Scale));
+    }
+
+    [Fact] // ruling R2 and eraser-apply: a hidden selected layer still erases, as in 4.1
+    public void ApplyTo_erases_a_hidden_layer()
+    {
+        var doc = TwoLayers(firstVisible: false);
+        var erased = Eraser.ApplyTo(doc, 1, [new SKPoint(60, 100), new SKPoint(140, 100)], 10);
+        Assert.Equal(0, AlphaAt(erased.Layers[0].Image, 50, 50));
+        Assert.False(erased.Layers[0].Visible);
+    }
+
+    [Fact] // no step when nothing changes: a missing id, or a drag that misses the template
+    public void ApplyTo_returns_the_same_document_when_nothing_is_erased()
+    {
+        var doc = TwoLayers();
+        Assert.Same(doc, Eraser.ApplyTo(doc, 9, [new SKPoint(60, 100), new SKPoint(140, 100)], 10));
+        Assert.Same(doc, Eraser.ApplyTo(doc, 1, [new SKPoint(-100, -100), new SKPoint(-50, -50)], 10));
+        Assert.Throws<ArgumentNullException>(() => Eraser.ApplyTo(null!, 1, [], 1));
+        Assert.Throws<ArgumentNullException>(() => Eraser.ApplyTo(doc, 1, null!, 1));
+    }
+
+    [Fact] // DrawStroke is StrokeCanvas's body, in both stroking modes
+    public void DrawStroke_is_the_StrokeCanvas_body()
+    {
+        foreach (var stroking in new[] { EraseStroking.Once, EraseStroking.Replay41 })
+        {
+            using var canvas = Eraser.StrokeCanvas(Zigzag, 20, stroking);
+            using var surface = SKSurface.Create(new SKImageInfo(TW, TH, SKImageInfo.PlatformColorType, SKAlphaType.Premul));
+            surface.Canvas.Clear(SKColors.Transparent);
+            Eraser.DrawStroke(surface.Canvas, Zigzag, 20, stroking);
+            using var drawn = surface.Snapshot();
+            Assert.Equal(Alphas(canvas), Alphas(drawn));
+        }
+    }
 }

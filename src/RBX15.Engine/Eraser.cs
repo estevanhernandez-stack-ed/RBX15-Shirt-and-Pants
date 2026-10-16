@@ -66,31 +66,58 @@ public static class Eraser
     {
         var info = new SKImageInfo(TemplateSize.Width, TemplateSize.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
         using var surface = SKSurface.Create(info) ?? throw new InvalidOperationException("cannot create stroke surface");
-        var canvas = surface.Canvas;
-        canvas.Clear(SKColors.Transparent);
-        if (points.Count >= 2)
-        {
-            using var paint = new SKPaint
-            {
-                Color = StrokeColor,
-                IsAntialias = true,
-                Style = SKPaintStyle.Stroke,
-                StrokeWidth = float.IsFinite(size) && size > 0 ? size : 1,
-                StrokeCap = SKStrokeCap.Round,
-                StrokeJoin = SKStrokeJoin.Round,
-            };
-            // Once: only the full path. Replay41: the path through points[0..end] after every move.
-            int firstEnd = stroking == EraseStroking.Replay41 ? 1 : points.Count - 1;
-            for (int end = firstEnd; end < points.Count; end++)
-            {
-                using var builder = new SKPathBuilder();
-                builder.MoveTo(points[0].X, points[0].Y);
-                for (int k = 1; k <= end; k++) builder.LineTo(points[k].X, points[k].Y);
-                using var path = builder.Detach();
-                canvas.DrawPath(path, paint);
-            }
-        }
+        surface.Canvas.Clear(SKColors.Transparent);
+        DrawStroke(surface.Canvas, points, size, stroking);
         return surface.Snapshot();
+    }
+
+    /// <summary>
+    /// The eraser stroke into an existing, already cleared, template-size kN32 canvas: <see cref="StrokeColor"/>,
+    /// <see cref="Tools.SanitizeWidth"/>(<paramref name="size"/>), round caps and joins, antialiased. Fewer than two points
+    /// draw nothing (M3b ruling R3). Shared by <see cref="StrokeCanvas"/> and the live preview (<see cref="LivePreview"/>).
+    /// </summary>
+    internal static void DrawStroke(SKCanvas canvas, IReadOnlyList<SKPoint> points, float size, EraseStroking stroking)
+    {
+        ArgumentNullException.ThrowIfNull(canvas);
+        ArgumentNullException.ThrowIfNull(points);
+        if (points.Count < 2) return;
+        using var paint = new SKPaint
+        {
+            Color = StrokeColor,
+            IsAntialias = true,
+            Style = SKPaintStyle.Stroke,
+            StrokeWidth = Tools.SanitizeWidth(size),
+            StrokeCap = SKStrokeCap.Round,
+            StrokeJoin = SKStrokeJoin.Round,
+        };
+        // Once: only the full path. Replay41: the path through points[0..end] after every move.
+        int firstEnd = stroking == EraseStroking.Replay41 ? 1 : points.Count - 1;
+        for (int end = firstEnd; end < points.Count; end++)
+        {
+            using var builder = new SKPathBuilder();
+            builder.MoveTo(points[0].X, points[0].Y);
+            for (int k = 1; k <= end; k++) builder.LineTo(points[k].X, points[k].Y);
+            using var path = builder.Detach();
+            canvas.DrawPath(path, paint);
+        }
+    }
+
+    /// <summary>
+    /// The eraser on the selection (editor.js:1265-1283; ledger eraser-apply, eraser-selection-semantics): the document
+    /// with layer <paramref name="layerId"/> replaced by <see cref="Apply(Layer, IReadOnlyList{SKPoint}, float)"/>, stroked
+    /// once. A hidden layer erases too, as in 4.1 (M3b ruling R2). Returns <paramref name="doc"/> itself, so the caller
+    /// records no undo step, when the id is missing or the stroke erased nothing (fewer than two points, or entirely off
+    /// the template).
+    /// </summary>
+    public static Document ApplyTo(Document doc, int layerId, IReadOnlyList<SKPoint> points, float size)
+    {
+        ArgumentNullException.ThrowIfNull(doc);
+        ArgumentNullException.ThrowIfNull(points);
+        int i = doc.Layers.FindIndex(l => l.Id == layerId);
+        if (i < 0) return doc;
+        var layer = doc.Layers[i];
+        var erased = Apply(layer, points, size);
+        return ReferenceEquals(erased, layer) ? doc : doc with { Layers = doc.Layers.SetItem(i, erased) };
     }
 
     /// <summary>

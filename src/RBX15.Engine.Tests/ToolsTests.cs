@@ -247,4 +247,67 @@ public class ToolsTests
     [InlineData(ShapeTool.Ellipse, "Circle drawing")]
     public void Drawing_layers_are_named_after_the_4_1_tool_id(ShapeTool tool, string name) =>
         Assert.Equal(name, Tools.DrawingName(tool));
+
+    // ── M3b: width sanitizing, the wheel's brush step, DrawStroke ──
+
+    [Fact] // editor.html:57: the brush range 1..50, default 4
+    public void Brush_size_constants_are_editor_html_57() =>
+        Assert.Equal((1, 50, 4), (Tools.MinBrushSize, Tools.MaxBrushSize, Tools.DefaultBrushSize));
+
+    [Theory] // M2a carry-forward: canvas ignores a lineWidth that is not finite or not positive, keeping its default 1
+    [InlineData(0f, 1f)]
+    [InlineData(-3f, 1f)]
+    [InlineData(float.NaN, 1f)]
+    [InlineData(float.PositiveInfinity, 1f)]
+    [InlineData(float.NegativeInfinity, 1f)]
+    [InlineData(0.5f, 0.5f)]
+    [InlineData(4f, 4f)]
+    [InlineData(50f, 50f)]
+    public void SanitizeWidth_keeps_canvas_default_1_for_bad_widths(float width, float sanitized) =>
+        Assert.Equal(sanitized, Tools.SanitizeWidth(width));
+
+    [Fact] // a bad width draws exactly like width 1, never Skia's hairline (width 0) or a NaN path
+    public void A_bad_width_strokes_like_width_1()
+    {
+        foreach (var tool in new[] { ShapeTool.Pen, ShapeTool.Line, ShapeTool.Rect, ShapeTool.Ellipse })
+        {
+            using var one = Tools.RenderStroke(Shape(tool, 100, 100, 200, 160, width: 1));
+            foreach (var bad in new[] { 0f, -2f, float.NaN })
+            {
+                using var got = Tools.RenderStroke(Shape(tool, 100, 100, 200, 160, width: bad));
+                Assert.Equal(0, Differing(one, got));
+            }
+        }
+        using var dot = Tools.RenderStroke(new Stroke(ShapeTool.Pen, new[] { new SKPoint(50.5f, 50.5f) }, Cyan, float.NaN, false));
+        using var dotOne = Tools.RenderStroke(new Stroke(ShapeTool.Pen, new[] { new SKPoint(50.5f, 50.5f) }, Cyan, 1, false));
+        Assert.Equal(0, Differing(dotOne, dot));
+    }
+
+    [Theory] // wheel-brush-size (editor.js:1316-1318): one step per event by sign, clamped to 1..50; sign 0 grows
+    [InlineData(4, 1, 5)]
+    [InlineData(4, -1, 3)]
+    [InlineData(4, 0, 5)]
+    [InlineData(4, 120, 5)]
+    [InlineData(4, -120, 3)]
+    [InlineData(50, 1, 50)]
+    [InlineData(1, -1, 1)]
+    [InlineData(60, -1, 50)]
+    public void StepBrushSize_is_one_step_by_sign(int size, int sign, int next) =>
+        Assert.Equal(next, Tools.StepBrushSize(size, sign));
+
+    [Fact] // ruling R12: DrawStroke into a cleared template canvas is RenderStroke, for every tool
+    public void DrawStroke_is_the_RenderStroke_body()
+    {
+        foreach (var tool in new[] { ShapeTool.Pen, ShapeTool.Line, ShapeTool.Rect, ShapeTool.Ellipse })
+        {
+            var stroke = new Stroke(tool, new[] { new SKPoint(80, 60), new SKPoint(140, 200), new SKPoint(300, 120) }, Cyan, 6, tool == ShapeTool.Rect);
+            using var rendered = Tools.RenderStroke(stroke);
+            using var surface = SKSurface.Create(new SKImageInfo(TemplateSize.Width, TemplateSize.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul));
+            surface.Canvas.Clear(SKColors.Transparent);
+            Tools.DrawStroke(surface.Canvas, stroke);
+            using var drawn = surface.Snapshot();
+            Assert.Equal(0, Differing(rendered, drawn));
+        }
+        Assert.Throws<ArgumentNullException>(() => Tools.RenderStroke(null!));
+    }
 }

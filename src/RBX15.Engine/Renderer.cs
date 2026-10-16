@@ -70,13 +70,24 @@ public static class Renderer
     public static void RenderExport(SKCanvas canvas, Document doc) => RenderComposite(canvas, doc, applyMask: true);
 
     /// <summary>
-    /// The offscreen half of render() (editor.js:300-337) without the live drawing preview (M3b):
+    /// The offscreen half of render() (editor.js:300-337) without a live drawing preview:
     /// clear, background, region fills, visible layers bottom to top, then the mask with
     /// destination-in only when <paramref name="applyMask"/>. Export always masks
     /// (<see cref="RenderExport"/>); the view masks when <c>Document.ShowMask</c> (editor.js:332-337).
     /// Same precondition as <see cref="RenderExport"/>: a kN32 premultiplied canvas in template space.
     /// </summary>
-    public static void RenderComposite(SKCanvas canvas, Document doc, bool applyMask)
+    public static void RenderComposite(SKCanvas canvas, Document doc, bool applyMask) =>
+        RenderComposite(canvas, doc, applyMask, null, null);
+
+    /// <summary>
+    /// <see cref="RenderComposite(SKCanvas, Document, bool)"/> with the live drawing preview (editor.js:324-330) between
+    /// the layers and the mask, so a masked view also masks the preview (ledger render-live-preview,
+    /// draw-preview-composite). The preview is drawn into <paramref name="previewSurface"/> (a template-size kN32 surface
+    /// the caller keeps, <see cref="ViewRenderer"/>) or, when null, into a surface made and disposed here; then that image
+    /// is drawn at (0, 0) with <see cref="LivePreview.Alpha"/>, as 4.1's <c>drawImage(drawCanvas, 0, 0)</c> under
+    /// globalAlpha. The export never passes a preview.
+    /// </summary>
+    internal static void RenderComposite(SKCanvas canvas, Document doc, bool applyMask, LivePreview? preview, SKSurface? previewSurface)
     {
         ArgumentNullException.ThrowIfNull(canvas);
         ArgumentNullException.ThrowIfNull(doc);
@@ -84,10 +95,35 @@ public static class Renderer
         DrawBackground(canvas, doc);
         Fills.PaintRegions(canvas, doc.Mode, doc.RegionFills);
         foreach (var layer in doc.Layers) DrawLayer(canvas, layer);
+        if (preview is not null) DrawPreview(canvas, preview, previewSurface);
         if (!applyMask) return;
         using var mask = new SKPaint { BlendMode = SKBlendMode.DstIn };
         canvas.DrawImage(Template.Mask(doc.Mode), 0, 0, MaskSampling, mask);
     }
+
+    static void DrawPreview(SKCanvas canvas, LivePreview preview, SKSurface? reuse)
+    {
+        SKSurface? owned = null;
+        var surface = reuse ?? (owned = SKSurface.Create(TemplateInfo) ?? throw new InvalidOperationException("cannot create the preview surface"));
+        try
+        {
+            var pc = surface.Canvas;
+            pc.Clear(SKColors.Transparent);
+            if (preview.IsEraser) Eraser.DrawStroke(pc, preview.Stroke.Points, preview.Stroke.Width, EraseStroking.Once);
+            else Tools.DrawStroke(pc, preview.Stroke);
+            using var image = surface.Snapshot();
+            using var paint = new SKPaint { ColorF = new SKColorF(0, 0, 0, preview.Alpha) };
+            canvas.DrawImage(image, 0, 0, LayerSampling, paint);
+        }
+        finally
+        {
+            owned?.Dispose();
+        }
+    }
+
+    /// <summary>The template-size kN32 premultiplied surface info every composite, stroke and preview surface uses.</summary>
+    internal static readonly SKImageInfo TemplateInfo =
+        new(TemplateSize.Width, TemplateSize.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
 
     /// <summary>
     /// The view frame's size in device pixels. 4.1 assigns <c>canvas.width = TW * zoom</c>
@@ -107,7 +143,7 @@ public static class Renderer
 
     static readonly SKColor CheckerBase = new(0x0f, 0x1f, 0x31);  // editor.js:435
     static readonly SKColor CheckerSquare = new(0x05, 0x0c, 0x18); // editor.js:436
-    static readonly SKSamplingOptions NearestSampling = new(SKFilterMode.Nearest, SKMipmapMode.None);
+    internal static readonly SKSamplingOptions NearestSampling = new(SKFilterMode.Nearest, SKMipmapMode.None);
 
     /// <summary>
     /// Half the checkerboard tile in device pixels: 8 CSS px (editor.js:432-437) times the device
@@ -116,8 +152,8 @@ public static class Renderer
     internal static int CheckerHalf(double deviceScale) => Math.Max(1, (int)Math.Round(8 * deviceScale, MidpointRounding.AwayFromZero));
 
     /// <summary>
-    /// The view (render(), editor.js:300-359) minus the live drawing preview and the selection overlay
-    /// (both M3b). The composite renders at 585x559 identity (the Renderer's precondition), masked
+    /// The view (render(), editor.js:300-429), through a <see cref="ViewRenderer"/> made for this call. The composite
+    /// (with <see cref="ViewOptions.Preview"/>) renders at 585x559 identity (the Renderer's precondition), masked
     /// iff <c>doc.ShowMask</c>. The frame then gets:
     /// <list type="number">
     /// <item>the checkerboard (editor.js:345-348, :431-438): a tile of 2 x <see cref="CheckerHalf"/> device pixels anchored
@@ -128,43 +164,19 @@ public static class Renderer
     /// <item>when <c>options.ShowGrid</c>, every region of the document's mode stroked with rgba(255,255,0,0.3) at
     ///   (x, y, w, h) times the scale, unsnapped (editor.js:352-359; render-grid-overlay, overlay-grid-checkbox). The line
     ///   width is <c>DeviceScale</c>, 4.1's 1 CSS px.</item>
+    /// <item>when <see cref="ViewOptions.SelectedLayerId"/> names a visible layer, the selection overlay
+    ///   (<see cref="DrawSelectionOverlay"/>, editor.js:361-425).</item>
     /// </list>
     /// Precondition: <paramref name="canvas"/> is <see cref="ViewSize"/> pixels, kN32 premultiplied, identity matrix.
+    /// The app keeps one <see cref="ViewRenderer"/> instead, so the offscreen surface and checker tile persist.
     /// </summary>
     public static void RenderView(SKCanvas canvas, Document doc, ViewOptions options)
     {
-        ArgumentNullException.ThrowIfNull(canvas);
-        ArgumentNullException.ThrowIfNull(doc);
-        var size = ViewSize(options);
-
-        var info = new SKImageInfo(TemplateSize.Width, TemplateSize.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
-        using var offscreen = SKSurface.Create(info) ?? throw new InvalidOperationException("cannot create the composite surface");
-        RenderComposite(offscreen.Canvas, doc, doc.ShowMask);
-        using var composite = offscreen.Snapshot();
-
-        var frame = SKRect.Create(0, 0, size.Width, size.Height);
-        canvas.Clear(SKColors.Transparent);
-        using (var tile = CheckerTile(CheckerHalf(options.DeviceScale)))
-        using (var shader = tile.ToShader(SKShaderTileMode.Repeat, SKShaderTileMode.Repeat, NearestSampling))
-        using (var checker = new SKPaint { Shader = shader })
-            canvas.DrawRect(frame, checker);
-
-        double scale = options.Scale;
-        canvas.DrawImage(composite, frame, scale < 1 ? LayerSampling : NearestSampling);
-
-        if (!options.ShowGrid) return;
-        using var grid = new SKPaint
-        {
-            Style = SKPaintStyle.Stroke,
-            StrokeWidth = (float)options.DeviceScale,
-            IsAntialias = true,
-            ColorF = new SKColorF(1, 1, 0, 0.3f),
-        };
-        foreach (var r in Template.Regions(doc.Mode))
-            canvas.DrawRect(SKRect.Create((float)(r.X * scale), (float)(r.Y * scale), (float)(r.W * scale), (float)(r.H * scale)), grid);
+        using var renderer = new ViewRenderer();
+        renderer.Render(canvas, doc, options);
     }
 
-    static SKImage CheckerTile(int half)
+    internal static SKImage CheckerTile(int half)
     {
         var info = new SKImageInfo(half * 2, half * 2, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
         using var surface = SKSurface.Create(info) ?? throw new InvalidOperationException("cannot create the checker tile");
@@ -173,6 +185,143 @@ public static class Renderer
         surface.Canvas.DrawRect(SKRect.Create(0, 0, half, half), square);
         surface.Canvas.DrawRect(SKRect.Create(half, half, half, half), square);
         return surface.Snapshot();
+    }
+
+    static readonly SKColor SelectCyan = new(0x17, 0xd4, 0xfa);    // editor.js:375, :382
+    static readonly SKColor SelectMagenta = new(0xf2, 0x2f, 0x89); // editor.js:391, :397, :418
+
+    /// <summary>
+    /// The selection overlay (editor.js:361-425; ledger render-selection-box, render-resize-handles,
+    /// render-rotation-handle, render-rotation-label, select-handle-render), drawn on the view frame after the grid.
+    /// Every size is 4.1's CSS px; the canvas is scaled by <c>DeviceScale</c> first, so at device scale 1 this is 4.1's
+    /// drawing call for call. In the frame of the zoomed layer box (w = img.width*scale*zoom, centered at
+    /// x*zoom + w/2, y*zoom + h/2, rotated by the layer's rotation; flips are not applied, editor.js:365-373):
+    /// <list type="bullet">
+    /// <item>the box: strokeRect(-w/2, -h/2, w, h), #17d4fa, width 2, dash [5, 5] from the top-left corner (:375-379);</item>
+    /// <item>the corner handles: fillRect(hx-4, hy-4, 8, 8) at TL, TR, BR, BL, #17d4fa (:382-384);</item>
+    /// <item>the stem: (0, -h/2) to (0, -h/2 - 30), #f22f89, width 2 (:387-393);</item>
+    /// <item>the knob: a circle of radius 8 at (0, -h/2 - 30), filled #f22f89, stroked white 1.5 (:395-401);</item>
+    /// <item>the glyph: an arc of radius 4 from -0.7π to 0.4π and its arrowhead, stroked white 1.5 (:403-414);</item>
+    /// <item>the label when rotation != 0: <see cref="SelectionGeometry.RotationLabel"/> in 11 px JetBrains Mono 400,
+    ///   #f22f89, centered, alphabetic baseline at (0, -h/2 - 46) (:416-420). JetBrains Mono is the vendored face
+    ///   (render-rotation-label fix: bundled, so offline users get it too).</item>
+    /// </list>
+    /// Canvas defaults apply where 4.1 leaves them: antialiased, butt caps, miter joins with limit 10.
+    /// A hidden layer draws nothing (M3b ruling R2).
+    /// </summary>
+    internal static void DrawSelectionOverlay(SKCanvas canvas, Layer layer, ViewOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(canvas);
+        ArgumentNullException.ThrowIfNull(layer);
+        ArgumentNullException.ThrowIfNull(options);
+        if (!layer.Visible) return;
+        double zoom = options.Zoom;
+        double w = layer.Image.Width * layer.Scale * zoom, h = layer.Image.Height * layer.Scale * zoom; // editor.js:365-366
+        double cx = layer.X * zoom + w / 2, cy = layer.Y * zoom + h / 2;                               // editor.js:367-368
+        int restoreTo = canvas.Save();
+        canvas.Scale((float)options.DeviceScale);
+        canvas.Translate((float)cx, (float)cy);
+        canvas.RotateRadians((float)(layer.Rotation * Math.PI / 180));
+
+        using (var dash = SKPathEffect.CreateDash(new float[] { 5, 5 }, 0))
+        using (var box = OverlayStroke(SelectCyan, 2))
+        {
+            box.PathEffect = dash;
+            canvas.DrawRect(SKRect.Create((float)(-w / 2), (float)(-h / 2), (float)w, (float)h), box);
+        }
+
+        using (var handle = new SKPaint { Color = SelectCyan, IsAntialias = true, Style = SKPaintStyle.Fill })
+            foreach (var (hx, hy) in new[] { (-w / 2, -h / 2), (w / 2, -h / 2), (w / 2, h / 2), (-w / 2, h / 2) })
+                canvas.DrawRect(SKRect.Create((float)(hx - 4), (float)(hy - 4), 8, 8), handle);
+
+        double knobY = -h / 2 - SelectionGeometry.RotateHandleDistance;
+        using (var stem = OverlayStroke(SelectMagenta, 2))
+        using (var pb = new SKPathBuilder())
+        {
+            pb.MoveTo(0, (float)(-h / 2));
+            pb.LineTo(0, (float)knobY);
+            using var path = pb.Detach();
+            canvas.DrawPath(path, stem);
+        }
+
+        using (var white = OverlayStroke(SKColors.White, 1.5f))
+        {
+            using (var knob = CanvasArc(0, (float)knobY, 8, 0, Math.PI * 2))
+            {
+                using (var fill = new SKPaint { Color = SelectMagenta, IsAntialias = true, Style = SKPaintStyle.Fill })
+                    canvas.DrawPath(knob, fill);
+                canvas.DrawPath(knob, white);
+            }
+            using (var glyph = CanvasArc(0, (float)knobY, 4, -Math.PI * 0.7, Math.PI * 0.4))
+                canvas.DrawPath(glyph, white);
+            double ax = Math.Cos(Math.PI * 0.4) * 4; // editor.js:408-409
+            double ay = -h / 2 - SelectionGeometry.RotateHandleDistance + Math.Sin(Math.PI * 0.4) * 4;
+            using var pb = new SKPathBuilder();
+            pb.MoveTo((float)(ax - 3), (float)(ay - 2));
+            pb.LineTo((float)ax, (float)ay);
+            pb.LineTo((float)(ax + 2), (float)(ay - 3));
+            using var arrow = pb.Detach();
+            canvas.DrawPath(arrow, white);
+        }
+
+        canvas.RestoreToCount(restoreTo);
+        DrawRotationLabel(canvas, layer, options);
+    }
+
+    /// <summary>
+    /// The overlay's rotation label (editor.js:416-420; render-rotation-label): nothing when
+    /// <see cref="SelectionGeometry.RotationLabel"/> is null, else that text in 11 px JetBrains Mono 400 (the vendored
+    /// face), #f22f89, centered, alphabetic baseline at (0, -h/2 - 46) in the zoomed, rotated layer frame, the canvas scaled
+    /// by <c>DeviceScale</c>. Every pixel it draws lies inside <see cref="SelectionGeometry.LabelBounds"/> (ruling R4).
+    /// </summary>
+    internal static void DrawRotationLabel(SKCanvas canvas, Layer layer, ViewOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(canvas);
+        ArgumentNullException.ThrowIfNull(layer);
+        ArgumentNullException.ThrowIfNull(options);
+        if (SelectionGeometry.RotationLabel(layer.Rotation) is not { } label) return;
+        double zoom = options.Zoom;
+        double w = layer.Image.Width * layer.Scale * zoom, h = layer.Image.Height * layer.Scale * zoom;
+        int restoreTo = canvas.Save();
+        canvas.Scale((float)options.DeviceScale);
+        canvas.Translate((float)(layer.X * zoom + w / 2), (float)(layer.Y * zoom + h / 2));
+        canvas.RotateRadians((float)(layer.Rotation * Math.PI / 180));
+        using var font = Fonts.CreateFont("JetBrains Mono", 400, 11);
+        using var text = new SKPaint { Color = SelectMagenta, IsAntialias = true, Style = SKPaintStyle.Fill };
+        canvas.DrawText(label, 0, (float)(-h / 2 - SelectionGeometry.RotateHandleDistance - 16), SKTextAlign.Center, font, text);
+        canvas.RestoreToCount(restoreTo);
+    }
+
+    static SKPaint OverlayStroke(SKColor color, float width) => new()
+    {
+        Color = color, IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = width,
+        StrokeCap = SKStrokeCap.Butt, StrokeJoin = SKStrokeJoin.Miter, StrokeMiter = 10,
+    };
+
+    /// <summary>
+    /// <c>beginPath(); arc(x, y, r, start, end)</c>, clockwise, as Chromium 146 draws it (measured, ruling T1-2): one Skia
+    /// arcTo of the sweep from the start angle as given, in degrees converted from 4.1's doubles, or two arcTo of 180
+    /// degrees for a full turn. The start is not canonicalized into [0, 2π): -0.7π stays -126 degrees. Canonicalizing it to
+    /// 234 degrees moves the 1.5 px glyph's antialiasing by up to 46 levels at every one of 100 sub-pixel positions;
+    /// as given, all 100 match 4.1 exactly. The builder is empty, so the first arcTo starts with Skia's own moveTo to
+    /// the arc's start point, as on canvas after beginPath().
+    /// </summary>
+    static SKPath CanvasArc(float x, float y, float r, double start, double end)
+    {
+        double sweep = end - start;
+        float startDeg = (float)(start * 180 / Math.PI), sweepDeg = (float)(sweep * 180 / Math.PI);
+        var oval = new SKRect(x - r, y - r, x + r, y + r);
+        using var pb = new SKPathBuilder();
+        if (sweep >= Math.PI * 2)
+        {
+            pb.ArcTo(oval, startDeg, 180, false);
+            pb.ArcTo(oval, startDeg + 180, 180, false);
+        }
+        else
+        {
+            pb.ArcTo(oval, startDeg, sweepDeg, false);
+        }
+        return pb.Detach();
     }
 
     /// <summary><see cref="RenderView"/> into a new kN32 premultiplied image of <see cref="ViewSize"/>. For tests and goldens; the app renders into its own bitmap.</summary>

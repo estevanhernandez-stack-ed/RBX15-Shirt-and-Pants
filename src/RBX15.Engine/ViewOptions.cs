@@ -23,6 +23,16 @@ public sealed record ViewOptions(double Zoom, double DeviceScale = 1, bool ShowG
     /// <summary>Device pixels per template pixel: <c>Zoom * DeviceScale</c>.</summary>
     public double Scale => Zoom * DeviceScale;
 
+    /// <summary>
+    /// Draw 4.1's selection overlay (editor.js:361-425) for this layer: box, corner handles, rotation stem, knob, glyph
+    /// and the label when Rotation != 0. Null, a missing id or a hidden layer (M3b ruling R2) draws nothing. The app
+    /// passes it only while the tool is Select (editor.js:362).
+    /// </summary>
+    public int? SelectedLayerId { get; init; }
+
+    /// <summary>The live drawing preview (editor.js:324-330), composited after the layers and before the mask. Null: none.</summary>
+    public LivePreview? Preview { get; init; }
+
     static double Positive(double value, string name) =>
         double.IsFinite(value) && value > 0 ? value : throw new ArgumentOutOfRangeException(name, value, name + " must be finite and positive");
 }

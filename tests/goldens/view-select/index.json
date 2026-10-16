@@ -1,0 +1,123 @@
+{
+  "tool": "tools/parity-ref/view-select-ref.js",
+  "electron": "41.1.0",
+  "chrome": "146.0.7680.166",
+  "editorJsBlob": "2790c41e418cd5bfea82cf1ae4d71626a7b54e61",
+  "editorHtmlBlob": "401a5d5f33c4accbb452cb080c9c544a0f79a6ce",
+  "stylesCssBlob": "65110106efac704fd80e9fcb841835ccc0b487da",
+  "fillsJsBlob": "208d3297cb0920974d034639d754a65e75ae14d4",
+  "appHarnessBlob": "fa7b41a07a2c618d629c83880d8204dab038d82f",
+  "fontsManifestSha256": "ba0dafad93f0830be40f41301e1169c94730ccb8814d7dd0e9f21040f8813c9a",
+  "scenes": [
+    {
+      "name": "vs-select-z100",
+      "sha256": "71160d595d728aaaf0400d1c16f805d2badf4f7ad3d24c78caf3caeb683cb5fd",
+      "width": 585,
+      "height": 559,
+      "zoom": 1,
+      "mask": true,
+      "grid": false,
+      "select": 1,
+      "preview": null
+    },
+    {
+      "name": "vs-select-z200",
+      "sha256": "1695105622ba79d6fc56b4052ea682e0d588214a3770c522b7e1eb5201121c28",
+      "width": 1170,
+      "height": 1118,
+      "zoom": 2,
+      "mask": true,
+      "grid": false,
+      "select": 0,
+      "preview": null
+    },
+    {
+      "name": "vs-select-rot30-z100",
+      "sha256": "f9226b965d773f8c68f832330114e93772aa696d040e4afbea1762f5e2840b0e",
+      "width": 585,
+      "height": 559,
+      "zoom": 1,
+      "mask": true,
+      "grid": false,
+      "select": 1,
+      "preview": null
+    },
+    {
+      "name": "vs-select-rotneg135-z150",
+      "sha256": "bb9f797347a96b71585f5f574774f05f8bf0883f92670933170ecd4aba93b5cb",
+      "width": 877,
+      "height": 838,
+      "zoom": 1.5,
+      "mask": true,
+      "grid": false,
+      "select": 1,
+      "preview": null
+    },
+    {
+      "name": "vs-select-fliph-z50",
+      "sha256": "1ce52a5e9fe118676c1c809c8fc4cd5f3f90ee47364d25bbd7689db55054d0dd",
+      "width": 292,
+      "height": 279,
+      "zoom": 0.5,
+      "mask": true,
+      "grid": false,
+      "select": 1,
+      "preview": null
+    },
+    {
+      "name": "vs-select-pants-grid-z100",
+      "sha256": "3da5b1298db7164c669d27340bcecfa6d79a0cfe262575ddf77ca81ca9e10dd5",
+      "width": 585,
+      "height": 559,
+      "zoom": 1,
+      "mask": true,
+      "grid": true,
+      "select": 0,
+      "preview": null
+    },
+    {
+      "name": "vs-preview-rect-z100",
+      "sha256": "b877ba1956b94c23988290ac6f2722b7ee59e21c31009a7b6878a5f21c670c2b",
+      "width": 585,
+      "height": 559,
+      "zoom": 1,
+      "mask": true,
+      "grid": false,
+      "select": null,
+      "preview": "shape"
+    },
+    {
+      "name": "vs-preview-ellipse-fill-z200",
+      "sha256": "b2ff2a9e31c77ab98828bf14e09afc5a1db3cb825627de90bfdbb3387044e3a0",
+      "width": 1170,
+      "height": 1118,
+      "zoom": 2,
+      "mask": true,
+      "grid": false,
+      "select": null,
+      "preview": "shape"
+    },
+    {
+      "name": "vs-preview-line-z50",
+      "sha256": "70a2a5406b42f026455d75ca1dab8b2d5ae3b2f2c3b1bd3491fca86ed7c3e60d",
+      "width": 292,
+      "height": 279,
+      "zoom": 0.5,
+      "mask": true,
+      "grid": false,
+      "select": null,
+      "preview": "shape"
+    },
+    {
+      "name": "vs-preview-erase-z100",
+      "sha256": "c97d2d21bf3aed3dec50d871169b643490f26850ab9edc40030238b6ad782e42",
+      "width": 585,
+      "height": 559,
+      "zoom": 1,
+      "mask": true,
+      "grid": false,
+      "select": null,
+      "preview": "erase"
+    }
+  ]
+}

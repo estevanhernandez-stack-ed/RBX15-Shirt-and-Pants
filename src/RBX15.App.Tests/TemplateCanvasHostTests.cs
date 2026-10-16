@@ -249,6 +249,35 @@ public class TemplateCanvasHostTests
         Assert.False(session.InGesture);
     });
 
+    [Fact] // final fix wave 1: a draw press that cannot capture the mouse is cancelled, never committed as a dot layer
+    public void A_pen_press_that_cannot_capture_adds_no_layer_and_no_step() => StaThread.Run(() =>
+    {
+        var session = new EditorSession();
+        var (host, interaction, tools) = Wired(session);
+        tools.Set(Tool.Pen);
+        var press = new MouseButtonEventArgs(Mouse.PrimaryDevice, Environment.TickCount, MouseButton.Left) { RoutedEvent = Mouse.MouseDownEvent };
+        host.RaiseEvent(press);                                     // unparented: CaptureMouse fails, so the guard ends the stroke
+        Assert.True(press.Handled);
+        Assert.Equal(CanvasGesture.None, interaction.Gesture);
+        host.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, Environment.TickCount, MouseButton.Left) { RoutedEvent = Mouse.MouseUpEvent });
+        Assert.Empty(session.Document.Layers);
+        Assert.Equal((0, false), (session.UndoCount, session.InGesture));
+    });
+
+    [Fact] // final fix wave 2: an unloaded host never hooks CompositionTarget.Rendering and never recreates its renderer
+    public void A_document_change_after_unloaded_leaves_no_rendering_hook_and_no_renderer() => StaThread.Run(() =>
+    {
+        var host = Host(Sample());
+        host.RaiseEvent(new RoutedEventArgs(FrameworkElement.UnloadedEvent));
+        host.Document = Sample(grid: true);
+        host.ApplyDpi(1.5);
+        Assert.False(host.IsLoaded);
+        Assert.False(host.RenderingHooked);
+        Assert.False(host.HasRenderer);
+        Assert.Equal(EngineFrame(Sample(grid: true), new ViewOptions(1, 1.5, true)), Pixels(host.Frame!));   // a lazy read still renders the pending frame
+        Assert.False(host.HasRenderer);                             // through a renderer it does not keep
+    });
+
     [Fact] // wheel-sign-only-and-midstroke fix: sign only, Delta >= 0 grows; a 400 ms quiet period closes the burst (R7)
     public void The_wheel_is_sign_only_and_a_quiet_period_closes_the_burst() => StaThread.Run(() =>
     {

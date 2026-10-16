@@ -166,6 +166,12 @@ public sealed class TemplateCanvasHost : FrameworkElement
     /// <summary>True while a wheel burst waits for its quiet period.</summary>
     internal bool WheelBurstPending => _wheelTimer.IsEnabled;
 
+    /// <summary>True while a CompositionTarget.Rendering tick is hooked for a pending frame. Read by tests.</summary>
+    internal bool RenderingHooked => _renderingHooked;
+
+    /// <summary>True while the control keeps a persistent <see cref="ViewRenderer"/>. Read by tests.</summary>
+    internal bool HasRenderer => _renderer is not null;
+
     static void OnFrameInputChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) => ((TemplateCanvasHost)d).RequestFrame();
 
     static void OnZoomChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -200,14 +206,15 @@ public sealed class TemplateCanvasHost : FrameworkElement
     }
 
     /// <summary>
-    /// Marks the frame dirty and hooks one CompositionTarget.Rendering tick to render it. The measure is invalidated
-    /// only when the frame's pixel size changes, so a drag, which changes only the content, never forces a layout
-    /// pass per mouse event.
+    /// Marks the frame dirty and, while the control is loaded, hooks one CompositionTarget.Rendering tick to render
+    /// it. Unloaded, the frame only stays pending (final fix wave 2): Loaded requests it again, and a lazy read
+    /// (Frame, MeasureOverride) still renders it. The measure is invalidated only when the frame's pixel size
+    /// changes, so a drag, which changes only the content, never forces a layout pass per mouse event.
     /// </summary>
     void RequestFrame()
     {
         _framePending = true;
-        if (!_renderingHooked)
+        if (IsLoaded && !_renderingHooked)
         {
             CompositionTarget.Rendering += OnRendering;
             _renderingHooked = true;
@@ -264,7 +271,10 @@ public sealed class TemplateCanvasHost : FrameworkElement
             using (var surface = SKSurface.Create(info, _frame.BackBuffer, _frame.BackBufferStride)
                 ?? throw new InvalidOperationException("cannot wrap the frame bitmap"))
             {
-                (_renderer ??= new ViewRenderer()).Render(surface.Canvas, doc, options);
+                // Unloaded, a lazy read renders through a renderer it does not keep: the persistent one's native
+                // surfaces went with Unloaded and come back only with the next loaded frame (final fix wave 2).
+                if (IsLoaded) (_renderer ??= new ViewRenderer()).Render(surface.Canvas, doc, options);
+                else using (var once = new ViewRenderer()) once.Render(surface.Canvas, doc, options);
                 surface.Canvas.Flush();
             }
             _frame.AddDirtyRect(new Int32Rect(0, 0, size.Width, size.Height));
@@ -310,8 +320,10 @@ public sealed class TemplateCanvasHost : FrameworkElement
         base.OnMouseLeftButtonDown(e);
         if (Interaction is null) return;
         // A started gesture that could not capture (no visible source) would never see a release or a
-        // LostMouseCapture and would hold the session in a gesture: end it now (critic mn2). The seam stays as is.
-        if (HandlePointerDown(e.GetPosition(this)) && !IsMouseCaptured) Interaction?.CaptureLost();
+        // LostMouseCapture and would hold the session in a gesture: cancel it now (critic mn2; final fix wave 1).
+        // Cancel discards a Draw or Erase stroke, so a failed capture never commits a dot layer, and ends a select
+        // drag as one step (none here: nothing moved yet). The seam stays as is.
+        if (HandlePointerDown(e.GetPosition(this)) && !IsMouseCaptured) Interaction?.Cancel();
         e.Handled = true;
     }
 

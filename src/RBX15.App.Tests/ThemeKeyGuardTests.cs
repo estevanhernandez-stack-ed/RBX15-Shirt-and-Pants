@@ -18,7 +18,7 @@ public class ThemeKeyGuardTests
     {
         var theme = string.Concat(Directory.EnumerateFiles(Path.Combine(App, "Themes"), "*.xaml").Select(File.ReadAllText));
         var views = Directory.EnumerateFiles(Path.Combine(App, "Views"), "*.xaml").Append(Path.Combine(App, "MainWindow.xaml")).ToList();
-        Assert.Equal(12, views.Count); // the 10 M3a view files, ColorPickerPopup.xaml and MainWindow.xaml
+        Assert.Equal(14, views.Count); // the 10 M3a view files, ColorPickerPopup.xaml, MainWindow.xaml, and M3b's ToolsGroup.xaml and BrushGroup.xaml
         var missing = new List<string>();
         foreach (var file in views)
         {

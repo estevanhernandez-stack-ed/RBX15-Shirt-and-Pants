@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using RBX15.App.Canvas;
 using RBX15.App.Services;
 using RBX15.App.Tests.Fakes;
 using RBX15.App.ViewModels;
@@ -111,7 +112,7 @@ public class HomeRibbonViewTests
         Assert.Equal(5, list.SelectedIndex);
     });
 
-    [Fact] // the mode button, settings and edit bindings; contract: no Tools, Brush or Placement group in M3a
+    [Fact] // the mode button, settings and edit bindings; M3b shows Tools and Brush; Placement, Save work and Open stay hidden (M4)
     public void Mode_settings_and_edit_bind_and_hidden_groups_are_absent() => StaThread.Run(() =>
     {
         var session = new EditorSession();
@@ -135,9 +136,10 @@ public class HomeRibbonViewTests
         Descendants<TextBox>(view).Single().Text = "Hoodie";
         Assert.Equal("Hoodie", session.TemplateTitle);
 
-        Assert.Equal(new[] { "MODE", "EDIT", "SETTINGS", "FILL STYLE", "TEMPLATE REGIONS" },
+        Assert.Equal(new[] { "MODE", "TOOLS", "BRUSH", "EDIT", "SETTINGS", "FILL STYLE", "TEMPLATE REGIONS" },
             texts.Where(t => t is "MODE" or "TOOLS" or "BRUSH" or "PLACEMENT" or "EDIT" or "SETTINGS" or "FILL STYLE" or "TEMPLATE REGIONS"));
-        Assert.DoesNotContain(buttons, b => b.Content is "Draw" or "Fit Front" or "Save work" or "Open");
+        Assert.Contains(buttons, b => b.Content is "Draw");
+        Assert.DoesNotContain(buttons, b => b.Content is "Fit Front" or "Save work" or "Open" or "Keys: ON");
         Assert.Contains("Set a style, then click a region to paint it. Right-click clears.", texts);
     });
 
@@ -215,6 +217,55 @@ public class HomeRibbonViewTests
 
         Assert.Equal("solid", home.FillStyle.Type);
         Assert.Equal("solid", list.SelectedValue);
+    });
+
+    [Fact] // home-tool-buttons, tools-set-tool: six buttons in editor.html:43-48 order; the active one is .btn-active and "Active" to UIA
+    public void The_tool_buttons_show_4_1_labels_and_the_active_tool() => StaThread.Run(() =>
+    {
+        var home = Home(new EditorSession());
+        var view = Load(home);
+        var tools = Descendants<Button>(view).Where(b => b.DataContext is ToolButtonViewModel).ToArray();
+        Assert.Equal(new[] { "Select", "Draw", "Line", "Rect", "Ellipse", "Eraser" }, tools.Select(b => (string)b.Content));
+        Assert.Equal(new[] { "Select/Move", "Freehand draw", "Line tool", "Rectangle", "Ellipse", "Eraser" }, tools.Select(b => (string)b.ToolTip)); // R14
+        Assert.All(tools, b => Assert.True(b.Focusable && b.IsTabStop));
+        Assert.Equal(new[] { "Active", "", "", "", "", "" }, tools.Select(AutomationProperties.GetItemStatus));
+        var cyan = (Color)ColorConverter.ConvertFromString("#17D4FA");
+        Assert.Equal(cyan, ((SolidColorBrush)tools[0].Foreground).Color);   // .btn-active text (styles.css:411)
+
+        var draw = tools[1];
+        draw.Command.Execute(null);
+        view.UpdateLayout();
+        Assert.Equal(Tool.Pen, home.Tools.Current);
+        Assert.Equal(new[] { "", "Active", "", "", "", "" }, tools.Select(AutomationProperties.GetItemStatus));
+        Assert.Equal(cyan, ((SolidColorBrush)draw.Foreground).Color);
+        Assert.NotEqual(cyan, ((SolidColorBrush)tools[0].Foreground).Color);
+        draw.Command.Execute(null);
+        Assert.Equal(Tool.Select, home.Tools.Current);                       // tools-toggle-off
+    });
+
+    [Fact] // home-brush-group: #drawColor 26x24, #drawSize 1..50 value 4 width 60, Fill (editor.html:56-59); the picker opens under the swatch
+    public void The_brush_group_binds_color_size_and_fill() => StaThread.Run(() =>
+    {
+        var picker = new FakeColorPicker().Answer("#ff0000");
+        var home = Home(new EditorSession(), picker);
+        var view = Load(home);
+        var color = Descendants<Button>(view).Single(b => AutomationProperties.GetName(b) == "Draw color");
+        var size = Descendants<Slider>(view).Single(s => AutomationProperties.GetName(s) == "Brush size");
+        var fill = Descendants<CheckBox>(view).Single(c => (string)c.Content == "Fill");
+
+        Assert.Equal((26.0, 24.0), (color.Width, color.Height));
+        Assert.Equal((1.0, 50.0, 4.0, 60.0), (size.Minimum, size.Maximum, size.Value, size.Width));
+        Assert.False(fill.IsChecked);
+
+        color.Command.Execute(color.CommandParameter);
+        Assert.Same(color, Assert.Single(picker.Anchors));
+        Assert.Equal("#ff0000", home.Brush.Color);
+        size.Value = 12;
+        Assert.Equal(12, home.Brush.Size);
+        home.Brush.StepSize(+1);
+        Assert.Equal(13, size.Value);
+        fill.IsChecked = true;
+        Assert.True(home.Brush.Fill);
     });
 
     [Fact] // fix round 1: hide-until-it-works, no shortcut text before M4 ships the keyboard

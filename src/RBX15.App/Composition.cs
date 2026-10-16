@@ -1,4 +1,5 @@
 using System.Windows;
+using RBX15.App.Canvas;
 using RBX15.App.Services;
 using RBX15.App.ViewModels;
 using RBX15.Engine;
@@ -39,8 +40,12 @@ internal static class Composition
         canvas.DropHandler = d => import.Import(d.Paths, (d.TemplatePoint.X, d.TemplatePoint.Y));
         // A canvas click selects the topmost visible layer under it, or none (editor.js:1100-1116; Task 2 ruling R5).
         canvas.ClickHandler = p => session.Select(LayerOps.HitTest(session.Document, p.X, p.Y));
+        var tools = new ToolsViewModel();
+        var brush = new BrushViewModel(colorPicker);
         var home = new HomeViewModel(session, colorPicker)
         {
+            Tools = tools,
+            Brush = brush,
             File = fileGroup,
         };
         // M3a: construction lines above this line.

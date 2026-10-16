@@ -1,0 +1,45 @@
+<UserControl x:Class="RBX15.App.Views.ToolsGroup"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- The Home tab's Tools group (editor.html:41-52; ledger home-tool-buttons). DataContext: ToolsViewModel.
+         Six .btn.btn-sm.btn-secondary buttons in one row, gap 4 (.ribbon-group-items, styles.css:208). The active one
+         is .btn-active (styles.css:408-412): cyan border, rgba(23,212,250,.1) background, cyan text; screen readers
+         hear it as the item status "Active". 4.1's "Keys: ON" button (editor.html:49) is M4's keyboard and stays absent. -->
+    <UserControl.Resources>
+        <Style x:Key="ToolButton" TargetType="Button" BasedOn="{StaticResource SecondaryButtonSm}">
+            <Setter Property="Content" Value="{Binding Label}" />
+            <Setter Property="ToolTip" Value="{Binding ToolTip}" />
+            <Setter Property="Command" Value="{Binding Command}" />
+            <Setter Property="AutomationProperties.Name" Value="{Binding Label}" />
+            <Setter Property="AutomationProperties.HelpText" Value="{Binding ToolTip}" />
+            <Setter Property="Margin" Value="0,0,4,0" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsActive}" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource BrandCyanBrush}" />
+                    <Setter Property="Background" Value="#1A17D4FA" />
+                    <Setter Property="Foreground" Value="{DynamicResource BrandCyanBrush}" />
+                    <Setter Property="AutomationProperties.ItemStatus" Value="Active" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Border Style="{DynamicResource RibbonGroup}">
+        <DockPanel>
+            <TextBlock Style="{DynamicResource RibbonGroupLabel}" Text="TOOLS" />
+            <ItemsControl x:Name="Buttons" ItemsSource="{Binding Buttons}" VerticalAlignment="Center" Focusable="False"
+                          AutomationProperties.Name="Tools">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Style="{StaticResource ToolButton}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </DockPanel>
+    </Border>
+</UserControl>

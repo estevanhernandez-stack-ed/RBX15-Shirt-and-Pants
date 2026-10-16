@@ -3,10 +3,10 @@ using RBX15.App.Services;
 namespace RBX15.App.ViewModels;
 
 /// <summary>
-/// The Home tab (editor.html:29-110). M3a shows the Mode, Edit, File (Task 4) and Settings groups,
-/// then Fill Style and Template Regions, which 4.1 kept on the Layout tab (editor.html:145-171) and
-/// which M3a hosts here until M4 brings the Layout tab back. Tools, Brush and Placement stay hidden
-/// until they work (contract: hide what does not work yet).
+/// The Home tab (editor.html:29-110): the Mode, Tools, Brush, Edit, File and Settings groups, then
+/// Fill Style and Template Regions, which 4.1 kept on the Layout tab (editor.html:145-171) and which
+/// M3a hosts here until M4 brings the Layout tab back. Placement stays hidden until it works
+/// (contract: hide what does not work yet).
 /// </summary>
 public sealed class HomeViewModel
 {
@@ -26,6 +26,12 @@ public sealed class HomeViewModel
     public FillStyleViewModel FillStyle { get; }
     public SettingsGroupViewModel Settings { get; }
     public EditGroupViewModel Edit { get; }
+
+    /// <summary>The Tools group (editor.html:41-52), shared with the canvas (M3b).</summary>
+    public required ToolsViewModel Tools { get; init; }
+
+    /// <summary>The Brush group (editor.html:53-62), shared with the canvas (M3b).</summary>
+    public required BrushViewModel Brush { get; init; }
 
     /// <summary>The File group (Task 4): Add image and Download template.</summary>
     public required FileGroupViewModel File { get; init; }

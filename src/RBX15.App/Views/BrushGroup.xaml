@@ -1,0 +1,46 @@
+<UserControl x:Class="RBX15.App.Views.BrushGroup"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- The Home tab's Brush group (editor.html:53-62; ledger home-brush-group, draw-brush-controls). DataContext:
+         BrushViewModel. .ribbon-group-items.vert: a column, gap 4 (styles.css:208-209). Row 1 (editor.html:55): the
+         color swatch and the size slider, gap 4, centered. Row 2 (editor.html:59): the Fill checkbox, 10px #888. -->
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="HomeStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <!-- #drawColor (editor.html:56): 26x24, no border, radius 4, the face shows the color. -->
+            <Style x:Key="BrushSwatchButton" TargetType="Button" BasedOn="{StaticResource ColorSwatchButton}">
+                <Setter Property="Height" Value="24" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}" CornerRadius="4" />
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Border Style="{DynamicResource RibbonGroup}">
+        <DockPanel>
+            <TextBlock Style="{DynamicResource RibbonGroupLabel}" Text="BRUSH" />
+            <StackPanel VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                    <Button x:Name="BrushColor" Style="{StaticResource BrushSwatchButton}" Background="{Binding Color}"
+                            Command="{Binding PickColorCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Self}}"
+                            ToolTip="Draw color" AutomationProperties.Name="Draw color" Margin="0,0,4,0" />
+                    <!-- #drawSize (editor.html:57): range 1..50, value 4, width 60. accent-color cyan has no WPF slider
+                         equivalent in the theme; the stock slider is provisional; M3b look sign-off. -->
+                    <Slider x:Name="BrushSize" Width="60" Minimum="1" Maximum="50" SmallChange="1" LargeChange="1"
+                            TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Size}" VerticalAlignment="Center"
+                            ToolTip="Brush size" AutomationProperties.Name="Brush size" />
+                </StackPanel>
+                <CheckBox x:Name="BrushFill" Content="Fill" IsChecked="{Binding Fill}" FontSize="10" Foreground="#888888"
+                          VerticalContentAlignment="Center" FocusVisualStyle="{DynamicResource FocusRing}"
+                          AutomationProperties.Name="Fill shapes" />
+            </StackPanel>
+        </DockPanel>
+    </Border>
+</UserControl>

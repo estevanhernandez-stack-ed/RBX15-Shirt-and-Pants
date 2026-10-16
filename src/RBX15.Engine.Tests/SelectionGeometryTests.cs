@@ -158,6 +158,55 @@ public class SelectionGeometryTests
     public void The_snap_takes_the_first_angle_strictly_within_3_degrees(double degrees, double snapped) =>
         Assert.Equal(snapped, SelectionGeometry.SnapRotation(degrees));
 
+    /// <summary>
+    /// editor.js:1172-1180 as 4.1 runs it, written out independently of SelectionGeometry: atan2(mx - cx, -(my - cy)) in
+    /// degrees, minus rotStartAngle, then the first of [-180, -135, -90, -45, 0, 45, 90, 135, 180] strictly within 3
+    /// degrees. 4.1 never normalizes.
+    /// </summary>
+    static double Js41Rotation((double X, double Y) c, double rotStartAngle, double mx, double my)
+    {
+        double newRot = Math.Atan2(mx - c.X, -(my - c.Y)) * 180 / Math.PI - rotStartAngle;
+        foreach (double snap in new double[] { -180, -135, -90, -45, 0, 45, 90, 135, 180 })
+            if (Math.Abs(newRot - snap) < 3) return snap;
+        return newRot;
+    }
+
+    [Fact] // select-rotate-drag-2 parityCheck: "Drive mouse around layer center in 1 degree steps; recorded rotation sequence
+           // equals JS including snap plateaus at +-3 degrees of each multiple of 45." (final fix wave 9)
+    public void Driving_the_mouse_around_the_center_in_1_degree_steps_records_4_1s_sequence_with_every_snap_plateau()
+    {
+        var layer = L(rotation: 0);
+        var c = SelectionGeometry.Center(layer);
+        var handle = SelectionGeometry.RotateHandle(layer, 1);                      // the press: the rotate knob, straight up
+        double offset = SelectionGeometry.RotateStartOffset(layer, handle.X, handle.Y);
+        double rotStartAngle = Math.Atan2(handle.X - c.X, -(handle.Y - c.Y)) * 180 / Math.PI - layer.Rotation;   // editor.js:1073
+        Assert.Equal(0, rotStartAngle);
+
+        var degrees = Enumerable.Range(-179, 360).ToArray();                          // one full turn, -179 .. 180
+        var recorded = new List<double>();
+        var js = new List<double>();
+        foreach (int d in degrees)
+        {
+            double rad = d * Math.PI / 180, mx = c.X + 80 * Math.Sin(rad), my = c.Y - 80 * Math.Cos(rad);
+            recorded.Add(SelectionGeometry.RotateAngle(c, offset, mx, my));
+            js.Add(Js41Rotation(c, rotStartAngle, mx, my));
+        }
+        Assert.Equal(js, recorded);                                                   // the whole sequence, exactly
+
+        // The plateaus: within +-2 steps of every multiple of 45 the rotation is that multiple (strict < 3), and from +-4 on
+        // it is the pointer's own angle. At exactly +-3 the strict < 3 sees the atan2 result's last bits, in 4.1 as here
+        // (the pointer at -177 reads -177.00000000000003 and snaps), so +-3 is held by the exact sequence above. The pointer
+        // at -180 is the pointer at 180: the -180 plateau shows at -179 and -178, the 180 one at 178 to 180.
+        double At(int d) => recorded[Array.IndexOf(degrees, d)];
+        foreach (int m in new[] { -180, -135, -90, -45, 0, 45, 90, 135, 180 })
+        {
+            foreach (int d in Enumerable.Range(m - 2, 5).Where(d => d >= -179 && d <= 180))
+                Assert.Equal(m, At(d));
+            foreach (int d in new[] { m - 4, m + 4 }.Where(d => d >= -179 && d <= 180))
+                Assert.Equal(d, At(d), 9);
+        }
+    }
+
     [Theory] // spec §5: rotation normalized to -180..180; the identity inside, so a slider value of 180 stays
     [InlineData(180, 180)]
     [InlineData(-180, -180)]
@@ -255,6 +304,10 @@ public class SelectionGeometryTests
         Assert.Null(SelectionGeometry.RotationLabel(-0.0));
         Assert.Equal(SKRectI.Empty, SelectionGeometry.LabelBounds(L(), new ViewOptions(1)));
     }
+
+    [Fact] // final fix wave 11: the exact box at rotation 30, zoom 1, device scale 1, so the golden exemption box cannot silently widen
+    public void The_label_bounds_at_rotation_30_zoom_1_device_scale_1_are_pinned() =>
+        Assert.Equal(new SKRectI(257, 138, 318, 182), SelectionGeometry.LabelBounds(L(rotation: 30), new ViewOptions(1, 1)));
 
     [Fact] // ruling R4: the label box holds the anchor, rotates with the layer and scales with the device scale
     public void The_label_bounds_follow_the_anchor_rotation_and_device_scale()

@@ -9,7 +9,8 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="HomeStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
-            <!-- #drawColor (editor.html:56): 26x24, no border, radius 4, the face shows the color. -->
+            <!-- #drawColor (editor.html:56): 26x24, no border, radius 4, the face shows the color; assistive tech reads
+                 its hex as the help text (final fix wave 14). -->
             <Style x:Key="BrushSwatchButton" TargetType="Button" BasedOn="{StaticResource ColorSwatchButton}">
                 <Setter Property="Height" Value="24" />
                 <Setter Property="Template">
@@ -30,7 +31,8 @@
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                     <Button x:Name="BrushColor" Style="{StaticResource BrushSwatchButton}" Background="{Binding Color}"
                             Command="{Binding PickColorCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Self}}"
-                            ToolTip="Draw color" AutomationProperties.Name="Draw color" Margin="0,0,4,0" />
+                            ToolTip="Draw color" AutomationProperties.Name="Draw color"
+                            AutomationProperties.HelpText="{Binding Color}" Margin="0,0,4,0" />
                     <!-- #drawSize (editor.html:57): range 1..50, value 4, width 60. accent-color cyan has no WPF slider
                          equivalent in the theme; the stock slider is provisional; M3b look sign-off. -->
                     <Slider x:Name="BrushSize" Width="60" Minimum="1" Maximum="50" SmallChange="1" LargeChange="1"

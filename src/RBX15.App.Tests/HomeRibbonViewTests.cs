@@ -5,6 +5,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using RBX15.App.Canvas;
+using RBX15.App.Controls;
 using RBX15.App.Services;
 using RBX15.App.Tests.Fakes;
 using RBX15.App.ViewModels;
@@ -117,7 +118,7 @@ public class HomeRibbonViewTests
     {
         var session = new EditorSession();
         var view = Load(Home(session));
-        var buttons = Descendants<Button>(view).ToArray();
+        var buttons = Descendants<ButtonBase>(view).ToArray();   // the tool buttons are ToggleButtons (final fix wave 14)
         var texts = Descendants<TextBlock>(view).Select(t => t.Text).ToArray();
 
         var mode = buttons.Single(b => AutomationProperties.GetName(b).StartsWith("Mode:", StringComparison.Ordinal));
@@ -223,28 +224,56 @@ public class HomeRibbonViewTests
         Assert.Equal("solid", list.SelectedValue);
     });
 
-    [Fact] // home-tool-buttons, tools-set-tool: six buttons in editor.html:43-48 order; the active one is .btn-active and "Active" to UIA
+    [Fact] // home-tool-buttons, tools-set-tool: six buttons in editor.html:43-48 order; the active one is .btn-active, and
+           // final fix wave 14: it is a toggle that is On for assistive tech (Narrator does not reliably announce ItemStatus)
     public void The_tool_buttons_show_4_1_labels_and_the_active_tool() => StaThread.Run(() =>
     {
         var home = Home(new EditorSession());
         var view = Load(home);
-        var tools = Descendants<Button>(view).Where(b => b.DataContext is ToolButtonViewModel).ToArray();
+        var tools = Descendants<ToolToggleButton>(view).ToArray();
         Assert.Equal(new[] { "Select", "Draw", "Line", "Rect", "Ellipse", "Eraser" }, tools.Select(b => (string)b.Content));
         Assert.Equal(new[] { "Select/Move", "Freehand draw", "Line tool", "Rectangle", "Ellipse", "Eraser" }, tools.Select(b => (string)b.ToolTip)); // R14
         Assert.All(tools, b => Assert.True(b.Focusable && b.IsTabStop));
-        Assert.Equal(new[] { "Active", "", "", "", "", "" }, tools.Select(AutomationProperties.GetItemStatus));
+        ToggleState[] States() => tools.Select(b => Toggle(b).ToggleState).ToArray();
+        Assert.Equal(new[] { ToggleState.On, ToggleState.Off, ToggleState.Off, ToggleState.Off, ToggleState.Off, ToggleState.Off }, States());
         var cyan = (Color)ColorConverter.ConvertFromString("#17D4FA");
         Assert.Equal(cyan, ((SolidColorBrush)tools[0].Foreground).Color);   // .btn-active text (styles.css:411)
 
         var draw = tools[1];
-        draw.Command.Execute(null);
+        Toggle(draw).Toggle();                                               // assistive tech's toggle runs the button's command
         view.UpdateLayout();
         Assert.Equal(Tool.Pen, home.Tools.Current);
-        Assert.Equal(new[] { "", "Active", "", "", "", "" }, tools.Select(AutomationProperties.GetItemStatus));
+        Assert.Equal(new[] { ToggleState.Off, ToggleState.On, ToggleState.Off, ToggleState.Off, ToggleState.Off, ToggleState.Off }, States());
         Assert.Equal(cyan, ((SolidColorBrush)draw.Foreground).Color);
         Assert.NotEqual(cyan, ((SolidColorBrush)tools[0].Foreground).Color);
-        draw.Command.Execute(null);
+        Toggle(draw).Toggle();
         Assert.Equal(Tool.Select, home.Tools.Current);                       // tools-toggle-off
+        Assert.Equal(ToggleState.Off, Toggle(draw).ToggleState);
+
+        Toggle(tools[0]).Toggle();                                           // Select never toggles off: the state stays the view-model's
+        Assert.Equal((Tool.Select, ToggleState.On), (home.Tools.Current, Toggle(tools[0]).ToggleState));
+        Invoke(tools[5]).Invoke();                                           // Invoke stays too, for UIA drivers
+        Assert.Equal((Tool.Eraser, ToggleState.On), (home.Tools.Current, Toggle(tools[5]).ToggleState));
+        Assert.All(tools, b => Assert.Equal("", AutomationProperties.GetItemStatus(b)));
+    });
+
+    static System.Windows.Automation.Provider.IToggleProvider Toggle(UIElement e) =>
+        (System.Windows.Automation.Provider.IToggleProvider)System.Windows.Automation.Peers.UIElementAutomationPeer.CreatePeerForElement(e)
+            .GetPattern(System.Windows.Automation.Peers.PatternInterface.Toggle);
+
+    static System.Windows.Automation.Provider.IInvokeProvider Invoke(UIElement e) =>
+        (System.Windows.Automation.Provider.IInvokeProvider)System.Windows.Automation.Peers.UIElementAutomationPeer.CreatePeerForElement(e)
+            .GetPattern(System.Windows.Automation.Peers.PatternInterface.Invoke);
+
+    [Fact] // final fix wave 14: the brush swatch tells assistive tech its color as hex
+    public void The_brush_swatch_exposes_its_hex_color() => StaThread.Run(() =>
+    {
+        var home = Home(new EditorSession());
+        var view = Load(home);
+        var color = Descendants<Button>(view).Single(b => AutomationProperties.GetName(b) == "Draw color");
+        Assert.Equal("#17d4fa", AutomationProperties.GetHelpText(color));
+        home.Brush.Color = "#FF0000";
+        Assert.Equal("#ff0000", AutomationProperties.GetHelpText(color));
     });
 
     [Fact] // home-brush-group: #drawColor 26x24, #drawSize 1..50 value 4 width 60, Fill (editor.html:56-59); the picker opens under the swatch

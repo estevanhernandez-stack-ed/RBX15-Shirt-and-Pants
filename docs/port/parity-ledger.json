@@ -872,12 +872,12 @@
    "quirks": "Canvas dims truncated: TW*zoom non-integer loses fractional pixel, while region coords * zoom still use float, causing 0.5px offset at the right/bottom edge for fractional zoom. The visible canvas is also stretched to the truncated size. Zoom value sets from a slider elsewhere; list allowed values (see zoom UI slice).",
    "portTarget": "SkiaSharp SKElement/SKGLElement sized TW*zoom; draw offscreen with SKSamplingOptions Nearest when zoom>=1, Linear when <1 (and mipmap off).",
    "risk": "med",
-   "parityCheck": "Zoom 0.5, 1, 2, 3, 4 screenshots vs Electron: nearest neighbor magnification crisp; downsample smooth. Check truncation: zoom 1.5 -> 877x838 (TW*1.5=877.5 truncated to 877).",
+   "parityCheck": "GoldenViewTests (M3a) at zoom 0.25, 0.5, 1, 1.5 and 3 and GoldenViewSelectTests at 0.5, 1, 1.5 and 2: crisp magnification and smooth downsampling; 1.5 gives 877x838 (RendererViewTests). The 200% scroll host compared side by side in the M3b look sign-off (state 05), signed off by Este on 2026-10-16 (.superpowers/m3b-look/SIGNOFF.txt). Narrowed in M3b: zoom 4 is outside v5's 25-300% range.",
    "owner": "App.Canvas",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: the canvas is reallocated and cleared on every render and clipped when it outgrows the area. v5: the frame keeps 4.1's truncated size (TW*zoom, editor.js:340-341), renders through one persistent offscreen surface and checker tile into a reused bitmap, at most once per display frame while dragging, and sits in a scroll host with scrollbars to pan; zoom stays 25-300% in 0.25 steps.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "render-checkerboard",
@@ -1370,12 +1370,12 @@
    "quirks": "Thumbnail ignores adjustments, rotation, opacity (raw source). Thumbnails for drawing layers are the cropped data URL. Row has no keyboard focus/accessibility; native should add. Button titles are tooltips.",
    "portTarget": "ListBox with reversed ObservableCollection view (CollectionViewSource sort desc by index or reversed projection); DataTemplate with Image (Stretch=Uniform on black, CornerRadius 4), TextBlock TextTrimming=CharacterEllipsis, three small buttons colored per brand tokens (626labs-design).",
    "risk": "med",
-   "parityCheck": "Visual compare screenshot of rows: selected, hidden, long name truncation, 20 layers scroll.",
+   "parityCheck": "A selected row (state 03) compared side by side in the M3b look sign-off, and a hidden row, a long name truncated and 20 layers scrolling checked by hand in the M3b manual checklist (H8); signed off by Este on 2026-10-16 (.superpowers/m3b-look/SIGNOFF.txt). Narrowed in M3b: Este's review stands in for a screenshot diff.",
    "owner": "App.Layers",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: layer rows have no keyboard focus or accessibility. v5: layers panel is keyboard operable with automation names and a cyan focus ring.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "layers-reorder-drag",
@@ -3097,12 +3097,12 @@
    "quirks": "Painted order of limb faces differs between arms (mirrored to match the template atlas layout); keep. Grid omits arm up/down panels, so 'paint everything' via the grid never reaches 4 regions of 18; decide: keep (parity) or add buttons. Recommended: keep for 1.0, log as enhancement.",
    "portTarget": "XAML Grid with 5 columns x 3 rows for the torso cross, UniformGrid(1x4) per limb inside a 2-column Grid. Region buttons are ToggleButton-like Border/Button controls bound by region key (Tag). Build from a data-driven list so Pants reuses the same template with different prefixes.",
    "risk": "low",
-   "parityCheck": "Screenshot compare of the grid in Shirt mode against the Electron capture (same cell order, labels 'Top','R','Front','L','Back','Bot','Right Arm','Left Arm', limb order L/Bk/R/Fr vs Fr/L/Bk/R). Automation test enumerates AutomationIds and asserts exactly 14 painted-able regions.",
+   "parityCheck": "RegionsGroupTests (M3a): 14 tiles in 4.1's cell order with its labels, each with a region automation name. The grid compared side by side with 4.1's Layout tab in the M3b look sign-off (state 02), signed off by Este on 2026-10-16 (.superpowers/m3b-look/SIGNOFF.txt). Narrowed in M3b: the grid sits on the Home tab until M4 moves it to Layout.",
    "owner": "App.Ribbon.Home",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "regions-grid-layout-pants",
@@ -3218,12 +3218,12 @@
    "quirks": "It does not mention that painting is blocked while a layer is selected. Consider adding that clarification.",
    "portTarget": "TextBlock with same string (localization candidate; the repo has a vibe-lingual track).",
    "risk": "low",
-   "parityCheck": "String equality in a UI test.",
+   "parityCheck": "The M3b look run reads the Fill Style hint through UI Automation as 'Set a style, then click a region to paint it. Right-click clears.' (editor.html:164; .superpowers/m3b-look/v5/RESULTS.md); compared side by side in state 02, signed off by Este on 2026-10-16 (.superpowers/m3b-look/SIGNOFF.txt).",
    "owner": "App.Ribbon.Home",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "fillstyle-type-buttons",
@@ -3357,12 +3357,12 @@
    "quirks": "editor.html is the live shell (cyan/magenta). Legacy shirt_editor.html (and backup/) use purple #e040fb/#7c4dff and white text; do not port those. Hidden #assetType select mirrors the mode (value 'Shirt'/'Pants') and likely feeds export or project metadata; port should keep a single Mode enum.",
    "portTarget": "Button with LinearGradientBrush (StartPoint 0,0 EndPoint 1,1) bound to Mode; command ToggleModeCommand.",
    "risk": "low",
-   "parityCheck": "Screenshot of both states; assert label text and gradient endpoints.",
+   "parityCheck": "ModeGroupTests (M3a): the label reads SHIRT, then PANTS. Both states compared side by side in the M3b look sign-off (states 01 and 06), gradient direction included, signed off by Este on 2026-10-16 (.superpowers/m3b-look/SIGNOFF.txt). Narrowed in M3b: the gradient endpoints are judged by eye, not sampled.",
    "owner": "App.Shell",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "mode-switch-effects",
@@ -4971,12 +4971,12 @@
    "quirks": "Inline legacy colors (#1a1a2e/#333/#e0e0e0) diverge from tokens: Home-tab and Text-tab inputs are slightly different navy than panel inputs (var(--brand-navy) #192e44). Keep both unless explicitly normalized.",
    "portTarget": "ResourceDictionary (Theme.xaml) with SolidColorBrush/Color resources for every token plus LinearGradientBrush resources (BrandGradient, BrandGradientSoft); keep inline literal colors as separate named resources (InputBgLegacy #1a1a2e etc.) so they can be unified later. Dark theme only: no light theme, no prefers-color-scheme handling, no theme switch exists.",
    "risk": "low",
-   "parityCheck": "Unit test that every token hex in the ResourceDictionary equals styles.css values; screenshot diff of ribbon/panel regions.",
+   "parityCheck": "ThemeTokenTests (M3a): every token hex in the theme equals styles.css. The ribbon and panel regions compared side by side with 4.1 at 1200x800 and 100% scale in the M3b look sign-off (states 01-07), signed off by Este on 2026-10-16 (.superpowers/m3b-look/SIGNOFF.txt). Narrowed in M3b: Este's side-by-side review stands in for a pixel diff.",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "theme-tokens-shape-motion-type",
@@ -5011,12 +5011,12 @@
    "quirks": "Intended-vs-actual: tab labels etc. specify weight 600 mono; screenshots show those weights, so ship 600.",
    "portTarget": "Bundle Inter (400/500/600/700), Space Grotesk (400-700; only 600 used visibly), JetBrains Mono (400/500/600) as WPF Resources (FontFamily='pack://application:,,,/Fonts/#Inter'), include OFL license files. No network access at runtime. Pin to the Google static instances matching weights (Inter variable file needs static cuts or use variable-font aware loading; WPF does not support variable axes well, so ship static TTFs).",
    "risk": "med",
-   "parityCheck": "Disconnect network, launch: all UI text renders in Inter/Space Grotesk/JetBrains Mono (not Segoe). Compare glyph metrics of 'Download template' button text against the 4.1 screenshot (width within 2 px).",
+   "parityCheck": "No network: the app has no network code (the M3b final verification grep) and the UI faces resolve to the vendored files (ThemeTokenTests.Ui_fonts_resolve_to_the_vendored_files). Glyph metrics: the 'Download template' button is within 2 px of 4.1's width in the M3b look run's metrics table; signed off by Este on 2026-10-16 (.superpowers/m3b-look/SIGNOFF.txt). Narrowed in M3b: the button box stands in for the text box.",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: UI fonts load at runtime from Google Fonts, leaking an IP and falling back offline. v5: Space Grotesk, Inter and JetBrains Mono are bundled with zero network requests.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "font-wordart-runtime-google",
@@ -5055,12 +5055,12 @@
    "quirks": "The webkit gradient/hover rules are dead code under Electron 41. Do not implement them.",
    "portTarget": "ScrollViewer ControlTemplate/Style with thin (about 8 px) track #050c18, thumb #223a54 (rounded), no hover color. Apply to Panel ScrollViewer, asset browser ScrollViewer, ribbon pane horizontal ScrollViewer. Decide: match effective (thin flat) look, not the dead webkit gradient.",
    "risk": "low",
-   "parityCheck": "Screenshot of left panel overflowing: scrollbar width/colors match 02-layers.png within 2 px.",
+   "parityCheck": "The left panel's scrollbar (states 03 and 05) and the canvas scrollbars (state 05) compared side by side with 4.1 in the M3b look sign-off, which also confirmed M3a's provisional width 8 and thumb inset 1; signed off by Este on 2026-10-16 (.superpowers/m3b-look/SIGNOFF.txt). Narrowed in M3b: 1200x800 captures stand in for 02-layers.png.",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "a11y-focus-rings",
@@ -5137,12 +5137,12 @@
    "quirks": "",
    "portTarget": "ScrollViewer HorizontalScrollBarVisibility=Auto VerticalScrollBarVisibility=Disabled around each pane's StackPanel(Orientation=Horizontal). Mouse wheel horizontal scroll is NOT provided by the original (wheel over ribbon does nothing); keep or add (low-risk nicety).",
    "risk": "low",
-   "parityCheck": "Shrink window to 700 px: horizontal scrollbar appears at ribbon bottom; groups keep their size.",
+   "parityCheck": "The launch state at a 700 DIP client width (state 07): the ribbon scrolls horizontally and its groups keep their size, compared side by side with 4.1 at the same width, signed off by Este on 2026-10-16 (.superpowers/m3b-look/SIGNOFF.txt). Narrowed in M3b: a 700 DIP client stands in for a 700 px window.",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "home-mode-toggle",
@@ -8492,12 +8492,12 @@
    "quirks": "WPF exposes only the named instances of a variable font file. Space Grotesk lists Light, Regular, Medium and Bold; JetBrains Mono lists Thin through ExtraBold without SemiBold. Inter has a real SemiBold.",
    "portTarget": "The theme asks for SemiBold; WPF resolves it to the Bold (700) instance of Space Grotesk and JetBrains Mono and to Inter SemiBold. Vendoring static 600 cuts would mean new font files and manifest rows.",
    "risk": "low",
-   "parityCheck": "ThemeTokenTests.Ui_fonts_resolve_to_the_vendored_files pins the face each family resolves to; the M3b side-by-side sign-off compares the header title, ribbon tabs, group labels and panel headings.",
+   "parityCheck": "ThemeTokenTests.Ui_fonts_resolve_to_the_vendored_files pins the face each family resolves to; the header title, ribbon tabs, group labels and panel headings were compared side by side in the M3b look sign-off, signed off by Este on 2026-10-16 (.superpowers/m3b-look/SIGNOFF.txt).",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: Chromium instances the Google variable fonts at weight 600 for the header title, ribbon tabs, group labels and panel headings (styles.css:142, :175, :220, :261). v5: WPF exposes only the named instances of the vendored variable files, and Space Grotesk and JetBrains Mono have no 600 instance there, so those labels draw at 700. Inter's 600 is exact.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "zoom-pill-limits",

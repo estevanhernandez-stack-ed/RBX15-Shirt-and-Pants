@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**417 rows.** Status: done 177, open 240. Disposition: fix 200, keep 190, drop 26, new 1. Checks: ui-auto 120, unit 117, manual 67, golden 66, none-retired 25, doc 22.
+**417 rows.** Status: done 187, open 230. Disposition: fix 200, keep 190, drop 26, new 1. Checks: ui-auto 120, unit 117, manual 67, golden 66, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -35,7 +35,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
-| open | `render-zoom-canvas` | Zoom resize and smoothing rule | manual | fix | med |
+| done | `render-zoom-canvas` | Zoom resize and smoothing rule | manual | fix | med |
 | done | `render-checkerboard` | Transparency checkerboard | manual | keep | low |
 | done | `render-grid-overlay` | Region grid overlay | manual | keep | low |
 | done | `render-selection-box` | Selection bounding box | manual | fix | med |
@@ -136,7 +136,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
 | done | `layers-select` | Select layer | ui-auto | keep | low |
-| open | `layers-list-render` | Layer list rows (top = highest z) | ui-auto | fix | med |
+| done | `layers-list-render` | Layer list rows (top = highest z) | ui-auto | fix | med |
 | open | `layers-reorder-drag` | Drag-to-reorder layers in panel | ui-auto | fix | med |
 | done | `layers-list` | Layer list rows | ui-auto | fix | med |
 | open | `layers-reorder-drag-2` | Drag to reorder layers | ui-auto | fix | med |
@@ -157,12 +157,12 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `tools-draw-props` | Draw color, size, fill controls | ui-auto | keep | low |
 | done | `draw-brush-controls` | Brush color, size, fill controls and defaults | manual | keep | low |
 | done | `overlay-mask-checkbox` | Mask checkbox (default on) | ui-auto | fix | low |
-| open | `regions-grid-layout-shirt` | Template Regions grid layout (Shirt) | ui-auto | keep | low |
+| done | `regions-grid-layout-shirt` | Template Regions grid layout (Shirt) | ui-auto | keep | low |
 | done | `regions-grid-layout-pants` | Template Regions grid in Pants mode (labels and keys) | ui-auto | keep | low |
 | open | `regions-button-swatch-paint` | Region button swatch preview (paintRegionButton) | manual | fix | med |
 | done | `regions-click-fit-layer` | Click region button with a layer selected: fit layer into region | unit | fix | low |
 | done | `regions-right-click-clear` | Right-click region button clears its fill | ui-auto | keep | low |
-| open | `regions-hint-text` | Fill Style hint line | manual | keep | low |
+| done | `regions-hint-text` | Fill Style hint line | manual | keep | low |
 | open | `fillstyle-type-buttons` | Fill type button strip (7 types) | ui-auto | fix | low |
 | open | `fillstyle-color-pickers` | Color 1 and Color 2 pickers | manual | fix | med |
 | open | `fillstyle-angle-scale` | Angle and Scale sliders | ui-auto | keep | low |
@@ -210,21 +210,21 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
 | open | `ribbon-tab-switch` | Ribbon tab switching | ui-auto | keep | low |
-| open | `mode-toggle-button` | Shirt/Pants toggle button | ui-auto | keep | low |
+| done | `mode-toggle-button` | Shirt/Pants toggle button | ui-auto | keep | low |
 | open | `project-startup` | Initial render and startup order | manual | fix | low |
 | open | `shell-window-frame` | Window frame, title, menu, default size | manual | fix | low |
 | open | `shell-layout-skeleton` | Page skeleton and flex layout | manual | fix | low |
 | open | `shell-responsive-breakpoint` | Narrow-window breakpoint | ui-auto | keep | low |
 | open | `shell-header` | Header bar content and styling | manual | keep | med |
 | done | `shell-footer` | Footer line | unit | fix | low |
-| open | `theme-tokens-colors` | Color token set (:root) | manual | keep | low |
+| done | `theme-tokens-colors` | Color token set (:root) | manual | keep | low |
 | open | `theme-tokens-shape-motion-type` | Radii, shadows, motion, type tokens | manual | keep | med |
-| open | `font-ui-runtime-google` | UI fonts loaded at runtime from Google Fonts | manual | fix | med |
-| open | `theme-scrollbars` | Scrollbar styling (effective result) | manual | keep | low |
+| done | `font-ui-runtime-google` | UI fonts loaded at runtime from Google Fonts | manual | fix | med |
+| done | `theme-scrollbars` | Scrollbar styling (effective result) | manual | keep | low |
 | open | `a11y-focus-rings` | Keyboard focus ring | ui-auto | fix | med |
 | open | `ribbon-tabs-switching` | Ribbon tab strip and switching | ui-auto | keep | low |
 | open | `ribbon-group-structure` | Ribbon group chrome | manual | keep | low |
-| open | `ribbon-overflow-hscroll` | Ribbon horizontal overflow | manual | keep | low |
+| done | `ribbon-overflow-hscroll` | Ribbon horizontal overflow | manual | keep | low |
 | open | `cross-undo-disabled-style` | Button visual states (base, hover, active, disabled) | manual | keep | med |
 | open | `cross-inline-style-overrides` | Inline styles override CSS (effective values) | manual | keep | low |
 | open | `cross-text-select-and-selection` | Text selection, context menu, tooltips | manual | fix | low |
@@ -235,7 +235,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `shell-single-instance` | No single-instance lock | manual | keep | low |
 | open | `shell-external-drop-guard` | Dropping files outside the drop zone/canvas is swallowed, not navigated | ui-auto | keep | low |
 | open | `shell-header-version-hardcoded` | Header version string is hand-typed and drifts from docs | manual | fix | low |
-| open | `font-ui-weight-600` | UI labels at CSS weight 600 in the vendored variable fonts | manual | fix | low |
+| done | `font-ui-weight-600` | UI labels at CSS weight 600 in the vendored variable fonts | manual | fix | low |
 
 ## App.Storage
 

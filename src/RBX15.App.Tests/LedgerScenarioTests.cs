@@ -524,7 +524,10 @@ public sealed class LedgerScenarioTests : IDisposable
         for (int i = 0; i < 10; i++) canvas.Wheel(+1);
         canvas.EndWheelBurst();
         Assert.Equal(1, LayerOf(s, id).Scale, 12);                         // symmetric steps; 4.1 drifts to 0.9794
-        Assert.InRange(s.UndoCount, 1, 2);   // the burst is at most one step: none when the center recompute lands on the start exactly
+        // The add plus this burst, exactly: 10 steps down and 10 up end at 0.9999999999999999, one ulp off the exact 1 the
+        // layer started at, so the content changed and the burst is its one step. Pure double math with no timer (the
+        // test closes the burst itself), so the count is the same on every run (final fix wave 12; 2 on three runs).
+        Assert.Equal(2, s.UndoCount);
 
         s.Select(null);
         canvas.Wheel(+1);

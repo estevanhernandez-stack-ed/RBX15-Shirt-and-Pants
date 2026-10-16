@@ -221,7 +221,8 @@ public static class LayerOps
 
     /// <summary>
     /// The Image adjustments sliders (editor.js:873-907), each clamped to its slider's range (<see cref="LayerAdjustments"/>).
-    /// A field that is not finite keeps the layer's current value.
+    /// A field that is not finite keeps the layer's current value. A field equal to the layer's current value is kept as
+    /// stored, unclamped, so touching one slider never clamps an out-of-range neighbor in the same step (final fix wave 8).
     /// </summary>
     public static Document SetAdjustments(Document doc, int id, LayerAdjustments adjustments)
     {
@@ -229,13 +230,13 @@ public static class LayerOps
         ArgumentNullException.ThrowIfNull(adjustments);
         return Edit(doc, id, l => l with
         {
-            Brightness = Range(adjustments.Brightness, 0, 200, l.Brightness),
-            Contrast = Range(adjustments.Contrast, 0, 200, l.Contrast),
-            Saturate = Range(adjustments.Saturate, 0, 200, l.Saturate),
-            HueRotate = Range(adjustments.HueRotate, 0, 360, l.HueRotate),
-            RShift = Math.Clamp(adjustments.RShift, -100, 100),
-            GShift = Math.Clamp(adjustments.GShift, -100, 100),
-            BShift = Math.Clamp(adjustments.BShift, -100, 100),
+            Brightness = adjustments.Brightness == l.Brightness ? l.Brightness : Range(adjustments.Brightness, 0, 200, l.Brightness),
+            Contrast = adjustments.Contrast == l.Contrast ? l.Contrast : Range(adjustments.Contrast, 0, 200, l.Contrast),
+            Saturate = adjustments.Saturate == l.Saturate ? l.Saturate : Range(adjustments.Saturate, 0, 200, l.Saturate),
+            HueRotate = adjustments.HueRotate == l.HueRotate ? l.HueRotate : Range(adjustments.HueRotate, 0, 360, l.HueRotate),
+            RShift = adjustments.RShift == l.RShift ? l.RShift : Math.Clamp(adjustments.RShift, -100, 100),
+            GShift = adjustments.GShift == l.GShift ? l.GShift : Math.Clamp(adjustments.GShift, -100, 100),
+            BShift = adjustments.BShift == l.BShift ? l.BShift : Math.Clamp(adjustments.BShift, -100, 100),
         });
     }
 

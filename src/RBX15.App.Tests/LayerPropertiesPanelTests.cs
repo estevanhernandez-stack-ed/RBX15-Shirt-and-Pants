@@ -7,6 +7,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using RBX15.App.Canvas;
 using RBX15.App.Tests.Fakes;
 using RBX15.App.ViewModels;
 using RBX15.App.Views;
@@ -214,6 +215,75 @@ public class LayerPropertiesPanelTests
         Assert.Same(rot, Named<Slider>(view, "RotationSlider"));
         Assert.Equal(("77", -44.6, "-45\u00B0"), (x.Text, rot.Value, Named<Run>(view, "RotationText").Text));
         Assert.True(Named<Expander>(view, "Adjustments").IsExpanded);
+    });
+
+    [Fact] // final fix wave 3b: a Document-only change of the shown layer keeps uncommitted typing; Enter then commits it
+    public void Wheel_scaling_while_typing_in_X_keeps_the_text() => StaThread.Run(() =>
+    {
+        var (session, _, view) = Make();
+        var canvas = new CanvasInteraction(session, new ToolsViewModel(), new BrushViewModel(new FakeColorPicker()), new FakeStatus());
+        var x = Named<TextBox>(view, "XBox");
+        x.Text = "40";                                              // typed, not committed
+        canvas.Wheel(+1);                                           // the wheel moves X and Y (scaled about the center)
+        canvas.EndWheelBurst();
+        Layout(view);
+        Assert.NotEqual(12.7, session.SelectedLayer!.X);
+        Assert.Equal(1, session.UndoCount);
+        Assert.Equal("40", x.Text);
+        Assert.Equal("X: " + LayerPropertiesViewModel.ToFixed0(session.SelectedLayer!.X) + "   Y: " + LayerPropertiesViewModel.ToFixed0(session.SelectedLayer!.Y),
+            Named<TextBlock>(view, "PositionText").Text);           // the label follows the layer
+        LayerPropertiesPanel.HandleTextKey(x, Key.Enter);
+        Assert.Equal((40.0, 2), (session.SelectedLayer!.X, session.UndoCount));
+    });
+
+    [Fact] // final fix wave 3a: a selection change resets dirty fields to the new layer even when its values are equal
+    public void A_selection_change_to_an_equal_layer_resets_typing_and_a_later_focus_loss_records_nothing() => StaThread.Run(() =>
+    {
+        var (session, _, view) = Make(null, LayerOf(1) with { Name = "art", X = 5, Y = 6 }, LayerOf(2) with { Name = "art", X = 5, Y = 6 });
+        var name = Named<TextBox>(view, "NameBox");
+        var x = Named<TextBox>(view, "XBox");
+        var y = Named<TextBox>(view, "YBox");
+        name.Text = "Logo";
+        x.Text = "40";
+        y.Text = "41";
+        session.Select(1);                                          // no commit first (the press-elsewhere hook did not run)
+        Layout(view);
+        Assert.Equal(("art", "5", "6"), (name.Text, x.Text, y.Text));
+        foreach (var box in new[] { name, x, y }) box.RaiseEvent(new RoutedEventArgs(UIElement.LostFocusEvent));
+        view.CommitTextEdits(null);
+        Assert.Equal(0, session.UndoCount);
+        Assert.All(session.Document.Layers, l => Assert.Equal(("art", 5.0, 6.0), (l.Name, l.X, l.Y)));
+    });
+
+    [Fact] // final fix wave 4: a fresh bind to out-of-range values coerces the sliders but never writes back a step
+    public void Binding_out_of_range_rotation_and_brightness_records_nothing() => StaThread.Run(() =>
+    {
+        var (session, props, view) = Make(null, LayerOf(1) with { Rotation = 270, Brightness = 300, Scale = 9, RShift = 150 });
+        Layout(view);
+        Assert.Equal((180.0, 200.0), (Named<Slider>(view, "RotationSlider").Value, Named<Slider>(view, "BrightnessSlider").Value));
+        Assert.Equal(0, session.UndoCount);
+        Assert.Equal((270.0, 300.0, 9.0, 150), (session.SelectedLayer!.Rotation, session.SelectedLayer!.Brightness, session.SelectedLayer!.Scale, session.SelectedLayer!.RShift));
+
+        var other = new LayerPropertiesPanel(() => true) { DataContext = new LayerPropertiesViewModel(session) };   // a second bind
+        Layout(other);
+        view.DataContext = new LayerPropertiesViewModel(session);   // and a DataContext swap
+        Layout(view);
+        Assert.Equal(0, session.UndoCount);
+        Assert.Equal((270.0, 300.0), (session.SelectedLayer!.Rotation, session.SelectedLayer!.Brightness));
+    });
+
+    [Fact] // final fix wave 4: the Refresh path (selection change, then a Document change) never writes a coerced value back
+    public void Refreshing_to_out_of_range_values_records_nothing() => StaThread.Run(() =>
+    {
+        var (session, _, view) = Make(null, LayerOf(1) with { Rotation = 270, Brightness = 300, HueRotate = 400, GShift = -150 }, LayerOf(2));
+        session.Select(1);
+        Layout(view);
+        Assert.Equal(0, session.UndoCount);
+        Assert.True(session.Apply(d => d with { Layers = d.Layers.SetItem(0, d.Layers[0] with { Rotation = -300, Opacity = 3 }) }));
+        Layout(view);
+        Assert.Equal(1, session.UndoCount);
+        var l = session.SelectedLayer!;
+        Assert.Equal((-300.0, 3.0, 300.0, 400.0, -150), (l.Rotation, l.Opacity, l.Brightness, l.HueRotate, l.GShift));
     });
 
     [Fact] // the panel sits in the left panel after the layers, as editor.html:311-323 orders them

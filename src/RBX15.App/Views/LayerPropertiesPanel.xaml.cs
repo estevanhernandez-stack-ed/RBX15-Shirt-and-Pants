@@ -30,8 +30,30 @@ public partial class LayerPropertiesPanel : UserControl
         TextFields = [NameBox, XBox, YBox];
         Loaded += (_, _) => HookWindow(Window.GetWindow(this));
         Unloaded += (_, _) => { HookWindow(null); _tracker.End(); };
-        DataContextChanged += (_, _) => _tracker.End();
+        DataContextChanged += (_, e) =>
+        {
+            _tracker.End();
+            if (e.OldValue is LayerPropertiesViewModel old) old.HasUncommittedTyping = null;
+            if (e.NewValue is LayerPropertiesViewModel vm) vm.HasUncommittedTyping = HasUncommittedTyping;
+        };
     }
+
+    /// <summary>
+    /// Whether the field bound to <paramref name="property"/> holds typing not yet committed (its binding is dirty).
+    /// A field commits on Enter, focus loss or a press elsewhere, so a dirty field is the one being typed in. The panel
+    /// keeps that typing over a Document-only change of the same layer (final fix wave 3b): the view-model skips raising
+    /// the field rather than the panel committing it on the session's Changing, because a commit there would record
+    /// half-typed text as a step the user never confirmed, and the canvas edit would then overwrite the field anyway.
+    /// </summary>
+    bool HasUncommittedTyping(string property) => property switch
+    {
+        nameof(LayerPropertiesViewModel.Name) => IsDirty(NameBox),
+        nameof(LayerPropertiesViewModel.XText) => IsDirty(XBox),
+        nameof(LayerPropertiesViewModel.YText) => IsDirty(YBox),
+        _ => false,
+    };
+
+    static bool IsDirty(TextBox box) => box.GetBindingExpression(TextBox.TextProperty)?.IsDirty == true;
 
     /// <summary>The ten sliders, in panel order.</summary>
     internal IReadOnlyList<Slider> Sliders =>

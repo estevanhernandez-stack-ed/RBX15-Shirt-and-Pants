@@ -120,6 +120,19 @@ public class LayerOpsEditTests
         Assert.Throws<ArgumentNullException>(() => LayerOps.SetAdjustments(doc, 1, null!));
     }
 
+    [Fact] // final fix wave 8: only a field that changes is clamped; an out-of-range field passed back unchanged stays as stored
+    public void SetAdjustments_clamps_only_the_fields_that_change()
+    {
+        var doc = Doc(L(1) with { Brightness = 300, Contrast = -20, HueRotate = 400, GShift = 150 });
+        var stored = LayerAdjustments.From(doc.Layers[0]);
+        var a = Only(LayerOps.SetAdjustments(doc, 1, stored with { HueRotate = 90 }));
+        Assert.Equal(stored with { HueRotate = 90 }, LayerAdjustments.From(a));
+        var b = Only(LayerOps.SetAdjustments(doc, 1, stored with { Brightness = 250 }));
+        Assert.Equal(stored with { Brightness = 200 }, LayerAdjustments.From(b));
+        Assert.Same(doc, LayerOps.SetAdjustments(doc, 1, stored));
+        Assert.Equal(LayerAdjustments.Default, LayerAdjustments.From(Only(LayerOps.ResetAdjustments(doc, 1))));
+    }
+
     [Fact] // props-adjust-reset (editor.js:908-911); layers-model defaults (editor.js:134-142)
     public void ResetAdjustments_restores_the_defaults()
     {

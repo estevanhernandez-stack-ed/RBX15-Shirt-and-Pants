@@ -134,7 +134,7 @@ public sealed partial class LayerPropertiesViewModel : ObservableObject
         set
         {
             // Controller ruling (Task 3): non-finite input is refused like X/Y; SetScale would write 1% as a real step.
-            if (!double.IsFinite(value)) { OnPropertyChanged(nameof(ScalePercent)); return; }
+            if (RefusedNonFinite(value)) return;
             Edit((d, id) => LayerOps.SetScale(d, id, Whole(value, MinScalePercent, MaxScalePercent) / 100));
         }
     }
@@ -149,7 +149,7 @@ public sealed partial class LayerPropertiesViewModel : ObservableObject
         set
         {
             // Controller ruling (Task 3): non-finite input is refused like X/Y; SetRotation would write 0 degrees as a real step.
-            if (!double.IsFinite(value)) { OnPropertyChanged(nameof(Rotation)); return; }
+            if (RefusedNonFinite(value)) return;
             Edit((d, id) => LayerOps.SetRotation(d, id, Whole(value, MinRotation, MaxRotation)));
         }
     }
@@ -164,7 +164,11 @@ public sealed partial class LayerPropertiesViewModel : ObservableObject
     public double OpacityPercent
     {
         get => Get<double>();
-        set => Edit((d, id) => LayerOps.SetOpacity(d, id, Whole(value, 0, 100) / 100));
+        set
+        {
+            if (RefusedNonFinite(value)) return;
+            Edit((d, id) => LayerOps.SetOpacity(d, id, Whole(value, 0, 100) / 100));
+        }
     }
 
     /// <summary>#opaVal: (opacity*100).toFixed(0) + "%" (editor.js:765).</summary>
@@ -174,28 +178,44 @@ public sealed partial class LayerPropertiesViewModel : ObservableObject
     public double Brightness
     {
         get => Get<double>();
-        set => Adjust(a => a with { Brightness = Whole(value, 0, MaxPercentAdjust) });
+        set
+        {
+            if (RefusedNonFinite(value)) return;
+            Adjust(a => a with { Brightness = Whole(value, 0, MaxPercentAdjust) });
+        }
     }
 
     /// <summary>#ctrlContrast 0..200 (editor.js:788, :878-882).</summary>
     public double Contrast
     {
         get => Get<double>();
-        set => Adjust(a => a with { Contrast = Whole(value, 0, MaxPercentAdjust) });
+        set
+        {
+            if (RefusedNonFinite(value)) return;
+            Adjust(a => a with { Contrast = Whole(value, 0, MaxPercentAdjust) });
+        }
     }
 
     /// <summary>#ctrlSaturate 0..200 (editor.js:790, :883-887).</summary>
     public double Saturate
     {
         get => Get<double>();
-        set => Adjust(a => a with { Saturate = Whole(value, 0, MaxPercentAdjust) });
+        set
+        {
+            if (RefusedNonFinite(value)) return;
+            Adjust(a => a with { Saturate = Whole(value, 0, MaxPercentAdjust) });
+        }
     }
 
     /// <summary>#ctrlHue 0..360 (editor.js:792, :888-892).</summary>
     public double HueRotate
     {
         get => Get<double>();
-        set => Adjust(a => a with { HueRotate = Whole(value, 0, MaxHue) });
+        set
+        {
+            if (RefusedNonFinite(value)) return;
+            Adjust(a => a with { HueRotate = Whole(value, 0, MaxHue) });
+        }
     }
 
     /// <summary>#ctrlR -100..100 (editor.js:795, :893-897).</summary>
@@ -270,6 +290,14 @@ public sealed partial class LayerPropertiesViewModel : ObservableObject
     public IDisposable BeginSliderDrag() => _session.BeginGesture();
 
     /// <summary>
+    /// Set by the view: true while the text field bound to the named property (<see cref="Name"/>, <see cref="XText"/>
+    /// or <see cref="YText"/>) holds typing not yet committed. A Document-only change of the shown layer (a wheel burst,
+    /// a canvas drag, a panel key) does not raise that field, so WPF never writes the layer's value over the typing;
+    /// Enter or focus loss then commits it (final fix wave 3b).
+    /// </summary>
+    public Func<string, bool>? HasUncommittedTyping { get; set; }
+
+    /// <summary>
     /// X and Y commit (onchange, editor.js:826-827). Text equal to the shown value changes nothing (4.1's change
     /// event fires only on a changed value), so a field committed on every focus loss records no step. An empty
     /// field is 0 (<c>+''</c>). Text that is not a finite number, or whose size reaches 1e21 (where JS toFixed
@@ -323,18 +351,28 @@ public sealed partial class LayerPropertiesViewModel : ObservableObject
 
     T Get<T>([CallerMemberName] string name = "") => (T)ShownByName[name](_layer);
 
-    /// <summary>Re-reads the selected layer and raises only what changed (no rebuild: focus and expansion survive).</summary>
+    /// <summary>
+    /// Re-reads the selected layer and raises only what changed (no rebuild: focus and expansion survive). When the shown
+    /// layer id changes (to or from null too), Name, X and Y are raised whatever their values, so a field with uncommitted
+    /// typing resets to the new layer and can never commit into it (final fix wave 3a). For the same layer, a field with
+    /// uncommitted typing is not raised (<see cref="HasUncommittedTyping"/>).
+    /// </summary>
     void Refresh()
     {
         var before = _layer;
         var after = _session.SelectedLayer;
+        bool otherLayer = before?.Id != after?.Id;
         _syncing = true;
         try
         {
             _layer = after;
             if (!ReferenceEquals(before, after))
                 foreach (var (name, read) in Shown)
-                    if (!Equals(read(before), read(after))) OnPropertyChanged(name);
+                {
+                    bool text = name is nameof(Name) or nameof(XText) or nameof(YText);
+                    if (text && otherLayer) OnPropertyChanged(name);
+                    else if (!Equals(read(before), read(after)) && !(text && HasUncommittedTyping?.Invoke(name) == true)) OnPropertyChanged(name);
+                }
         }
         finally
         {
@@ -362,10 +400,19 @@ public sealed partial class LayerPropertiesViewModel : ObservableObject
     /// <summary>A stored number as JS prints it inside a template string, for the slider-range values the labels show.</summary>
     static string Num(double v) => (v + 0.0).ToString(Inv);
 
-    /// <summary>A step-1 range value: rounded half away from zero, clamped to [min, max], never -0. NaN throws, as FillStyleViewModel does.</summary>
-    static double Whole(double value, double min, double max)
+    /// <summary>
+    /// The one non-finite policy (final fix wave 15): NaN and both infinities are refused by every number the panel
+    /// takes, as X and Y refuse unusable text. Nothing is recorded, and the property is raised so the control shows the
+    /// stored value again. True when refused.
+    /// </summary>
+    bool RefusedNonFinite(double value, [CallerMemberName] string name = "")
     {
-        if (double.IsNaN(value)) throw new ArgumentOutOfRangeException(nameof(value), "NaN is not a slider value.");
-        return Math.Clamp(Math.Round(value, MidpointRounding.AwayFromZero), min, max) + 0.0;
+        if (double.IsFinite(value)) return false;
+        OnPropertyChanged(name);
+        return true;
     }
+
+    /// <summary>A step-1 range value: rounded half away from zero, clamped to [min, max], never -0. Callers refuse non-finite input first.</summary>
+    static double Whole(double value, double min, double max) =>
+        Math.Clamp(Math.Round(value, MidpointRounding.AwayFromZero), min, max) + 0.0;
 }

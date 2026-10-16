@@ -189,6 +189,41 @@ public class LayerPropertiesViewModelTests
             (props.BrightnessLabel, props.SaturateLabel, props.HueLabel, props.RLabel, props.GLabel, props.BLabel));
     }
 
+    [Fact] // final fix wave 8: touching one adjustment clamps only that one; an out-of-range Brightness stays as stored
+    public void An_adjustment_edit_clamps_only_its_own_field()
+    {
+        var (session, props) = Make(LayerOf(1) with { Brightness = 300, Contrast = -20, HueRotate = 400, GShift = 150 });
+        props.HueRotate = 90;
+        var l = Shown(session);
+        Assert.Equal((300.0, -20.0, 90.0, 150), (l.Brightness, l.Contrast, l.HueRotate, l.GShift));
+        Assert.Equal(1, session.UndoCount);
+        props.RShift = 120;
+        Assert.Equal((300.0, -20.0, 100, 150), (Shown(session).Brightness, Shown(session).Contrast, Shown(session).RShift, Shown(session).GShift));
+    }
+
+    [Theory] // final fix wave 15: every number the panel takes refuses NaN and both infinities: no throw, no step, the view reverts
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    [InlineData(double.NegativeInfinity)]
+    public void Non_finite_input_is_refused_everywhere(double value)
+    {
+        var (session, props) = Make(LayerOf(1) with { Opacity = 0.4, Brightness = 120, Contrast = 80, Saturate = 60, HueRotate = 30 });
+        var before = session.Document;
+        var raised = Track(props);
+        props.ScalePercent = value;
+        props.Rotation = value;
+        props.OpacityPercent = value;
+        props.Brightness = value;
+        props.Contrast = value;
+        props.Saturate = value;
+        props.HueRotate = value;
+        Assert.Same(before, session.Document);
+        Assert.Equal(0, session.UndoCount);
+        Assert.Equal(
+            new[] { "ScalePercent", "Rotation", "OpacityPercent", "Brightness", "Contrast", "Saturate", "HueRotate" },
+            raised);
+    }
+
     [Fact] // props-adjust-reset (fix): one step to (100,100,100,0,0,0,0) (editor.js:908-912), the panel stays open; at defaults, nothing
     public void Reset_is_one_step_and_keeps_the_adjustments_open()
     {

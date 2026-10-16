@@ -20,6 +20,7 @@ namespace RBX15.App.Tests;
 /// slider press is one step, typed fields commit on Enter or on a press elsewhere, and every control has a name
 /// (spec §4 Accessibility). Laid out off-screen on StaThread, whose Application holds Task 1's theme.
 /// </summary>
+[Collection("MainWindow")] // see ShellLookTests
 public class LayerPropertiesPanelTests
 {
     static void Layout(FrameworkElement e)

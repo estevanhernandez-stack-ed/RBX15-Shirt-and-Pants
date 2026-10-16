@@ -25,6 +25,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d">
 
+  <Window.InputBindings>
+    <!-- Ctrl+Z is M3b's one shortcut (planning contract: shortcuts are M4 except Ctrl+Z). A focused TextBox
+         handles its own Ctrl+Z first (TextBoxBase's Undo command), so typing is undone before the document. -->
+    <KeyBinding Key="Z" Modifiers="Control" Command="{Binding Home.Edit.UndoCommand}" />
+  </Window.InputBindings>
+
   <Grid x:Name="Viewport">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />

@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Xml.Linq;
 using RBX15.App.Converters;
 using RBX15.App.Services;
@@ -11,6 +12,7 @@ using RBX15.Parity;
 namespace RBX15.App.Tests;
 
 /// <summary>The window, header, footer and layout skeleton (ledger shell-* rows).</summary>
+[Collection("MainWindow")] // see ShellLookTests
 public class ShellTests
 {
     static readonly string Root = RepoRoot.Find(AppContext.BaseDirectory);
@@ -156,4 +158,14 @@ public class ShellTests
         XNamespace ws = "http://schemas.microsoft.com/SMI/2016/WindowsSettings";
         Assert.Equal("PerMonitorV2", manifest.Descendants(ws + "dpiAwareness").Single().Value);
     }
+
+    [Fact] // M3b: Ctrl+Z is the one shortcut before M4 (planning contract); it runs the Edit group's Undo, no input sent
+    public void Ctrl_Z_on_the_window_runs_the_Edit_groups_undo() => StaThread.Run(() =>
+    {
+        var main = TestShell.Main(new EditorSession());
+        var window = new MainWindow(main, new FakeSettingsStore(), [Primary]);
+        StaThread.Pump();
+        var binding = Assert.Single(window.InputBindings.OfType<KeyBinding>(), b => b.Key == Key.Z && b.Modifiers == ModifierKeys.Control);
+        Assert.Same(main.Home.Edit.UndoCommand, binding.Command);
+    });
 }

@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**413 rows.** Status: done 124, open 289. Disposition: fix 195, keep 191, drop 26, new 1. Checks: ui-auto 120, unit 114, manual 67, golden 65, none-retired 25, doc 22.
+**417 rows.** Status: done 188, open 229. Disposition: fix 200, keep 190, drop 26, new 1. Checks: ui-auto 120, unit 117, manual 67, golden 66, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -35,47 +35,49 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
-| open | `render-zoom-canvas` | Zoom resize and smoothing rule | manual | fix | med |
+| done | `render-zoom-canvas` | Zoom resize and smoothing rule | manual | fix | med |
 | done | `render-checkerboard` | Transparency checkerboard | manual | keep | low |
 | done | `render-grid-overlay` | Region grid overlay | manual | keep | low |
-| open | `render-selection-box` | Selection bounding box | manual | fix | med |
-| open | `render-resize-handles` | Corner resize handles | manual | keep | low |
-| open | `render-rotation-handle` | Rotation handle (stem, knob, glyph) | manual | keep | med |
-| open | `render-rotation-label` | Rotation angle label | manual | fix | med |
+| done | `render-selection-box` | Selection bounding box | manual | fix | med |
+| done | `render-resize-handles` | Corner resize handles | manual | keep | low |
+| done | `render-rotation-handle` | Rotation handle (stem, knob, glyph) | manual | keep | med |
+| done | `render-rotation-label` | Rotation angle label | manual | fix | med |
 | open | `render-restore-and-cursor` | Render tail: restore then updateCursor | manual | keep | low |
 | open | `cursor-default` | Default tool cursor | manual | fix | low |
 | open | `cursor-eraser` | Eraser brush ring cursor | manual | fix | med |
-| open | `tools-set-tool` | setTool: active tool, button highlight, cursor refresh | ui-auto | keep | low |
+| done | `tools-set-tool` | setTool: active tool, button highlight, cursor refresh | ui-auto | keep | low |
 | open | `tools-toggle-off` | Re-click or re-press active tool returns to Select | ui-auto | keep | low |
-| open | `tools-auto-select-switch` | Tool auto-reverts to Select on layer add and layer select | ui-auto | keep | low |
+| done | `tools-auto-select-switch` | Tool auto-reverts to Select on layer add and layer select | ui-auto | keep | low |
 | open | `tools-cursor` | Canvas cursor per tool, eraser ring cursor | manual | fix | med |
 | open | `drop-canvas` | Drop on canvas places layer at drop point | ui-auto | fix | med |
 | open | `select-move` | Move drag | ui-auto | fix | low |
-| open | `select-rotate-handle` | Rotation handle | ui-auto | fix | med |
+| done | `select-rotate-handle` | Rotation handle | ui-auto | fix | med |
 | open | `select-hover-idle` | Idle hover cursor | ui-auto | fix | low |
-| open | `canvas-coord-map` | Mouse to template-space coordinate mapping | ui-auto | fix | med |
+| done | `canvas-coord-map` | Mouse to template-space coordinate mapping | ui-auto | fix | med |
 | open | `canvas-cursor-states` | Cursor shapes per tool and drag state | ui-auto | fix | low |
-| open | `select-deselect-click` | Click on empty space deselects | ui-auto | keep | low |
+| done | `select-deselect-click` | Click on empty space deselects | ui-auto | keep | low |
 | open | `select-hover-and-end` | Select tool mousemove idle, mouseup and mouseleave | ui-auto | fix | low |
-| open | `select-handle-render` | Selection box and handle rendering (editor overlay) | manual | keep | low |
+| done | `select-handle-render` | Selection box and handle rendering (editor overlay) | manual | keep | low |
 | open | `draw-release-outside-canvas` | Mouse released or left outside canvas while drawing | ui-auto | fix | med |
 | open | `draw-tool-switch-midstroke` | Tool switch during a stroke | ui-auto | fix | low |
 | open | `wheel-scale-layer` | Wheel in Select tool scales selected layer | ui-auto | fix | med |
-| open | `wheel-brush-size` | Wheel with draw tools changes brush size | ui-auto | keep | low |
-| open | `eraser-cursor` | Eraser ring cursor | manual | keep | low |
-| open | `eraser-selection-semantics` | Eraser operates on selection, not on topmost under cursor | ui-auto | fix | low |
+| done | `wheel-brush-size` | Wheel with draw tools changes brush size | ui-auto | keep | low |
+| open | `eraser-cursor` | Eraser ring cursor | manual | fix | low |
+| done | `eraser-selection-semantics` | Eraser operates on selection, not on topmost under cursor | ui-auto | fix | low |
 | done | `zoom-controls` | Zoom buttons and label | ui-auto | keep | med |
 | done | `overlay-grid-checkbox` | Grid checkbox (default off) region outlines | manual | fix | low |
 | open | `render-pipeline-canvas-reset` | Render loop characteristics that affect input | manual | keep | low |
 | done | `canvas-zoom-controls` | Zoom controls | ui-auto | fix | med |
 | open | `canvas-select-gestures` | Select tool gestures: move, resize, rotate, wheel | ui-auto | fix | high |
-| open | `select-hidden-layer-still-handled` | Hidden selected layer keeps box and live handles | ui-auto | fix | low |
+| done | `select-hidden-layer-still-handled` | Hidden selected layer keeps box and live handles | ui-auto | fix | low |
 | open | `canvas-mouse-button-agnostic` | Right and middle mouse buttons act like left on canvas | ui-auto | fix | low |
 | open | `wheel-sign-only-and-midstroke` | Wheel uses sign only; wheel mid-shape changes live stroke width | ui-auto | fix | low |
 | done | `layers-multi-file-async-order` | Multi-file add: z-order follows decode completion, one undo per file | ui-auto | fix | low |
 | done | `canvas-zoom-clipped-no-pan` | Zoomed canvas is clipped with no scrollbars or pan | ui-auto | fix | med |
 | open | `canvas-device-pixel-render` | View canvas rendered at device pixels | manual | fix | low |
 | done | `zoom-pill-limits` | Zoom buttons disabled at 25% and 300% | unit | fix | low |
+| open | `wheel-scale-undo-burst` | A burst of wheel scaling is one undo step | unit | fix | low |
+| done | `canvas-automation-peer` | The canvas is exposed to UI Automation | unit | fix | low |
 
 ## App.Dialogs
 
@@ -115,26 +117,26 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
-| open | `layers-empty-state` | Empty selection panel | ui-auto | keep | low |
-| open | `props-name-xy` | Name and X/Y fields | ui-auto | fix | low |
-| open | `props-scale` | Scale slider | ui-auto | fix | low |
-| open | `props-rotation` | Rotation slider | ui-auto | fix | low |
-| open | `props-opacity` | Layer opacity slider | ui-auto | fix | low |
-| open | `props-adjust-panel` | Image adjustments collapsible panel | ui-auto | fix | low |
+| done | `layers-empty-state` | Empty selection panel | ui-auto | keep | low |
+| done | `props-name-xy` | Name and X/Y fields | ui-auto | fix | low |
+| done | `props-scale` | Scale slider | ui-auto | fix | low |
+| done | `props-rotation` | Rotation slider | ui-auto | fix | low |
+| done | `props-opacity` | Layer opacity slider | ui-auto | fix | low |
+| done | `props-adjust-panel` | Image adjustments collapsible panel | ui-auto | fix | low |
 | open | `props-adjust-sliders` | Brightness/Contrast/Saturation/Hue/RGB shift sliders | ui-auto | fix | high |
-| open | `props-adjust-reset` | Reset adjustments | ui-auto | fix | low |
+| done | `props-adjust-reset` | Reset adjustments | ui-auto | fix | low |
 | open | `props-live-refresh` | Property panel refresh behavior while dragging | ui-auto | fix | low |
 | open | `layers-selected-panel` | Selected layer controls | ui-auto | fix | high |
-| open | `props-falsy-zero-adjust-display` | Brightness/Contrast/Saturation of 0 display as 100 after reselect | ui-auto | fix | low |
-| open | `props-rotation-label-unrounded` | Rotation label shows raw float after handle drag | ui-auto | fix | low |
-| open | `props-panel-rebuild-resets` | Every updateUI rebuilds the property panel and collapses Image adjustments | ui-auto | fix | low |
+| done | `props-falsy-zero-adjust-display` | Brightness/Contrast/Saturation of 0 display as 100 after reselect | ui-auto | fix | low |
+| done | `props-rotation-label-unrounded` | Rotation label shows raw float after handle drag | ui-auto | fix | low |
+| done | `props-panel-rebuild-resets` | Every updateUI rebuilds the property panel and collapses Image adjustments | ui-auto | fix | low |
 
 ## App.Layers
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
-| open | `layers-select` | Select layer | ui-auto | keep | low |
-| open | `layers-list-render` | Layer list rows (top = highest z) | ui-auto | fix | med |
+| done | `layers-select` | Select layer | ui-auto | keep | low |
+| done | `layers-list-render` | Layer list rows (top = highest z) | ui-auto | fix | med |
 | open | `layers-reorder-drag` | Drag-to-reorder layers in panel | ui-auto | fix | med |
 | done | `layers-list` | Layer list rows | ui-auto | fix | med |
 | open | `layers-reorder-drag-2` | Drag to reorder layers | ui-auto | fix | med |
@@ -152,27 +154,27 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
-| open | `tools-draw-props` | Draw color, size, fill controls | ui-auto | keep | low |
-| open | `draw-brush-controls` | Brush color, size, fill controls and defaults | manual | keep | low |
+| done | `tools-draw-props` | Draw color, size, fill controls | ui-auto | keep | low |
+| done | `draw-brush-controls` | Brush color, size, fill controls and defaults | manual | keep | low |
 | done | `overlay-mask-checkbox` | Mask checkbox (default on) | ui-auto | fix | low |
-| open | `regions-grid-layout-shirt` | Template Regions grid layout (Shirt) | ui-auto | keep | low |
+| done | `regions-grid-layout-shirt` | Template Regions grid layout (Shirt) | ui-auto | keep | low |
 | done | `regions-grid-layout-pants` | Template Regions grid in Pants mode (labels and keys) | ui-auto | keep | low |
 | open | `regions-button-swatch-paint` | Region button swatch preview (paintRegionButton) | manual | fix | med |
-| open | `regions-click-fit-layer` | Click region button with a layer selected: fit layer into region | unit | fix | low |
+| done | `regions-click-fit-layer` | Click region button with a layer selected: fit layer into region | unit | fix | low |
 | done | `regions-right-click-clear` | Right-click region button clears its fill | ui-auto | keep | low |
-| open | `regions-hint-text` | Fill Style hint line | manual | keep | low |
+| done | `regions-hint-text` | Fill Style hint line | manual | keep | low |
 | open | `fillstyle-type-buttons` | Fill type button strip (7 types) | ui-auto | fix | low |
 | open | `fillstyle-color-pickers` | Color 1 and Color 2 pickers | manual | fix | med |
 | open | `fillstyle-angle-scale` | Angle and Scale sliders | ui-auto | keep | low |
 | done | `project-load-image-layer` | Add image (load image as layer) | ui-auto | fix | med |
 | open | `home-mode-toggle` | Shirt/Pants mode toggle button | ui-auto | fix | low |
 | open | `home-tool-buttons` | Tool buttons: Select, Draw, Line, Rect, Ellipse, Eraser | ui-auto | keep | low |
-| open | `home-brush-group` | Brush group: color, size, fill | ui-auto | keep | med |
+| done | `home-brush-group` | Brush group: color, size, fill | ui-auto | keep | med |
 | open | `home-placement-group` | Placement buttons: Fit Front, F+B, Stretch, Allover, Scatter | ui-auto | fix | low |
 | done | `home-edit-group` | Edit group: Undo, Redo, Clear | ui-auto | keep | med |
 | open | `home-file-group` | File group: Save work, Open, Add image, Download template | manual | fix | med |
 | done | `home-settings-group` | Settings group: Template name, Mask, Grid | ui-auto | keep | low |
-| open | `region-front-highlight-lost` | Front region button loses its purple base highlight once cleared | ui-auto | fix | low |
+| done | `region-front-highlight-lost` | Front region button loses its purple base highlight once cleared | ui-auto | fix | low |
 | open | `fillstyle-ui-not-synced-from-region` | Fill Style controls are one-way (never read back from regions) | manual | keep | low |
 
 ## App.Ribbon.Layout
@@ -208,24 +210,24 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
 | open | `ribbon-tab-switch` | Ribbon tab switching | ui-auto | keep | low |
-| open | `mode-toggle-button` | Shirt/Pants toggle button | ui-auto | keep | low |
+| done | `mode-toggle-button` | Shirt/Pants toggle button | ui-auto | keep | low |
 | open | `project-startup` | Initial render and startup order | manual | fix | low |
 | open | `shell-window-frame` | Window frame, title, menu, default size | manual | fix | low |
 | open | `shell-layout-skeleton` | Page skeleton and flex layout | manual | fix | low |
 | open | `shell-responsive-breakpoint` | Narrow-window breakpoint | ui-auto | keep | low |
 | open | `shell-header` | Header bar content and styling | manual | keep | med |
 | done | `shell-footer` | Footer line | unit | fix | low |
-| open | `theme-tokens-colors` | Color token set (:root) | manual | keep | low |
+| done | `theme-tokens-colors` | Color token set (:root) | manual | keep | low |
 | open | `theme-tokens-shape-motion-type` | Radii, shadows, motion, type tokens | manual | keep | med |
-| open | `font-ui-runtime-google` | UI fonts loaded at runtime from Google Fonts | manual | fix | med |
-| open | `theme-scrollbars` | Scrollbar styling (effective result) | manual | keep | low |
+| done | `font-ui-runtime-google` | UI fonts loaded at runtime from Google Fonts | manual | fix | med |
+| done | `theme-scrollbars` | Scrollbar styling (effective result) | manual | keep | low |
 | open | `a11y-focus-rings` | Keyboard focus ring | ui-auto | fix | med |
 | open | `ribbon-tabs-switching` | Ribbon tab strip and switching | ui-auto | keep | low |
 | open | `ribbon-group-structure` | Ribbon group chrome | manual | keep | low |
-| open | `ribbon-overflow-hscroll` | Ribbon horizontal overflow | manual | keep | low |
+| done | `ribbon-overflow-hscroll` | Ribbon horizontal overflow | manual | keep | low |
 | open | `cross-undo-disabled-style` | Button visual states (base, hover, active, disabled) | manual | keep | med |
 | open | `cross-inline-style-overrides` | Inline styles override CSS (effective values) | manual | keep | low |
-| open | `cross-text-select-and-selection` | Text selection, context menu, tooltips | manual | keep | low |
+| open | `cross-text-select-and-selection` | Text selection, context menu, tooltips | manual | fix | low |
 | open | `cross-window-dpi-rendering` | Pixel scale / DPI behavior | manual | keep | med |
 | open | `shell-window-size` | Initial window 1200x800, centered, resizable | ui-auto | fix | low |
 | done | `shell-window-title` | Window title is a static product name | ui-auto | keep | low |
@@ -233,7 +235,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `shell-single-instance` | No single-instance lock | manual | keep | low |
 | open | `shell-external-drop-guard` | Dropping files outside the drop zone/canvas is swallowed, not navigated | ui-auto | keep | low |
 | open | `shell-header-version-hardcoded` | Header version string is hand-typed and drifts from docs | manual | fix | low |
-| open | `font-ui-weight-600` | UI labels at CSS weight 600 in the vendored variable fonts | manual | fix | low |
+| done | `font-ui-weight-600` | UI labels at CSS weight 600 in the vendored variable fonts | manual | fix | low |
 
 ## App.Storage
 
@@ -312,14 +314,14 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `tpl-active-regions-swap` | Active region reference and mode variable | unit | keep | med |
 | done | `state-defaults` | Initial editor state defaults | unit | keep | low |
 | done | `layer-factory` | makeLayer factory defaults | unit | keep | low |
-| open | `layers-model` | Layer data model and defaults | unit | fix | med |
+| done | `layers-model` | Layer data model and defaults | unit | fix | med |
 | done | `layers-add-placement` | Add image layer: auto-fit and placement | unit | fix | med |
-| open | `layers-add-drawing` | Add drawing layer from stroke canvas | unit | keep | med |
+| done | `layers-add-drawing` | Add drawing layer from stroke canvas | unit | keep | med |
 | done | `layers-duplicate` | Duplicate layer | unit | keep | low |
 | done | `layers-remove` | Delete layer and reselection | unit | fix | low |
 | done | `layers-visibility` | Toggle layer visibility | unit | fix | low |
 | done | `layers-move-updown` | Up/Down buttons | unit | fix | low |
-| open | `props-flip` | Flip H / Flip V | unit | fix | low |
+| done | `props-flip` | Flip H / Flip V | unit | fix | low |
 | open | `btn-fit-front` | Fit Front | unit | fix | med |
 | open | `btn-fit-fb` | F+B (front and back) | unit | fix | med |
 | open | `btn-stretch` | Stretch (across torso) | unit | fix | low |
@@ -339,8 +341,8 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `asset-click-add` | Click thumbnail: add as layer (fit 85% in front region) | unit | keep | low |
 | open | `asset-rightclick-full` | Right-click thumbnail: add at full template size | unit | keep | low |
 | done | `claim-mode-per-mode-region-data` | CHANGELOG 3.0 'per-mode region data' is false: a mode switch wipes fills | unit | keep | low |
-| open | `props-scale-clamp-inconsistency` | Scale bounds differ by input path | unit | fix | low |
-| open | `layers-default-name-offbyone` | Default layer names are off by one from the id | unit | fix | low |
+| done | `props-scale-clamp-inconsistency` | Scale bounds differ by input path | unit | fix | low |
+| done | `layers-default-name-offbyone` | Default layer names are off by one from the id | unit | fix | low |
 | open | `bg-color-pick-clears-image` | Picking a background color or swatch silently discards the background image | unit | keep | low |
 | open | `image-decode-format-matrix` | Decoder matrix: SVG, BMP, GIF, WebP accepted by extension or MIME | unit | drop | med |
 | done | `image-decode-caps` | Imported image size caps (file bytes, side length, pixel count) | unit | fix | med |
@@ -386,7 +388,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 |---|---|---|---|---|---|
 | done | `history-snapshot-coupling` | State captured by undo snapshots | unit | keep | med |
 | done | `undo-model` | Undo/redo snapshot model and stack discipline | unit | keep | low |
-| open | `undo-snapshot-contents` | What a snapshot captures (and what it does not) | unit | keep | high |
+| done | `undo-snapshot-contents` | What a snapshot captures (and what it does not) | unit | keep | high |
 | done | `undo-restore` | restoreState: order of operations, async image loading | unit | fix | high |
 | open | `undo-coverage-gaps` | Which actions create undo steps | unit | fix | med |
 | done | `history-snapshot-memory` | Snapshot size and 30-step cap behavior | unit | fix | low |
@@ -428,12 +430,13 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `render-offscreen` | Persistent offscreen composite | golden | keep | med |
 | done | `render-background` | Background image vs color with opacity | golden | keep | med |
 | done | `render-region-fills-step` | Region fills painted over background, under layers | golden | keep | low |
-| open | `render-live-preview` | Live drawing preview composite | golden | keep | low |
+| done | `render-live-preview` | Live drawing preview composite | golden | keep | low |
 | done | `render-mask-step` | Mask application (destination-in) | golden | keep | med |
 | done | `render-order-summary` | Full render order (contract) | golden | keep | high |
-| open | `draw-preview-composite` | Live preview compositing | golden | keep | low |
+| done | `draw-preview-composite` | Live preview compositing | golden | keep | low |
 | open | `fillstyle-live-render-hook` | Region fills rendered in canvas with connected-component gradient extent | golden | keep | med |
 | done | `canvas-element-render` | Main canvas, zoom and compositing order | golden | keep | high |
+| done | `overlay-knob-glyph-rasterization` | The rotate knob's glyph antialiasing differs at some offsets | golden | fix | low |
 
 ## Engine.Template
 
@@ -450,29 +453,30 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
 | done | `autocrop` | autocrop of drawn canvas | unit | keep | low |
-| open | `select-hit-test` | Topmost layer hit-testing and deselect | unit | keep | med |
-| open | `select-rotate-drag` | Rotate drag with 45-degree snapping | unit | fix | med |
-| open | `select-resize-handles` | Corner resize handles (uniform scale) | unit | fix | med |
-| open | `draw-begin` | Drawing tools mousedown setup (pen, line, rect, circle, eraser) | unit | fix | med |
-| open | `select-rotate-handle-hit` | Rotation handle hit test and drag start | unit | fix | med |
-| open | `select-resize-handle-hit` | Corner resize handle hit and start | unit | keep | low |
-| open | `select-resize-drag` | Resize drag math | unit | fix | low |
-| open | `select-rotate-drag-2` | Rotate drag with 45-degree snap | unit | fix | med |
+| done | `select-hit-test` | Topmost layer hit-testing and deselect | unit | keep | med |
+| done | `select-rotate-drag` | Rotate drag with 45-degree snapping | unit | fix | med |
+| done | `select-resize-handles` | Corner resize handles (uniform scale) | unit | fix | med |
+| done | `draw-begin` | Drawing tools mousedown setup (pen, line, rect, circle, eraser) | unit | fix | med |
+| done | `select-rotate-handle-hit` | Rotation handle hit test and drag start | unit | fix | med |
+| done | `select-resize-handle-hit` | Corner resize handle hit and start | unit | keep | low |
+| done | `select-resize-drag` | Resize drag math | unit | fix | low |
+| done | `select-rotate-drag-2` | Rotate drag with 45-degree snap | unit | fix | med |
 | open | `select-move-hit-and-drag` | Layer pick (topmost) and move drag | unit | fix | low |
-| open | `draw-tool-start` | Drawing tools mousedown: snapshot, offscreen canvas, stroke style | unit | fix | med |
+| done | `draw-tool-start` | Drawing tools mousedown: snapshot, offscreen canvas, stroke style | unit | fix | med |
 | open | `draw-pen-incremental-stroke` | Pen and eraser incremental stroking | golden | fix | high |
-| open | `draw-pen-single-click` | Single click / zero-length stroke handling | unit | fix | med |
+| done | `draw-pen-single-click` | Single click / zero-length stroke handling | unit | fix | med |
 | done | `draw-shape-line` | Line tool geometry | golden | keep | low |
 | done | `draw-shape-rect` | Rectangle tool geometry | golden | keep | low |
 | done | `draw-shape-ellipse` | Ellipse tool geometry | golden | keep | low |
-| open | `draw-commit-layer` | Mouseup commit of a drawing as a new layer | unit | keep | med |
-| open | `draw-empty-no-layer` | Nothing drawn means no layer | unit | keep | low |
-| open | `eraser-apply` | Eraser commit: erase from selected layer through inverse transform | golden | fix | high |
+| done | `draw-commit-layer` | Mouseup commit of a drawing as a new layer | unit | keep | med |
+| done | `draw-empty-no-layer` | Nothing drawn means no layer | unit | keep | low |
+| done | `eraser-apply` | Eraser commit: erase from selected layer through inverse transform | golden | fix | high |
 | done | `eraser-math-inverse` | lib/erase.js inverse-transform and destination-out details | golden | keep | high |
-| open | `canvas-draw-tools` | Drawing tools (pen, line, rect, ellipse) and eraser | golden | fix | high |
+| done | `canvas-draw-tools` | Drawing tools (pen, line, rect, ellipse) and eraser | golden | fix | high |
 | done | `tests-lib-erase` | erase.test.js: 5 tests for eraser transform math | unit | keep | med |
-| open | `select-hit-test-rect-not-alpha` | Hit-test uses the rotated bounding rect, not pixel alpha | unit | keep | low |
+| done | `select-hit-test-rect-not-alpha` | Hit-test uses the rotated bounding rect, not pixel alpha | unit | keep | low |
 | done | `draw-canvas-template-clip` | Drawings are clipped to the 585x559 template and auto-cropped with 10px pad | golden | keep | low |
+| open | `eraser-click-without-move` | An eraser click without movement erases nothing | unit | keep | low |
 
 ## Engine.WordArt
 

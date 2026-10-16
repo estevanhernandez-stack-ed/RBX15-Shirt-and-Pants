@@ -4,6 +4,8 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using RBX15.App.Canvas;
+using RBX15.App.Controls;
 using RBX15.App.Services;
 using RBX15.App.Tests.Fakes;
 using RBX15.App.ViewModels;
@@ -111,12 +113,12 @@ public class HomeRibbonViewTests
         Assert.Equal(5, list.SelectedIndex);
     });
 
-    [Fact] // the mode button, settings and edit bindings; contract: no Tools, Brush or Placement group in M3a
+    [Fact] // the mode button, settings and edit bindings; M3b shows Tools and Brush; Placement, Save work and Open stay hidden (M4)
     public void Mode_settings_and_edit_bind_and_hidden_groups_are_absent() => StaThread.Run(() =>
     {
         var session = new EditorSession();
         var view = Load(Home(session));
-        var buttons = Descendants<Button>(view).ToArray();
+        var buttons = Descendants<ButtonBase>(view).ToArray();   // the tool buttons are ToggleButtons (final fix wave 14)
         var texts = Descendants<TextBlock>(view).Select(t => t.Text).ToArray();
 
         var mode = buttons.Single(b => AutomationProperties.GetName(b).StartsWith("Mode:", StringComparison.Ordinal));
@@ -135,9 +137,10 @@ public class HomeRibbonViewTests
         Descendants<TextBox>(view).Single().Text = "Hoodie";
         Assert.Equal("Hoodie", session.TemplateTitle);
 
-        Assert.Equal(new[] { "MODE", "EDIT", "SETTINGS", "FILL STYLE", "TEMPLATE REGIONS" },
+        Assert.Equal(new[] { "MODE", "TOOLS", "BRUSH", "EDIT", "SETTINGS", "FILL STYLE", "TEMPLATE REGIONS" },
             texts.Where(t => t is "MODE" or "TOOLS" or "BRUSH" or "PLACEMENT" or "EDIT" or "SETTINGS" or "FILL STYLE" or "TEMPLATE REGIONS"));
-        Assert.DoesNotContain(buttons, b => b.Content is "Draw" or "Fit Front" or "Save work" or "Open");
+        Assert.Contains(buttons, b => b.Content is "Draw");
+        Assert.DoesNotContain(buttons, b => b.Content is "Fit Front" or "Save work" or "Open" or "Keys: ON");
         Assert.Contains("Set a style, then click a region to paint it. Right-click clears.", texts);
     });
 
@@ -146,9 +149,11 @@ public class HomeRibbonViewTests
     {
         var session = new EditorSession();
         var home = Home(session);
-        var view = Load(home);
         Tile(home.Regions, "torso_front").PaintCommand.Execute(null);
-        var angle = Descendants<Slider>(view).Single(s => AutomationProperties.GetName(s) == "Angle");
+        // The group with the button held, as during a real press: Mouse.LeftButton always reads up in a test, and
+        // SliderGestureTracker ignores a DragStarted that arrives with the button up (M3b Task 3).
+        var group = new FillStyleGroup(() => true) { DataContext = home.FillStyle };
+        var angle = (Slider)group.FindName("AngleSlider");
 
         void Start() => angle.RaiseEvent(new DragStartedEventArgs(0, 0) { RoutedEvent = Thumb.DragStartedEvent });
         void Complete() => angle.RaiseEvent(new DragCompletedEventArgs(0, 0, false) { RoutedEvent = Thumb.DragCompletedEvent });
@@ -172,14 +177,33 @@ public class HomeRibbonViewTests
         Assert.Equal(4, session.UndoCount);
     });
 
+    [Fact] // final fix wave 15: the Fill Style sliders go through SliderGestureTracker.Attach, so a press a template marks handled still opens the one gesture
+    public void A_press_already_marked_handled_still_opens_the_fill_style_slider_gesture() => StaThread.Run(() =>
+    {
+        var session = new EditorSession();
+        var home = Home(session);
+        Tile(home.Regions, "torso_front").PaintCommand.Execute(null);
+        var group = new FillStyleGroup(() => true) { DataContext = home.FillStyle };
+        var scale = (Slider)group.FindName("ScaleSlider");
+
+        scale.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, Environment.TickCount, MouseButton.Left) { RoutedEvent = UIElement.PreviewMouseLeftButtonDownEvent, Handled = true });
+        home.FillStyle.Scale = 20;
+        home.FillStyle.Scale = 24;
+        Assert.Equal(1, session.UndoCount);                         // the paint; the drag is open
+        scale.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, Environment.TickCount, MouseButton.Left) { RoutedEvent = UIElement.PreviewMouseLeftButtonUpEvent, Handled = true });
+        Assert.Equal((2, false), (session.UndoCount, session.InGesture));
+    });
+
     [Fact] // fix round 1: press-and-hold on the track repeats LargeChange; the press is one gesture, one step
     public void A_pressed_slider_is_one_step_however_many_changes_it_repeats() => StaThread.Run(() =>
     {
         var session = new EditorSession();
         var home = Home(session);
-        var view = Load(home);
         Tile(home.Regions, "torso_front").PaintCommand.Execute(null);
-        var angle = Descendants<Slider>(view).Single(s => AutomationProperties.GetName(s) == "Angle");
+        // The group with the button held, as during a real press: Mouse.LeftButton always reads up in a test, and
+        // SliderGestureTracker ignores a DragStarted that arrives with the button up (M3b Task 3).
+        var group = new FillStyleGroup(() => true) { DataContext = home.FillStyle };
+        var angle = (Slider)group.FindName("AngleSlider");
 
         angle.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, Environment.TickCount, MouseButton.Left) { RoutedEvent = UIElement.PreviewMouseLeftButtonDownEvent });
         for (int a = 50; a < 80; a++) home.FillStyle.Angle = a;   // the repeat button's LargeChange ticks
@@ -215,6 +239,83 @@ public class HomeRibbonViewTests
 
         Assert.Equal("solid", home.FillStyle.Type);
         Assert.Equal("solid", list.SelectedValue);
+    });
+
+    [Fact] // home-tool-buttons, tools-set-tool: six buttons in editor.html:43-48 order; the active one is .btn-active, and
+           // final fix wave 14: it is a toggle that is On for assistive tech (Narrator does not reliably announce ItemStatus)
+    public void The_tool_buttons_show_4_1_labels_and_the_active_tool() => StaThread.Run(() =>
+    {
+        var home = Home(new EditorSession());
+        var view = Load(home);
+        var tools = Descendants<ToolToggleButton>(view).ToArray();
+        Assert.Equal(new[] { "Select", "Draw", "Line", "Rect", "Ellipse", "Eraser" }, tools.Select(b => (string)b.Content));
+        Assert.Equal(new[] { "Select/Move", "Freehand draw", "Line tool", "Rectangle", "Ellipse", "Eraser" }, tools.Select(b => (string)b.ToolTip)); // R14
+        Assert.All(tools, b => Assert.True(b.Focusable && b.IsTabStop));
+        ToggleState[] States() => tools.Select(b => Toggle(b).ToggleState).ToArray();
+        Assert.Equal(new[] { ToggleState.On, ToggleState.Off, ToggleState.Off, ToggleState.Off, ToggleState.Off, ToggleState.Off }, States());
+        var cyan = (Color)ColorConverter.ConvertFromString("#17D4FA");
+        Assert.Equal(cyan, ((SolidColorBrush)tools[0].Foreground).Color);   // .btn-active text (styles.css:411)
+
+        var draw = tools[1];
+        Toggle(draw).Toggle();                                               // assistive tech's toggle runs the button's command
+        view.UpdateLayout();
+        Assert.Equal(Tool.Pen, home.Tools.Current);
+        Assert.Equal(new[] { ToggleState.Off, ToggleState.On, ToggleState.Off, ToggleState.Off, ToggleState.Off, ToggleState.Off }, States());
+        Assert.Equal(cyan, ((SolidColorBrush)draw.Foreground).Color);
+        Assert.NotEqual(cyan, ((SolidColorBrush)tools[0].Foreground).Color);
+        Toggle(draw).Toggle();
+        Assert.Equal(Tool.Select, home.Tools.Current);                       // tools-toggle-off
+        Assert.Equal(ToggleState.Off, Toggle(draw).ToggleState);
+
+        Toggle(tools[0]).Toggle();                                           // Select never toggles off: the state stays the view-model's
+        Assert.Equal((Tool.Select, ToggleState.On), (home.Tools.Current, Toggle(tools[0]).ToggleState));
+        Invoke(tools[5]).Invoke();                                           // Invoke stays too, for UIA drivers
+        Assert.Equal((Tool.Eraser, ToggleState.On), (home.Tools.Current, Toggle(tools[5]).ToggleState));
+        Assert.All(tools, b => Assert.Equal("", AutomationProperties.GetItemStatus(b)));
+    });
+
+    static System.Windows.Automation.Provider.IToggleProvider Toggle(UIElement e) =>
+        (System.Windows.Automation.Provider.IToggleProvider)System.Windows.Automation.Peers.UIElementAutomationPeer.CreatePeerForElement(e)
+            .GetPattern(System.Windows.Automation.Peers.PatternInterface.Toggle);
+
+    static System.Windows.Automation.Provider.IInvokeProvider Invoke(UIElement e) =>
+        (System.Windows.Automation.Provider.IInvokeProvider)System.Windows.Automation.Peers.UIElementAutomationPeer.CreatePeerForElement(e)
+            .GetPattern(System.Windows.Automation.Peers.PatternInterface.Invoke);
+
+    [Fact] // final fix wave 14: the brush swatch tells assistive tech its color as hex
+    public void The_brush_swatch_exposes_its_hex_color() => StaThread.Run(() =>
+    {
+        var home = Home(new EditorSession());
+        var view = Load(home);
+        var color = Descendants<Button>(view).Single(b => AutomationProperties.GetName(b) == "Draw color");
+        Assert.Equal("#17d4fa", AutomationProperties.GetHelpText(color));
+        home.Brush.Color = "#FF0000";
+        Assert.Equal("#ff0000", AutomationProperties.GetHelpText(color));
+    });
+
+    [Fact] // home-brush-group: #drawColor 26x24, #drawSize 1..50 value 4 width 60, Fill (editor.html:56-59); the picker opens under the swatch
+    public void The_brush_group_binds_color_size_and_fill() => StaThread.Run(() =>
+    {
+        var picker = new FakeColorPicker().Answer("#ff0000");
+        var home = Home(new EditorSession(), picker);
+        var view = Load(home);
+        var color = Descendants<Button>(view).Single(b => AutomationProperties.GetName(b) == "Draw color");
+        var size = Descendants<Slider>(view).Single(s => AutomationProperties.GetName(s) == "Brush size");
+        var fill = Descendants<CheckBox>(view).Single(c => (string)c.Content == "Fill");
+
+        Assert.Equal((26.0, 24.0), (color.Width, color.Height));
+        Assert.Equal((1.0, 50.0, 4.0, 60.0), (size.Minimum, size.Maximum, size.Value, size.Width));
+        Assert.False(fill.IsChecked);
+
+        color.Command.Execute(color.CommandParameter);
+        Assert.Same(color, Assert.Single(picker.Anchors));
+        Assert.Equal("#ff0000", home.Brush.Color);
+        size.Value = 12;
+        Assert.Equal(12, home.Brush.Size);
+        home.Brush.StepSize(+1);
+        Assert.Equal(13, size.Value);
+        fill.IsChecked = true;
+        Assert.True(home.Brush.Fill);
     });
 
     [Fact] // fix round 1: hide-until-it-works, no shortcut text before M4 ships the keyboard

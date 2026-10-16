@@ -383,7 +383,7 @@ public class FillStyleTests
         group.Begin(freshPress: false);                  // DragStarted-style begin with the button up: stale, closed
         Assert.Equal(2, session.UndoCount);
         fill.Angle = 120;
-        Assert.Equal(2, session.UndoCount);              // the new gesture is open
+        Assert.Equal(3, session.UndoCount);              // and none opened (the M3a minor): the edit is its own step
         down = true;
         group.Begin(freshPress: true);                   // a fresh press closes whatever is open
         Assert.Equal(3, session.UndoCount);

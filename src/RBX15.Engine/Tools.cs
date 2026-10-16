@@ -19,6 +19,23 @@ public sealed record Stroke(ShapeTool Tool, IReadOnlyList<SKPoint> Points, SKCol
 /// </summary>
 public static class Tools
 {
+    /// <summary>The brush size range and default (editor.html:57: range 1..50, value 4).</summary>
+    public const int MinBrushSize = 1, MaxBrushSize = 50, DefaultBrushSize = 4;
+
+    /// <summary>
+    /// Canvas2D's lineWidth rule: assigning a width that is not finite, or 0 or less, is ignored, so a fresh stroke canvas
+    /// keeps its default of 1 (HTML canvas, "lineWidth"). Otherwise the width is unchanged. <see cref="RenderStroke"/>,
+    /// <see cref="DrawStroke"/>, <see cref="CommitDrawing"/>, the eraser and <see cref="LivePreview"/> all apply it, so a
+    /// bad width can never become Skia's hairline (width 0) or a NaN path (M2a carry-forward: width sanitizing).
+    /// </summary>
+    public static float SanitizeWidth(float width) => float.IsFinite(width) && width > 0 ? width : 1;
+
+    /// <summary>
+    /// The wheel's brush step in a draw tool (editor.js:1316-1318): one size per event, sign only, clamped to 1..50. A
+    /// <paramref name="sign"/> of 0 or more grows, as 4.1's <c>deltaY &lt;= 0</c> does (ledger wheel-brush-size).
+    /// </summary>
+    public static int StepBrushSize(int size, int sign) => Math.Clamp(size + (sign >= 0 ? 1 : -1), MinBrushSize, MaxBrushSize);
+
     /// <summary>The name 4.1 gives a drawing layer: the tool id capitalized plus ' drawing' (editor.js:1285).</summary>
     public static string DrawingName(ShapeTool tool) => tool switch
     {
@@ -37,10 +54,23 @@ public static class Tools
     /// </summary>
     public static SKImage RenderStroke(Stroke stroke)
     {
+        ArgumentNullException.ThrowIfNull(stroke);
         var info = new SKImageInfo(TemplateSize.Width, TemplateSize.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
         using var surface = SKSurface.Create(info) ?? throw new InvalidOperationException("cannot create stroke surface");
-        var canvas = surface.Canvas;
-        canvas.Clear(SKColors.Transparent);
+        surface.Canvas.Clear(SKColors.Transparent);
+        DrawStroke(surface.Canvas, stroke);
+        return surface.Snapshot();
+    }
+
+    /// <summary>
+    /// The stroke drawn into an existing, already cleared, template-size kN32 canvas: the body of
+    /// <see cref="RenderStroke"/>, shared with the live preview (<see cref="LivePreview"/>, M3b ruling R12) so the
+    /// preview and the commit draw the same pixels. The width goes through <see cref="SanitizeWidth"/>.
+    /// </summary>
+    internal static void DrawStroke(SKCanvas canvas, Stroke stroke)
+    {
+        ArgumentNullException.ThrowIfNull(canvas);
+        ArgumentNullException.ThrowIfNull(stroke);
         var pts = stroke.Points;
         if (stroke.Tool == ShapeTool.Pen)
         {
@@ -50,14 +80,13 @@ public static class Tools
         {
             DrawShape(canvas, stroke, pts[0], pts[pts.Count - 1]);
         }
-        return surface.Snapshot();
     }
 
     // Canvas state for a stroke: lineWidth = drawSize, lineCap round on every tool (editor.js:1140,
     // :1210); lineJoin round for the pen (:1141) and canvas-default miter, miterLimit 10, for shapes.
     static SKPaint StrokePaint(Stroke s, SKStrokeJoin join) => new()
     {
-        Color = s.Color, IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = s.Width,
+        Color = s.Color, IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = SanitizeWidth(s.Width),
         StrokeCap = SKStrokeCap.Round, StrokeJoin = join, StrokeMiter = 10,
     };
 
@@ -69,7 +98,7 @@ public static class Tools
         if (pts.Count == 1)
         {
             using var dot = FillPaint(s);
-            canvas.DrawCircle(pts[0], s.Width / 2, dot);
+            canvas.DrawCircle(pts[0], SanitizeWidth(s.Width) / 2, dot);
             return;
         }
         using var pb = new SKPathBuilder();

@@ -431,6 +431,32 @@ public class EditorSessionTests
         Assert.Equal(0.5, s.Document.BgOpacity);
     }
 
+    [Fact] // M3b R7 (critic MJ1): Changing comes first from Apply, ApplyWithSelection, BeginGesture, Undo and Redo, never from Select or the title
+    public void Changing_is_raised_first_by_every_entry_point()
+    {
+        var s = new EditorSession(WithLayers(new Document(), 1, 2));
+        var order = new List<string>();
+        Document? atChanging = null;
+        s.Changing += (_, _) => { order.Add("Changing"); atChanging = s.Document; };
+        s.Changed += (_, _) => order.Add("Changed");
+
+        var before = s.Document;
+        Assert.True(s.Apply(d => d with { Layers = d.Layers.RemoveAt(1) }));
+        Assert.Same(before, atChanging);   // raised before the change landed
+        Assert.Equal(new[] { "Changing", "Changed" }, order);
+
+        order.Clear();
+        s.ApplyWithSelection(snap => snap with { SelectedLayerId = 1 });
+        using (s.BeginGesture()) { }
+        s.Undo();
+        s.Redo();
+        Assert.Equal(4, order.Count(o => o == "Changing"));
+
+        s.Select(null);
+        s.TemplateTitle = "shirt";
+        Assert.Equal(4, order.Count(o => o == "Changing"));   // selection and title are not document changes
+    }
+
     [Fact] // an unchanged gesture leaves redo alone
     public void Redo_during_an_unchanged_gesture_still_redoes()
     {

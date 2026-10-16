@@ -25,6 +25,10 @@
                 </DockPanel>
             </Border>
 
+            <!-- Tools (editor.html:41-52) and Brush (editor.html:53-62); Placement (editor.html:63-76) is M4 -->
+            <views:ToolsGroup x:Name="Tools" DataContext="{Binding Tools}" />
+            <views:BrushGroup x:Name="Brush" DataContext="{Binding Brush}" />
+
             <!-- Edit (editor.html:77-84): .btn .btn-sm .btn-secondary, a centered row with a 4px gap -->
             <Border Style="{StaticResource RibbonGroup}" DataContext="{Binding Edit}">
                 <DockPanel>

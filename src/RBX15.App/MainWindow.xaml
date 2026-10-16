@@ -25,6 +25,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d">
 
+  <!-- Ctrl+Z, M3b's one shortcut, is added in MainWindow.xaml.cs behind TextFieldShortcutCommand. -->
+
   <Grid x:Name="Viewport">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
@@ -78,8 +80,10 @@
               <GradientStop Offset="1" Color="{StaticResource Ink900Color}" />
             </LinearGradientBrush>
           </Border.Background>
+          <!-- The tabs carry no GroupName: a named RadioButton group is process-wide, so a second window would
+               uncheck this one's tab. Unnamed, they group by this per-window parent panel (final fix wave 6). -->
           <StackPanel x:Name="RibbonTabs" Orientation="Horizontal">
-            <RadioButton x:Name="HomeTab" Style="{StaticResource RibbonTab}" GroupName="RibbonTabs"
+            <RadioButton x:Name="HomeTab" Style="{StaticResource RibbonTab}"
                          Content="Home" IsChecked="True" AutomationProperties.Name="Home tab" />
           </StackPanel>
         </Border>
@@ -113,6 +117,7 @@
           <StackPanel x:Name="LeftPanelContent" Margin="14">
             <views:DropZone DataContext="{Binding Layers}" />
             <views:LayersPanel DataContext="{Binding Layers}" />
+            <views:LayerPropertiesPanel DataContext="{Binding LayerProperties}" />
           </StackPanel>
         </ScrollViewer>
       </Border>

@@ -165,9 +165,9 @@ public partial class ColorPickerPopup : Window
 
     void PlaceMarkers()
     {
-        Canvas.SetLeft(SvMarker, ViewModel.Saturation * SquareWidth - SvMarker.Width / 2);
-        Canvas.SetTop(SvMarker, (1 - ViewModel.Value) * SquareHeight - SvMarker.Height / 2);
-        Canvas.SetLeft(HueMarker, ViewModel.Hue / 360 * StripWidth - HueMarker.Width / 2);
+        System.Windows.Controls.Canvas.SetLeft(SvMarker, ViewModel.Saturation * SquareWidth - SvMarker.Width / 2);
+        System.Windows.Controls.Canvas.SetTop(SvMarker, (1 - ViewModel.Value) * SquareHeight - SvMarker.Height / 2);
+        System.Windows.Controls.Canvas.SetLeft(HueMarker, ViewModel.Hue / 360 * StripWidth - HueMarker.Width / 2);
     }
 
     void OnSvDown(object sender, MouseButtonEventArgs e)

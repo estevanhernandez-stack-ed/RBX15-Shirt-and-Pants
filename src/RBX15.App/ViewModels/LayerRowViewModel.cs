@@ -5,6 +5,9 @@ using RBX15.Engine;
 
 namespace RBX15.App.ViewModels;
 
+/// <summary>The row's drop indicator while another row is dragged over it (.drag-over-top / .drag-over-bottom, styles.css:310-311).</summary>
+public enum DropIndicator { None, Above, Below }
+
 /// <summary>
 /// One layer row (updateUI's list, editor.js:671-744; ledger layers-list, layers-list-render). The
 /// row is reused while its layer exists, so keyboard focus survives every edit; the list calls
@@ -16,6 +19,8 @@ public sealed class LayerRowViewModel : ObservableObject
     string _name = "";
     bool _visible;
     bool _isSelected;
+    bool _isDragSource;
+    DropIndicator _dropIndicator;
     ImageSource? _thumbnail;
 
     public LayerRowViewModel(EditorSession session, Layer layer, bool isSelected)
@@ -59,6 +64,20 @@ public sealed class LayerRowViewModel : ObservableObject
 
     /// <summary>The row's name for assistive tech (spec §4 Accessibility; 4.1 rows had none).</summary>
     public string AutomationName => _visible ? _name : _name + " (hidden)";
+
+    /// <summary>The row being dragged: .dragging-layer, drawn at opacity .4 (editor.js:595-599, styles.css:312). Set by LayersViewModel.</summary>
+    public bool IsDragSource
+    {
+        get => _isDragSource;
+        internal set => SetProperty(ref _isDragSource, value);
+    }
+
+    /// <summary>The live drop target's 2 px cyan edge (editor.js:611-618, styles.css:310-311). Set by LayersViewModel.</summary>
+    public DropIndicator DropIndicator
+    {
+        get => _dropIndicator;
+        internal set => SetProperty(ref _dropIndicator, value);
+    }
 
     public IRelayCommand ToggleVisibilityCommand { get; }
 

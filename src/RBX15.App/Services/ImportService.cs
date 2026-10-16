@@ -11,6 +11,9 @@ namespace RBX15.App.Services;
 /// </summary>
 public sealed class ImportService(EditorSession session, IStatus status)
 {
+    /// <summary>Raised after an import added at least one layer: addLayer sets the Select tool (editor.js:523; R8).</summary>
+    public event EventHandler? LayersAdded;
+
     /// <summary>
     /// Imports <paramref name="paths"/>; every layer is centered on <paramref name="dropAt"/>
     /// (template pixels) when given, else fit in the front slot. Returns the number of layers added.
@@ -28,6 +31,7 @@ public sealed class ImportService(EditorSession session, IStatus status)
             });
         if (result.Failures.Count > 0) status.Show(FailureMessage(result.Failures));
         else if (result.Images.Count > 0) status.Clear();
+        if (result.Images.Count > 0) LayersAdded?.Invoke(this, EventArgs.Empty);
         return result.Images.Count;
     }
 

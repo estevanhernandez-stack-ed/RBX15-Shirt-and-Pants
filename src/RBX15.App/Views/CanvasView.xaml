@@ -54,7 +54,10 @@
                                                  Document="{Binding Document}"
                                                  Zoom="{Binding Zoom}"
                                                  DropCommand="{Binding DropCommand}"
-                                                 ClickCommand="{Binding ClickCommand}" />
+                                                 Interaction="{Binding Interaction}"
+                                                 Overlay="{Binding Overlay}"
+                                                 CanvasCursor="{Binding Cursor}"
+                                                 AutomationValue="{Binding AutomationValue}" />
                 </Border>
             </Grid>
         </ScrollViewer>

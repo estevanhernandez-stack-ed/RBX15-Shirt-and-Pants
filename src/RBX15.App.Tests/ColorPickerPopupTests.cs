@@ -100,11 +100,11 @@ public class ColorPickerPopupTests
     {
         var vm = new ColorPickerViewModel("#ff0000");
         var p = new ColorPickerPopup(vm);
-        Assert.Equal((200 - 6.0, -6.0), (Canvas.GetLeft(p.SvMarker), Canvas.GetTop(p.SvMarker)));
+        Assert.Equal((200 - 6.0, -6.0), (System.Windows.Controls.Canvas.GetLeft(p.SvMarker), System.Windows.Controls.Canvas.GetTop(p.SvMarker)));
         vm.SetSvFromPoint(0.5, 0.25);
         vm.Hue = 180;
-        Assert.Equal((100 - 6.0, 35 - 6.0), (Canvas.GetLeft(p.SvMarker), Canvas.GetTop(p.SvMarker)));
-        Assert.Equal(100 - 3.0, Canvas.GetLeft(p.HueMarker));
+        Assert.Equal((100 - 6.0, 35 - 6.0), (System.Windows.Controls.Canvas.GetLeft(p.SvMarker), System.Windows.Controls.Canvas.GetTop(p.SvMarker)));
+        Assert.Equal(100 - 3.0, System.Windows.Controls.Canvas.GetLeft(p.HueMarker));
     });
 
     [Theory]

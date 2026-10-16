@@ -93,13 +93,27 @@ public class ImportServiceTests
         Assert.False(status.IsVisible);
     }
 
+    [Fact] // tools-auto-select-switch (R8): addLayer sets Select (editor.js:523); one event per import that added a layer
+    public void LayersAdded_is_raised_once_per_import_that_added_layers()
+    {
+        using var files = new TestFiles();
+        var import = new ImportService(new EditorSession(), new FakeStatus());
+        int raised = 0;
+        import.LayersAdded += (_, _) => raised++;
+        import.Import([files.Image("a.png", 4, 4, SKColors.Red), files.Image("b.png", 4, 4, SKColors.Blue)]);
+        Assert.Equal(1, raised);
+        import.Import([files.Write("bad.svg", [1])]);           // refused: nothing added
+        import.Import([]);
+        Assert.Equal(1, raised);
+    }
+
     [Fact] // drop-canvas: the canvas drop handler centers every file on the drop point
     public void A_canvas_drop_centers_every_layer_on_the_drop_point()
     {
         using var files = new TestFiles();
         var session = new EditorSession();
         var import = new ImportService(session, new FakeStatus());
-        var canvas = new CanvasViewModel(session) { DropHandler = d => import.Import(d.Paths, (d.TemplatePoint.X, d.TemplatePoint.Y)) };
+        var canvas = new CanvasViewModel(session, new ToolsViewModel(), new BrushViewModel(new FakeColorPicker()), new FakeStatus()) { DropHandler = d => import.Import(d.Paths, (d.TemplatePoint.X, d.TemplatePoint.Y)) };
         canvas.DropCommand.Execute(new CanvasDrop([files.Image("a.png", 512, 512, SKColors.Red), files.Image("b.png", 33, 77, SKColors.Blue)], new Point(300, 200)));
         Assert.Equal(1, session.UndoCount);
         foreach (var l in session.Document.Layers)

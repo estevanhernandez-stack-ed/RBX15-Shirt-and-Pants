@@ -1,0 +1,29 @@
+[
+  {"name": "01-launch", "shows": "The app at launch, Home tab, empty template, 100% zoom.", "ops": []},
+  {"name": "02-home-painted", "shows": "Back solid, Front linear gradient, Right Arm front dots, all with the default colors; Home tab.", "alsoTab41": "layout",
+   "ops": [
+    {"op": "paint", "region": "torso_back"},
+    {"op": "fillType", "type": "linear"}, {"op": "undo"},
+    {"op": "paint", "region": "torso_front"},
+    {"op": "fillType", "type": "dots"}, {"op": "undo"},
+    {"op": "paint", "region": "rarm_front"}
+  ]},
+  {"name": "03-layer-selected", "shows": "drip_red_wide_v1 added through Add image (selected, Select tool), rotation 30 through the slider, Image adjustments expanded, the left panel scrolled to its end.",
+   "ops": [
+    {"op": "addImage", "image": "packs/drips/drip_red_wide_v1.png"},
+    {"op": "rotation", "value": 30},
+    {"op": "expandAdjustments"},
+    {"op": "scrollPanel"}
+  ]},
+  {"name": "04-draw-tools", "shows": "The Draw (pen) tool active; the Tools and Brush groups at their defaults.", "ops": [{"op": "tool", "tool": "pen"}]},
+  {"name": "05-zoom-200", "shows": "State 03 at 200% zoom.",
+   "ops": [
+    {"op": "addImage", "image": "packs/drips/drip_red_wide_v1.png"},
+    {"op": "rotation", "value": 30},
+    {"op": "expandAdjustments"},
+    {"op": "scrollPanel"},
+    {"op": "zoom", "value": 2}
+  ]},
+  {"name": "06-pants", "shows": "Pants mode with Waist Front painted solid.", "ops": [{"op": "mode"}, {"op": "paint", "region": "waist_front"}]},
+  {"name": "07-narrow-700", "shows": "Supplementary: the launch state with the client area 700 DIPs wide (ribbon-overflow-hscroll).", "contentWidth": 700, "ops": []}
+]

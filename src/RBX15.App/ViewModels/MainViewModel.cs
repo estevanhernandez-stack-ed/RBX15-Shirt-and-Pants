@@ -46,4 +46,7 @@ public sealed partial class MainViewModel(EditorSession session) : ObservableObj
 
     /// <summary>The status strip (Task 4).</summary>
     public required StatusViewModel Status { get; init; }
+
+    /// <summary>The left panel's "Selected layer" section (M3b Task 3; editor.html:320-323).</summary>
+    public required LayerPropertiesViewModel LayerProperties { get; init; }
 }

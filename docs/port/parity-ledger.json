@@ -834,12 +834,12 @@
    "quirks": "Eraser preview is a magenta/colored stroke marking removal at 50% alpha, not the actual erased result. drawCanvas must be template-size.",
    "portTarget": "DrawBitmap(drawBitmap, 0,0, paint alpha 0.5/1) after layers, before DstIn mask.",
    "risk": "low",
-   "parityCheck": "Drag a pen stroke over a region and over a gutter: gutter portion hidden when mask on; eraser shows at half alpha.",
+   "parityCheck": "GoldenViewSelectTests vs-preview-* scenes hold the shape and eraser previews to 4.1 with Mask on; RendererOverlayTests pins that a preview pixel outside every region is masked when Mask is on and shown when it is off, and that the eraser preview draws at half alpha. Narrowed in M3b: pen previews are not frozen (approved divergence draw-pen-incremental-stroke), so the gutter clause is checked on a shape preview.",
    "owner": "Engine.Render",
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "render-mask-step",
@@ -872,12 +872,12 @@
    "quirks": "Canvas dims truncated: TW*zoom non-integer loses fractional pixel, while region coords * zoom still use float, causing 0.5px offset at the right/bottom edge for fractional zoom. The visible canvas is also stretched to the truncated size. Zoom value sets from a slider elsewhere; list allowed values (see zoom UI slice).",
    "portTarget": "SkiaSharp SKElement/SKGLElement sized TW*zoom; draw offscreen with SKSamplingOptions Nearest when zoom>=1, Linear when <1 (and mipmap off).",
    "risk": "med",
-   "parityCheck": "Zoom 0.5, 1, 2, 3, 4 screenshots vs Electron: nearest neighbor magnification crisp; downsample smooth. Check truncation: zoom 1.5 -> 877x838 (TW*1.5=877.5 truncated to 877).",
+   "parityCheck": "GoldenViewTests (M3a) at zoom 0.25, 0.5, 1, 1.5 and 3 and GoldenViewSelectTests at 0.5, 1, 1.5 and 2: crisp magnification and smooth downsampling; 1.5 gives 877x838 (RendererViewTests). The 200% scroll host compared side by side in the M3b look sign-off (state 05), signed off by Este on 2026-10-16 (.superpowers/m3b-look/SIGNOFF.txt). Narrowed in M3b: zoom 4 is outside v5's 25-300% range.",
    "owner": "App.Canvas",
    "check": "manual",
    "disposition": "fix",
-   "divergence": "4.1: the canvas is reallocated and cleared on every render and clipped when it outgrows the area. v5: the frame keeps 4.1's truncated size (TW*zoom, editor.js:340-341), renders into a reused bitmap, and sits in a scroll host with scrollbars to pan; zoom stays 25-300% in 0.25 steps.",
-   "status": "open"
+   "divergence": "4.1: the canvas is reallocated and cleared on every render and clipped when it outgrows the area. v5: the frame keeps 4.1's truncated size (TW*zoom, editor.js:340-341), renders through one persistent offscreen surface and checker tile into a reused bitmap, at most once per display frame while dragging, and sits in a scroll host with scrollbars to pan; zoom stays 25-300% in 0.25 steps.",
+   "status": "done"
   },
   {
    "id": "render-checkerboard",
@@ -930,12 +930,12 @@
    "quirks": "Dash starts at the top-left corner of the rect path. Box drawn for hidden layers too. Box sits above grid. Handles scale with zoom only in position; sizes (8px squares, 30px stem, 8px knob) are constant in screen pixels.",
    "portTarget": "SKPaint Stroke 2px, SKPathEffect.CreateDash([5,5],0), color #17D4FA, within canvas.Save/Translate/RotateDegrees.",
    "risk": "med",
-   "parityCheck": "Pixel diff the box at rotation 0 and 30 with dash phase starting at top-left corner (-w/2,-h/2) and going clockwise as strokeRect path order (x,y -> x+w,y -> x+w,y+h -> x,y+h).",
+   "parityCheck": "GoldenViewSelectTests vs-select-z100 and vs-select-rot30-z100: the dashed box, its dash phase from (-w/2, -h/2) clockwise and the handles match 4.1's view under the golden rule; the rotation label's box is blanked in both images (interfaces R4). RendererOverlayTests: a hidden selected layer draws nothing. Narrowed in M3b: the label is pinned by unit tests, not pixels.",
    "owner": "App.Canvas",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: selection box and handles are drawn for a selected layer even when it is hidden. v5: hidden layers show no handles (approved decision).",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "render-resize-handles",
@@ -949,12 +949,12 @@
    "quirks": "Handles are axis-aligned to the rotated frame; fractional centers give AA edges.",
    "portTarget": "DrawRect(SKRect) with fill paint, inside rotated transform.",
    "risk": "low",
-   "parityCheck": "Handle pixels at corners at zoom 1/2/4 same size (8 px) regardless of zoom.",
+   "parityCheck": "GoldenViewSelectTests vs-select-z100 and vs-select-z200: the 8 px corner handles stay 8 px at zoom 1 and 2. Narrowed in M3b: zoom 4 is outside v5's 25-300% range.",
    "owner": "App.Canvas",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "render-rotation-handle",
@@ -968,12 +968,12 @@
    "quirks": "Handle is always above the box top edge in the layer's rotated frame, even when the layer is flipped or when near the canvas top (can be clipped off-canvas). Knob position independent of zoom (fixed 30 px).",
    "portTarget": "SKPath arcs: Skia ArcTo with start/sweep degrees (-126 to 72: start -126, sweep 198) in SKPaint stroke 1.5, white; line caps Butt, join Miter to match canvas defaults.",
    "risk": "med",
-   "parityCheck": "Zoomed screenshot crop of the knob matches; handle at rotation 0, 90, 180.",
+   "parityCheck": "GoldenViewSelectTests at rotation 0, 30 and -135 (zoom 1 and 1.5): stem, knob and glyph match 4.1's view under the golden rule. Narrowed in M3b: rotations 90 and 180 are covered by RendererOverlayTests' geometry pins, not frozen pixels.",
    "owner": "App.Canvas",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "render-rotation-label",
@@ -987,12 +987,12 @@
    "quirks": "Font is not loaded via local asset in this slice; relies on JetBrains Mono being available (likely Google Fonts or system), otherwise falls back to ui-monospace. Label rotates with layer (can read upside-down). Negative zero rotation is '-0.0'? rotation!==0 guard avoids 0 but -0.04 shows '-0.0°'.",
    "portTarget": "SKCanvas.DrawText with SKFont(JetBrains Mono bundled, 11px), SKTextAlign.Center, baseline alphabetic; format with rotation.ToString(\"F1\", Invariant) + \"°\" (toFixed vs F1 rounding on halves: verify).",
    "risk": "med",
-   "parityCheck": "Screenshot at rotation 17.25 -> '17.3°' (JS toFixed on binary 17.25 gives '17.3'; check .NET gives same, use Math.Round away from zero with decimal). Font bundled so offline users get same face.",
+   "parityCheck": "SelectionGeometryTests: 17.25 gives '17.3°', -17.25 gives '-17.3°', -0.04 gives '-0.0°', 0 gives no label (JS toFixed(1)). RendererOverlayTests: the face is the vendored JetBrains Mono 400 at 11 px, #f22f89, centered at (0, -h/2 - 46) in the rotated frame, with no label pixel outside SelectionGeometry.LabelBounds. Compared side by side in the M3b look sign-off (state 03). Narrowed in M3b: the label is excluded from the golden comparison (interfaces R4).",
    "owner": "App.Canvas",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: label font JetBrains Mono is not bundled and falls back to ui-monospace when absent. v5: bundled JetBrains Mono, with rotation normalized to -180..180.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "render-restore-and-cursor",
@@ -1048,7 +1048,7 @@
    "owner": "App.Canvas",
    "check": "manual",
    "disposition": "fix",
-   "divergence": "4.1: eraser ring radius is capped at 120 so it under-represents the real footprint at large size and zoom, and is off-center by under 1px. v5: ring drawn at the true brush footprint, centered (clearly unintended mismatch).",
+   "divergence": "4.1: eraser ring radius is capped at 120 so it under-represents the real footprint at large size and zoom, and is off-center by under 1px. v5: ring drawn at the true brush footprint, radius max(4, size x zoom / 2) DIPs, centered, at device pixels (clearly unintended mismatch). A Win32 cursor bitmap is at most 256x256 device px, so the radius is capped at 128 - ceil(2 x display scale) device px (126 at 100%, 124 at 200%), which binds only above a 124 DIP ring diameter at 200%.",
    "status": "open"
   },
   {
@@ -1126,12 +1126,12 @@
    "quirks": "None.",
    "portTarget": "ToolMode enum on EditorViewModel; toolbar ToggleButtons (RadioButton-style group) bound to CurrentTool with IsChecked converter; SetTool command also refreshes canvas Cursor.",
    "risk": "low",
-   "parityCheck": "UI test: click each tool button, only that one shows active style; initial launch shows Select active.",
+   "parityCheck": "ToolsViewModelTests and LedgerScenarioTests: each tool button makes its tool current and only that button active; Select is active at launch. The active look is compared side by side in the M3b look sign-off (state 04). Narrowed in M3b: view-model evidence, not UI automation (M6).",
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "tools-toggle-off",
@@ -1167,12 +1167,12 @@
    "quirks": "Clicking a layer row while drawing tool is active silently switches tool; keep.",
    "portTarget": "Same rules inside AddLayer/SelectLayer view-model methods; AddDrawingLayer leaves tool unchanged.",
    "risk": "low",
-   "parityCheck": "With pen active, drop an image: tool becomes Select. With pen active, draw a stroke: pen remains. Click a layer row while pen active: Select.",
+   "parityCheck": "LedgerScenarioTests.Tool_buttons_toggle_off_to_select_and_an_import_or_a_list_pick_returns_to_select: with Pen active an import returns to Select, a pen stroke keeps Pen, a pick in the layer list returns to Select, and undo leaves the tool alone (ImportService.LayersAdded and LayersViewModel.LayerPicked through Composition). Narrowed in M3b: the import is a file drop through LayersViewModel, not a drag from Explorer.",
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "tools-cursor",
@@ -1208,12 +1208,12 @@
    "quirks": "Color input does not snapshot undo. Slider range lives in index.html (other slice); port must copy it.",
    "portTarget": "ColorPicker control (WPF has none built in; use a custom or Extended.Wpf.Toolkit/ModernWpf-style picker) bound to DrawColor; Slider for DrawSize; CheckBox for DrawFill. Verify slider range in index.html.",
    "risk": "low",
-   "parityCheck": "Defaults at launch match; changing size changes eraser ring immediately.",
+   "parityCheck": "BrushViewModelTests and LedgerScenarioTests: color #17d4fa, size 4 and Fill off at launch; a size change rebuilds the eraser ring (TemplateCanvasHostTests). Narrowed in M3b: view-model evidence, not UI automation (M6).",
    "owner": "App.Ribbon.Home",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "layers-model",
@@ -1229,12 +1229,12 @@
    "quirks": "Adjustment display uses `sel.brightness || 100`, so a value of 0 (valid slider min) displays and reloads as 100 in the controls (and sat/contrast likewise). Real stored 0 is used by renderer but the slider shows 100 after any updateUI. Port must decide: fix (recommended, show 0) and verify pixel parity of render stays driven by true values. hueRotate/rShift use `|| 0` which is harmless.",
    "portTarget": "Layer record/class with SKBitmap Source; INotifyPropertyChanged. Keep field names for v4 project-file read compatibility.",
    "risk": "med",
-   "parityCheck": "Load a v4 project file and compare each field after load; serialize and diff.",
+   "parityCheck": "ProjectIOTests (M2b) load a v4 project and compare every layer field and round-trip it; LayerPropertiesViewModelTests: a stored adjustment of 0 displays as 0. Narrowed in M3b: the display half is the view-model.",
    "owner": "Engine.Document",
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: a stored adjustment of 0 is treated as falsy and shown as 100 in the controls. v5: 0 displays and reloads as 0.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "layers-add-placement",
@@ -1273,7 +1273,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "layers-duplicate",
@@ -1350,12 +1350,12 @@
    "quirks": "Rebuilding the whole list on each selection (innerHTML clear) would cancel an in-progress HTML drag; WPF virtualized list won't have this issue.",
    "portTarget": "SelectedLayer property on VM; ListBox/ItemsControl row click.",
    "risk": "low",
-   "parityCheck": "Click row highlights (selected class) and shows controls.",
+   "parityCheck": "LayersViewModelTests and LedgerScenarioTests: a pick in the list selects the layer, highlights its row and fills the properties panel. Narrowed in M3b: view-model evidence, not UI automation (M6).",
    "owner": "App.Layers",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "layers-list-render",
@@ -1370,12 +1370,12 @@
    "quirks": "Thumbnail ignores adjustments, rotation, opacity (raw source). Thumbnails for drawing layers are the cropped data URL. Row has no keyboard focus/accessibility; native should add. Button titles are tooltips.",
    "portTarget": "ListBox with reversed ObservableCollection view (CollectionViewSource sort desc by index or reversed projection); DataTemplate with Image (Stretch=Uniform on black, CornerRadius 4), TextBlock TextTrimming=CharacterEllipsis, three small buttons colored per brand tokens (626labs-design).",
    "risk": "med",
-   "parityCheck": "Visual compare screenshot of rows: selected, hidden, long name truncation, 20 layers scroll.",
+   "parityCheck": "A selected row (state 03) compared side by side in the M3b look sign-off, and a hidden row, a long name truncated and 20 layers scrolling checked by hand in the M3b manual checklist (H8); signed off by Este on 2026-10-16 (.superpowers/m3b-look/SIGNOFF.txt). Narrowed in M3b: Este's review stands in for a screenshot diff.",
    "owner": "App.Layers",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: layer rows have no keyboard focus or accessibility. v5: layers panel is keyboard operable with automation names and a cyan focus ring.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "layers-reorder-drag",
@@ -1429,12 +1429,12 @@
    "quirks": "None.",
    "portTarget": "Properties panel visibility template: TextBlock 'Select a layer to edit.' styled as info text when SelectedLayer null.",
    "risk": "low",
-   "parityCheck": "Launch app: placeholder text shown. Click empty canvas: returns to placeholder.",
+   "parityCheck": "LayerPropertiesViewModelTests and LedgerScenarioTests: with no selection the panel shows 'Select a layer to edit.'; a press on empty canvas returns to it. Narrowed in M3b: view-model evidence, not UI automation (M6).",
    "owner": "App.LayerProperties",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "props-name-xy",
@@ -1450,12 +1450,12 @@
    "quirks": "Displayed X rounds, stored X stays fractional: typing then re-rendering UI may silently show a rounded value but not write it back. During drag the header span xVal/yVal and inputs are not live-updated for move (updateUI only for rotate/resize), so X/Y fields go stale while moving until mouseup/next update. Name is not undoable. Name can be empty string.",
    "portTarget": "TextBox with LostFocus/Enter commit binding (UpdateSourceTrigger=LostFocus), NumericUpDown-style TextBox with integer display format F0.",
    "risk": "low",
-   "parityCheck": "Type 12.7 in X: field shows 13 after refresh? (value stored 12.7 until updateUI, then displays 13). Name change appears in list.",
+   "parityCheck": "LayerPropertiesViewModelTests and LedgerScenarioTests: X '12.7' stores 12.7 and shows '13'; an unparsable entry reverts; a name change shows in the list; X and Y follow a move drag live; each committed edit is one undo step. Narrowed in M3b: view-model evidence, not UI automation (M6).",
    "owner": "App.LayerProperties",
    "check": "ui-auto",
    "disposition": "fix",
-   "divergence": "4.1: X/Y fields and header stay stale during a move drag and edits are not undoable. v5: fields track the layer live and each edit is one undo step.",
-   "status": "open"
+   "divergence": "4.1: X/Y fields and header stay stale during a move drag and edits are not undoable. v5: fields track the layer live and each edit is one undo step. Text that is not a finite number below 1e21 is refused and the field reverts (4.1's +value stored Infinity for 1e400).",
+   "status": "done"
   },
   {
    "id": "props-scale",
@@ -1471,12 +1471,12 @@
    "quirks": "Corner-handle resize scales about center and can produce scale >5 or <0.01*; slider clamps display (range input clamps value to 1..500 when set programmatically, so a 700% layer shows 500% handle but label 700%). Resize min is 0.01 so slider min 1% = 0.01 consistent.",
    "portTarget": "Slider Minimum=1 Maximum=500 IsSnapToTickEnabled TickFrequency=1; label binding StringFormat {0:0}%.",
    "risk": "low",
-   "parityCheck": "Set slider 100: layer rendered at natural size; layer position top-left constant.",
+   "parityCheck": "LayerPropertiesViewModelTests and LedgerScenarioTests: the slider keeps the top-left corner, clamps to 1-500% and each change is one undo step (a drag is one); scale 1 renders at natural size (GoldenRenderTests, M1). Narrowed in M3b: view-model evidence, not UI automation (M6).",
    "owner": "App.LayerProperties",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: slider range 1-500 disagrees with handle/key/wheel limits and the label can exceed the slider. v5: one scale clamp of 1%-500% for slider, keys, wheel and handles, and the change is undoable.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "props-rotation",
@@ -1492,12 +1492,12 @@
    "quirks": "Label can show fractional degrees after handle rotation (e.g. 12.345678°) because rotVal uses raw value interpolation `${sel.rotation}` with no rounding. Decide format.",
    "portTarget": "Slider -180..180; rotate transform in SkiaSharp about center via canvas.RotateDegrees.",
    "risk": "low",
-   "parityCheck": "Rotation 45: pixel-diff vs JS render at same transform.",
+   "parityCheck": "LayerPropertiesViewModelTests: the slider stores the rotation normalized to -180..180, the label is whole degrees, and a drag is one undo step. Rotated pixels are held to 4.1 by GoldenRenderTests at 30, -135, 90 and 15 degrees (M1) and GoldenViewSelectTests vs-select-rot30-z100. Narrowed in M3b: 30 degrees stands in for 45.",
    "owner": "App.LayerProperties",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: rotation label shows raw fractional degrees after handle rotation. v5: rotation label is rounded and rotation is normalized to -180..180.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "props-opacity",
@@ -1513,12 +1513,12 @@
    "quirks": "Not undoable.",
    "portTarget": "Slider 0..100 -> SKPaint alpha (globalAlpha equivalent).",
    "risk": "low",
-   "parityCheck": "50% opacity pixel-diff.",
+   "parityCheck": "LayerPropertiesViewModelTests and LedgerScenarioTests: 50% stores 0.5 and is one undo step; GoldenRenderTests gap-opacity-with-adjust (M1) holds a 0.5-opacity layer to 4.1's export.",
    "owner": "App.LayerProperties",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: opacity change is not undoable. v5: opacity change is exactly one undo step.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "props-flip",
@@ -1533,12 +1533,12 @@
    "quirks": "Not undoable. Interaction of flip with rotation direction determined by renderer (other slice); hit-testing ignores flip (pointInRotatedRect symmetric, fine).",
    "portTarget": "Commands toggling bool; Skia Scale(-1,1) about center in render.",
    "risk": "low",
-   "parityCheck": "Flip then export compare.",
+   "parityCheck": "LayerOpsEditTests: Flip H and Flip V toggle and are one undo step each; the flipped pixels are held to 4.1 by GoldenRenderTests layer-rotate-scale-fliph-opacity and layer-rotate-neg-flipv-upscale (M1) and GoldenViewSelectTests vs-select-fliph-z50.",
    "owner": "Engine.Document",
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: Flip H/V is not undoable. v5: each flip is exactly one undo step.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "props-center-front",
@@ -1573,12 +1573,12 @@
    "quirks": "Expansion state lost on any updateUI, including when rotate/resize handle drag triggers updateUI; moving a slider inside the panel does not rebuild so it stays open while adjusting.",
    "portTarget": "Expander control with IsExpanded stored in VM; decide whether to persist expansion across rebuilds (improvement).",
    "risk": "low",
-   "parityCheck": "Expand, select another layer: collapsed (parity) or preserved (documented deviation).",
+   "parityCheck": "LayerPropertiesViewModelTests and LedgerScenarioTests: Image adjustments stays open across a selection change, every edit and Reset (the documented fix). Narrowed in M3b: view-model evidence, not UI automation (M6).",
    "owner": "App.LayerProperties",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: adjustments panel collapses on every UI rebuild (select, rename, reset, rotate/resize drag). v5: adjustments panel stays open.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "props-adjust-sliders",
@@ -1614,12 +1614,12 @@
    "quirks": "Collapses panel after reset (via updateUI).",
    "portTarget": "ResetAdjustmentsCommand.",
    "risk": "low",
-   "parityCheck": "After reset values equal defaults and render identical to unadjusted.",
+   "parityCheck": "LayerPropertiesViewModelTests and LedgerScenarioTests: Reset restores LayerAdjustments.Default as one undo step and none when already at the defaults, the panel stays open, and the render equals the unadjusted layer (LayerOpsEditTests).",
    "owner": "App.LayerProperties",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: Reset adjustments is not undoable and collapses the panel. v5: reset is one undo step and the panel stays open.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "props-injection-safe",
@@ -1815,7 +1815,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "select-move",
@@ -1852,12 +1852,12 @@
    "quirks": "Handle works even if selected layer is hidden (visible not checked). Handle position ignores flip. Hover grab cursor only updates on mousemove when not dragging.",
    "portTarget": "Same math in core; overlay drawn in Skia pass (render slice). Cursor via Cursors.Hand / custom.",
    "risk": "med",
-   "parityCheck": "Unit-test handle position for rotation 0/45/90 and zooms 0.5/1/4; hit boundary at 13.9 vs 14.1 screen px.",
+   "parityCheck": "SelectionGeometryTests and RendererOverlayTests: the knob sits where the overlay draws it at rotation 0 (zoom 0.5, 1, 2) and 30, 90, 180 (zoom 1); hit boundary 13.9 vs 14.1 screen px; no handle on a hidden selected layer. Narrowed in M3b: zoom 4 is outside v5's 25-300% range, and 30 and 90 stand in for 45.",
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: rotation handle is shown and active for a hidden selected layer. v5: hidden layers show no handles.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "select-rotate-drag",
@@ -1878,7 +1878,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: rotation is never normalized and can jump by 360 across the atan2 discontinuity. v5: rotation normalized to -180..180 with the 45-degree snap kept.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "select-resize-handles",
@@ -1898,7 +1898,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: resize has no upper limit and can divide by a near-zero start distance. v5: single 1%-500% scale clamp shared with slider, keys and wheel.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "select-hover-idle",
@@ -1932,12 +1932,12 @@
    "quirks": "undo is saved at mousedown even if no stroke results (empty click on draw tool). Pen paints in a single moveTo/lineTo path stroked incrementally per move (re-stroking accumulates alpha overlap on semi-transparent colors at joints; opaque unaffected). Included here only for slice-boundary coverage (lines 1058-1147 straddle the slice end at 1055).",
    "portTarget": "Slice boundary item: drawing pipeline belongs to adjacent slice; port as SKBitmap/SKCanvas stroke buffer with SKPaint round cap/join, antialias on (match canvas AA for diff).",
    "risk": "med",
-   "parityCheck": "Pixel-diff pen stroke path with identical points; 2-point stroke.",
+   "parityCheck": "Reworded in M3b to the approved divergence: a Line, Rect and Ellipse stroke with identical points renders as 4.1 renders it (GoldenAppTests shape-* scenes, M2a); a pen stroke is the whole path stroked once and a pen press is a brush-size dot (ToolsTests, LedgerScenarioTests); no press records an undo step (CanvasInteractionTests, LedgerScenarioTests).",
    "owner": "Engine.Tools",
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: undo saved at mousedown even with no stroke, and pen is re-stroked incrementally per move. v5: pen stroke drawn once at mouseup, a press with no movement draws a brush-size dot, and no empty undo steps.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "cross-state-globals",
@@ -1975,12 +1975,12 @@
    "quirks": "No button filter: right and middle button also draw/drag. Decide keep or restrict to left button (recommend fix) and whether to add mouse capture (see canvas-draw-release-outside).",
    "portTarget": "One WPF input surface (SKElement) with MouseDown/Move/Up/Leave/Wheel. Mouse.GetPosition(surface)/zoom. Size the surface to 585*zoom x 559*zoom DIPs and account for Windows DPI scaling so 1 template px = zoom DIPs.",
    "risk": "med",
-   "parityCheck": "Inject a mouse position at zoom 0.25/1/3 and at 125%/150% Windows scale; logged template coords match Electron to 0.01.",
+   "parityCheck": "CanvasCoordinatesTests (M3a): template = position in the frame / zoom at zoom 0.25, 1 and 3 and device scale 1, 1.25 and 1.5, to 1e-9, matching editor.js:1059-1061's formula. TemplateCanvasHostTests: only the left button presses, and the press captures the mouse. Narrowed in M3b: compared with the ported formula, not a logged Electron run.",
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: any mouse button draws or drags, with no capture. v5: left button only, with mouse capture across the canvas edge.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "canvas-cursor-states",
@@ -2005,7 +2005,7 @@
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "fix",
-   "divergence": "4.1: render() resets the cursor to crosshair on every move, so drag cursors flash only until the first move. v5: drag cursor is held for the whole drag.",
+   "divergence": "4.1: render() resets the cursor to crosshair on every move, so drag cursors flash only until the first move. v5: drag cursor is held for the whole drag. Grab and grabbing show the Windows Hand cursor (WPF has no stock grab cursor); provisional, M3b look sign-off.",
    "status": "open"
   },
   {
@@ -2022,12 +2022,12 @@
    "quirks": "Hit radius 14 screen px vs drawn handle radius 8. Rotation handle remains hittable for a hidden (visible=false) selected layer. Handle is hittable while it overlaps another layer (handle priority).",
    "portTarget": "Port getRotHandlePos and atan2 convention verbatim (0 deg = up, clockwise positive). Keep 14/zoom and 30/zoom so on-screen size is constant in pixels.",
    "risk": "med",
-   "parityCheck": "Unit test: given layer (x,y,scale,rotation) and zoom, handle pos equals JS to 1e-9; mousedown at handle +/-13.9 vs 14.1 px hits/misses.",
+   "parityCheck": "SelectionGeometryTests: the knob is at the center plus R(rotation) x (0, -(h/2 + 30/zoom)), where the overlay draws it, to 1e-9 at rotation 0 for zoom 0.5, 1 and 2 and at 30, 90 and 180 for zoom 1 (4.1's getRotHandlePos agrees at 0 and 180 only); a press 13.9 screen px from it hits and 14.1 misses; a hidden selected layer has no handle hit (SelectionGeometryTests, RendererOverlayTests.The_rotate_handle_is_hit_where_the_overlay_draws_it, LedgerScenarioTests). Reworded in M3b: the mirrored 4.1 hit point is the fixed behavior this row's divergence states.",
    "owner": "Engine.Tools",
    "check": "unit",
    "disposition": "fix",
-   "divergence": "4.1: rotation handle stays hittable for a hidden selected layer. v5: hidden layers have no handles, so no handle hit.",
-   "status": "open"
+   "divergence": "4.1: the rotation handle stays hittable for a hidden selected layer, and is hit-tested at the knob's mirror image across the layer's vertical axis (getRotHandlePos uses c.x - sin r x d, editor.js:1036), so a rotated layer's visible knob does not rotate it. v5: hidden layers have no handles, and the handle is hit where it is drawn.",
+   "status": "done"
   },
   {
    "id": "select-resize-handle-hit",
@@ -2046,7 +2046,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "select-resize-drag",
@@ -2066,7 +2066,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: resize has no maximum and no undo step, while '+' caps at 5 and wheel is uncapped. v5: one 1%-500% clamp for all paths and the drag is exactly one undo step.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "select-rotate-drag-2",
@@ -2082,12 +2082,12 @@
    "quirks": "Rotation is never normalized during drag: newRot = angle - startAngle can reach about +-360 (e.g. start rotation 170, drag across the 180 discontinuity gives -190ish values). Snap list only has +-180, so values like 350 or -270 do not snap to 0/-90. Keyboard bracket keys DO normalize to [-180,180). Decide whether to normalize.",
    "portTarget": "Same math; rotation property in degrees.",
    "risk": "med",
-   "parityCheck": "Drive mouse around layer center in 1 degree steps; recorded rotation sequence equals JS including snap plateaus at +-3 degrees of each multiple of 45.",
+   "parityCheck": "SelectionGeometryTests.Driving_the_mouse_around_the_center_in_1_degree_steps_records_4_1s_sequence_with_every_snap_plateau drives the pointer around the layer center in 1-degree steps through a full turn (-179 to 180); the recorded rotation sequence equals, exactly, a transcription of editor.js:1172-1180 (atan2 minus the start angle, then the first multiple of 45 strictly within 3 degrees), including the snap plateaus and the crossing of +-180. Narrowed in M3b: the sequence equals a transcription of editor.js:1172-1180, not a recorded 4.1 run.",
    "owner": "Engine.Tools",
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: dragged rotation is unbounded (about +-360) so values like 350 or -270 never snap. v5: rotation normalized to -180..180 so snapping works at every angle.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "select-move-hit-and-drag",
@@ -2123,12 +2123,12 @@
    "quirks": "Clicks in transparent area of a layer still select it (see select-move-hit-and-drag).",
    "portTarget": "SelectedLayer = null, invalidate.",
    "risk": "low",
-   "parityCheck": "Click outside all layers: selection highlight and handles vanish, sidebar properties empty.",
+   "parityCheck": "A press on empty canvas clears the selection, the properties panel shows its empty state and the view draws no overlay, with no undo step (LedgerScenarioTests, RendererOverlayTests). Narrowed in M3b: view-model and render evidence, not UI automation (M6).",
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "select-hover-and-end",
@@ -2163,12 +2163,12 @@
    "quirks": "Hit radii (14, 10) are larger than drawn shapes (8, 4). Arrowhead drawn from a hand-tuned offset formula; copy coordinates verbatim.",
    "portTarget": "SkiaSharp overlay pass drawn in screen space after composite: SKPaint dashed PathEffect, SKCanvas.Translate/RotateDegrees. Bundle JetBrains Mono or choose fallback.",
    "risk": "low",
-   "parityCheck": "Screenshot diff of overlay at zoom 1 and 2 with rotation 0 and 37.5 shows boxes/handles in identical positions (allow AA diff on text).",
+   "parityCheck": "GoldenViewSelectTests at zoom 1, 1.5 and 2, rotation 0, 30 and -135, flipped and over the Pants grid: boxes and handles in identical positions under the golden rule, the label blanked (interfaces R4). Narrowed in M3b: rotation 30 and -135 stand in for 37.5.",
    "owner": "App.Canvas",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "draw-tool-start",
@@ -2182,12 +2182,12 @@
    "quirks": "saveUndo runs on every mousedown even if nothing is drawn (single click, off-template click, eraser with no layer selected), creating no-op undo entries that waste the 30-entry stack and require an extra Ctrl+Z. Decide: keep or push snapshot lazily on commit (recommended fix).",
    "portTarget": "SKBitmap/SKSurface 585x585... TWxTH BGRA premul in drawing session; SKPaint stroke style, StrokeCap.Round, StrokeJoin.Round for pen/eraser.",
    "risk": "med",
-   "parityCheck": "Click without drag then undo: history depth shows an entry was consumed (see quirk). Pixel-diff a pen stroke against Electron export.",
+   "parityCheck": "A press records no undo step and a click with Line, Rect or Ellipse adds nothing (CanvasInteractionTests, LedgerScenarioTests). Shape pixels: GoldenAppTests shape-* scenes (M2a). Reworded in M3b: 4.1's consumed history entry is the fixed behavior, and the pen pixels follow the approved draw-pen-incremental-stroke divergence.",
    "owner": "Engine.Tools",
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: Every draw mousedown pushes an undo snapshot even if nothing is drawn. v5: Each mutation is exactly one undo step, with no empty steps.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "draw-pen-incremental-stroke",
@@ -2224,12 +2224,12 @@
    "quirks": "A plain click with the pen produces no dot, which users may expect. Keep or fix (draw a dot of diameter drawSize).",
    "portTarget": "Explicitly special-case: only commit when the drawing bitmap has any alpha>0. Verify degenerate behavior empirically in Skia (Skia draws dots for zero-length round-cap lines; Canvas2D may not).",
    "risk": "med",
-   "parityCheck": "Automated: click-without-move for each tool yields zero new layers; move-then-return to start with pen yields a layer only if Electron does (record Electron outcome as fixture).",
+   "parityCheck": "Line, Rect and Ellipse: a click without movement adds no layer and no undo step. Pen: a click adds one layer, a brush-size dot. Eraser: a click erases nothing (eraser-click-without-move). LedgerScenarioTests, CanvasInteractionTests. Reworded in M3b to the approved divergence (a pen click draws a dot).",
    "owner": "Engine.Tools",
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: A press with no movement draws nothing and creates no layer. v5: A press with no movement draws a brush-size dot.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "draw-shape-line",
@@ -2302,12 +2302,12 @@
    "quirks": "Preview and final committed layer differ for strokes extending outside masked regions (committed layer keeps all pixels, only the view/export mask hides them).",
    "portTarget": "Draw stroke bitmap with SKPaint alpha 0.5 (eraser) or 1 in the compositing pass before the DstIn mask.",
    "risk": "low",
-   "parityCheck": "Mid-stroke screenshot: eraser preview is 50% magenta over art; shapes fully opaque; both clipped by mask when Mask on.",
+   "parityCheck": "GoldenViewSelectTests: the live preview of a rect, a filled ellipse, a line and a two-point eraser stroke mid-gesture, at zoom 0.5, 1 and 2, with Mask on, match 4.1's view under the golden rule; the eraser preview is magenta at half alpha (RendererOverlayTests, LivePreviewTests).",
    "owner": "Engine.Render",
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "draw-commit-layer",
@@ -2324,12 +2324,12 @@
    "quirks": "Layer creation is async (img.onload), so nextId is assigned later and an undo between mouseup and load could race. makeLayer is called with name fallback 'Drawing '+(nextId+1) which is unused since a name is always passed. Layer id consumed in onload. Newly drawn layer is selected but handles are not shown until user switches to Select.",
    "portTarget": "Autocrop on SKBitmap pixels (alpha>0 scan, pad 10, clamp), SKBitmap.Extract; layer model owns SKBitmap directly (no data URL round trip). Add layer synchronously.",
    "risk": "med",
-   "parityCheck": "After a stroke, layer count +1, layer x,y,width,height match Electron (width = bbox+2*pad clamped), pixel contents identical within AA tolerance, new layer is selected and topmost, tool unchanged.",
+   "parityCheck": "After a stroke the layer count is +1, the new layer is selected and topmost, it is named per 4.1 (Tools.DrawingName) and the tool is unchanged (LedgerScenarioTests, CanvasInteractionTests); its origin, size and pixels are Tools.CommitDrawing's, held to 4.1 by GoldenAppTests shape-* scenes (M2a).",
    "owner": "Engine.Tools",
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "draw-empty-no-layer",
@@ -2344,12 +2344,12 @@
    "quirks": "See draw-tool-start (wasted undo entry).",
    "portTarget": "Same alpha scan.",
    "risk": "low",
-   "parityCheck": "Click each draw tool without moving: layer count unchanged.",
+   "parityCheck": "A click without movement with Line, Rect, Ellipse or the Eraser leaves the layer count and the undo count unchanged (CanvasInteractionTests.A_shape_click_draws_nothing_and_records_nothing, Eraser_click_without_move_changes_nothing_and_records_no_step; LedgerScenarioTests S4, S5); a stroke that leaves no pixels adds no layer (Tools.CommitDrawing returns null). Reworded in M3b: a Pen click draws a brush-size dot (approved divergence draw-pen-single-click).",
    "owner": "Engine.Tools",
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "draw-release-outside-canvas",
@@ -2407,12 +2407,12 @@
    "quirks": "Color input is opaque only (no alpha). Shapes read drawColor live during the drag, so changing color mid-drag affects the shape but not an in-progress pen path whose strokeStyle was fixed at mousedown.",
    "portTarget": "WPF: color picker (e.g. ColorPicker control or button + dialog), Slider Min=1 Max=50 Value=4, CheckBox 'Fill'. Bind to a BrushSettings view model.",
    "risk": "low",
-   "parityCheck": "Defaults on first launch equal; slider range enforced 1..50.",
+   "parityCheck": "BrushViewModelTests: the defaults (#17d4fa, 4, off) and the size clamp 1..50; compared side by side in the M3b look sign-off (state 04).",
    "owner": "App.Ribbon.Home",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "wheel-scale-layer",
@@ -2445,12 +2445,12 @@
    "quirks": "During an active stroke the new size does not affect the pen path already started (lineWidth set at mousedown) but does affect shapes on next move. deltaY===0 counts as up (+1).",
    "portTarget": "Same, update Slider.Value and eraser cursor.",
    "risk": "low",
-   "parityCheck": "20 wheel-up events from 4 gives 24; 60 gives 50 (clamped); down clamps at 1.",
+   "parityCheck": "From 4, 20 wheel-up steps give 24 and 60 more give 50 (clamped); wheel-down clamps at 1 (ToolsTests.StepBrushSize, BrushViewModelTests, LedgerScenarioTests).",
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "eraser-cursor",
@@ -2467,8 +2467,8 @@
    "parityCheck": "Visual: ring diameter equals brush diameter on screen (drawSize*zoom) at zoom 0.25 and 3, capped at diameter 240.",
    "owner": "App.Canvas",
    "check": "manual",
-   "disposition": "keep",
-   "divergence": "",
+   "disposition": "fix",
+   "divergence": "4.1: the ring radius is max(4, min(120, drawSize x zoom / 2)) CSS px, an SVG cursor that is not redrawn on zoom (editor.js:443-454). v5: the ring is the true brush footprint, max(4, size x zoom / 2) DIPs, drawn at device pixels and redrawn on zoom, tool and size changes; the Win32 cursor-size cap is stated on cursor-eraser.",
    "status": "open"
   },
   {
@@ -2484,12 +2484,12 @@
    "quirks": "Alert is a blocking OS dialog (port: MessageBox). The erase mask is drawn via drawImage with default bilinear smoothing under scale/rotate, so stroke edges are resampled (soft). Erasing in a stroke that does not touch the layer still rewrites the bitmap and costs an undo step. Erase result is async (image load) so undo immediately after could race. Eraser ignores layer opacity/adjustments (works on source bitmap).",
    "portTarget": "SKCanvas: create imgW x imgH mask bitmap; apply matrix inverse of render transform; DrawBitmap(stroke); then new layer bitmap = copy of source with SKBlendMode.DstOut mask drawn at identity. Replace layer.Bitmap (clone before mutation so shared bitmaps are not erased in other layers).",
    "risk": "high",
-   "parityCheck": "Fixture tests: apply erase stroke (scripted polyline, width 20) to layers with scale 0.5/2, rotation 33, flipH/flipV combos; export pixels match Electron/@napi-rs fixture within 3/255; alpha of erased region matches proportional-alpha rule.",
+   "parityCheck": "GoldenAppTests erase-* scenes (M2a) on scaled, rotated and flipped layers against 4.1's frozen exports; EraserTests for the single-stroke production path; LedgerScenarioTests: the eraser acts on the selected layer only, hidden or not, as one undo step. Narrowed in M3b: the production path's fringe divergence is the one this row states (M2a Task 6 measurement).",
    "owner": "Engine.Tools",
    "check": "golden",
    "disposition": "fix",
    "divergence": "4.1: the eraser re-strokes its whole path on every mousemove, so the antialiased fringe of a drag of three or more points is erased more the more mouse events the drag produced. v5: the eraser path is stroked once (the eraser half of draw-pen-incremental-stroke); fully covered pixels and two-point drags erase identically, and only that fringe keeps slightly more alpha (measured in M2a Task 6; GoldenAppTests replays 4.1's stroking against the frozen goldens).",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "eraser-math-inverse",
@@ -2526,12 +2526,12 @@
    "quirks": "The user draws a whole stroke before learning nothing is selected (and a no-op undo entry exists).",
    "portTarget": "Same rules. Consider disabling the tool when no selection, but alert behavior must match for parity.",
    "risk": "low",
-   "parityCheck": "Eraser with no selection: alert text exactly 'Select a layer to erase from, then try again.' and no layer change.",
+   "parityCheck": "Eraser with no selection: the press shows the status message 'Select a layer to erase from, then try again.' (editor.js:1270), starts no stroke and changes nothing (LedgerScenarioTests, CanvasInteractionTests). Reworded in M3b to the fixed behavior: a status message at the press replaces 4.1's alert after the stroke.",
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: Eraser with no selection lets the user draw a whole stroke, then alerts and loses it. v5: Eraser refuses on mousedown with a status message when no layer is selected.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "zoom-controls",
@@ -2635,12 +2635,12 @@
    "quirks": "Every snapshot embeds each layer's full PNG data URL: 30 snapshots x N layers can be hundreds of MB (memory blow-up risk in Electron; native design with shared bitmaps removes it). Images loaded from object URLs/blob URLs (if any) would not survive restore; check how Add image creates src (data URL vs blob).",
    "portTarget": "Immutable snapshot record: list of layer records referencing shared immutable bitmap objects (copy-on-write, no re-encoding), plus bg fields and region fills. Do not serialize pixels per snapshot.",
    "risk": "high",
-   "parityCheck": "Round-trip test: mutate each captured field, undo, assert equality; mutate each non-captured field, undo, assert it is unchanged.",
+   "parityCheck": "EditorSessionTests and HistoryTests: a snapshot holds the document (every Layer and Document field, compared by Document.ContentEquals) and the selection, and undo restores them; LedgerScenarioTests: the brush, the current tool and the zoom are not in it and survive undo. Narrowed in M3b: the field round trip is ContentEquals over the record, not one assertion per field.",
    "owner": "Engine.History",
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "undo-restore",
@@ -3097,12 +3097,12 @@
    "quirks": "Painted order of limb faces differs between arms (mirrored to match the template atlas layout); keep. Grid omits arm up/down panels, so 'paint everything' via the grid never reaches 4 regions of 18; decide: keep (parity) or add buttons. Recommended: keep for 1.0, log as enhancement.",
    "portTarget": "XAML Grid with 5 columns x 3 rows for the torso cross, UniformGrid(1x4) per limb inside a 2-column Grid. Region buttons are ToggleButton-like Border/Button controls bound by region key (Tag). Build from a data-driven list so Pants reuses the same template with different prefixes.",
    "risk": "low",
-   "parityCheck": "Screenshot compare of the grid in Shirt mode against the Electron capture (same cell order, labels 'Top','R','Front','L','Back','Bot','Right Arm','Left Arm', limb order L/Bk/R/Fr vs Fr/L/Bk/R). Automation test enumerates AutomationIds and asserts exactly 14 painted-able regions.",
+   "parityCheck": "RegionsGroupTests (M3a): 14 tiles in 4.1's cell order with its labels, each with a region automation name. The grid compared side by side with 4.1's Layout tab in the M3b look sign-off (state 02), signed off by Este on 2026-10-16 (.superpowers/m3b-look/SIGNOFF.txt). Narrowed in M3b: the grid sits on the Home tab until M4 moves it to Layout.",
    "owner": "App.Ribbon.Home",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "regions-grid-layout-pants",
@@ -3180,12 +3180,12 @@
    "quirks": "updateUI() is not called, so the scale and rotation sliders in the properties panel stay stale until the next UI refresh. Port should refresh inspector (deliberate fix, invisible to saved files). Uses 0.85 here but Meme/Fit use 0.9, Allover/Sleeve use 0.8; keep each constant.",
    "portTarget": "Same math in ViewModel command; double precision. Call UpdateInspector() as well (see quirk).",
    "risk": "low",
-   "parityCheck": "Layer 200x100 into torso_front(128x128): scale=0.544, x=231+(128-108.8)/2=240.6, y=74+(128-54.4)/2=110.8. Assert numerically.",
+   "parityCheck": "DocumentOpsTests (M3a): a 200x100 layer fits torso_front at scale 0.544, x 240.6, y 110.8, rotation 0; LedgerScenarioTests: the properties panel shows 54%, X 241 and Y 111 right after the fit.",
    "owner": "App.Ribbon.Home",
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: region-click fit leaves the properties sliders stale because updateUI is not called. v5: refreshes the inspector after the fit (unintended; saved files unchanged).",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "regions-right-click-clear",
@@ -3218,12 +3218,12 @@
    "quirks": "It does not mention that painting is blocked while a layer is selected. Consider adding that clarification.",
    "portTarget": "TextBlock with same string (localization candidate; the repo has a vibe-lingual track).",
    "risk": "low",
-   "parityCheck": "String equality in a UI test.",
+   "parityCheck": "The M3b look run reads the Fill Style hint through UI Automation as 'Set a style, then click a region to paint it. Right-click clears.' (editor.html:164; .superpowers/m3b-look/v5/RESULTS.md); compared side by side in state 02, signed off by Este on 2026-10-16 (.superpowers/m3b-look/SIGNOFF.txt).",
    "owner": "App.Ribbon.Home",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "fillstyle-type-buttons",
@@ -3357,12 +3357,12 @@
    "quirks": "editor.html is the live shell (cyan/magenta). Legacy shirt_editor.html (and backup/) use purple #e040fb/#7c4dff and white text; do not port those. Hidden #assetType select mirrors the mode (value 'Shirt'/'Pants') and likely feeds export or project metadata; port should keep a single Mode enum.",
    "portTarget": "Button with LinearGradientBrush (StartPoint 0,0 EndPoint 1,1) bound to Mode; command ToggleModeCommand.",
    "risk": "low",
-   "parityCheck": "Screenshot of both states; assert label text and gradient endpoints.",
+   "parityCheck": "ModeGroupTests (M3a): the label reads SHIRT, then PANTS. Both states compared side by side in the M3b look sign-off (states 01 and 06), gradient direction included, signed off by Este on 2026-10-16 (.superpowers/m3b-look/SIGNOFF.txt). Narrowed in M3b: the gradient endpoints are judged by eye, not sampled.",
    "owner": "App.Shell",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "mode-switch-effects",
@@ -4971,12 +4971,12 @@
    "quirks": "Inline legacy colors (#1a1a2e/#333/#e0e0e0) diverge from tokens: Home-tab and Text-tab inputs are slightly different navy than panel inputs (var(--brand-navy) #192e44). Keep both unless explicitly normalized.",
    "portTarget": "ResourceDictionary (Theme.xaml) with SolidColorBrush/Color resources for every token plus LinearGradientBrush resources (BrandGradient, BrandGradientSoft); keep inline literal colors as separate named resources (InputBgLegacy #1a1a2e etc.) so they can be unified later. Dark theme only: no light theme, no prefers-color-scheme handling, no theme switch exists.",
    "risk": "low",
-   "parityCheck": "Unit test that every token hex in the ResourceDictionary equals styles.css values; screenshot diff of ribbon/panel regions.",
+   "parityCheck": "ThemeTokenTests (M3a): every token hex in the theme equals styles.css. The ribbon and panel regions compared side by side with 4.1 at 1200x800 and 100% scale in the M3b look sign-off (states 01-07), signed off by Este on 2026-10-16 (.superpowers/m3b-look/SIGNOFF.txt). Narrowed in M3b: Este's side-by-side review stands in for a pixel diff.",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "theme-tokens-shape-motion-type",
@@ -5011,12 +5011,12 @@
    "quirks": "Intended-vs-actual: tab labels etc. specify weight 600 mono; screenshots show those weights, so ship 600.",
    "portTarget": "Bundle Inter (400/500/600/700), Space Grotesk (400-700; only 600 used visibly), JetBrains Mono (400/500/600) as WPF Resources (FontFamily='pack://application:,,,/Fonts/#Inter'), include OFL license files. No network access at runtime. Pin to the Google static instances matching weights (Inter variable file needs static cuts or use variable-font aware loading; WPF does not support variable axes well, so ship static TTFs).",
    "risk": "med",
-   "parityCheck": "Disconnect network, launch: all UI text renders in Inter/Space Grotesk/JetBrains Mono (not Segoe). Compare glyph metrics of 'Download template' button text against the 4.1 screenshot (width within 2 px).",
+   "parityCheck": "No network: the app has no network code (the M3b final verification grep) and the UI faces resolve to the vendored files (ThemeTokenTests.Ui_fonts_resolve_to_the_vendored_files). Glyph metrics: the 'Download template' button is within 2 px of 4.1's width in the M3b look run's metrics table; signed off by Este on 2026-10-16 (.superpowers/m3b-look/SIGNOFF.txt). Narrowed in M3b: the button box stands in for the text box.",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: UI fonts load at runtime from Google Fonts, leaking an IP and falling back offline. v5: Space Grotesk, Inter and JetBrains Mono are bundled with zero network requests.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "font-wordart-runtime-google",
@@ -5055,12 +5055,12 @@
    "quirks": "The webkit gradient/hover rules are dead code under Electron 41. Do not implement them.",
    "portTarget": "ScrollViewer ControlTemplate/Style with thin (about 8 px) track #050c18, thumb #223a54 (rounded), no hover color. Apply to Panel ScrollViewer, asset browser ScrollViewer, ribbon pane horizontal ScrollViewer. Decide: match effective (thin flat) look, not the dead webkit gradient.",
    "risk": "low",
-   "parityCheck": "Screenshot of left panel overflowing: scrollbar width/colors match 02-layers.png within 2 px.",
+   "parityCheck": "The left panel's scrollbar (states 03 and 05) and the canvas scrollbars (state 05) compared side by side with 4.1 in the M3b look sign-off, which also confirmed M3a's provisional width 8 and thumb inset 1; signed off by Este on 2026-10-16 (.superpowers/m3b-look/SIGNOFF.txt). Narrowed in M3b: 1200x800 captures stand in for 02-layers.png.",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "a11y-focus-rings",
@@ -5130,19 +5130,19 @@
    "area": "ribbon",
    "name": "Ribbon horizontal overflow",
    "source": "ui-surface",
-   "behavior": "When a pane's groups exceed window width the active pane scrolls horizontally (overflow-x:auto) with the thin themed scrollbar; groups never wrap or shrink. Text tab is widest (~900px of content); Home about 1050 px at the 4.1 layout. At 1200 px width Home fits.",
+   "behavior": "When a pane's groups exceed window width the active pane scrolls horizontally (overflow-x:auto) with the thin themed scrollbar; groups never wrap or shrink. Text tab is widest (~900px of content); Home about 1050 px at the 4.1 layout. Home overflows a 1200 px window too (pane 1432 px in a 1184 px client, measured M3b).",
    "codeRefs": [
     "styles.css:198-206"
    ],
    "quirks": "",
    "portTarget": "ScrollViewer HorizontalScrollBarVisibility=Auto VerticalScrollBarVisibility=Disabled around each pane's StackPanel(Orientation=Horizontal). Mouse wheel horizontal scroll is NOT provided by the original (wheel over ribbon does nothing); keep or add (low-risk nicety).",
    "risk": "low",
-   "parityCheck": "Shrink window to 700 px: horizontal scrollbar appears at ribbon bottom; groups keep their size.",
+   "parityCheck": "The launch state at a 700 DIP client width (state 07): the ribbon scrolls horizontally and its groups keep their size, compared side by side with 4.1 at the same width, signed off by Este on 2026-10-16 (.superpowers/m3b-look/SIGNOFF.txt). Narrowed in M3b: a 700 DIP client stands in for a 700 px window.",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "home-mode-toggle",
@@ -5223,12 +5223,12 @@
    "quirks": "Native Chromium color dialog is a system/HTML popup the port must replace; hex values are lowercase '#rrggbb' only (no alpha), so a color picker without alpha is correct.",
    "portTarget": "Custom color button (WPF has no built-in color picker; build a popup with HSV square + hex box + RGB, plus an eyedropper is NOT needed unless desired), Slider 1..50 SmallChange 1, CheckBox. Style Slider with accent cyan track/thumb.",
    "risk": "med",
-   "parityCheck": "Set size 50: eraser ring shows radius 25*zoom clamped; wheel down at size 4 gives 3; Fill checked + rect tool draws solid rectangle in drawColor.",
+   "parityCheck": "LedgerScenarioTests: Fill checked with Rect draws a filled rectangle in the brush color; wheel-down at 4 gives 3 (BrushViewModelTests); CanvasCursorsTests: size 50 gives a ring of radius 25 x zoom DIPs. Narrowed in M3b: view-model and cursor evidence, not UI automation (M6).",
    "owner": "App.Ribbon.Home",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "home-placement-group",
@@ -5607,7 +5607,7 @@
    "owner": "App.AssetLibrary",
    "check": "ui-auto",
    "disposition": "fix",
-   "divergence": "4.1: multi-file drops add layers in racy FileReader completion order with one undo entry each and the zone is not keyboard focusable. v5: multi-file import in pick order as one undo step and a keyboard-reachable zone.",
+   "divergence": "4.1: multi-file drops add layers in racy FileReader completion order with one undo entry each and the zone is not keyboard focusable. v5: multi-file import in pick order as one undo step and a keyboard-reachable zone. The label wraps in the narrow 200 px panel instead of clipping (M3b Task 4).",
    "status": "open"
   },
   {
@@ -5649,7 +5649,7 @@
    "owner": "App.Layers",
    "check": "ui-auto",
    "disposition": "fix",
-   "divergence": "4.1: reorder is mouse-drag only and can leave a stale drag target. v5: stale drag target fixed and reorder is keyboard operable, with the same above/below z semantics and one undo step.",
+   "divergence": "4.1: reorder is mouse-drag only and can leave a stale drag target. v5: stale drag target fixed and reorder is keyboard operable, with the same above/below z semantics and one undo step. Pressing a row selects it, so a dragged row ends selected; Alt+Up and Alt+Down move a focused row (M3b Task 4).",
    "status": "open"
   },
   {
@@ -5768,12 +5768,12 @@
    "quirks": "Strokes are clipped to the 585x559 template area (stroke outside the canvas is lost). Zero-length pen click yields no layer but still an undo entry. Eraser can only erase the SELECTED layer.",
    "portTarget": "Skia draw into SKBitmap/SKSurface; autocrop on alpha bbox; custom cursor: use an overlay ring drawn in the SKElement (avoids Windows cursor size limits) hiding the system cursor while the eraser is active.",
    "risk": "high",
-   "parityCheck": "Draw scripted strokes with each tool and compare resulting layer bitmap + origin to Electron; erase test per tests/erase.test.js on rotated/scaled/flipped layers.",
+   "parityCheck": "Shapes: GoldenAppTests shape-* scenes (M2a); eraser: GoldenAppTests erase-* scenes and EraserTests; pen: the approved divergence (ToolsTests). The eraser refuses at the press with a status message and no undo step is empty (LedgerScenarioTests, CanvasInteractionTests). Narrowed in M3b: pen strokes are not compared with 4.1 (approved divergence).",
    "owner": "Engine.Tools",
    "check": "golden",
    "disposition": "fix",
    "divergence": "4.1: undo pushed on mousedown even for a zero-length click, pen re-strokes incrementally, and the eraser alerts after the stroke when no layer is selected. v5: pen strokes drawn once at mouseup, a press with no movement draws a brush-size dot, eraser refuses on mousedown with a status message when no layer is selected, and no empty undo steps.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "canvas-export-pipeline",
@@ -5965,8 +5965,8 @@
    "parityCheck": "Hover audit: every tooltip string matches the title attributes; no tooltip where none existed (unless added by decision).",
    "owner": "App.Shell",
    "check": "manual",
-   "disposition": "keep",
-   "divergence": "",
+   "disposition": "fix",
+   "divergence": "4.1: tooltips are native title= attributes, shown on mouse hover only. v5: a control's tooltip also shows while the control has keyboard focus and stays until focus moves, Esc or Ctrl (WPF's default, WCAG 1.4.13), so keyboard users read the same text; the tool tooltips drop their shortcut letters until M4's keys exist (measured M3b: the 52x26 and 162x26 windows under Color 1 and Add image).",
    "status": "open"
   },
   {
@@ -7728,12 +7728,12 @@
    "quirks": "Bug, fix in port.",
    "portTarget": "Bind sliders directly to the layer view-model. Fixing this is recommended.",
    "risk": "low",
-   "parityCheck": "Set brightness to 0, select another layer, then reselect. Compare the slider and label to the rendered pixels.",
+   "parityCheck": "LayerPropertiesViewModelTests and LedgerScenarioTests: brightness 0, then another selection and back: the slider reads 0 and the label '0%'. Narrowed in M3b: view-model evidence, not a screenshot.",
    "owner": "App.LayerProperties",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: brightness/contrast/saturation of 0 display as 100 after reselect. v5: 0 adjustments display as 0.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "props-rotation-label-unrounded",
@@ -7749,12 +7749,12 @@
    "quirks": "Cosmetic bug.",
    "portTarget": "StringFormat on the binding. Pick toFixed(1) or the integer form deliberately.",
    "risk": "low",
-   "parityCheck": "Rotate with the handle to a non-snap angle and screenshot the panel label.",
+   "parityCheck": "LayerPropertiesViewModelTests and LedgerScenarioTests: after a handle drag to 77.4 the label reads '77°', 30.4 reads '30°' and -0.4 reads '0°'. Narrowed in M3b: view-model evidence, not a screenshot.",
    "owner": "App.LayerProperties",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: rotation label shows a raw float after a handle drag. v5: rotation label is rounded.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "props-panel-rebuild-resets",
@@ -7772,12 +7772,12 @@
    "quirks": "Users likely find the collapse annoying, so fixing it is safe.",
    "portTarget": "WPF data binding keeps the Expander state. Decide whether to persist IsExpanded (a likely fix) and note it as a behavior change.",
    "risk": "low",
-   "parityCheck": "Open adjustments, press ']' with a layer selected, and see whether the panel stays open.",
+   "parityCheck": "LayerPropertiesViewModelTests and LedgerScenarioTests: with Image adjustments open, a rename, a slider edit, Reset, a selection change and a canvas drag leave it open. Narrowed in M3b: the ']' key lands with M4's keyboard, so the same refresh is driven by the edits that reach it today.",
    "owner": "App.LayerProperties",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: every updateUI rebuilds the panel and collapses Image adjustments. v5: the adjustments panel stays open.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "props-scale-clamp-inconsistency",
@@ -7796,12 +7796,12 @@
    "quirks": "Inconsistent. Unify or keep.",
    "portTarget": "Slider Maximum=500 with a coerce-free binding, or unify the clamps. Document the choice.",
    "risk": "low",
-   "parityCheck": "Wheel-scale a layer past 500% and compare the slider position and label.",
+   "parityCheck": "LedgerScenarioTests and SelectionGeometryTests: wheel scaling past 500% stops at 500% and the slider reads 500 with the label '500%'; the slider, the wheel and the handles share SelectionGeometry.ClampScale (1-500%).",
    "owner": "Engine.Document",
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: slider, keys, wheel, handles and presets each clamp scale differently. v5: one scale clamp of 1%-500% for slider, keys, wheel and handles, with presets computing exact fits.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "select-hidden-layer-still-handled",
@@ -7818,12 +7818,12 @@
    "quirks": "Probably unintended. Decide keep vs fix.",
    "portTarget": "Overlay visual in SkiaSharp. Mirror the guard or hide handles for hidden layers (decision).",
    "risk": "low",
-   "parityCheck": "Select a layer, hide it, and screenshot the canvas. Drag the rotation knob and check that rotation changes.",
+   "parityCheck": "RendererOverlayTests and LedgerScenarioTests: a hidden selected layer renders exactly as with no selection (no box, handles, knob or label), and a press on its knob or corner falls through to the pick, which skips hidden layers. Narrowed in M3b: the knob drag is checked as a press that does not rotate, not as a screenshot.",
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: a hidden selected layer still shows its box and live handles. v5: hidden layers show no handles.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "select-hit-test-rect-not-alpha",
@@ -7843,7 +7843,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "canvas-mouse-button-agnostic",
@@ -7884,7 +7884,7 @@
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "fix",
-   "divergence": "4.1: wheel scaling uses delta sign with asymmetric x1.05/x0.95 steps, no max clamp, and changes width mid-stroke. v5: wheel scaling centered with symmetric steps under the single 1%-500% clamp.",
+   "divergence": "4.1: wheel scaling uses delta sign with asymmetric x1.05/x0.95 steps, no max clamp, and changes width mid-stroke. v5: wheel scaling centered with symmetric steps (x1.05 up, /1.05 down) under the single 1%-500% clamp. The wheel still counts one step per event by its sign, and a step mid-shape still redraws a Line, Rect or Ellipse at the new brush width (kept); Pen and Eraser keep the width of the press, as in 4.1.",
    "status": "open"
   },
   {
@@ -7991,12 +7991,12 @@
    "quirks": "Bug, fix.",
    "portTarget": "Region button style via DataTemplate with an IsFront trigger. Fix by construction.",
    "risk": "low",
-   "parityCheck": "Paint Front, right-click it, and screenshot the region grid.",
+   "parityCheck": "Paint Front, right-click it, and screenshot the region grid. Narrowed (M3b close-out, 2026-10-16): the tint return was observed after clearing Front with the Delete key, which runs the same clear command as right-click (pixels 67,51,92 -> 90,224,251 -> 67,51,92); the real mouse right-click clearing Front was observed in the 2026-10-16 computer-use smoke.",
    "owner": "App.Ribbon.Home",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: front region button loses its purple base highlight once cleared. v5: highlight is a persistent template trigger.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "fillstyle-ui-not-synced-from-region",
@@ -8031,12 +8031,12 @@
    "quirks": "",
    "portTarget": "Keep the fallback strings or simplify.",
    "risk": "low",
-   "parityCheck": "Unit test the naming function.",
+   "parityCheck": "LayerOpsTests (M3a): LayerOps.DefaultName(id) is 'Image <id>'; ToolsTests and LedgerScenarioTests: drawing layers are named by Tools.DrawingName, so 4.1's 'Drawing <nextId+1>' fallback never applies.",
    "owner": "Engine.Document",
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: default layer names are off by one from the layer id. v5: default layer names match the id.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "layers-multi-file-async-order",
@@ -8492,12 +8492,12 @@
    "quirks": "WPF exposes only the named instances of a variable font file. Space Grotesk lists Light, Regular, Medium and Bold; JetBrains Mono lists Thin through ExtraBold without SemiBold. Inter has a real SemiBold.",
    "portTarget": "The theme asks for SemiBold; WPF resolves it to the Bold (700) instance of Space Grotesk and JetBrains Mono and to Inter SemiBold. Vendoring static 600 cuts would mean new font files and manifest rows.",
    "risk": "low",
-   "parityCheck": "ThemeTokenTests.Ui_fonts_resolve_to_the_vendored_files pins the face each family resolves to; the M3b side-by-side sign-off compares the header title, ribbon tabs, group labels and panel headings.",
+   "parityCheck": "ThemeTokenTests.Ui_fonts_resolve_to_the_vendored_files pins the face each family resolves to; the header title, ribbon tabs, group labels and panel headings were compared side by side in the M3b look sign-off, signed off by Este on 2026-10-16 (.superpowers/m3b-look/SIGNOFF.txt).",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: Chromium instances the Google variable fonts at weight 600 for the header title, ribbon tabs, group labels and panel headings (styles.css:142, :175, :220, :261). v5: WPF exposes only the named instances of the vendored variable files, and Space Grotesk and JetBrains Mono have no 600 instance there, so those labels draw at 700. Inter's 600 is exact.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "zoom-pill-limits",
@@ -8537,6 +8537,83 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
+   "status": "done"
+  },
+  {
+   "id": "wheel-scale-undo-burst",
+   "area": "canvas-input",
+   "name": "A burst of wheel scaling is one undo step",
+   "source": "gap:m3b-canvas",
+   "behavior": "4.1's wheel scales the selected layer with no undo step at all (editor.js:1305-1313; undo-coverage-gaps), so a wheel change can be undone only together with the action before it.",
+   "codeRefs": [
+    "editor.js:1305-1313"
+   ],
+   "quirks": "",
+   "portTarget": "CanvasInteraction opens one EditorSession gesture at the first wheel scale event of a burst; EndWheelBurst closes it, called by TemplateCanvasHost's 400 ms one-shot timer after the last wheel event, and by a press, a tool change, a selection change or any other session change (EditorSession.Changing, raised first by every change entry point). The gesture records one step iff the content changed.",
+   "risk": "low",
+   "parityCheck": "LedgerScenarioTests.A_wheel_burst_scales_about_the_center_clamps_at_500_percent_and_is_one_step: three wheel steps are one undo step, two hundred more are one more, clamped at 500%. CanvasInteractionTests and TemplateCanvasHostTests pin the closes (the 400 ms timer, a press, a tool change, a selection change, and an edit or slider gesture made during the burst, which records as its own step). By hand in the M3b manual checklist (H3): a burst on a real wheel undoes in one step.",
+   "owner": "App.Canvas",
+   "check": "unit",
+   "disposition": "fix",
+   "divergence": "4.1: wheel scaling records no undo step. v5: each burst of wheel steps is one undo step; a burst ends 400 ms after its last wheel event, or at a press, a tool change, a selection change or any other edit, which stays its own step.",
+   "status": "open"
+  },
+  {
+   "id": "eraser-click-without-move",
+   "area": "draw-tools",
+   "name": "An eraser click without movement erases nothing",
+   "source": "gap:m3b-canvas",
+   "behavior": "4.1's eraser only moves to the press point on mousedown (editor.js:1143-1144) and strokes at mouseup only for the pen (editor.js:1253-1255), so a click without movement leaves no alpha on the stroke canvas and erases nothing, with no undo step.",
+   "codeRefs": [
+    "editor.js:1133-1144",
+    "editor.js:1249-1283"
+   ],
+   "quirks": "The approved pen dot (draw-pen-single-click) is not carried to the eraser: a click is not a destructive punch-out.",
+   "portTarget": "Eraser.Apply returns the layer itself for fewer than 2 points and Eraser.ApplyTo returns the same document, so EditorSession records no step; the live preview shows nothing for one point.",
+   "risk": "low",
+   "parityCheck": "EraserTests.A_press_without_movement_erases_nothing; CanvasInteractionTests.Eraser_click_without_move_changes_nothing_and_records_no_step; LedgerScenarioTests.The_eraser_refuses_without_a_selection_and_erases_only_the_selected_layer_even_when_hidden. By hand in the M3b manual checklist (H5).",
+   "owner": "Engine.Tools",
+   "check": "unit",
+   "disposition": "keep",
+   "divergence": "",
+   "status": "open"
+  },
+  {
+   "id": "canvas-automation-peer",
+   "area": "canvas",
+   "name": "The canvas is exposed to UI Automation",
+   "source": "gap:m3b-a11y",
+   "behavior": "4.1's <canvas id=mainCanvas> has no accessible name, role or value (editor.html:327), so a screen reader skips it and cannot tell which layer is selected.",
+   "codeRefs": [
+    "editor.html:327"
+   ],
+   "quirks": "",
+   "portTarget": "TemplateCanvasHostAutomationPeer (FrameworkElementAutomationPeer, IValueProvider): ControlType Image, ClassName TemplateCanvasHost, Name 'Template canvas', bounds from the element, not keyboard focusable, Value = the selected layer's name or '', read-only, with a ValueProperty change event on selection change.",
+   "risk": "low",
+   "parityCheck": "CanvasAutomationPeerTests pin the control type, name, bounds, read-only value and its change event. The M3b look run reads the value through UI Automation: state 03 reads \"drip_red_wide_v1\" (.superpowers/m3b-look/v5/RESULTS.md).",
+   "owner": "App.Canvas",
+   "check": "unit",
+   "disposition": "fix",
+   "divergence": "4.1: the canvas is invisible to screen readers. v5: the canvas exposes its name, its bounds and the selected layer's name as a read-only value.",
+   "status": "done"
+  },
+  {
+   "id": "overlay-knob-glyph-rasterization",
+   "area": "render",
+   "name": "The rotate knob's glyph antialiasing differs at some offsets",
+   "source": "gap:m3b-render",
+   "behavior": "4.1 strokes the rotate knob's 1.5 px white glyph arc and arrowhead with Chromium's Skia (editor.js:403-414), at the knob offset h/2 + 30 screen px above the layer's center.",
+   "codeRefs": [
+    "editor.js:395-414"
+   ],
+   "quirks": "Measured 2026-10-15 (M3b Task 1 ruling T1-3), 100 device positions per offset against Chromium 146: offsets 0, 10, 20, 30, 63, 67.5, 70, 80, 100, 129 and 130 screen px are exact; offsets 5 and 35 to 60 differ on up to about 14 glyph px by up to 41 levels. No construction reproduces Chromium at every offset: float rounding inside two Skia builds, not geometry.",
+   "portTarget": "Renderer.DrawSelectionOverlay draws the knob with 4.1's call structure, arc angles as given (ruling T1-2); the view-select goldens use offsets that measure exact.",
+   "risk": "low",
+   "parityCheck": "GoldenViewSelectTests: the six vs-select-* scenes (knob offsets 67.5, 130, 67.5, 86.25 and 75) match 4.1's view under the unchanged golden rule with the knob exact. The residual at other offsets is the measured quirk above, compared by eye in the M3b look sign-off (state 03).",
+   "owner": "Engine.Render",
+   "check": "golden",
+   "disposition": "fix",
+   "divergence": "4.1: Chromium 146's Skia antialiases the knob's 1.5 px white glyph. v5: SkiaSharp 4.153.1 antialiases it differently at some knob offsets (5 and 35 to 60 screen px: up to 41 levels on about 14 px); the geometry is 4.1's call for call, and the view-select goldens hold it exact at the offsets they use.",
    "status": "done"
   }
  ]

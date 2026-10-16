@@ -38,6 +38,22 @@ public class LayersViewModelTests
 
     static string[] Names(LayersViewModel vm) => vm.Rows.Select(r => r.Name).ToArray();
 
+    [Fact] // tools-auto-select-switch (R8): a user pick raises LayerPicked; a sync, the same row again or a deselect does not
+    public void Picking_a_row_raises_LayerPicked_and_syncs_do_not() => StaThread.Run(() =>
+    {
+        var session = Seeded(2);
+        var vm = Vm(session);
+        int picked = 0;
+        vm.LayerPicked += (_, _) => picked++;
+        session.Select(1);                    // the canvas or an undo moved the selection
+        Assert.Equal(0, picked);
+        vm.Selected = vm.Rows[0];             // the user picks B
+        Assert.Equal((1, (int?)2), (picked, session.SelectedLayerId));
+        vm.Selected = vm.Rows[0];
+        vm.Selected = null;
+        Assert.Equal(1, picked);
+    });
+
     [Fact] // top = highest z (editor.js:672-675); .selected marks the selection
     public void Rows_list_the_top_layer_first_and_mark_the_selection() => StaThread.Run(() =>
     {

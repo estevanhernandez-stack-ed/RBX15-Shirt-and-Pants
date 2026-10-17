@@ -6,8 +6,9 @@
          not. Values: styles.css:265-282. The inset glow (box-shadow inset 0 0 20px) and the 220 ms
          transition are not reproduced; M3b's side-by-side sign-off judges the look. -->
     <StackPanel>
-        <!-- The panel's first heading: .panel h3:first-child has no top margin (styles.css:263). -->
-        <TextBlock Text="Drop art here" Style="{DynamicResource PanelHeading}" Margin="0,0,0,8" />
+        <!-- .panel h3 (styles.css:254-263): the asset library is the panel's first section from M4a, so this heading takes
+             PanelHeading's own 14px top margin, as 4.1's second h3 does (editor.html:311). -->
+        <TextBlock Text="Drop art here" Style="{DynamicResource PanelHeading}" />
         <Button x:Name="Zone"
                 Command="{Binding BrowseCommand}"
                 AllowDrop="True"

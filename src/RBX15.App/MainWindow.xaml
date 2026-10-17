@@ -116,6 +116,7 @@
         </Border.Background>
         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
           <StackPanel x:Name="LeftPanelContent" Margin="14">
+            <views:AssetLibraryPanel DataContext="{Binding Assets}" />
             <views:DropZone DataContext="{Binding Layers}" />
             <views:LayersPanel DataContext="{Binding Layers}" />
             <views:LayerPropertiesPanel DataContext="{Binding LayerProperties}" />

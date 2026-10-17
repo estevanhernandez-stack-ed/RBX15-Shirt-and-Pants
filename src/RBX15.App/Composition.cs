@@ -54,6 +54,8 @@ internal static class Composition
             Brush = brush,
             File = fileGroup,
         };
+        // M4a Task 2: the asset library (editor.html:291-309); its adds go through the one ImportService, so LayersAdded sets Select.
+        var assets = new AssetLibraryViewModel(import, fileDialogs, dialogs, status, settings, new PackSource(PackSource.DefaultDirectory), new AssetThumbnailLoader());
         // M3a: construction lines above this line.
         return new MainViewModel(session)
         {
@@ -63,6 +65,7 @@ internal static class Composition
             Status = status,
             LayerProperties = layerProperties,
             Files = projectFiles,
+            Assets = assets,
             // M3a: required members above this line.
         };
     }

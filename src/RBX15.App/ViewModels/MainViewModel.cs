@@ -98,4 +98,7 @@ public sealed partial class MainViewModel : ObservableObject
             };
         }
     }
+
+    /// <summary>The left panel's asset library (M4a Task 2; editor.html:291-309).</summary>
+    public required AssetLibraryViewModel Assets { get; init; }
 }

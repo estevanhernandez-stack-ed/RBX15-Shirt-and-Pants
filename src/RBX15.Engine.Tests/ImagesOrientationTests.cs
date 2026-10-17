@@ -58,4 +58,18 @@ public class ImagesOrientationTests
             else Assert.True(px.Red < 55 && px.Green < 55 && px.Blue < 55, $"{name} should be black, got {px}");
         }
     }
+
+    [Theory] // the thumbnail is oriented like the full decode (M4a Task 2): EXIF 6 turns 32x16 into 16x32, white top-right
+    [InlineData(1, 16, 8, "TL")]
+    [InlineData(6, 8, 16, "TR")]
+    public void A_thumbnail_applies_the_exif_orientation(int orientation, int w, int h, string corner)
+    {
+        using var img = Images.DecodeThumbnail(JpegWithOrientation(orientation), 16);
+        Assert.Equal((w, h), (img.Width, img.Height));
+        var (x, y) = corner == "TL" ? (1, 1) : (w - 2, 1);
+        var px = Px.At(img, x, y);
+        Assert.True(px.Red > 200 && px.Green > 200 && px.Blue > 200, $"{corner} should be white, got {px}");
+        var far = Px.At(img, corner == "TL" ? w - 2 : 1, h - 2);
+        Assert.True(far.Red < 55, $"the opposite corner should be black, got {far}");
+    }
 }

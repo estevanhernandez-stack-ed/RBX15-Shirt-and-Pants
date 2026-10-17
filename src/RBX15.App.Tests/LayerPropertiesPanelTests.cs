@@ -286,14 +286,15 @@ public class LayerPropertiesPanelTests
         Assert.Equal((-300.0, 3.0, 300.0, 400.0, -150), (l.Rotation, l.Opacity, l.Brightness, l.HueRotate, l.GShift));
     });
 
-    [Fact] // the panel sits in the left panel after the layers, as editor.html:311-323 orders them
+    [Fact] // the panel sits in the left panel after the layers, as editor.html:288-323 orders them (the asset library first, M4a Task 2)
     public void The_main_window_puts_the_panel_after_the_layers() => StaThread.Run(() =>
     {
         var main = TestShell.Main(new EditorSession());
         var window = new MainWindow(main, new FakeSettingsStore(), [new Rect(0, 0, 1920, 1040)]);
         StaThread.Pump();
         var children = ((StackPanel)window.FindName("LeftPanelContent")).Children.Cast<FrameworkElement>().ToList();
-        Assert.Equal(new[] { typeof(DropZone), typeof(LayersPanel), typeof(LayerPropertiesPanel) }, children.Select(c => c.GetType()));
-        Assert.Same(main.LayerProperties, children[2].DataContext);
+        Assert.Equal(new[] { typeof(AssetLibraryPanel), typeof(DropZone), typeof(LayersPanel), typeof(LayerPropertiesPanel) }, children.Select(c => c.GetType()));
+        Assert.Same(main.Assets, children[0].DataContext);
+        Assert.Same(main.LayerProperties, children[3].DataContext);
     });
 }

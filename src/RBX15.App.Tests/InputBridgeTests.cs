@@ -295,6 +295,28 @@ public class InputBridgeTests
         });
     }
 
+    [Fact] // R8, smoke D1 (H4/H5): a bare unmarked move, like the one Windows sends at SetCapture, is pinned to the bridge point
+    public void A_bare_hardware_move_during_a_drag_never_reaches_the_canvas()
+    {
+        using var rig = Open(LayerOf(1));
+        rig.Ok("""{"id":1,"cmd":"pointer","action":"down","at":{"canvas":{"x":50,"y":50}}}""");
+        StaThread.Run(() =>
+        {
+            var host = First<TemplateCanvasHost>(rig.Window);
+            var source = PresentationSource.FromVisual(host)!;
+            var elsewhere = source.CompositionTarget.TransformToDevice.Transform(host.TranslatePoint(new Point(400, 300), rig.Window));
+            RawMouse.Inject(source, "AbsoluteMove", elsewhere, 0, extraInformation: 0);
+            Assert.Equal(new Point(50, 50), RoundedTemplate(host));
+            Assert.Equal((CanvasGesture.Move, true), (host.Interaction!.Gesture, host.IsMouseCaptured));
+            Assert.Equal((0.0, 0.0), (L(rig.Session, 1).X, L(rig.Session, 1).Y));
+            RawMouse.Inject(source, "Activate, AbsoluteMove", elsewhere, 0, extraInformation: 0);
+            Assert.Equal(new Point(50, 50), RoundedTemplate(host));
+            Assert.Equal((0.0, 0.0), (L(rig.Session, 1).X, L(rig.Session, 1).Y));
+        });
+        rig.Ok("""{"id":2,"cmd":"pointer","action":"up","at":{"canvas":{"x":50,"y":50}}}""");
+        StaThread.Run(() => Assert.Equal((0.0, 0.0), (L(rig.Session, 1).X, L(rig.Session, 1).Y)));
+    }
+
     static Point RoundedTemplate(TemplateCanvasHost host)
     {
         var p = CanvasCoordinates.ToTemplate(Mouse.GetPosition(host), host.Zoom);

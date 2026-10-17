@@ -27,7 +27,8 @@ namespace RBX15.App.Testing;
 ///   The left button's state reaches app code through <see cref="PointerState"/>.</item>
 /// <item><b>While it lives, hardware cannot act on the app.</b> A PreProcessInput handler cancels every raw mouse
 ///   report without <see cref="Marker"/> that moves, presses or turns the wheel, and replaces it with a move to the
-///   bridge's last point (WPF's own Mouse.Synchronize reads the real cursor; this keeps it from moving the pointer).
+///   bridge's last point, a bare move included (Windows sends one at the physical cursor on SetCapture). Only WPF's
+///   own Synchronize replay passes: it re-sends MouseDevice's last position, which this keeps at the bridge's point.
 ///   It is a WPF event handler in this process, not a Windows hook.</item>
 /// <item><b>Keys</b> are raised on a <see cref="BridgeKeyboardDevice"/>, so <c>e.KeyboardDevice.Modifiers</c> carries
 ///   the command's modifiers. A chord's KeyBindings are matched by the bridge itself, because WPF's KeyGesture.Matches
@@ -257,13 +258,15 @@ public sealed class InputBridgeDispatcher : IInputBridge, IDisposable
 
     /// <summary>
     /// The hardware neutralizer (R8): an unmarked raw mouse report that moves, presses or turns the wheel is cancelled
-    /// and replaced by a marked move to the bridge's last point. Activate, Deactivate and WPF's own bookkeeping pass.
+    /// and replaced by a marked move to the bridge's last point, a bare move included (smoke D1: the move Windows sends
+    /// at SetCapture carries the physical cursor). Activate, Deactivate, WPF's own bookkeeping and its Synchronize
+    /// replay pass (<see cref="Passes"/>).
     /// </summary>
     void OnPreProcessInput(object sender, PreProcessInputEventArgs e)
     {
-        if (!RawMouse.TryRead(e.StagingItem.Input, out var actions, out var extra, out var source) || extra == Marker) return;
+        if (!RawMouse.TryRead(e.StagingItem.Input, out var actions, out var extra, out var source, out var synchronize) || extra == Marker) return;
+        if (Passes(actions, synchronize)) return;
         var kept = Neutralize(actions);
-        if (kept == actions) return;
         e.Cancel();
         if (source?.RootVisual is not { } root) return;
         if (_lastScreen is { } screen)
@@ -284,13 +287,27 @@ public sealed class InputBridgeDispatcher : IInputBridge, IDisposable
     /// </summary>
     internal static string Neutralize(string actions, bool withMove = true)
     {
+        if (!Acts(actions)) return actions;
         var parts = actions.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-        bool acts = parts.Any(p => p is "AbsoluteMove" or "RelativeMove" or "VirtualDesktopMove" or "VerticalWheelRotate" or "HorizontalWheelRotate"
-                                   || p.StartsWith("Button", StringComparison.Ordinal));
-        if (!acts) return actions;
         var kept = parts.Where(p => p is "Activate" or "Deactivate" or "AttributesChanged" or "QueryCursor" or "CancelCapture");
         return string.Join(", ", withMove ? kept.Append("AbsoluteMove") : kept);
     }
+
+    /// <summary>True when an unmarked report moves, presses or turns the wheel.</summary>
+    internal static bool Acts(string actions) =>
+        actions.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+               .Any(p => p is "AbsoluteMove" or "RelativeMove" or "VirtualDesktopMove" or "VerticalWheelRotate" or "HorizontalWheelRotate"
+                         || p.StartsWith("Button", StringComparison.Ordinal));
+
+    /// <summary>
+    /// True when the neutralizer lets an unmarked report through: it does not act, or it is WPF's own
+    /// MouseDevice.Synchronize replay (a bare AbsoluteMove flagged _isSynchronize). Synchronize re-sends MouseDevice's
+    /// last known position, never the system cursor, and it is the only report that hit-tests a move to an unchanged
+    /// point: after the bridge's Activate, its move to the same point is redundant to WPF, so without the replay
+    /// Mouse.DirectlyOver stays null and the press reaches nothing. Every hardware report that would change that last
+    /// position is cancelled here, so the replay can only ever carry the bridge's point.
+    /// </summary>
+    internal static bool Passes(string actions, bool synchronize) => !Acts(actions) || (synchronize && actions == "AbsoluteMove");
 
     // ---- keys (R7) ----
 

@@ -30,6 +30,7 @@ internal static class RawMouse
     static readonly PropertyInfo ActionsProperty = ReportType.GetProperty("Actions", Any) ?? throw new MissingMemberException("RawMouseInputReport.Actions");
     static readonly PropertyInfo ExtraProperty = ReportType.GetProperty("ExtraInformation", Any) ?? throw new MissingMemberException("RawMouseInputReport.ExtraInformation");
     static readonly PropertyInfo SourceProperty = InputReportType.GetProperty("InputSource", Any) ?? throw new MissingMemberException("InputReport.InputSource");
+    static readonly FieldInfo SynchronizeField = ReportType.GetField("_isSynchronize", Any) ?? throw new MissingFieldException("RawMouseInputReport._isSynchronize");
 
     /// <summary>InputManager.PreviewInputReportEvent, the routed event every raw report travels as.</summary>
     internal static readonly RoutedEvent PreviewInputReportEvent =
@@ -57,17 +58,27 @@ internal static class RawMouse
     }
 
     /// <summary>Reads a raw mouse report: its actions (Enum.ToString form), extraInformation and source. False for anything else.</summary>
-    internal static bool TryRead(InputEventArgs input, out string actions, out nint extraInformation, out PresentationSource? source)
+    internal static bool TryRead(InputEventArgs input, out string actions, out nint extraInformation, out PresentationSource? source) =>
+        TryRead(input, out actions, out extraInformation, out source, out _);
+
+    /// <summary>
+    /// As above, plus whether the report is WPF's own MouseDevice.Synchronize replay. That report is built in-process
+    /// at MouseDevice's last known position (its _lastPosition, never the system cursor) and is the only kind that
+    /// hit-tests a move to an unchanged point, so it sets Mouse.DirectlyOver after an Activate or a capture change.
+    /// </summary>
+    internal static bool TryRead(InputEventArgs input, out string actions, out nint extraInformation, out PresentationSource? source, out bool synchronize)
     {
         actions = "";
         extraInformation = 0;
         source = null;
+        synchronize = false;
         if (input.RoutedEvent != PreviewInputReportEvent || !ArgsType.IsInstanceOfType(input)) return false;
         object? report = ReportProperty.GetValue(input);
         if (report is null || !ReportType.IsInstanceOfType(report)) return false;
         actions = ActionsProperty.GetValue(report)!.ToString()!;
         extraInformation = (IntPtr)ExtraProperty.GetValue(report)!;
         source = SourceProperty.GetValue(report) as PresentationSource;
+        synchronize = (bool)SynchronizeField.GetValue(report)!;
         return true;
     }
 }

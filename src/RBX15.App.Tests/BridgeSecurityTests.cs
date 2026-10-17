@@ -186,4 +186,21 @@ public class BridgeSecurityTests
     [InlineData("QueryCursor", "QueryCursor")]
     public void The_neutralizer_keeps_only_bookkeeping_plus_a_move(string actions, string kept) =>
         Assert.Equal(kept, InputBridgeDispatcher.Neutralize(actions));
+
+    [Theory] // R8, smoke D1: every unmarked report that acts is cancelled, a bare move included; only WPF's Synchronize replay
+             // (a bare AbsoluteMove at MouseDevice's last position) and pure bookkeeping pass
+    [InlineData("AbsoluteMove", false, false)]
+    [InlineData("Activate, AbsoluteMove", false, false)]
+    [InlineData("Activate, AbsoluteMove", true, false)]
+    [InlineData("RelativeMove", false, false)]
+    [InlineData("Button1Press", false, false)]
+    [InlineData("Button1Press", true, false)]
+    [InlineData("AbsoluteMove, Button1Press", true, false)]
+    [InlineData("VerticalWheelRotate", false, false)]
+    [InlineData("AbsoluteMove", true, true)]
+    [InlineData("Activate", false, true)]
+    [InlineData("Deactivate", false, true)]
+    [InlineData("QueryCursor, CancelCapture", false, true)]
+    public void Only_bookkeeping_and_the_synchronize_replay_pass_the_neutralizer(string actions, bool synchronize, bool passes) =>
+        Assert.Equal(passes, InputBridgeDispatcher.Passes(actions, synchronize));
 }

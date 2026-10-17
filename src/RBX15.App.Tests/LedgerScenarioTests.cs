@@ -1025,6 +1025,16 @@ public sealed class LedgerScenarioTests : IDisposable
         }
 
         public void Alert(string message) => Alerts.Add(message);
+
+        public SaveChoice SaveAnswer { get; set; } = SaveChoice.Cancel;
+
+        public List<string> SavePrompts { get; } = [];
+
+        public SaveChoice AskSaveChanges(string documentName)
+        {
+            SavePrompts.Add(documentName);
+            return SaveAnswer;
+        }
     }
 
     sealed class Files(string? savePath) : IFileDialogs
@@ -1038,6 +1048,20 @@ public sealed class LedgerScenarioTests : IDisposable
             Suggested.Add(suggestedFileName);
             return savePath;
         }
+
+        public string? ProjectPath { get; set; }
+
+        public List<string> ProjectSuggested { get; } = [];
+
+        public string? OpenProject(string? initialDirectory) => ProjectPath;
+
+        public string? SaveProject(string suggestedFileName, string? initialDirectory)
+        {
+            ProjectSuggested.Add(suggestedFileName);
+            return ProjectPath;
+        }
+
+        public string? PickFolder(string? initialDirectory) => null;
     }
 
     sealed class Status : IStatus

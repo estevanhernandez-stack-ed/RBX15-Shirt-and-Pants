@@ -15,7 +15,9 @@
          AppInfo.ProductName. Buttons follow Chromium's confirm: OK then Cancel, Enter = OK, Esc = Cancel.
          4.1's confirm is Chromium's native box, so it has no CSS to copy: MinWidth 360, MaxWidth 480,
          the 20,18,20,16 padding, the 13px message and its 18 DIP bottom margin are a new v5 surface;
-         provisional; M3b look sign-off. The buttons are .btn-sm (padding 5px 10px, 11px, styles.css:407). -->
+         provisional; M3b look sign-off. The buttons are .btn-sm (padding 5px 10px, 11px, styles.css:407).
+         M4a (interfaces R13): the unsaved-changes prompt reuses it as Save (the default, Enter), Don't save and Cancel
+         (Esc), the Windows order; 4.1 had no such prompt, so the Don't save button copies Cancel's look. -->
     <Border BorderBrush="{DynamicResource BorderAccentBrush}" BorderThickness="0,1,0,0" Padding="20,18,20,16">
         <StackPanel>
             <TextBlock x:Name="MessageText"
@@ -31,6 +33,15 @@
                         FontSize="11"
                         Style="{DynamicResource PrimaryButton}"
                         Click="OnOk" />
+                <Button x:Name="DontSaveButton"
+                        Content="Don't save"
+                        Visibility="Collapsed"
+                        MinWidth="72"
+                        Padding="10,5"
+                        FontSize="11"
+                        Margin="8,0,0,0"
+                        Style="{DynamicResource SecondaryButton}"
+                        Click="OnDontSave" />
                 <Button x:Name="CancelButton"
                         Content="Cancel"
                         IsCancel="True"

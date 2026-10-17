@@ -35,6 +35,12 @@
   <ItemGroup Condition="'$(EnableTestInputBridge)' != 'true'">
     <Compile Remove="Testing\**" />
   </ItemGroup>
+  <!-- dotnet publish sets _IsPublishing; MSIX packaging (M6's Store path) sets the Appx/WindowsPackageType properties
+       instead, so those refuse too (critic M5). -->
+  <Target Name="RefuseTestInputBridgeOnPublish" BeforeTargets="BeforeBuild"
+          Condition="'$(EnableTestInputBridge)' == 'true' and ('$(_IsPublishing)' == 'true' or '$(GenerateAppxPackageOnBuild)' == 'true' or '$(AppxPackage)' == 'true' or '$(WindowsPackageType)' == 'MSIX')">
+    <Error Text="EnableTestInputBridge is for the smoke build only; a published RBX15 never carries the test input bridge." />
+  </Target>
 
   <!-- The built-in packs (ledger packs-inventory-drips, packs-inventory-wordart, pack-contents, packs-resolve-dir): the
        repo's packs/**/*.png, byte for byte, at packs/<name>/<file> in every output that references the App, as 4.1's

@@ -49,11 +49,11 @@ public sealed partial class MainViewModel : ObservableObject
     public string HeaderTitle => "RBX15 Classic Shirt & Pants Maker";
 
     /// <summary>
-    /// The header byline. 4.1 hand-typed "ItsjustEste | v4.1" (editor.html:17); v5 builds the same shape
-    /// from the assembly's major.minor (ledger shell-header-version-hardcoded, fix, whose parity check
-    /// reads 'ItsjustEste | v&lt;major.minor&gt;'). The view upper-cases it (styles.css:153).
+    /// The header byline. 4.1 hand-typed "ItsjustEste | v4.1" (editor.html:17). v5 shows the 626Labs mark in place of
+    /// the name (Este, 2026-10-17; ledger shell-header) and keeps the version, built from the assembly's major.minor
+    /// (ledger shell-header-version-hardcoded). The view upper-cases it (styles.css:153).
     /// </summary>
-    public string HeaderByline => "ItsjustEste | v" + MajorMinor(AppInfo.Version);
+    public string HeaderByline => "v" + MajorMinor(AppInfo.Version);
 
     /// <summary>
     /// The footer (ledger shell-footer, fix): 4.1's "Developed at 626 Labs LLC" (editor.html:343) reads

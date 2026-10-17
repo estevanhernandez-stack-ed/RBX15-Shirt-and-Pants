@@ -56,8 +56,11 @@
         <TextBlock x:Name="HeaderTitle" Text="{Binding HeaderTitle, Mode=OneTime}" VerticalAlignment="Center"
                    FontFamily="{StaticResource FontDisplay}" FontSize="20" FontWeight="SemiBold"
                    Foreground="{StaticResource BrandGradientBrush}" />
-        <!-- header span (styles.css:149-155): JetBrains Mono 11px fg-3 uppercase; gap 16px (:133). -->
-        <TextBlock x:Name="HeaderByline" Margin="16,0,0,0" VerticalAlignment="Center"
+        <!-- The 626Labs mark in place of 4.1's "ItsjustEste" (Este, 2026-10-17; ledger shell-header): bold duo, no "LLC". -->
+        <Image x:Name="HeaderMark" Source="{StaticResource LabsMarkDuo}" Height="18" Margin="16,0,0,0" VerticalAlignment="Center"
+               AutomationProperties.Name="626Labs" />
+        <!-- header span (styles.css:149-155): JetBrains Mono 11px fg-3 uppercase; gap 16px (:133). Now the version only. -->
+        <TextBlock x:Name="HeaderByline" Margin="12,0,0,0" VerticalAlignment="Center"
                    FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{StaticResource Fg3Brush}"
                    Text="{Binding HeaderByline, Mode=OneTime, Converter={StaticResource UpperCase}}" />
       </StackPanel>

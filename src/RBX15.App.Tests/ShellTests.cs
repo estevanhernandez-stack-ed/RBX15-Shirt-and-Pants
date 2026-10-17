@@ -33,7 +33,8 @@ public class ShellTests
         Assert.Contains("<title>RBX15 Classic Shirt and Pants Maker</title>", File.ReadAllText(Path.Combine(Root, "editor.html")));
     }
 
-    [Fact] // shell-header: editor.html:16-17 verbatim, the byline's version is major.minor; shell-footer (fix): 4.1's
+    [Fact] // shell-header (fix): editor.html:16-17, with the 626Labs mark in place of "ItsjustEste" (Este, 2026-10-17) and
+           // the byline the version alone, major.minor; shell-footer (fix): 4.1's
            // editor.html:343 is unchanged, and v5 reads "Developed at 626Labs" (Este, 2026-10-14)
     public void Header_and_footer_text_match_4_1_and_the_footer_credit()
     {
@@ -45,7 +46,7 @@ public class ShellTests
 
         Assert.Equal(AppInfo.ProductName, vm.Title);
         Assert.Equal("RBX15 Classic Shirt & Pants Maker", vm.HeaderTitle);
-        Assert.Equal("ItsjustEste | v5.0", vm.HeaderByline);
+        Assert.Equal("v5.0", vm.HeaderByline);
         Assert.Equal("Developed at 626Labs", vm.FooterText);
     }
 
@@ -53,7 +54,7 @@ public class ShellTests
     public void Upper_case_converter_matches_css_text_transform()
     {
         var c = new UpperCaseConverter();
-        Assert.Equal("ITSJUSTESTE | V5.0", c.Convert("ItsjustEste | v5.0", typeof(string), null, CultureInfo.InvariantCulture));
+        Assert.Equal("V5.0", c.Convert("v5.0", typeof(string), null, CultureInfo.InvariantCulture));
         Assert.Equal("DEVELOPED AT 626LABS", c.Convert("Developed at 626Labs", typeof(string), null, CultureInfo.InvariantCulture));
         Assert.Null(c.Convert(null, typeof(string), null, CultureInfo.InvariantCulture));
         Assert.Throws<NotSupportedException>(() => c.ConvertBack("X", typeof(string), null, CultureInfo.InvariantCulture));
@@ -88,6 +89,9 @@ public class ShellTests
                 Min = (w.MinWidth, w.MinHeight),
                 Header = Text("HeaderTitle"),
                 Byline = Text("HeaderByline"),
+                Mark = ((Image)w.FindName("HeaderMark")) is var m
+                    ? (m.Source == w.FindResource("LabsMarkDuo"), m.Height, System.Windows.Automation.AutomationProperties.GetName(m))
+                    : default,
                 Footer = Text("FooterText"),
                 FooterLook = ((TextBlock)w.FindName("FooterText")) is var f
                     ? (f.FontSize, ((System.Windows.Media.SolidColorBrush)f.Foreground).Color.ToString(), f.HorizontalAlignment)
@@ -103,7 +107,8 @@ public class ShellTests
         Assert.Equal((360.0, 120.0, 1200.0, 800.0, WindowState.Normal), facts.Size);
         Assert.Equal((640.0, 480.0), facts.Min);
         Assert.Equal("RBX15 Classic Shirt & Pants Maker", facts.Header);
-        Assert.Equal("ITSJUSTESTE | V5.0", facts.Byline);
+        Assert.Equal("V5.0", facts.Byline);
+        Assert.Equal((true, 18.0, "626Labs"), facts.Mark);
         Assert.Equal("DEVELOPED AT 626LABS", facts.Footer);
         Assert.Equal((10.0, "#FF5E6B7F", HorizontalAlignment.Center), facts.FooterLook);   // styles.css:678-689: 10px fg-muted, centered
         Assert.Equal([("Home", (bool?)true)], facts.Tabs);

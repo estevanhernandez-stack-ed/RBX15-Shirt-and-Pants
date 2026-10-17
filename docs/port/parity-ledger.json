@@ -4931,11 +4931,11 @@
    "quirks": "Gradient text is clipped to the h1 box only (not the whole header). Letter-spacing in WPF needs a workaround; budget for it for all mono uppercase labels (tabs, group labels, h3, .info, footer).",
    "portTarget": "Border with LinearGradientBrush background; TextBlock for title using a gradient foreground (LinearGradientBrush Foreground with StartPoint/EndPoint 0,0->1,1 in bounding box) and FontFamily Space Grotesk; subtitle TextBlock with CharacterSpacing equivalent (WPF has no letter-spacing: use Typography or per-glyph Run spacing / a custom TextBlock with TextOptions; or use FormattedText + DrawingContext). Bind version text to assembly/MSIX version formatted 'v{Major}.{Minor}'.",
    "risk": "med",
-   "parityCheck": "Pixel-compare header strip against 4.1 screenshots; text bounds within 1 px; gradient endpoints cyan at left, magenta at right of the h1 box. Version string equals MSIX identity version major.minor.",
+   "parityCheck": "Pixel-compare header strip against 4.1 screenshots; text bounds within 1 px; gradient endpoints cyan at left, magenta at right of the h1 box. Version string equals MSIX identity version major.minor. ShellTests: the byline is 'v<major.minor>' (shown 'V5.0') and the HeaderMark image shows the LabsMarkDuo resource at 18 DIP, named '626Labs' for UI Automation.",
    "owner": "App.Shell",
    "check": "manual",
-   "disposition": "keep",
-   "divergence": "",
+   "disposition": "fix",
+   "divergence": "4.1: the header span reads 'ItsjustEste | v4.1' (editor.html:17). v5: the 626Labs signature mark (bold duo, no 'LLC'; 626labs-design/assets/Logos/626labs-signature-bold-duo.svg as a vector DrawingImage, 18 DIP high) stands in for the name, followed by the version alone ('v5.0', shown as 'V5.0'), per Este's call (2026-10-17).",
    "status": "open"
   },
   {
@@ -7582,7 +7582,7 @@
    "quirks": "Doc drift. Fix the TEST_PLAN expectation when porting.",
    "portTarget": "Bind the header text to the assembly version (major.minor), or to Package.Current.Id.Version under MSIX, so it cannot drift.",
    "risk": "low",
-   "parityCheck": "The header reads 'ItsjustEste | v<major.minor>' matching the MSIX Identity Version's first two components.",
+   "parityCheck": "The header byline reads 'v<major.minor>' (the name became the 626Labs mark, shell-header) matching the MSIX Identity Version's first two components.",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "fix",

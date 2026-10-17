@@ -2,7 +2,7 @@
 
 Every deliberate behavior change in v5, generated from `parity-ledger.json` rows whose disposition is `fix` or `drop`. The bug policy: fix anything clearly unintended, keep anything a user could reasonably rely on. A change that is not in this table is a regression. Rows with a visual effect get a new golden image with a note.
 
-## Fixed in v5 (203)
+## Fixed in v5 (204)
 
 | ID | Owner | Change |
 |---|---|---|
@@ -112,6 +112,7 @@ Every deliberate behavior change in v5, generated from `parity-ledger.json` rows
 | `font-ui-weight-600` | App.Shell | 4.1: Chromium instances the Google variable fonts at weight 600 for the header title, ribbon tabs, group labels and panel headings (styles.css:142, :175, :220, :261). v5: WPF exposes only the named instances of the vendored variable files, and Space Grotesk and JetBrains Mono have no 600 instance there, so those labels draw at 700. Inter's 600 is exact. |
 | `project-startup` | App.Shell | 4.1: requests Google Fonts at startup and does not remember window size or position. v5: zero network requests and the window remembers size and position. |
 | `shell-footer` | App.Shell | 4.1: the footer reads 'Developed at 626 Labs LLC' (editor.html:343). v5: it reads 'Developed at 626Labs', shown uppercase as 'DEVELOPED AT 626LABS', per Este's call (2026-10-14). |
+| `shell-header` | App.Shell | 4.1: the header span reads 'ItsjustEste \| v4.1' (editor.html:17). v5: the 626Labs signature mark (bold duo, no 'LLC'; 626labs-design/assets/Logos/626labs-signature-bold-duo.svg as a vector DrawingImage, 18 DIP high) stands in for the name, followed by the version alone ('v5.0', shown as 'V5.0'), per Este's call (2026-10-17). |
 | `shell-header-version-hardcoded` | App.Shell | 4.1: header version is hand-typed markup that drifts from docs and package version. v5: header text bound to the assembly/package version. |
 | `shell-layout-skeleton` | App.Shell | 4.1: ribbon height changes per tab, shifting the canvas vertically on tab switch. v5: fixed ribbon height. |
 | `shell-lifecycle-quit` | App.Shell | 4.1: closing the window exits immediately with no unsaved-work prompt and no autosave. v5: save-changes prompt on close with dirty tracking, backed by autosave and crash recovery. |

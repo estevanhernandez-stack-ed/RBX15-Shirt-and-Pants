@@ -187,6 +187,34 @@ public static class Images
     /// </summary>
     static readonly SKSamplingOptions MipBuild = new(SKFilterMode.Linear, SKMipmapMode.Nearest);
 
+    /// <summary>
+    /// Frees a layer or background image the editor no longer references (M4a interfaces R11: the outgoing
+    /// document after Open). Disposes the image's RGB-shifted copies (<see cref="Adjust.ShiftRgb"/>) with their
+    /// own derived entries, its premultiplied drawing copy (<see cref="ForDrawing"/>) unless that copy is the
+    /// image itself, the decode-cache pre-scale keyed by either, and then the image. Idempotent; the caller
+    /// guarantees nothing draws the image afterwards. UI thread.
+    /// </summary>
+    public static void Release(SKImage image)
+    {
+        ArgumentNullException.ThrowIfNull(image);
+        foreach (var shifted in Adjust.TakeShifted(image)) Release(shifted);
+        if (Premultiplied.TryGetValue(image, out var premul))
+        {
+            Premultiplied.Remove(image);
+            ReleaseScaled(premul);
+            if (!ReferenceEquals(premul, image)) premul.Dispose();
+        }
+        ReleaseScaled(image);
+        image.Dispose();
+    }
+
+    static void ReleaseScaled(SKImage key)
+    {
+        if (!Scaled.TryGetValue(key, out var entry)) return;
+        Scaled.Remove(key);
+        if (!ReferenceEquals(entry.Result, key)) entry.Result.Dispose();
+    }
+
     static SKImage ScalePixels(SKImage source, int width, int height, SKSamplingOptions sampling)
     {
         var info = new SKImageInfo(width, height, source.ColorType, SKAlphaType.Premul);

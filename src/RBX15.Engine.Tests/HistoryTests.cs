@@ -313,4 +313,30 @@ public class HistoryTests
         h.Record(Snap("opened"));
         Assert.Equal("opened", Label(h.Undo(Snap("edited"))));
     }
+
+    [Fact] // M4a R11: Open reads every recorded snapshot before Clear, undo stack then redo stack, oldest first
+    public void Snapshots_lists_undo_then_redo_oldest_first_as_a_copy()
+    {
+        var h = new History();
+        Assert.Empty(h.Snapshots);
+        h.Record(Snap("A"));
+        h.Record(Snap("B"));
+        h.Record(Snap("C"));
+        h.Undo(Snap("D"));                   // undo [A, B], redo [D]
+        h.Undo(Snap("C2"));                  // undo [A], redo [D, C2]
+        var listed = h.Snapshots;
+        Assert.Equal(new[] { "A", "D", "C2" }, listed.Select(Label));
+        h.Clear();
+        Assert.Equal(new[] { "A", "D", "C2" }, listed.Select(Label));   // a copy: Clear after reading does not empty it
+        Assert.Empty(h.Snapshots);
+    }
+
+    [Fact] // M4a R11: Snapshots shares the recorded documents by reference, so Open can collect their images
+    public void Snapshots_are_the_recorded_instances()
+    {
+        var h = new History();
+        var a = Snap("A");
+        h.Record(a);
+        Assert.Same(a, Assert.Single(h.Snapshots));
+    }
 }

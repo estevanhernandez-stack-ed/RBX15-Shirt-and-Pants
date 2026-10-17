@@ -73,6 +73,22 @@ public static class Adjust
     static readonly ConditionalWeakTable<SKImage, Dictionary<(int R, int G, int B), SKImage>> ShiftCache = new();
 
     /// <summary>
+    /// Removes and returns every cached shift of <paramref name="source"/>, for <see cref="Images.Release"/>,
+    /// which disposes them. Empty when there are none.
+    /// </summary>
+    internal static IReadOnlyList<SKImage> TakeShifted(SKImage source)
+    {
+        if (!ShiftCache.TryGetValue(source, out var slots)) return [];
+        ShiftCache.Remove(source);
+        lock (slots)
+        {
+            var taken = slots.Values.ToList();
+            slots.Clear();
+            return taken;
+        }
+    }
+
+    /// <summary>
     /// applyRGBShift on exact un-premultiplied pixels: add per channel, clamp 0..255, skip alpha 0,
     /// leave alpha alone. Cached per (source image, shift). Cache-owned; callers must not dispose.
     /// Images are immutable, so a pixel edit is a new

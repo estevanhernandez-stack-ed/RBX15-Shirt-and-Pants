@@ -1,12 +1,19 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Threading.Tasks;
+using System.Windows.Threading;
 using RBX15.App.Canvas;
 using RBX15.App.Controls;
 using RBX15.App.Services;
 using RBX15.App.ViewModels;
 using RBX15.Engine;
+using RBX15.Parity;
 using SkiaSharp;
 using Xunit;
 using Point = System.Windows.Point;
@@ -942,6 +949,314 @@ public sealed class LedgerScenarioTests : IDisposable
         Assert.Equal((30, true, Tool.Rect, 1.25), (main.Home.Brush.Size, main.Home.Brush.Fill, main.Home.Tools.Current, main.Canvas.Zoom));
     });
 
+    // ─── M4a close-out scenarios (Task 5). Each builds the real composition (Composition.Build) with recording fakes
+    // for the native file dialogs, the themed dialogs and the settings file, and drives the File group, the project
+    // service and the asset library through their public surface, the way the window and the panels do.
+
+    [Fact]
+    public void Save_as_writes_the_project_marks_it_clean_and_reopening_restores_it_with_history_cleared() => StaThread.Run(() =>
+    {
+        // project-save-format, project-save-filename, file-project-format, project-load-history-interplay,
+        // project-template-name-not-saved, home-file-group, window-title-dirty-marker
+        // (editor.js:2550-2591 saveProject, :2594-2690 loadProject; interfaces R1, R2, R3)
+        using var art = Solid(40, 30, Slate);
+        var (s, main, files, dialogs, settings) = Shell4a();
+        string path = Path.Combine(_dir, "My_Shirt_v2_.r15proj");
+        s.TemplateTitle = "My Shirt v2!";
+        Assert.True(s.Apply(d => DocumentOps.PaintRegion(d, "torso_front", Fill.Solid("#ff0000"))));
+        int id = AddLayer(s, art, 200, 100, "art");
+        Assert.True(s.IsDirty);
+        Assert.Equal("*Untitled - RBX15 Classic Shirt and Pants Maker", main.Title);
+
+        files.Saves.Enqueue(path);
+        main.Home.File.SaveCommand.Execute(null);                          // Save work with no current file is Save As
+        Assert.Equal(new[] { "My_Shirt_v2_.r15proj" }, files.SuggestedProjects);   // ExportNaming.ProjectFileName
+        Assert.True(File.Exists(path));
+        Assert.Empty(Directory.GetFiles(_dir, "*.tmp"));                   // temp file plus move: nothing left over
+        using (var json = JsonDocument.Parse(File.ReadAllText(path)))
+        {
+            Assert.Equal("5.0", json.RootElement.GetProperty("version").GetString());
+            Assert.False(json.RootElement.TryGetProperty("title", out _));   // R1: the template name is not saved
+        }
+        Assert.False(s.IsDirty);
+        Assert.Equal(path, s.CurrentFile);
+        Assert.Equal("My_Shirt_v2_.r15proj - RBX15 Classic Shirt and Pants Maker", main.Title);
+        Assert.Equal("Saved My_Shirt_v2_.r15proj.", main.Status.Message);
+        Assert.Equal(_dir, settings.Folders[SettingsFolder.Project]);     // the last folder is remembered
+        byte[] saved = Renderer.ExportPng(s.Document);
+
+        Assert.True(s.Apply(d => LayerOps.MoveTo(d, id, 10, 10)));
+        Assert.True(s.IsDirty);
+        Assert.Equal("*My_Shirt_v2_.r15proj - RBX15 Classic Shirt and Pants Maker", main.Title);
+        Assert.True(s.Undo());                                             // R2: undoing back to the save reads clean
+        Assert.False(s.IsDirty);
+        Assert.Equal("My_Shirt_v2_.r15proj - RBX15 Classic Shirt and Pants Maker", main.Title);
+
+        Assert.True(s.Apply(d => LayerOps.MoveTo(d, id, 10, 10)));
+        dialogs.Choices.Enqueue(SaveChoice.DontSave);
+        Assert.True(Await(main.Files.OpenAsync(path)));
+        Assert.Equal(new[] { "My_Shirt_v2_.r15proj" }, dialogs.SaveChanges);   // the guard named the file
+        Assert.Equal(saved, Renderer.ExportPng(s.Document));               // the reopened file exports as it was saved
+        Assert.Equal(0, s.UndoCount);                                      // spec §3: history cleared on open
+        Assert.False(s.CanUndo);
+        Assert.Equal(s.Document.Layers[^1].Id, s.SelectedLayerId);         // T1-R2: top layer, editor.js:2664
+        Assert.Equal(s.Document.Layers.Max(l => l.Id) + 1, s.NextId);
+        Assert.Equal("My Shirt v2!", s.TemplateTitle);                     // R1: Open leaves the name box alone
+        Assert.False(s.IsDirty);
+        Assert.Equal(path, s.CurrentFile);
+        Assert.Equal("My_Shirt_v2_.r15proj - RBX15 Classic Shirt and Pants Maker", main.Title);
+
+        var (_, untitled, blank, _, _) = Shell4a();
+        untitled.Home.File.SaveCommand.Execute(null);                      // the Save dialog is cancelled: nothing written
+        Assert.Equal(new[] { "untitled.r15proj" }, blank.SuggestedProjects);
+        Assert.Null(untitled.Session.CurrentFile);
+    });
+
+    [Fact]
+    public void A_file_that_cannot_open_alerts_and_changes_nothing_and_layers_that_cannot_load_are_named() => StaThread.Run(() =>
+    {
+        // io-alert-inventory, project-load-flow, project-load-error-path-bugs, project-load-untrusted-src,
+        // project-load-no-imgsrc-hang (editor.js:2632, :2663-2680; interfaces R4)
+        using var art = Solid(30, 30, Slate);
+        var (s, main, _, dialogs, _) = Shell4a();
+        AddLayer(s, art, 50, 60, "kept");
+        var before = s.Document;
+        foreach (var text in new[] { "not json", "{\"version\": \"4.0\", \"layers\": [{\"id\": 1," })
+        {
+            string bad = WriteText($"bad{dialogs.Alerts.Count}.r15proj", text);
+            Assert.False(Await(main.Files.OpenAsync(bad)));
+            Assert.StartsWith("Failed to load project. ", dialogs.Alerts[^1]);   // editor.js:2676
+            Assert.Same(before, s.Document);
+            Assert.Equal(1, s.UndoCount);
+            Assert.Null(s.CurrentFile);
+        }
+        Assert.Empty(dialogs.SaveChanges);                                  // R4: a file that cannot open never asks to save first
+
+        using var a = Solid(20, 10, Red);
+        using var b = Solid(20, 10, Blue);
+        using var c = Solid(20, 10, Slate);
+        var three = new Document
+        {
+            Layers = ImmutableList.Create(
+                new Layer { Id = 1, Image = a, Name = "A", X = 10, Y = 10 },
+                new Layer { Id = 2, Image = b, Name = "B", X = 20, Y = 20 },
+                new Layer { Id = 3, Image = c, Name = "C", X = 30, Y = 30 }),
+        };
+        var node = JsonNode.Parse(ProjectIO.Write(three, DateTimeOffset.UnixEpoch))!;
+        node["layers"]![1]!["imgSrc"] = "http://example.com/b.png";        // refused: not a data: URL
+        node["layers"]![2]!.AsObject().Remove("imgSrc");                     // 4.1 skipped it silently (editor.js:2632)
+        string mixed = WriteText("mixed.r15proj", node.ToJsonString());
+        dialogs.Choices.Enqueue(SaveChoice.DontSave);
+        Assert.True(Await(main.Files.OpenAsync(mixed)));
+        Assert.Equal(new[] { "A" }, s.Document.Layers.Select(l => l.Name));
+        Assert.Equal("Opened mixed.r15proj. Couldn't load: B, C.", main.Status.Message);
+        Assert.Equal(2, s.NextId);
+        Assert.Equal(0, s.UndoCount);
+
+        var none = new JsonObject { ["layers"] = new JsonArray(new JsonObject { ["id"] = 1, ["name"] = "P" }, new JsonObject { ["id"] = 2, ["name"] = "Q" }) };
+        string empty = WriteText("none.r15proj", none.ToJsonString());
+        Assert.True(Await(main.Files.OpenAsync(empty)));                    // clean since the last open: no prompt
+        Assert.Empty(s.Document.Layers);
+        Assert.Same(s.Document, main.Canvas.Document);                      // the canvas took the opened document
+        Assert.Equal("Opened none.r15proj. Couldn't load: P, Q.", main.Status.Message);
+        Assert.False(s.Undo());                                              // Undo straight after Open does nothing
+        Assert.Single(dialogs.SaveChanges);
+    });
+
+    [Fact]
+    public void The_unsaved_changes_guard_asks_only_when_dirty_and_cancel_or_a_cancelled_save_keeps_everything() => StaThread.Run(() =>
+    {
+        // shell-unsaved-work-loss, shell-no-unsaved-changes-guard (interfaces R2, R13; Este 2026-10-16)
+        using var art = Solid(30, 30, Slate);
+        var (s, main, files, dialogs, _) = Shell4a();
+        Assert.True(main.Files.ConfirmDiscardChanges());                    // nothing to lose: no prompt
+        Assert.Empty(dialogs.SaveChanges);
+
+        AddLayer(s, art, 50, 60, "art");
+        dialogs.Choices.Enqueue(SaveChoice.Cancel);
+        Assert.False(main.Files.ConfirmDiscardChanges());
+        dialogs.Choices.Enqueue(SaveChoice.Save);                           // Save on an untitled document is Save As...
+        Assert.False(main.Files.ConfirmDiscardChanges());                   // ...and a cancelled Save As cancels the action
+        Assert.Equal(new[] { "untitled.r15proj" }, files.SuggestedProjects);
+        dialogs.Choices.Enqueue(SaveChoice.DontSave);
+        Assert.True(main.Files.ConfirmDiscardChanges());
+        Assert.Equal(new[] { "Untitled", "Untitled", "Untitled" }, dialogs.SaveChanges);
+        Assert.True(s.IsDirty);                                             // Don't save leaves the document to the caller
+        Assert.Null(s.CurrentFile);
+
+        string path = Path.Combine(_dir, "guard.r15proj");
+        files.Saves.Enqueue(path);
+        dialogs.Choices.Enqueue(SaveChoice.Save);
+        Assert.True(main.Files.ConfirmDiscardChanges());
+        Assert.True(File.Exists(path));
+        Assert.False(s.IsDirty);
+        Assert.True(s.Undo());                                               // R2: past the save reads dirty...
+        Assert.True(s.IsDirty);
+        Assert.True(s.Redo());                                               // ...and back to it reads clean
+        Assert.False(s.IsDirty);
+        Assert.True(main.Files.ConfirmDiscardChanges());
+        Assert.Equal(4, dialogs.SaveChanges.Count);
+    });
+
+    [Fact]
+    public void The_built_in_packs_ship_byte_identical_list_sorted_and_add_by_click_and_right_click_in_one_step_each() => StaThread.Run(() =>
+    {
+        // pack-contents, packs-inventory-drips, packs-inventory-wordart, pack-builtin-load, packs-load-builtin,
+        // pack-load-sync-and-mime, asset-click-add, asset-rightclick-full (editor.js:2340-2378, :2491-2539)
+        string repo = RepoRoot.Find(AppContext.BaseDirectory);
+        var packs = new PackSource(PackSource.DefaultDirectory);
+        foreach (var (name, count) in new[] { (PackSource.Drips, 156), (PackSource.WordArt, 25) })
+        {
+            var shipped = packs.Files(name)!.OrderBy(Path.GetFileName, StringComparer.OrdinalIgnoreCase).ToList();
+            var source = Directory.GetFiles(Path.Combine(repo, "packs", name), "*.png").OrderBy(Path.GetFileName, StringComparer.OrdinalIgnoreCase).ToList();
+            Assert.Equal(count, shipped.Count);
+            Assert.Equal(source.Select(Path.GetFileName), shipped.Select(Path.GetFileName));
+            for (int i = 0; i < count; i++)
+                Assert.Equal(SHA256.HashData(File.ReadAllBytes(source[i])), SHA256.HashData(File.ReadAllBytes(shipped[i])));
+        }
+
+        var (s, main, _, _, _) = Shell4a();
+        main.Home.Tools.Set(Tool.Pen);
+        main.Assets.LoadDripsCommand.Execute(null);
+        Assert.Equal("156 images in built-in drips pack", main.Assets.CountText);   // editor.js:2373, no longer overwritten
+        var tiles = main.Assets.Rows.SelectMany(r => r.Tiles).ToList();
+        Assert.Equal(156, tiles.Count);
+        Assert.All(main.Assets.Rows.Take(main.Assets.Rows.Count - 1), r => Assert.Equal(3, r.Tiles.Count));   // editor.html:305
+        var names = tiles.Select(t => t.Entry.FileName).ToList();
+        Assert.Equal(names.Order(StringComparer.OrdinalIgnoreCase), names);
+        Assert.Equal("drip_blood_front_flipped.png", names[0]);
+
+        var front = tiles.Single(t => t.Entry.FileName == "drip_blue_front_v1.png");   // 128x150
+        Assert.Equal(("drip_blue_front_v1", "drip_blue_front_v1.png"), (front.Caption, front.ToolTip));
+        main.Assets.AddCommand.Execute(front);
+        var l = s.Document.Layers[^1];
+        double fit = Math.Min(128.0 / 128, 128.0 / 150) * 0.85;                       // 0.7253..., the front slot 231,74,128,128
+        Assert.Equal("drip_blue_front_v1", l.Name);
+        Assert.Equal(fit, l.Scale, 12);
+        Assert.Equal(231 + (128 - 128 * fit) / 2, l.X, 9);
+        Assert.Equal(74 + (128 - 150 * fit) / 2, l.Y, 9);
+        Assert.Equal((l.Id, 1, Tool.Select), (s.SelectedLayerId!.Value, s.UndoCount, main.Home.Tools.Current));   // editor.js:523
+
+        var wide = tiles.Single(t => t.Entry.FileName == "drip_blue_wide_v1.png");     // 390x200
+        main.Assets.AddFullCommand.Execute(wide);
+        var full = s.Document.Layers[^1];
+        Assert.Equal("drip_blue_wide_v1 (full)", full.Name);
+        Assert.Equal((0.0, 0.0), (full.X, full.Y));
+        Assert.Equal(Math.Max(585.0 / 390, 559.0 / 200), full.Scale, 12);              // 2.795, unclamped (R15)
+        Assert.Equal(2, s.UndoCount);
+        Assert.True(s.Undo());
+        Assert.DoesNotContain(s.Document.Layers, x => x.Id == full.Id);
+
+        main.Assets.LoadWordArtCommand.Execute(null);
+        Assert.Equal("25 images in built-in word_art pack", main.Assets.CountText);
+        var words = main.Assets.Rows.SelectMany(r => r.Tiles).ToList();
+        Assert.Equal(25, words.Count);
+        main.Assets.AddCommand.Execute(words[0]);
+        Assert.Equal(Path.GetFileNameWithoutExtension(words[0].Entry.FileName), s.Document.Layers[^1].Name);
+    });
+
+    [Fact]
+    public void A_folder_lists_the_import_formats_dedupes_by_name_keeping_the_deepest_and_shows_the_duplicates_count() => StaThread.Run(() =>
+    {
+        // asset-open-folder, asset-dedupe-by-name, asset-folder-grouping, asset-count-label, asset-count-label-overwritten,
+        // asset-thumb-uuid-label, io-folder-picker (editor.js:2380-2470, :2478-2486, :2544; interfaces R14)
+        const string uuid = "1a2b3c4d-1111-2222-3333-444444444444";
+        string root = Path.Combine(_dir, "art");
+        string Put(string rel, int w, int h, SKColor color)
+        {
+            string p = Path.Combine(root, rel);
+            Directory.CreateDirectory(Path.GetDirectoryName(p)!);
+            using var image = Solid(w, h, color);
+            File.WriteAllBytes(p, Png(image));
+            return p;
+        }
+        Put(@"a\x.png", 10, 10, Red);
+        Put(@"a\sub\x.png", 10, 10, Red);
+        Put(@"b\x.png", 10, 10, Red);
+        string deepest = Put(@"a\sub\deep\x.png", 12, 7, Blue);
+        Put("y.png", 10, 10, Slate);
+        Put($@"Cool\{uuid}.png", 9, 9, Blue);
+        File.WriteAllBytes(Path.Combine(root, "z.bmp"), TestFiles.Bmp2x1());
+        File.WriteAllText(Path.Combine(root, "notes.txt"), "not an image");
+        File.WriteAllText(Path.Combine(root, "logo.svg"), "<svg xmlns=\"http://www.w3.org/2000/svg\"/>");
+
+        var (s, main, files, dialogs, settings) = Shell4a();
+        files.Folders.Enqueue(root);
+        main.Assets.OpenFolderCommand.Execute(null);
+        Assert.Equal("4 unique images (3 duplicates removed)", main.Assets.CountText);   // editor.js:2448, shown (4.1 overwrote it)
+        Assert.Equal(new[] { "All (4)", "Root (2)", "Cool (1)", "deep (1)" }, main.Assets.GroupButtons.Select(g => g.Label));
+        var tiles = main.Assets.Rows.SelectMany(r => r.Tiles).ToList();
+        Assert.Equal(deepest, tiles.Single(t => t.Entry.FileName == "x.png").Entry.FullPath);
+        Assert.Contains(tiles, t => t.Entry.FileName == "z.bmp");                        // R14: the import formats, .bmp included
+        Assert.DoesNotContain(tiles, t => t.Entry.FileName is "notes.txt" or "logo.svg");
+        Assert.Equal(root, settings.Folders[SettingsFolder.Asset]);
+
+        main.Assets.ShowGroupCommand.Execute(main.Assets.GroupButtons.Single(g => g.Key == "Cool"));
+        Assert.Equal("1 images in Cool", main.Assets.CountText);                          // editor.js:2544
+        var tile = Assert.Single(main.Assets.Rows.SelectMany(r => r.Tiles));
+        Assert.Equal("Cool", tile.Caption);                                                // a UUID name shows its folder
+        main.Assets.AddCommand.Execute(tile);
+        Assert.Equal(uuid, s.Document.Layers[^1].Name);
+        main.Assets.ShowGroupCommand.Execute(main.Assets.GroupButtons[0]);
+        Assert.Equal("4 images in all folders", main.Assets.CountText);
+
+        string empty = Directory.CreateDirectory(Path.Combine(_dir, "empty")).FullName;
+        files.Folders.Enqueue(empty);
+        main.Assets.OpenFolderCommand.Execute(null);
+        Assert.Equal("No images found in that folder. Pick a folder with PNG, JPG, GIF, or WEBP files.", dialogs.Alerts[^1]);   // editor.js:2385
+    });
+
+    [Fact]
+    public void A_thumbnail_or_a_file_dropped_on_the_canvas_lands_centered_on_the_drop_point_at_every_zoom() => StaThread.Run(() =>
+    {
+        // asset-drag-to-canvas, drop-canvas (editor.js:961-986 the canvas drop; :500-526 addLayer's drop placement; interfaces R6)
+        var (s, main, _, _, _) = Shell4a();
+        main.Assets.LoadDripsCommand.Execute(null);
+        var front = main.Assets.Rows.SelectMany(r => r.Tiles).Single(t => t.Entry.FileName == "drip_blue_front_v1.png");
+        foreach (double zoom in new[] { 1.0, 2.0 })
+        {
+            main.Assets.DropOnCanvas(front, CanvasCoordinates.ToTemplate(new Point(300 * zoom, 200 * zoom), zoom));
+            var l = s.Document.Layers[^1];
+            Assert.Equal(300, l.X + 128 * l.Scale / 2, 9);
+            Assert.Equal(200, l.Y + 150 * l.Scale / 2, 9);
+        }
+        Assert.Equal(2, s.UndoCount);
+
+        string png = WritePng("dropped.png", 40, 20, Blue);
+        foreach (double zoom in new[] { 0.5, 1.0, 2.0 })
+            foreach (var (tx, ty) in new[] { (10.0, 10.0), (150.0, 300.0), (292.5, 279.5), (575.0, 549.0) })
+            {
+                main.Canvas.DropHandler!(new CanvasDrop([png], CanvasCoordinates.ToTemplate(new Point(tx * zoom, ty * zoom), zoom)));
+                var l = s.Document.Layers[^1];
+                Assert.Equal("dropped", l.Name);
+                Assert.Equal(tx, l.X + 40 * l.Scale / 2, 9);
+                Assert.Equal(ty, l.Y + 20 * l.Scale / 2, 9);
+            }
+        Assert.Equal(14, s.UndoCount);
+    });
+
+    [Fact]
+    public void Stored_values_out_of_range_open_raw_as_4_1_opens_them() => StaThread.Run(() =>
+    {
+        // project-load-layers note (interfaces R12; editor.js:2632-2660 copies each stored field as it is)
+        using var art = Solid(20, 10, Red);
+        var one = new Document { Layers = ImmutableList.Create(new Layer { Id = 4, Image = art, Name = "raw" }) };
+        var node = JsonNode.Parse(ProjectIO.Write(one, DateTimeOffset.UnixEpoch))!;
+        var layer = node["layers"]![0]!;
+        layer["rotation"] = 720;
+        layer["scale"] = 9;
+        layer["opacity"] = 2.5;
+        layer["brightness"] = 500;
+        layer["hueRotate"] = -90;
+        layer["x"] = 5000;
+        string path = WriteText("raw.r15proj", node.ToJsonString());
+        var (s, main, _, _, _) = Shell4a();
+        Assert.True(Await(main.Files.OpenAsync(path)));
+        var l = Assert.Single(s.Document.Layers);
+        Assert.Equal((720.0, 9.0, 2.5, 500.0, -90.0, 5000.0), (l.Rotation, l.Scale, l.Opacity, l.Brightness, l.HueRotate, l.X));
+        Assert.Equal(5, s.NextId);
+    });
+
     static (EditorSession Session, MainViewModel Main) Shell()
     {
         var s = new EditorSession();
@@ -1041,6 +1356,80 @@ public sealed class LedgerScenarioTests : IDisposable
         var reread = ProjectIO.Read(File.ReadAllText(first));
         Assert.Equal("art", Assert.Single(reread.Document.Layers).Name);   // first.r15proj kept the save, not the unsaved grid toggle
         Assert.False(reread.Document.ShowGrid);
+    }
+
+    /// <summary>The M4a scenarios' shell: the real composition with recording fakes for the dialogs and the settings file.</summary>
+    static (EditorSession Session, MainViewModel Main, ProjectDialogs Files, PromptDialogs Dialogs, MemorySettings Settings) Shell4a()
+    {
+        var s = new EditorSession();
+        var files = new ProjectDialogs();
+        var dialogs = new PromptDialogs();
+        var settings = new MemorySettings();
+        return (s, Composition.Build(s, files, dialogs, new Picker(), settings), files, dialogs, settings);
+    }
+
+    /// <summary>Pumps the STA dispatcher until <paramref name="task"/> completes: Open reads on the pool and resumes here.</summary>
+    static T Await<T>(Task<T> task)
+    {
+        var frame = new DispatcherFrame();
+        task.ContinueWith(_ => frame.Continue = false, TaskScheduler.Default);
+        Dispatcher.PushFrame(frame);
+        return task.GetAwaiter().GetResult();
+    }
+
+    /// <summary>File dialogs that answer from queues (an empty queue is a cancel) and record the Save dialog's suggestions.</summary>
+    sealed class ProjectDialogs : IFileDialogs
+    {
+        public Queue<string?> Saves { get; } = new();
+        public Queue<string?> Opens { get; } = new();
+        public Queue<string?> Folders { get; } = new();
+        public List<string> SuggestedProjects { get; } = [];
+
+        public IReadOnlyList<string> OpenImages() => [];
+
+        public string? SavePng(string suggestedFileName) => null;
+
+        public string? OpenProject(string? initialDirectory) => Opens.Count > 0 ? Opens.Dequeue() : null;
+
+        public string? SaveProject(string suggestedFileName, string? initialDirectory)
+        {
+            SuggestedProjects.Add(suggestedFileName);
+            return Saves.Count > 0 ? Saves.Dequeue() : null;
+        }
+
+        public string? PickFolder(string? initialDirectory) => Folders.Count > 0 ? Folders.Dequeue() : null;
+    }
+
+    /// <summary>Themed dialogs that record every message; the save prompt answers from a queue (empty: Cancel).</summary>
+    sealed class PromptDialogs : IDialogService
+    {
+        public Queue<SaveChoice> Choices { get; } = new();
+        public List<string> SaveChanges { get; } = [];
+        public List<string> Alerts { get; } = [];
+
+        public bool Confirm(string message) => true;
+
+        public void Alert(string message) => Alerts.Add(message);
+
+        public SaveChoice AskSaveChanges(string documentName)
+        {
+            SaveChanges.Add(documentName);
+            return Choices.Count > 0 ? Choices.Dequeue() : SaveChoice.Cancel;
+        }
+    }
+
+    /// <summary>An in-memory settings file that keeps the remembered folders.</summary>
+    sealed class MemorySettings : ISettingsStore
+    {
+        public Dictionary<SettingsFolder, string> Folders { get; } = [];
+
+        public WindowPlacement? LoadWindowPlacement() => null;
+
+        public void SaveWindowPlacement(WindowPlacement placement) { }
+
+        public string? LoadFolder(SettingsFolder which) => Folders.GetValueOrDefault(which);
+
+        public void SaveFolder(SettingsFolder which, string folder) => Folders[which] = folder;
     }
 
     sealed class Picker(params string?[] answers) : IColorPicker

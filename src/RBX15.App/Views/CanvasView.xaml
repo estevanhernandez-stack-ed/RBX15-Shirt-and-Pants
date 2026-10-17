@@ -57,7 +57,8 @@
                                                  Interaction="{Binding Interaction}"
                                                  Overlay="{Binding Overlay}"
                                                  CanvasCursor="{Binding Cursor}"
-                                                 AutomationValue="{Binding AutomationValue}" />
+                                                 AutomationValue="{Binding AutomationValue}"
+                                                 LayerAutomation="{Binding}" />
                 </Border>
             </Grid>
         </ScrollViewer>

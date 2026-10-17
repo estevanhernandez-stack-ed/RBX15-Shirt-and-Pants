@@ -97,6 +97,86 @@ public sealed class JsonSettingsStoreTests : IDisposable
         Assert.Null(store.LoadWindowPlacement());
     }
 
+    // ---- M4a: the last folders (spec §3 "Saving": last folder remembered) ----
+
+    [Fact] // each folder has its own root key, round-trips, and leaves the window and the other folder alone
+    public void Folders_round_trip_under_their_own_keys_beside_the_window()
+    {
+        var project = Directory.CreateDirectory(Path.Combine(_dir, "projects")).FullName;
+        var assets = Directory.CreateDirectory(Path.Combine(_dir, "assets")).FullName;
+        var store = new JsonSettingsStore(_dir);
+        Assert.Null(store.LoadFolder(SettingsFolder.Project));
+        store.SaveWindowPlacement(new WindowPlacement(5, 6, 700, 500, false));
+        store.SaveFolder(SettingsFolder.Project, project);
+        store.SaveFolder(SettingsFolder.Asset, assets);
+
+        var reread = new JsonSettingsStore(_dir);
+        Assert.Equal(project, reread.LoadFolder(SettingsFolder.Project));
+        Assert.Equal(assets, reread.LoadFolder(SettingsFolder.Asset));
+        Assert.Equal(new WindowPlacement(5, 6, 700, 500, false), reread.LoadWindowPlacement());
+        var root = JsonNode.Parse(File.ReadAllText(FilePath))!;
+        Assert.Equal(project, root["lastProjectFolder"]!.GetValue<string>());
+        Assert.Equal(assets, root["lastAssetFolder"]!.GetValue<string>());
+        Assert.False(File.Exists(FilePath + ".tmp"));
+    }
+
+    [Theory] // a folder that is gone, relative, or not a string reads as unset, so the dialog opens where Windows chooses
+    [InlineData("""{ "lastProjectFolder": "C:\\no\\such\\rbx15\\folder" }""")]
+    [InlineData("""{ "lastProjectFolder": "relative\\folder" }""")]
+    [InlineData("""{ "lastProjectFolder": 42 }""")]
+    [InlineData("""{ "lastProjectFolder": null }""")]
+    [InlineData("""{ "lastProjectFolder": "" }""")]
+    [InlineData("{ truncated")]
+    public void A_missing_or_bad_folder_loads_as_unset(string content)
+    {
+        Directory.CreateDirectory(_dir);
+        File.WriteAllText(FilePath, content);
+        Assert.Null(new JsonSettingsStore(_dir).LoadFolder(SettingsFolder.Project));
+    }
+
+    [Fact] // a relative or empty folder is never written
+    public void A_relative_or_empty_folder_is_not_saved()
+    {
+        var store = new JsonSettingsStore(_dir);
+        store.SaveFolder(SettingsFolder.Project, "");
+        store.SaveFolder(SettingsFolder.Project, "relative");
+        Assert.False(File.Exists(FilePath));
+    }
+
+    [Fact] // interfaces §2.5 (M3b carry-forward): a save after a read that failed on a locked file is skipped, never written over
+    public void A_save_after_a_failed_read_keeps_the_sibling_keys()
+    {
+        Directory.CreateDirectory(_dir);
+        string original = """{ "recent": ["a.r15proj"], "window": { "left": 1, "top": 2, "width": 300, "height": 400, "maximized": false } }""";
+        File.WriteAllText(FilePath, original);
+        var folder = Directory.CreateDirectory(Path.Combine(_dir, "p")).FullName;
+        var store = new JsonSettingsStore(_dir);
+        // Deny reading the file to the current user while leaving delete and replace allowed: the read fails with
+        // UnauthorizedAccessException, and the atomic move over the file would succeed if the store tried it.
+        var file = new FileInfo(FilePath);
+        var user = System.Security.Principal.WindowsIdentity.GetCurrent().User!;
+        var deny = new System.Security.AccessControl.FileSystemAccessRule(user, System.Security.AccessControl.FileSystemRights.ReadData,
+            System.Security.AccessControl.AccessControlType.Deny);
+        var acl = file.GetAccessControl();
+        acl.AddAccessRule(deny);
+        file.SetAccessControl(acl);
+        try
+        {
+            Assert.Throws<UnauthorizedAccessException>(() => File.ReadAllText(FilePath));
+            Assert.Null(store.LoadFolder(SettingsFolder.Project));
+            store.SaveFolder(SettingsFolder.Project, folder);
+            store.SaveWindowPlacement(new WindowPlacement(9, 9, 900, 900, true));
+        }
+        finally
+        {
+            acl = file.GetAccessControl();
+            acl.RemoveAccessRule(deny);
+            file.SetAccessControl(acl);
+        }
+        Assert.Equal(original, File.ReadAllText(FilePath));
+        Assert.False(File.Exists(FilePath + ".tmp"));
+    }
+
     [Fact] // a non-finite or non-positive placement is never written
     public void An_unusable_placement_is_not_saved()
     {

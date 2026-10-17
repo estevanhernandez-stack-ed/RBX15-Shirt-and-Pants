@@ -42,4 +42,20 @@ public class CanvasAutomationPeerTests
         session.Select(null);
         Assert.Equal("", value.Value);
     });
+
+    [Fact] // M4a: CanvasView binds the view model as the host's LayerAutomation, and the canvas is a single-select container
+    public void The_canvas_is_the_selection_container_of_its_layers() => StaThread.Run(() =>
+    {
+        var session = SessionWith(LayerOf(1));
+        var vm = new CanvasViewModel(session, new ToolsViewModel(), new BrushViewModel(new FakeColorPicker()), new FakeStatus());
+        var view = new CanvasView { DataContext = vm };
+        StaThread.Pump();
+        var host = (TemplateCanvasHost)view.FindName("Host");
+        Assert.Same(vm, host.LayerAutomation);
+        var selection = Assert.IsAssignableFrom<ISelectionProvider>(UIElementAutomationPeer.CreatePeerForElement(host).GetPattern(PatternInterface.Selection));
+        Assert.Equal((false, false), (selection.CanSelectMultiple, selection.IsSelectionRequired));
+        Assert.Empty(selection.GetSelection());
+        session.Select(1);
+        Assert.Single(selection.GetSelection());
+    });
 }

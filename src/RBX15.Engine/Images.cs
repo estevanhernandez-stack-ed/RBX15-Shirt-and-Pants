@@ -90,6 +90,44 @@ public static class Images
     }
 
     /// <summary>
+    /// An asset-browser thumbnail (spec §3 "Thumbnails decode lazily at thumbnail size"; ledger asset-grid-thumbnails and
+    /// asset-objecturl-lifecycle, fix: 4.1 decoded every file at full size through a blob: URL, editor.js:2475). The same
+    /// caps as <see cref="Decode"/>, in the same order: the payload length, then the codec header's dimensions, before
+    /// any pixel memory. JPEG and WebP decode straight at a reduced size where the codec supports it
+    /// (<see cref="SKCodec.GetScaledDimensions"/>); PNG, GIF and BMP decode full size. The EXIF orientation is applied,
+    /// then one Linear + mipmap draw scales the longer side down to <paramref name="maxSide"/> pixels; a smaller image
+    /// is never upscaled (an img with max-width/max-height 100% shows a small file at its own size, editor.js:2474).
+    /// Returns a premultiplied platform-native (kN32) image the caller owns. Throws <see cref="ImageTooLargeException"/>
+    /// and <see cref="InvalidDataException"/> exactly as <see cref="Decode"/>. Thread-safe: it touches no shared state.
+    /// </summary>
+    public static SKImage DecodeThumbnail(byte[] encoded, int maxSide)
+    {
+        ArgumentNullException.ThrowIfNull(encoded);
+        ArgumentOutOfRangeException.ThrowIfLessThan(maxSide, 1);
+        CheckEncodedSize(encoded.LongLength);
+        using var data = SKData.CreateCopy(encoded);
+        using var codec = SKCodec.Create(data) ?? throw new InvalidDataException("not a supported image");
+        CheckDimensions(codec.Info.Width, codec.Info.Height);
+        float want = Math.Min(1f, (float)maxSide / Math.Max(codec.Info.Width, codec.Info.Height));
+        var size = codec.GetScaledDimensions(want);
+        var info = new SKImageInfo(size.Width, size.Height, SKColorType.Rgba8888, SKAlphaType.Unpremul);
+        using var bmp = new SKBitmap(info);
+        var result = codec.GetPixels(info, bmp.GetPixels());
+        if (result != SKCodecResult.Success) throw new InvalidDataException($"image decode failed: {result}");
+        using var oriented = codec.EncodedOrigin == SKEncodedOrigin.TopLeft
+            ? SKImage.FromPixelCopy(bmp.PeekPixels())
+            : Orient(bmp, codec.EncodedOrigin);
+        double s = Math.Min(1.0, (double)maxSide / Math.Max(oriented.Width, oriented.Height));
+        int w = Math.Max(1, (int)Math.Round(oriented.Width * s)), h = Math.Max(1, (int)Math.Round(oriented.Height * s));
+        using var surface = SKSurface.Create(new SKImageInfo(w, h, SKImageInfo.PlatformColorType, SKAlphaType.Premul))
+            ?? throw new InvalidOperationException("cannot create thumbnail surface");
+        surface.Canvas.Clear(SKColors.Transparent);
+        using var paint = new SKPaint { BlendMode = SKBlendMode.Src };
+        surface.Canvas.DrawImage(oriented, SKRect.Create(w, h), new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear), paint);
+        return surface.Snapshot();
+    }
+
+    /// <summary>
     /// Applies an EXIF orientation as a pure pixel permutation, so the un-premultiplied values stay
     /// exact. Each case maps a displayed pixel (x, y) back to its stored pixel; 5 to 8 swap the sides.
     /// </summary>
@@ -186,6 +224,34 @@ public static class Images
     /// level n, so successive halvings reproduce its chain.
     /// </summary>
     static readonly SKSamplingOptions MipBuild = new(SKFilterMode.Linear, SKMipmapMode.Nearest);
+
+    /// <summary>
+    /// Frees a layer or background image the editor no longer references (M4a interfaces R11: the outgoing
+    /// document after Open). Disposes the image's RGB-shifted copies (<see cref="Adjust.ShiftRgb"/>) with their
+    /// own derived entries, its premultiplied drawing copy (<see cref="ForDrawing"/>) unless that copy is the
+    /// image itself, the decode-cache pre-scale keyed by either, and then the image. Idempotent; the caller
+    /// guarantees nothing draws the image afterwards. UI thread.
+    /// </summary>
+    public static void Release(SKImage image)
+    {
+        ArgumentNullException.ThrowIfNull(image);
+        foreach (var shifted in Adjust.TakeShifted(image)) Release(shifted);
+        if (Premultiplied.TryGetValue(image, out var premul))
+        {
+            Premultiplied.Remove(image);
+            ReleaseScaled(premul);
+            if (!ReferenceEquals(premul, image)) premul.Dispose();
+        }
+        ReleaseScaled(image);
+        image.Dispose();
+    }
+
+    static void ReleaseScaled(SKImage key)
+    {
+        if (!Scaled.TryGetValue(key, out var entry)) return;
+        Scaled.Remove(key);
+        if (!ReferenceEquals(entry.Result, key)) entry.Result.Dispose();
+    }
 
     static SKImage ScalePixels(SKImage source, int width, int height, SKSamplingOptions sampling)
     {

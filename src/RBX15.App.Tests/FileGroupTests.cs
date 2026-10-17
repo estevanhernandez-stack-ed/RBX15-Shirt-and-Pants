@@ -22,7 +22,7 @@ public class FileGroupTests
         var files = new FakeFileDialogs();
         var dialogs = new FakeDialogService();
         var status = new FakeStatus();
-        return new Rig(session, files, dialogs, status, new FileGroupViewModel(session, files, dialogs, status, new ImportService(session, status)));
+        return new Rig(session, files, dialogs, status, HomeTestKit.FileGroup(session, files, dialogs, status));
     }
 
     static SKImage Img()
@@ -135,6 +135,63 @@ public class FileGroupTests
         r.Files.SaveResult = Path.Combine(files.Dir, "a.png");
         r.Vm.DownloadTemplateCommand.Execute(null);
         Assert.Equal((0, false), (r.Session.UndoCount, r.Session.IsDirty));
+    }
+
+    // ---- M4a Task 1: Save work, Save As and Open ----
+
+    [Fact] // home-file-group: Save work runs Save As when untitled, then saves to the file; Save As always asks
+    public void Save_work_and_save_as_go_through_the_project_service()
+    {
+        using var files = new TestFiles();
+        var r = Make(new Document { BgImage = Img() });
+        r.Files.SaveProjectResult = Path.Combine(files.Dir, "w.r15proj");
+        r.Vm.SaveCommand.Execute(null);
+        Assert.Equal(r.Files.SaveProjectResult, r.Session.CurrentFile);
+        r.Vm.SaveCommand.Execute(null);
+        Assert.Single(r.Files.SaveProjectCalls);                     // the second Save work wrote to the current file
+        r.Vm.SaveAsCommand.Execute(null);
+        Assert.Equal(2, r.Files.SaveProjectCalls.Count);
+        Assert.Equal("Saved w.r15proj.", r.Status.Current);
+    }
+
+    [Fact] // home-file-group: Open runs the Open dialog, then opens the pick
+    public async Task Open_opens_the_picked_project()
+    {
+        using var files = new TestFiles();
+        var r = Make();
+        string path = files.Write("p.r15proj", System.Text.Encoding.UTF8.GetBytes("""{ "mode": "Pants" }"""));
+        r.Files.OpenProjectResult = path;
+        await r.Vm.OpenCommand.ExecuteAsync(null);
+        Assert.Equal(TemplateMode.Pants, r.Session.Document.Mode);
+        Assert.Equal(path, r.Session.CurrentFile);
+    }
+
+    [Fact] // R4: while an Open reads, Save work, Save As and Open cannot run, and each says so through CanExecuteChanged
+    public async Task The_file_commands_wait_while_an_open_reads()
+    {
+        var session = new EditorSession();
+        var files = new FakeFileDialogs();
+        var dialogs = new FakeDialogService();
+        var status = new FakeStatus();
+        var pending = new TaskCompletionSource<ProjectLoad>();
+        var service = new ProjectFileService(session, files, dialogs, status, new FakeSettingsStore(), read: (_, _) => pending.Task, release: _ => { });
+        var vm = new FileGroupViewModel(session, files, dialogs, status, new ImportService(session, status), service);
+        int changes = 0;
+        vm.SaveCommand.CanExecuteChanged += (_, _) => changes++;
+        vm.SaveAsCommand.CanExecuteChanged += (_, _) => changes++;
+        vm.OpenCommand.CanExecuteChanged += (_, _) => changes++;
+        Assert.True(vm.SaveCommand.CanExecute(null) && vm.SaveAsCommand.CanExecute(null) && vm.OpenCommand.CanExecute(null));
+
+        var open = service.OpenAsync("C:\\p\\slow.r15proj");
+        Assert.False(vm.SaveCommand.CanExecute(null));
+        Assert.False(vm.SaveAsCommand.CanExecute(null));
+        Assert.False(vm.OpenCommand.CanExecute(null));
+        Assert.Equal(3, changes);
+
+        pending.SetResult(new ProjectLoad(new Document(), 1, []));
+        Assert.True(await open);
+        Assert.True(vm.SaveCommand.CanExecute(null) && vm.SaveAsCommand.CanExecute(null) && vm.OpenCommand.CanExecute(null));
+        Assert.Equal(6, changes);
     }
 
     [Fact] // project-load-image-layer: Add image imports what the picker returns, one step

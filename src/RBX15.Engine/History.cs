@@ -63,6 +63,13 @@ public sealed class History
     public int RedoCount => _redo.Count;
 
     /// <summary>
+    /// Every recorded snapshot, the undo stack then the redo stack, each oldest first, as a copy. Opening a
+    /// project reads it before <see cref="Clear"/> so the session can release the images only history still
+    /// holds (M4a interfaces R11).
+    /// </summary>
+    public IEnumerable<EditorSnapshot> Snapshots => [.. _undo, .. _redo];
+
+    /// <summary>
     /// Records the state from BEFORE a change: pushes it onto undo, evicts the oldest past
     /// <see cref="Capacity"/>, and clears redo, because a new edit abandons the redo branch
     /// (lib/history.js:33-36).

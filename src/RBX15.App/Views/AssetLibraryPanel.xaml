@@ -1,0 +1,214 @@
+<UserControl x:Class="RBX15.App.Views.AssetLibraryPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:RBX15.App.ViewModels"
+             xmlns:conv="clr-namespace:RBX15.App.Converters"
+             xmlns:controls="clr-namespace:RBX15.App.Controls">
+    <!-- The asset library (editor.html:291-309; editor.js:2302-2545, :2713-2743; styles.css:324-332, :369-370, :407,
+         :649-673; ledger panel-asset-library, panel-asset-resize-handle). DataContext: AssetLibraryViewModel. Click a
+         thumbnail (or press Enter or Space on it) to add it at 85% in the front slot; right-click to add it at full
+         template size; drag it onto the canvas to add it at the drop point. The code-behind drives the drag and the
+         resize handle. The panel has no bottom margin: 4.1's .controls margin-bottom 8px collapses into the next
+         heading's 14px top margin. -->
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="Visible" />
+        <conv:EqualsMultiConverter x:Key="IsCurrent" />
+        <!-- .controls label (styles.css:324-332) with the inline font-size:10px;color:#888 (editor.html:293, :298):
+             mono 10px uppercase, margin 8px 0 3px. The 8px top collapses with the heading's 8px bottom. WPF has no
+             letter-spacing (.08em; the M3b PanelHeading observation). -->
+        <Style x:Key="AssetLabel" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{DynamicResource FontMono}" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="Foreground" Value="#888888" />
+            <Setter Property="Margin" Value="0,0,0,3" />
+        </Style>
+        <!-- A subfolder button: btn btn-sm btn-secondary, font-size:9px; padding:2px 6px (editor.js:2435-2436), gap 3px
+             (editor.html:304). The button on show is #2d4a2d on #7fff7f (editor.js:2464-2465). -->
+        <Style x:Key="GroupButton" TargetType="Button" BasedOn="{StaticResource SecondaryButtonSm}">
+            <Setter Property="FontSize" Value="9" />
+            <Setter Property="Padding" Value="6,2" />
+            <Setter Property="Margin" Value="0,0,3,3" />
+            <Style.Triggers>
+                <DataTrigger Value="True">
+                    <DataTrigger.Binding>
+                        <MultiBinding Converter="{StaticResource IsCurrent}">
+                            <Binding />
+                            <Binding Path="DataContext.CurrentGroup" RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                        </MultiBinding>
+                    </DataTrigger.Binding>
+                    <Setter Property="Background" Value="#2D4A2D" />
+                    <Setter Property="Foreground" Value="#7FFF7F" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <!-- The resize bar: 40x3, radius r-xs, border-2; the brand gradient on hover and while dragging (styles.css:661-673). -->
+        <Style x:Key="ResizeBar" TargetType="Rectangle">
+            <Setter Property="Fill" Value="{DynamicResource Border2Brush}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Border}}" Value="True">
+                    <Setter Property="Fill" Value="{DynamicResource BrandGradientBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsMouseCaptured, RelativeSource={RelativeSource AncestorType=Border}}" Value="True">
+                    <Setter Property="Fill" Value="{DynamicResource BrandGradientBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel>
+        <!-- The panel's first heading: .panel h3:first-child has no top margin (styles.css:263). -->
+        <TextBlock x:Name="AssetHeading" Text="Asset library" Style="{DynamicResource PanelHeading}" Margin="0,0,0,8" />
+
+        <TextBlock x:Name="PacksLabel" Style="{StaticResource AssetLabel}"
+                   Text="{Binding Source='Built-in packs', Converter={StaticResource UpperCase}, Mode=OneTime}" />
+        <!-- .row with gap:4px; .row > * { flex: 1 } (editor.html:294; styles.css:369-370): two equal halves. -->
+        <UniformGrid Columns="2">
+            <Button x:Name="DripsButton" Style="{StaticResource SecondaryButtonSm}" Margin="0,0,2,0" Content="Drips"
+                    Command="{Binding LoadDripsCommand}" ToolTip="Load the bundled blood / liquid drip pack." />
+            <Button x:Name="WordArtButton" Style="{StaticResource SecondaryButtonSm}" Margin="2,0,0,0" Content="Word art"
+                    Command="{Binding LoadWordArtCommand}" ToolTip="Load the bundled word art pack." />
+        </UniformGrid>
+
+        <!-- The inline margin-top:6px (editor.html:298). -->
+        <TextBlock x:Name="FolderLabel" Style="{StaticResource AssetLabel}" Margin="0,6,0,3"
+                   Text="{Binding Source='Load folder', Converter={StaticResource UpperCase}, Mode=OneTime}" />
+        <Button x:Name="OpenFolderButton" Style="{StaticResource SecondaryButtonSm}" Content="Open folder"
+                Command="{Binding OpenFolderCommand}" ToolTip="Pick a folder of PNGs to browse." />
+
+        <!-- #assetBrowser: max-height 180px, margin-top 6px, hidden until a load (editor.html:303). The subfolder
+             buttons sit above the scrolling grid; 4.1 scrolled them with it (provisional, M4b look sign-off). -->
+        <DockPanel x:Name="AssetBrowser" Margin="0,6,0,0" MaxHeight="{Binding BrowserHeight}"
+                   Visibility="{Binding IsBrowserVisible, Converter={StaticResource Visible}}">
+            <!-- #assetSubfolders: flex-wrap, gap 3px, margin-bottom 6px (editor.html:304): 3 from the buttons' own margin. -->
+            <ItemsControl x:Name="GroupButtonsPanel" DockPanel.Dock="Top" Margin="0,0,0,3" Focusable="False"
+                          ItemsSource="{Binding GroupButtons}">
+                <ItemsControl.Style>
+                    <Style TargetType="ItemsControl">
+                        <Style.Triggers>
+                            <Trigger Property="HasItems" Value="False">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </ItemsControl.Style>
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button x:Name="GroupButton" Style="{StaticResource GroupButton}" Content="{Binding Label}"
+                                ToolTip="{Binding Key}" AutomationProperties.Name="{Binding Label}"
+                                Command="{Binding DataContext.ShowGroupCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <!-- #assetGrid: 3 columns, gap 4px (editor.html:305), virtualized by rows (interfaces R5). -->
+            <ListBox x:Name="AssetGrid" ItemsSource="{Binding Rows}" Focusable="False"
+                     Background="Transparent" BorderThickness="0" Padding="0"
+                     VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                     VirtualizingPanel.ScrollUnit="Pixel"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                     KeyboardNavigation.TabNavigation="Continue"
+                     AutomationProperties.Name="Asset thumbnails">
+                <ListBox.Template>
+                    <ControlTemplate TargetType="ListBox">
+                        <ScrollViewer x:Name="AssetScroller" Style="{DynamicResource ThemedScrollViewer}" Focusable="False"
+                                      CanContentScroll="True"
+                                      HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                            <ItemsPresenter />
+                        </ScrollViewer>
+                    </ControlTemplate>
+                </ListBox.Template>
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Focusable" Value="False" />
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="Margin" Value="0,0,0,4" />
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <ContentPresenter />
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="{x:Type vm:AssetRowViewModel}">
+                        <!-- Three square cells, gap 4, flush ends: the row's height is known in its first measure. -->
+                        <ItemsControl ItemsSource="{Binding Tiles}" Focusable="False">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <controls:AssetRowPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:AssetTileViewModel}">
+                                    <!-- A thumb (editor.js:2470-2484): cursor pointer, 1px #333 border, radius 4, #111, square
+                                         (aspect-ratio 1), the image centered and never upscaled (max-width/max-height 100%),
+                                         title = file name, and a 7px #ccc caption on rgba(0,0,0,.7) at the bottom, one line
+                                         with an ellipsis. A Button, so Enter, Space and UI Automation Invoke add it too. -->
+                                    <Button x:Name="AssetTile" Cursor="Hand"
+                                            FocusVisualStyle="{DynamicResource FocusRing}"
+                                            ToolTip="{Binding ToolTip}" AutomationProperties.Name="{Binding Caption}"
+                                            Command="{Binding DataContext.AddCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            MouseRightButtonUp="OnTileRightButtonUp">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="#111111" BorderBrush="#333333" BorderThickness="1" CornerRadius="4">
+                                                    <Grid ClipToBounds="True">
+                                                        <Image x:Name="Thumb" Source="{Binding Thumbnail}" Stretch="Uniform" StretchDirection="DownOnly"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                               RenderOptions.BitmapScalingMode="HighQuality" />
+                                                        <Border VerticalAlignment="Bottom" Background="#B3000000" Padding="2,1" CornerRadius="0,0,3,3">
+                                                            <TextBlock x:Name="CaptionText" Text="{Binding Caption}" FontSize="7"
+                                                                       FontFamily="{DynamicResource FontBody}" Foreground="#CCCCCC"
+                                                                       TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                                                        </Border>
+                                                    </Grid>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </DockPanel>
+
+        <!-- #assetCount: 10px #555, margin-top 4px (editor.html:307). Collapsed while empty, as an empty div has no height. -->
+        <TextBlock x:Name="CountLabel" Text="{Binding CountText}" FontSize="10" Foreground="#555555" Margin="0,4,0,0"
+                   FontFamily="{DynamicResource FontBody}">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                    <Style.Triggers>
+                        <Trigger Property="Text" Value="">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+
+        <!-- .asset-resize-handle: full width, 8px, margin 2px 0, ns-resize, title "Drag to resize", shown even while the
+             browser is hidden (styles.css:649-660, editor.html:308; panel-asset-resize-handle, keep). -->
+        <Border x:Name="ResizeHandle" Height="8" Margin="0,2" Background="Transparent" Cursor="SizeNS"
+                ToolTip="Drag to resize" AutomationProperties.Name="Resize the asset browser"
+                MouseLeftButtonDown="OnHandleDown" MouseMove="OnHandleMove" MouseLeftButtonUp="OnHandleUp"
+                LostMouseCapture="OnHandleCaptureLost">
+            <Rectangle x:Name="ResizeBar" Width="40" Height="3" RadiusX="1.5" RadiusY="1.5" Style="{StaticResource ResizeBar}" />
+        </Border>
+    </StackPanel>
+</UserControl>

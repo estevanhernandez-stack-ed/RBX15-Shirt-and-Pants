@@ -12,7 +12,7 @@
         xmlns:vm="clr-namespace:RBX15.App.ViewModels"
         xmlns:app="clr-namespace:RBX15.App"
         x:Name="Root"
-        Title="{x:Static app:AppInfo.ProductName}"
+        Title="{Binding Title}"
         Width="{x:Static app:ShellLayout.DefaultWidth}" Height="{x:Static app:ShellLayout.DefaultHeight}"
         MinWidth="{x:Static app:ShellLayout.MinWidth}" MinHeight="{x:Static app:ShellLayout.MinHeight}"
         Background="{StaticResource Bg0Brush}"
@@ -25,9 +25,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d">
 
-  <!-- Ctrl+Z, M3b's one shortcut, is added in MainWindow.xaml.cs behind TextFieldShortcutCommand. -->
+  <!-- Ctrl+Z, Ctrl+S, Ctrl+Shift+S and Ctrl+O are added in MainWindow.xaml.cs (AddShortcut) behind TextFieldShortcutCommand.
+       The title is MainViewModel.Title (M4a R3). While an Open reads its file the whole client takes no input (R4). -->
 
-  <Grid x:Name="Viewport">
+  <Grid x:Name="Viewport" IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
@@ -115,6 +116,7 @@
         </Border.Background>
         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
           <StackPanel x:Name="LeftPanelContent" Margin="14">
+            <views:AssetLibraryPanel DataContext="{Binding Assets}" />
             <views:DropZone DataContext="{Binding Layers}" />
             <views:LayersPanel DataContext="{Binding Layers}" />
             <views:LayerPropertiesPanel DataContext="{Binding LayerProperties}" />

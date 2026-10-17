@@ -114,7 +114,7 @@ public class ShellLookTests
         Assert.Equal(int.MaxValue, ToolTipService.GetShowDuration(button));
         var session = new EditorSession();
         var status = new FakeStatus();
-        var file = new FileGroup { DataContext = new FileGroupViewModel(session, new FakeFileDialogs(), new FakeDialogService(), status, new ImportService(session, status)) };
+        var file = new FileGroup { DataContext = HomeTestKit.FileGroup(session, new FakeFileDialogs(), new FakeDialogService(), status) };
         StaThread.Pump();
         file.Measure(new Size(400, 200));
         file.Arrange(new Rect(0, 0, 400, 200));

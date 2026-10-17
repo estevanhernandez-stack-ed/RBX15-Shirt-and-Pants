@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using RBX15.App.Controls;
 using RBX15.App.ViewModels;
 
 namespace RBX15.App.Views;
@@ -40,7 +41,7 @@ public partial class LayersPanel : UserControl
     protected override void OnPreviewMouseMove(MouseEventArgs e)
     {
         base.OnPreviewMouseMove(e);
-        HandleMove(e.GetPosition(this), e.LeftButton == MouseButtonState.Pressed);
+        HandleMove(e.GetPosition(this), PointerState.LeftButton(e) == MouseButtonState.Pressed);
         if (_dragging) e.Handled = true;
     }
 
@@ -63,7 +64,7 @@ public partial class LayersPanel : UserControl
     {
         base.OnPreviewKeyDown(e);
         var key = e.Key == Key.System ? e.SystemKey : e.Key;
-        if (HandleKey(key, Keyboard.Modifiers, RowFrom(e.OriginalSource as DependencyObject, stopAtButtons: false))) e.Handled = true;
+        if (HandleKey(key, e.KeyboardDevice.Modifiers, RowFrom(e.OriginalSource as DependencyObject, stopAtButtons: false))) e.Handled = true;
     }
 
     /// <summary>A left press. On a row's body it arms a drag; anywhere else it disarms. A drag still running (its release was missed) is cancelled.</summary>

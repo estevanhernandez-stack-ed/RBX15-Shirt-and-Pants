@@ -7,19 +7,32 @@ namespace RBX15.App.Services;
 /// <summary>
 /// <c>settings.json</c> in one directory (the app passes <c>%LOCALAPPDATA%\RBX15</c>, which MSIX
 /// redirects into the package's local data, removed on uninstall). The file holds one object:
-/// <c>{ "window": { "left", "top", "width", "height", "maximized" } }</c>. Later milestones add
-/// sibling keys, so a save rewrites only <c>window</c> and keeps every other key it read.
+/// <c>{ "window": { "left", "top", "width", "height", "maximized" }, "lastProjectFolder": "...", "lastAssetFolder": "..." }</c>.
+/// Each save rewrites only its own key and keeps every other key it read.
 /// <para>
 /// Writes are atomic: the whole file goes to <c>settings.json.tmp</c>, then
 /// <see cref="File.Move(string, string, bool)"/> replaces <c>settings.json</c>, so a crash mid-write
 /// leaves the previous file intact. Reads never throw: a missing, unreadable, malformed or
 /// out-of-range file gives null and the window opens at its default.
 /// </para>
+/// <para>
+/// A save after a read that failed on an existing file (an <see cref="IOException"/> such as a sharing violation, or
+/// <see cref="UnauthorizedAccessException"/>) is skipped, so a transient lock never makes a save drop the sibling keys
+/// it could not read (M4a interfaces §2.5, the M3b carry-forward). A malformed file is still replaced.
+/// </para>
 /// </summary>
 public sealed class JsonSettingsStore(string directory) : ISettingsStore
 {
     public const string FileName = "settings.json";
     const string WindowKey = "window";
+
+    /// <summary>The root key of each remembered folder.</summary>
+    internal static string FolderKey(SettingsFolder which) => which switch
+    {
+        SettingsFolder.Project => "lastProjectFolder",
+        SettingsFolder.Asset => "lastAssetFolder",
+        _ => throw new ArgumentOutOfRangeException(nameof(which), which, null),
+    };
 
     public string FilePath { get; } = Path.Combine(directory, FileName);
 
@@ -39,15 +52,48 @@ public sealed class JsonSettingsStore(string directory) : ISettingsStore
     {
         ArgumentNullException.ThrowIfNull(placement);
         if (!IsUsable(placement)) return;
-        var root = ReadRoot() ?? new JsonObject();
-        root[WindowKey] = new JsonObject
+        Update(WindowKey, new JsonObject
         {
             ["left"] = placement.Left,
             ["top"] = placement.Top,
             ["width"] = placement.Width,
             ["height"] = placement.Height,
             ["maximized"] = placement.Maximized,
-        };
+        });
+    }
+
+    public string? LoadFolder(SettingsFolder which)
+    {
+        string key = FolderKey(which);
+        if (ReadRoot()?[key] is not JsonValue v || !v.TryGetValue(out string? folder)) return null;
+        try
+        {
+            return Path.IsPathFullyQualified(folder) && Directory.Exists(folder) ? folder : null;
+        }
+        catch (Exception e) when (e is ArgumentException or IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
+    public void SaveFolder(SettingsFolder which, string folder)
+    {
+        string key = FolderKey(which);
+        if (string.IsNullOrEmpty(folder) || !Path.IsPathFullyQualified(folder)) return;
+        Update(key, JsonValue.Create(folder));
+    }
+
+    /// <summary>Finite coordinates and a positive finite size; anything else is a corrupt file.</summary>
+    static bool IsUsable(WindowPlacement p) =>
+        double.IsFinite(p.Left) && double.IsFinite(p.Top) &&
+        double.IsFinite(p.Width) && double.IsFinite(p.Height) && p.Width > 0 && p.Height > 0;
+
+    /// <summary>Rewrites <paramref name="key"/> and keeps every other key; skipped when the existing file could not be read.</summary>
+    void Update(string key, JsonNode value)
+    {
+        if (!TryReadRoot(out var root)) return;
+        root ??= new JsonObject();
+        root[key] = value;
         var temp = FilePath + ".tmp";
         try
         {
@@ -57,25 +103,33 @@ public sealed class JsonSettingsStore(string directory) : ISettingsStore
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
-            // Best effort: losing the window position must never block closing the app.
+            // Best effort: losing a remembered setting must never block closing the app or a save.
             try { File.Delete(temp); } catch (Exception d) when (d is IOException or UnauthorizedAccessException) { }
         }
     }
 
-    /// <summary>Finite coordinates and a positive finite size; anything else is a corrupt file.</summary>
-    static bool IsUsable(WindowPlacement p) =>
-        double.IsFinite(p.Left) && double.IsFinite(p.Top) &&
-        double.IsFinite(p.Width) && double.IsFinite(p.Height) && p.Width > 0 && p.Height > 0;
+    JsonObject? ReadRoot() => TryReadRoot(out var root) ? root : null;
 
-    JsonObject? ReadRoot()
+    /// <summary>
+    /// False only when an existing file could not be read (IO or access). A missing file reads as true and null; a
+    /// malformed or non-object file as true and null, so the next save replaces it.
+    /// </summary>
+    bool TryReadRoot(out JsonObject? root)
     {
+        root = null;
         try
         {
-            return File.Exists(FilePath) ? JsonNode.Parse(File.ReadAllText(FilePath)) as JsonObject : null;
+            if (!File.Exists(FilePath)) return true;
+            root = JsonNode.Parse(File.ReadAllText(FilePath)) as JsonObject;
+            return true;
         }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException)
+        catch (JsonException)
         {
-            return null;
+            return true;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return false;
         }
     }
 }

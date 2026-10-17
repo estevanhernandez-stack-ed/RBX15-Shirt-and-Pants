@@ -25,6 +25,17 @@
     <InternalsVisibleTo Include="RBX15.App.Tests" />
   </ItemGroup>
 
+  <!-- M4a test input bridge (interfaces R9). Testing/** compiles into the app only with
+       -p:EnableTestInputBridge=true, which also defines TEST_INPUT_BRIDGE for the two App.xaml.cs hook sites.
+       Release, Store and portable builds never set it; BridgeExclusionTests proves a plain Release build carries
+       no bridge type. Publishing with it set is refused outright. -->
+  <PropertyGroup Condition="'$(EnableTestInputBridge)' == 'true'">
+    <DefineConstants>$(DefineConstants);TEST_INPUT_BRIDGE</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(EnableTestInputBridge)' != 'true'">
+    <Compile Remove="Testing\**" />
+  </ItemGroup>
+
   <!-- The built-in packs (ledger packs-inventory-drips, packs-inventory-wordart, pack-contents, packs-resolve-dir): the
        repo's packs/**/*.png, byte for byte, at packs/<name>/<file> in every output that references the App, as 4.1's
        extraResources filter **/*.png shipped them (package.json:31-38); README.md stays out. PackSource reads them. -->

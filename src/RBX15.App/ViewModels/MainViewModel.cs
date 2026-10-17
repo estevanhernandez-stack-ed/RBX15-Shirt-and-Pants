@@ -1,17 +1,49 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using RBX15.App.Services;
 
 namespace RBX15.App.ViewModels;
 
 /// <summary>
-/// The window's view-model: the shell text and, from later tasks, one sub-view-model per region
-/// (Canvas in Task 2, Home in Task 3, Layers and Status in Task 4).
+/// The window's view-model: the shell text and one sub-view-model per region (Canvas, Home, Layers, Status,
+/// LayerProperties), plus the project files (M4a Task 1).
 /// </summary>
-public sealed partial class MainViewModel(EditorSession session) : ObservableObject
+public sealed partial class MainViewModel : ObservableObject
 {
-    public EditorSession Session { get; } = session ?? throw new ArgumentNullException(nameof(session));
+    readonly ProjectFileService _files = null!;
+    string _title;
 
-    /// <summary>The window title (main.js:8, editor.html:6; ledger shell-window-title, keep).</summary>
-    public string Title => AppInfo.ProductName;
+    public MainViewModel(EditorSession session)
+    {
+        Session = session ?? throw new ArgumentNullException(nameof(session));
+        _title = WindowTitle(session.CurrentFile, session.IsDirty);
+        session.Changed += (_, e) =>
+        {
+            if ((e.What & (SessionChange.Document | SessionChange.File)) == 0) return;
+            string next = WindowTitle(Session.CurrentFile, Session.IsDirty);
+            if (next == _title) return;
+            _title = next;
+            OnPropertyChanged(nameof(Title));
+        };
+    }
+
+    public EditorSession Session { get; }
+
+    /// <summary>
+    /// The window title (interfaces R3): 4.1's product name while the document is untitled and clean (main.js:8,
+    /// editor.html:6; ledger shell-window-title, keep), otherwise the Windows convention
+    /// "[*]&lt;name&gt; - RBX15 Classic Shirt and Pants Maker". Raised only when the text changes.
+    /// </summary>
+    public string Title => _title;
+
+    /// <summary>
+    /// R3's formula. <paramref name="currentFile"/> null and clean is the bare product name; otherwise the file name
+    /// (or "Untitled"), prefixed with "*" when <paramref name="dirty"/>, then " - " and the product name. "*" rather than
+    /// "•": Narrator reads it as "star", it is the classic Win32 marker, and it survives every font.
+    /// </summary>
+    public static string WindowTitle(string? currentFile, bool dirty) =>
+        currentFile is null && !dirty
+            ? AppInfo.ProductName
+            : (dirty ? "*" : "") + ProjectFileService.DocumentName(currentFile) + " - " + AppInfo.ProductName;
 
     /// <summary>The header h1, verbatim (editor.html:16, <c>&amp;amp;</c> decoded; ledger shell-header).</summary>
     public string HeaderTitle => "RBX15 Classic Shirt & Pants Maker";
@@ -35,6 +67,9 @@ public sealed partial class MainViewModel(EditorSession session) : ObservableObj
         return parts.Length >= 2 ? parts[0] + "." + parts[1] : version;
     }
 
+    /// <summary>True while an Open reads its file (R4); forwards <see cref="ProjectFileService.IsBusy"/>.</summary>
+    public bool IsBusy => _files.IsBusy;
+
     /// <summary>The canvas area (Task 2). Required, so the composition root cannot forget it.</summary>
     public required CanvasViewModel Canvas { get; init; }
 
@@ -49,4 +84,18 @@ public sealed partial class MainViewModel(EditorSession session) : ObservableObj
 
     /// <summary>The left panel's "Selected layer" section (M3b Task 3; editor.html:320-323).</summary>
     public required LayerPropertiesViewModel LayerProperties { get; init; }
+
+    /// <summary>Save, Save As, Open and the unsaved-changes guard (M4a Task 1). The window's close runs the guard.</summary>
+    public required ProjectFileService Files
+    {
+        get => _files;
+        init
+        {
+            _files = value ?? throw new ArgumentNullException(nameof(value));
+            value.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(ProjectFileService.IsBusy)) OnPropertyChanged(nameof(IsBusy));
+            };
+        }
+    }
 }

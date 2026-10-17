@@ -195,4 +195,27 @@ public class LayerOpsTests
         Assert.Equal(1, LayerOps.HitTest(d, 50, 55));
         Assert.Null(LayerOps.HitTest(d, 5, 10));
     }
+
+    [Theory] // asset-rightclick-full (keep): max(585/w, 559/h), 4.1's doubles as node printed them (editor.js:2525); unclamped (R15)
+    [InlineData(390, 200, 2.795)]
+    [InlineData(128, 150, 4.5703125)]
+    [InlineData(64, 130, 9.140625)]
+    [InlineData(684, 133, 4.203007518796992)]
+    [InlineData(1, 1, 585)]
+    public void Add_full_covers_the_template_from_the_top_left(int w, int h, double scale)
+    {
+        var start = new EditorSnapshot(Doc(L(1)), 1);
+        var s = LayerOps.AddFull(start, Img(w, h), 2, "drip");
+        var l = s.Document.Layers[^1];
+        Assert.Equal((2, "drip (full)", 0.0, 0.0, scale), (l.Id, l.Name, l.X, l.Y, l.Scale));
+        Assert.Equal((true, 1.0, 0.0, false, false), (l.Visible, l.Opacity, l.Rotation, l.FlipH, l.FlipV));
+        Assert.Equal((100.0, 100.0, 100.0, 0.0, 0, 0, 0), (l.Brightness, l.Contrast, l.Saturate, l.HueRotate, l.RShift, l.GShift, l.BShift));
+        Assert.Equal(2, s.SelectedLayerId);                  // pushed on top and selected (editor.js:2530-2531)
+        Assert.Equal([1, 2], Ids(s.Document));
+        Assert.Throws<ArgumentException>(() => LayerOps.AddFull(s, Img(w, h), 2, "again"));   // ids are never reused
+    }
+
+    [Fact] // displayName + ' (full)' with an empty name is " (full)", as 4.1's concatenation
+    public void Add_full_keeps_an_empty_base_name() =>
+        Assert.Equal(" (full)", LayerOps.AddFull(new EditorSnapshot(Doc(), null), Img(4, 4), 1, "").Document.Layers[0].Name);
 }

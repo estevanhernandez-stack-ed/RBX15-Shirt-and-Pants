@@ -220,4 +220,41 @@ public class ImagesCapsTests
         Assert.Same(bPremul, Images.ForDrawing(b));
         Assert.NotEqual(IntPtr.Zero, bPremul.Handle);
     }
+
+    // ---- DecodeThumbnail (M4a Task 2; ledger asset-grid-thumbnails, asset-objecturl-lifecycle) ----
+
+    static byte[] Encoded(int w, int h, SKEncodedImageFormat format)
+    {
+        using var img = Px.Solid(w, h, new SKColor(200, 30, 60));
+        using var data = img.Encode(format, 100);
+        return data.ToArray();
+    }
+
+    [Theory] // the longer side lands on maxSide; a smaller image is never upscaled; JPEG and WebP take the codec's scaled decode
+    [InlineData(400, 100, "png", 160, 40)]
+    [InlineData(100, 400, "png", 40, 160)]
+    [InlineData(1600, 1200, "jpeg", 160, 120)]
+    [InlineData(1000, 500, "webp", 160, 80)]
+    [InlineData(50, 30, "png", 50, 30)]
+    [InlineData(160, 160, "png", 160, 160)]
+    public void A_thumbnail_fits_the_longer_side_and_never_upscales(int w, int h, string format, int tw, int th)
+    {
+        var f = format switch { "jpeg" => SKEncodedImageFormat.Jpeg, "webp" => SKEncodedImageFormat.Webp, _ => SKEncodedImageFormat.Png };
+        using var thumb = Images.DecodeThumbnail(Encoded(w, h, f), 160);
+        Assert.Equal((tw, th), (thumb.Width, thumb.Height));
+        Assert.Equal((SKImageInfo.PlatformColorType, SKAlphaType.Premul), (thumb.ColorType, thumb.AlphaType));
+        Px.Near(new SKColor(200, 30, 60), Px.At(thumb, tw / 2, th / 2), 3);
+    }
+
+    [Fact] // the same caps as Decode, from the header, before any pixel memory
+    public void A_thumbnail_is_capped_exactly_as_decode()
+    {
+        var side = Assert.Throws<ImageTooLargeException>(() => Images.DecodeThumbnail(PngHeader(20000, 20000), 160));
+        Assert.Equal("The image is 20000 x 20000 pixels; the limit is 16384 pixels on a side.", side.Message);
+        var pixels = Assert.Throws<ImageTooLargeException>(() => Images.DecodeThumbnail(JpegHeader(8000, 8000), 160));
+        Assert.Equal("The image is 8000 x 8000 pixels (64 megapixels); the limit is 50 megapixels.", pixels.Message);
+        Assert.Throws<ImageTooLargeException>(() => Images.DecodeThumbnail(new byte[Images.MaxEncodedBytes + 1], 160));
+        Assert.Throws<InvalidDataException>(() => Images.DecodeThumbnail([1, 2, 3, 4], 160));
+        Assert.Throws<ArgumentOutOfRangeException>(() => Images.DecodeThumbnail(Encoded(2, 2, SKEncodedImageFormat.Png), 0));
+    }
 }

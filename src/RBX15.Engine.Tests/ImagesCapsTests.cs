@@ -175,4 +175,49 @@ public class ImagesCapsTests
         Assert.Equal(new[] { "Fine" }, load.Document.Layers.Select(l => l.Name));
         Assert.Equal(new[] { "Too wide" }, load.DroppedLayers);
     }
+
+    // ---- Release (M4a interfaces R11: the outgoing document's images after Open) ----
+
+    [Fact] // the image, its premultiplied drawing copy, its decode-cache pre-scale and its RGB shifts are all freed
+    public void Release_frees_the_image_and_every_derived_cache_entry()
+    {
+        var image = Images.Decode(RealPng(64, 64));                 // un-premultiplied RGBA, so ForDrawing makes a copy
+        var premul = Images.ForDrawing(image);
+        Assert.NotSame(image, premul);
+        var scaled = Images.DecodeCacheScaled(premul, 16, 16);
+        var shifted = Adjust.ShiftRgb(image, 10, 0, 0);
+        var shiftedPremul = Images.ForDrawing(shifted);
+
+        Images.Release(image);
+
+        Assert.All(new[] { image, premul, scaled, shifted, shiftedPremul }, i => Assert.Equal(IntPtr.Zero, i.Handle));
+    }
+
+    [Fact] // an image that is already premultiplied kN32 is its own drawing copy: it is disposed once, and a second Release is a no-op
+    public void Release_is_idempotent_and_safe_when_the_image_is_its_own_drawing_copy()
+    {
+        SKImage image;
+        using (var surface = SKSurface.Create(new SKImageInfo(8, 8, SKImageInfo.PlatformColorType, SKAlphaType.Premul)))
+        {
+            surface.Canvas.Clear(SKColors.Red);
+            image = surface.Snapshot();
+        }
+        Assert.Same(image, Images.ForDrawing(image));
+        Images.Release(image);
+        Images.Release(image);
+        Assert.Equal(IntPtr.Zero, image.Handle);
+        Assert.Throws<ArgumentNullException>(() => Images.Release(null!));
+    }
+
+    [Fact] // releasing one image leaves another image's cache entries alone, and a new image of the same pixels draws
+    public void Release_leaves_other_images_alone()
+    {
+        var a = Images.Decode(RealPng(8, 8));
+        var b = Images.Decode(RealPng(8, 8));
+        var bPremul = Images.ForDrawing(b);
+        Images.Release(a);
+        Assert.NotEqual(IntPtr.Zero, b.Handle);
+        Assert.Same(bPremul, Images.ForDrawing(b));
+        Assert.NotEqual(IntPtr.Zero, bPremul.Handle);
+    }
 }

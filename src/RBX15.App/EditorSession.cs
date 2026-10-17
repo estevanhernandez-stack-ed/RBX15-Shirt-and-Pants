@@ -1,4 +1,5 @@
 using RBX15.Engine;
+using SkiaSharp;
 
 namespace RBX15.App;
 
@@ -11,6 +12,15 @@ public enum SessionChange
     Selection = 2,
     History = 4,
     Title = 8,
+
+    /// <summary>
+    /// <see cref="EditorSession.CurrentFile"/> or the saved-state marker changed, so
+    /// <see cref="EditorSession.IsDirty"/> may flip without a Document change (M4a).
+    /// </summary>
+    File = 16,
+
+    /// <summary><see cref="EditorSession.Open"/> swapped the whole document; always raised with Document | Selection | History | File.</summary>
+    Replaced = 32,
 }
 
 public sealed class SessionChangedEventArgs(SessionChange what) : EventArgs
@@ -36,12 +46,21 @@ public sealed class SessionChangedEventArgs(SessionChange what) : EventArgs
 /// fix; 4.1 deselected on every restore, editor.js:1451). <see cref="History"/> resolves it and the
 /// session adopts it. Not thread-safe; use it from the UI thread.
 /// </para>
+/// <para>
+/// <b>Unsaved changes</b> (M4a interfaces R2; Este's ruling 2026-10-16; 4.1 had no dirty tracking at all,
+/// ledger shell-no-unsaved-changes-guard): the session keeps the document last saved or opened (the starting
+/// document before either) and <see cref="IsDirty"/> compares the live document's content with it. Documents are
+/// immutable and Undo restores the recorded instance, so undoing back to the save reads clean, and an edit made by
+/// hand back to the saved values reads clean too.
+/// </para>
 /// </summary>
 public sealed class EditorSession
 {
     readonly History _history;
     int _gestureDepth;
     EditorSnapshot? _gestureStart;
+    int _generation;      // bumped by Open, which abandons open gestures: a stale scope's Dispose then does nothing
+    Document _saved;      // the saved-state marker (R2)
     string _templateTitle = "";
 
     /// <param name="document">The starting document; null gives 4.1's startup state (editor.js:76-107, the <see cref="Engine.Document"/> defaults).</param>
@@ -50,6 +69,7 @@ public sealed class EditorSession
     {
         _history = new History(historyCapacity);
         Document = document ?? new Document();
+        _saved = Document;
         NextId = MaxLayerId(Document) + 1;
     }
 
@@ -62,15 +82,20 @@ public sealed class EditorSession
 
     /// <summary>
     /// The next layer id. Starts at 1 (editor.js:499) and only grows: undo and redo never lower it, and
-    /// adopting a document whose ids reach it raises it past them (editor.js:1465).
+    /// adopting a document whose ids reach it raises it past them (editor.js:1465). <see cref="Open"/> sets it
+    /// from the loaded file (editor.js:2663), with history cleared.
     /// </summary>
     public int NextId { get; private set; }
 
-    /// <summary>The open project file. Always null in M3a; M4's Save and Open set it.</summary>
+    /// <summary>The open project file: null until a Save or an Open. Set only by <see cref="Open"/> and <see cref="MarkSaved"/>.</summary>
     public string? CurrentFile { get; private set; }
 
-    /// <summary>True after any recorded step, undo or redo. M4's save clears it.</summary>
-    public bool IsDirty { get; private set; }
+    /// <summary>
+    /// True when the document's content differs from the last save or open (R2): one
+    /// <see cref="Engine.Document.ContentEquals"/> against the saved marker, O(layers + fills). Inside an open
+    /// gesture it reflects the live content.
+    /// </summary>
+    public bool IsDirty => !_saved.ContentEquals(Document);
 
     /// <summary>
     /// The export title box (editor.html:100, <c>#exportTitle</c>). It is not part of the document, so it
@@ -104,8 +129,9 @@ public sealed class EditorSession
 
     /// <summary>
     /// Raised first by every change entry point (<see cref="Apply"/>, <see cref="ApplyWithSelection"/>,
-    /// <see cref="BeginGesture"/>, <see cref="Undo"/>, <see cref="Redo"/>), before it changes anything. The canvas
-    /// closes an open wheel burst on it, so an unrelated edit is never folded into the burst's step (M3b R7).
+    /// <see cref="BeginGesture"/>, <see cref="Undo"/>, <see cref="Redo"/>, <see cref="Open"/>,
+    /// <see cref="CommitPendingEdits"/>), before it changes anything. The canvas closes an open wheel burst on it,
+    /// so an unrelated edit is never folded into the burst's step (M3b R7).
     /// </summary>
     public event EventHandler? Changing;
 
@@ -162,17 +188,85 @@ public sealed class EditorSession
     }
 
     /// <summary>
+    /// Raises <see cref="Changing"/> and nothing else, so the canvas closes an open wheel burst or select drag
+    /// before a save reads the document (M3b carry-forward). Save calls it before it takes its snapshot.
+    /// </summary>
+    public void CommitPendingEdits() => RaiseChanging();
+
+    /// <summary>
+    /// Records a successful write of <paramref name="saved"/> to <paramref name="path"/>: the current file and the
+    /// saved marker, so <see cref="IsDirty"/> reads false while the document's content equals it. Raises File.
+    /// </summary>
+    public void MarkSaved(string path, Document saved)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(path);
+        ArgumentNullException.ThrowIfNull(saved);
+        CurrentFile = path;
+        _saved = saved;
+        Raise(SessionChange.File);
+    }
+
+    /// <summary>
+    /// The Open entry point (planning contract: the swap goes through an entry point that raises Changing).
+    /// <list type="number">
+    /// <item>Raises <see cref="Changing"/>, so the canvas closes a wheel burst and a select drag first.</item>
+    /// <item>Abandons any still-open gesture: depth 0, no start, and a new generation, so a stale scope's Dispose
+    ///   is a no-op.</item>
+    /// <item>Collects the images held by the outgoing document, the saved marker, every history snapshot and an
+    ///   open gesture's start (R11).</item>
+    /// <item>Adopts the loaded document with no selection (planning contract) and the load's
+    ///   <see cref="ProjectLoad.NextId"/> (editor.js:2663), clears history (spec §3; ledger
+    ///   project-load-history-interplay, fix: 4.1 kept it, editor.js:2593-2679), and sets
+    ///   <see cref="CurrentFile"/> and the saved marker, so the session reads clean.</item>
+    /// </list>
+    /// <see cref="TemplateTitle"/> is untouched (R1; ledger project-template-name-not-saved, keep, editor.js:1536-1537).
+    /// Raises Document | Selection | History | File | Replaced once. Returns the collected images minus any the
+    /// new document holds, for the caller to release once nothing draws them.
+    /// </summary>
+    public IReadOnlyCollection<SKImage> Open(ProjectLoad load, string path)
+    {
+        ArgumentNullException.ThrowIfNull(load);
+        ArgumentException.ThrowIfNullOrEmpty(path);
+        RaiseChanging();
+        var outgoing = new HashSet<SKImage>(ReferenceEqualityComparer.Instance);
+        void Collect(Document doc)
+        {
+            if (doc.BgImage is { } bg) outgoing.Add(bg);
+            foreach (var layer in doc.Layers) outgoing.Add(layer.Image);
+        }
+        Collect(Document);
+        Collect(_saved);
+        foreach (var snapshot in _history.Snapshots) Collect(snapshot.Document);
+        if (_gestureStart is { } start) Collect(start.Document);
+
+        _gestureDepth = 0;
+        _gestureStart = null;
+        _generation++;
+        _history.Clear();
+        Document = load.Document;
+        SelectedLayerId = Document.Layers.IsEmpty ? null : Document.Layers[^1].Id;   // T1-R2: editor.js:2664 selects the top layer
+        NextId = Math.Max(load.NextId, MaxLayerId(Document) + 1);
+        CurrentFile = path;
+        _saved = Document;
+
+        if (Document.BgImage is { } kept) outgoing.Remove(kept);
+        foreach (var layer in Document.Layers) outgoing.Remove(layer.Image);
+        Raise(SessionChange.Document | SessionChange.Selection | SessionChange.History | SessionChange.File | SessionChange.Replaced);
+        return outgoing.ToArray();
+    }
+
+    /// <summary>
     /// Opens a gesture. Until the outermost scope is disposed, <see cref="Apply"/> and
     /// <see cref="ApplyWithSelection"/> adopt each change without recording. Disposing the outermost
     /// scope records the state from its opening once, iff the content changed (ledger
     /// fillstyle-undo-snapshot-timing: one slider drag is one step). Scopes nest by count, and disposing
-    /// a scope twice does nothing.
+    /// a scope twice does nothing. A scope opened before an <see cref="Open"/> does nothing when disposed.
     /// </summary>
     public IDisposable BeginGesture()
     {
         RaiseChanging();
         if (_gestureDepth++ == 0) _gestureStart = Snapshot;
-        return new GestureScope(this);
+        return new GestureScope(this, _generation);
     }
 
     /// <summary>
@@ -196,7 +290,6 @@ public sealed class EditorSession
             Document = target.Document;
             SelectedLayerId = target.SelectedLayerId;
             BumpNextId(Document);
-            IsDirty = true;
             what |= SessionChange.Document | SessionChange.History;
             if (current.SelectedLayerId != SelectedLayerId) what |= SessionChange.Selection;
         }
@@ -214,7 +307,6 @@ public sealed class EditorSession
             if (!InGesture)
             {
                 _history.Record(before);
-                IsDirty = true;
                 what |= SessionChange.History;
             }
             Document = after.Document;
@@ -236,13 +328,12 @@ public sealed class EditorSession
     {
         if (_gestureStart is not { } start || start.Document.ContentEquals(Document)) return SessionChange.None;
         _history.Record(start);
-        IsDirty = true;
         return SessionChange.History;
     }
 
-    void EndGesture()
+    void EndGesture(int generation)
     {
-        if (_gestureDepth == 0 || --_gestureDepth > 0) return;
+        if (generation != _generation || _gestureDepth == 0 || --_gestureDepth > 0) return;
         var what = RecordGesture();
         _gestureStart = null;
         if (what != SessionChange.None) Raise(what);
@@ -256,7 +347,7 @@ public sealed class EditorSession
 
     void Raise(SessionChange what) => Changed?.Invoke(this, new SessionChangedEventArgs(what));
 
-    sealed class GestureScope(EditorSession session) : IDisposable
+    sealed class GestureScope(EditorSession session, int generation) : IDisposable
     {
         bool _disposed;
 
@@ -264,7 +355,7 @@ public sealed class EditorSession
         {
             if (_disposed) return;
             _disposed = true;
-            session.EndGesture();
+            session.EndGesture(generation);
         }
     }
 }

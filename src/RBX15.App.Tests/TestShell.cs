@@ -16,6 +16,6 @@ internal static class TestShell
     public static MainViewModel Main(EditorSession session)
 #pragma warning restore CS0028
     {
-        return Composition.Build(session, new FakeFileDialogs(), new FakeDialogService(), new FakeColorPicker());
+        return Composition.Build(session, new FakeFileDialogs(), new FakeDialogService(), new FakeColorPicker(), new FakeSettingsStore());
     }
 }

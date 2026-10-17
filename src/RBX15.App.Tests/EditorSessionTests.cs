@@ -343,7 +343,7 @@ public class EditorSessionTests
             Assert.True(s.InGesture);
             for (int i = 1; i <= 5; i++) { int n = i; Assert.True(s.Apply(d => d with { BgOpacity = n / 10.0 })); }
             Assert.Equal(0, s.UndoCount);
-            Assert.False(s.IsDirty);
+            Assert.True(s.IsDirty);                 // M4a R2: IsDirty is the live content against the saved marker
             Assert.True(s.CanUndo);
         }
 
@@ -455,6 +455,156 @@ public class EditorSessionTests
         s.Select(null);
         s.TemplateTitle = "shirt";
         Assert.Equal(4, order.Count(o => o == "Changing"));   // selection and title are not document changes
+    }
+
+    // ---- M4a: the saved-state marker, MarkSaved, CommitPendingEdits and Open (interfaces R2, R11) ----
+
+    static ProjectLoad Load(Document doc, int nextId) => new(doc, nextId, []);
+
+    static SKImage Img(SKColor color)
+    {
+        using var surface = SKSurface.Create(new SKImageInfo(2, 2, SKColorType.Rgba8888, SKAlphaType.Premul));
+        surface.Canvas.Clear(color);
+        return surface.Snapshot();
+    }
+
+    [Fact] // R2 (Este, 2026-10-16): undo back to the saved state reads clean; redo away from it reads dirty
+    public void Undo_back_to_the_saved_state_reads_clean()
+    {
+        var s = new EditorSession();
+        Assert.True(s.Apply(d => d with { BgColor = "#000001" }));
+        Assert.True(s.IsDirty);
+        Assert.True(s.Undo());
+        Assert.False(s.IsDirty);                              // back at the starting document
+        Assert.True(s.Redo());
+        Assert.True(s.IsDirty);
+
+        s.MarkSaved(@"C:\p\a.r15proj", s.Document);
+        Assert.False(s.IsDirty);
+        Assert.True(s.Apply(d => d with { BgColor = "#000002" }));
+        Assert.True(s.IsDirty);
+        Assert.True(s.Undo());
+        Assert.False(s.IsDirty);                              // back at the save, though history still holds a step
+        Assert.True(s.Undo());
+        Assert.True(s.IsDirty);                               // before the save
+    }
+
+    [Fact] // R2: "differs from the last save": an edit made by hand back to the saved values reads clean
+    public void An_edit_back_to_the_saved_values_reads_clean()
+    {
+        var s = new EditorSession();
+        Assert.True(s.Apply(d => d with { ShowGrid = true }));
+        Assert.True(s.Apply(d => d with { ShowGrid = false }));
+        Assert.Equal(2, s.UndoCount);
+        Assert.False(s.IsDirty);
+    }
+
+    [Fact] // MarkSaved sets the file and the marker and raises File alone; IsDirty flips with no Document change
+    public void MarkSaved_sets_the_file_and_raises_only_File()
+    {
+        var s = new EditorSession();
+        Assert.True(s.Apply(d => d with { ShowGrid = true }));
+        var seen = Events(s);
+        s.MarkSaved(@"C:\p\shirt.r15proj", s.Document);
+        Assert.Equal(@"C:\p\shirt.r15proj", s.CurrentFile);
+        Assert.False(s.IsDirty);
+        Assert.Equal([SessionChange.File], seen);
+        Assert.Equal(1, s.UndoCount);                         // saving is not an undo step and keeps history
+        Assert.Throws<ArgumentException>(() => s.MarkSaved("", s.Document));
+        Assert.Throws<ArgumentNullException>(() => s.MarkSaved(null!, s.Document));
+        Assert.Throws<ArgumentNullException>(() => s.MarkSaved("x.r15proj", null!));
+    }
+
+    [Fact] // M3b carry-forward: Save raises Changing first, so the canvas closes a wheel burst or a select drag; nothing else happens
+    public void CommitPendingEdits_raises_Changing_and_nothing_else()
+    {
+        var s = new EditorSession();
+        int changing = 0;
+        s.Changing += (_, _) => changing++;
+        var seen = Events(s);
+        s.CommitPendingEdits();
+        Assert.Equal(1, changing);
+        Assert.Empty(seen);
+    }
+
+    [Fact] // project-load-flow, project-load-history-interplay (fix): Open swaps everything at once, clears history, reads clean
+    public void Open_swaps_the_document_clears_history_and_selection_and_reads_clean()
+    {
+        var s = new EditorSession(WithLayers(new Document(), 1, 2));
+        s.Select(2);
+        s.TemplateTitle = "Hoodie";
+        Assert.True(s.Apply(d => d with { ShowGrid = true }));
+        Assert.True(s.Undo());
+        Assert.Equal((0, 1), (s.UndoCount, s.RedoCount));
+        var order = new List<string>();
+        s.Changing += (_, _) => order.Add("Changing");
+        s.Changed += (_, e) => order.Add(e.What.ToString());
+        var loaded = WithLayers(new Document { Mode = TemplateMode.Pants }, 7);
+
+        s.Open(Load(loaded, 8), @"C:\p\pants.r15proj");
+
+        Assert.Same(loaded, s.Document);
+        Assert.Equal(loaded.Layers[^1].Id, s.SelectedLayerId); // T1-R2: top layer selected, editor.js:2664
+        Assert.Equal(8, s.NextId);
+        Assert.Equal((0, 0), (s.UndoCount, s.RedoCount));
+        Assert.False(s.CanUndo);
+        Assert.Equal(@"C:\p\pants.r15proj", s.CurrentFile);
+        Assert.False(s.IsDirty);
+        Assert.Equal("Hoodie", s.TemplateTitle);              // R1: the template name is not part of the file
+        Assert.Equal(new[] { "Changing", "Document, Selection, History, File, Replaced" }, order);
+        Assert.Throws<ArgumentNullException>(() => s.Open(null!, "x"));
+        Assert.Throws<ArgumentException>(() => s.Open(Load(loaded, 8), ""));
+    }
+
+    [Fact] // the id counter comes from the load, never below the loaded ids
+    public void Open_takes_the_loads_next_id_but_never_below_its_layers()
+    {
+        var s = new EditorSession(WithLayers(new Document(), 1, 2, 3, 4, 5));
+        s.Open(Load(WithLayers(new Document(), 2), 3), "a.r15proj");
+        Assert.Equal(3, s.NextId);                            // lower than before: history is gone, so no id can come back
+        s.Open(Load(WithLayers(new Document(), 9), 4), "b.r15proj");
+        Assert.Equal(10, s.NextId);
+    }
+
+    [Fact] // R11: the outgoing images are the old document's, the saved marker's, history's and a gesture start's, minus the new document's
+    public void Open_returns_every_outgoing_image_except_those_the_new_document_holds()
+    {
+        SKImage a = Img(SKColors.Red), b = Img(SKColors.Green), c = Img(SKColors.Blue), bg = Img(SKColors.White), kept = Img(SKColors.Black), fresh = Img(SKColors.Gray);
+        var start = new Document { BgImage = bg, Layers = [new Layer { Id = 1, Image = a }, new Layer { Id = 2, Image = kept }] };
+        var s = new EditorSession(start);                     // the saved marker holds a, kept and bg
+        Assert.True(s.Apply(d => d with { BgImage = null, Layers = [new Layer { Id = 3, Image = b }, new Layer { Id = 2, Image = kept }] }));
+        var gesture = s.BeginGesture();
+        Assert.True(s.Apply(d => d with { Layers = d.Layers.Add(new Layer { Id = 4, Image = c }) }));   // c lives only in the live document
+
+        var released = s.Open(Load(new Document { Layers = [new Layer { Id = 9, Image = kept }, new Layer { Id = 10, Image = fresh }] }, 11), "x.r15proj");
+
+        Assert.Equal(new HashSet<SKImage>([a, b, c, bg]), new HashSet<SKImage>(released));
+        Assert.Equal(4, released.Count);                      // each once, though a and kept sit in several places
+        gesture.Dispose();
+    }
+
+    [Fact] // Open abandons an open gesture: its stale Dispose records nothing, and a new gesture works as usual
+    public void A_gesture_open_across_an_Open_is_abandoned_and_its_stale_dispose_does_nothing()
+    {
+        var s = new EditorSession();
+        var stale = s.BeginGesture();
+        Assert.True(s.Apply(d => d with { BgOpacity = 0.5 }));
+        s.Open(Load(new Document(), 1), "x.r15proj");
+        Assert.False(s.InGesture);
+        Assert.False(s.CanUndo);
+        var seen = Events(s);
+        stale.Dispose();
+        Assert.Equal((0, false), (s.UndoCount, s.InGesture));
+        Assert.Empty(seen);
+
+        using (s.BeginGesture())
+        {
+            Assert.True(s.Apply(d => d with { BgOpacity = 0.25 }));
+            stale.Dispose();                                  // still a no-op, even with a new gesture open
+            Assert.True(s.InGesture);
+        }
+        Assert.Equal(1, s.UndoCount);
+        Assert.True(s.IsDirty);
     }
 
     [Fact] // an unchanged gesture leaves redo alone

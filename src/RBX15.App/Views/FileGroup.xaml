@@ -2,14 +2,31 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!-- The Home tab's File group (editor.html:85-97; ledger home-file-group). DataContext:
-         FileGroupViewModel. M3a shows Add image and Download template; Save work and Open (M4) stay
-         hidden until they work. .ribbon-group-items.vert: column, stretch, gap 4 (styles.css:207-208);
-         each row is a flex row with gap 3 (editor.html:87, :92); .btn-sm is padding 5px 10px, 11px (styles.css:407). -->
+         FileGroupViewModel. Row 1 is Save work, Open and Add image, row 2 Download template, in 4.1's order and labels
+         with its title= tooltips (editor.html:88-90, :93). .ribbon-group-items.vert: column, stretch, gap 4
+         (styles.css:207-208); each row is a flex row with gap 3 (editor.html:87, :92); .btn-sm is padding 5px 10px, 11px
+         (styles.css:407). Save As has no button (interfaces §2.1): Ctrl+Shift+S. -->
     <Border Style="{DynamicResource RibbonGroup}">
         <DockPanel>
             <TextBlock DockPanel.Dock="Bottom" Text="FILE" Style="{DynamicResource RibbonGroupLabel}" />
             <StackPanel VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                    <Button x:Name="SaveButton"
+                            Content="Save work"
+                            ToolTip="Save your workspace. Reopen and keep editing."
+                            Command="{Binding SaveCommand}"
+                            Padding="10,5"
+                            FontSize="11"
+                            Margin="0,0,3,0"
+                            Style="{DynamicResource SecondaryButton}" />
+                    <Button x:Name="OpenButton"
+                            Content="Open"
+                            ToolTip="Open a saved workspace."
+                            Command="{Binding OpenCommand}"
+                            Padding="10,5"
+                            FontSize="11"
+                            Margin="0,0,3,0"
+                            Style="{DynamicResource SecondaryButton}" />
                     <Button Content="Add image"
                             ToolTip="Add an image file as a layer."
                             Command="{Binding AddImageCommand}"

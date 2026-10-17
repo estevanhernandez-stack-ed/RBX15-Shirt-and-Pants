@@ -20,8 +20,9 @@ public partial class App : Application
     {
         base.OnStartup(e);
         var session = new EditorSession();
+        // The settings store comes first: the composition remembers the last project folder in it (M4a Task 1).
         var settings = new JsonSettingsStore(SettingsDirectory);
-        var main = Composition.Build(session, () => Current?.MainWindow);
+        var main = Composition.Build(session, () => Current?.MainWindow, settings);
         MainWindow = new MainWindow(main, settings);
         MainWindow.Show();
     }

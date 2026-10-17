@@ -259,7 +259,7 @@ public sealed class LedgerScenarioTests : IDisposable
         string path = Path.Combine(_dir, "blank.png");
         var files = new Files(path);
         var status = new Status();
-        var file = new FileGroupViewModel(s, files, dialogs, status, new ImportService(s, status));
+        var file = new FileGroupViewModel(s, files, dialogs, status, new ImportService(s, status), new ProjectFileService(s, files, dialogs, status, new Fakes.FakeSettingsStore()));
 
         file.DownloadTemplateCommand.Execute(null);         // a fresh document
         Assert.Equal(ExportGuard.EmptyTemplateMessage, Assert.Single(dialogs.Confirms));
@@ -296,7 +296,7 @@ public sealed class LedgerScenarioTests : IDisposable
         var files = new Files(path);
         var status = new Status();
 
-        new FileGroupViewModel(s, files, dialogs, status, new ImportService(s, status)).DownloadTemplateCommand.Execute(null);
+        new FileGroupViewModel(s, files, dialogs, status, new ImportService(s, status), new ProjectFileService(s, files, dialogs, status, new Fakes.FakeSettingsStore())).DownloadTemplateCommand.Execute(null);
 
         Assert.Empty(dialogs.Confirms);
         Assert.Equal("My_Shirt__roblox.png", Assert.Single(files.Suggested));
@@ -1000,6 +1000,49 @@ public sealed class LedgerScenarioTests : IDisposable
         return path;
     }
 
+    // ─── M4a Task 1 scenario: save, edit, undo to clean, open, and the prompt only for unsaved work ───
+
+    [Fact]
+    public async System.Threading.Tasks.Task Save_open_and_the_unsaved_prompt_through_the_real_composition()
+    {
+        // project-save-format, project-load-flow, project-load-history-interplay, shell-no-unsaved-changes-guard,
+        // home-file-group (editor.js:2550-2687): Save work, an edit undone back to the save, then Open through the
+        // File group's commands, with the canvas's Changing and Replaced wiring live.
+        using var red = Solid(20, 20, Red);
+        var s = new EditorSession();
+        var dialogs = new Dialogs();
+        var files = new Files(null);
+        var main = Composition.Build(s, files, dialogs, new Picker(), new Fakes.FakeSettingsStore());
+        Assert.True(s.ApplyWithSelection(x => LayerOps.AddImage(x, red, s.TakeId(), "art")));
+        string first = Path.Combine(_dir, "first.r15proj");
+        files.ProjectPath = first;
+
+        main.Home.File.SaveCommand.Execute(null);                       // untitled: Save As with the template name's file name
+        Assert.Equal("untitled.r15proj", Assert.Single(files.ProjectSuggested));
+        Assert.Equal("first.r15proj - RBX15 Classic Shirt and Pants Maker", main.Title);
+
+        main.Canvas.Interaction.Wheel(-1);                              // a wheel burst, still open: the title reads dirty at once (R2)
+        Assert.Equal("*first.r15proj - RBX15 Classic Shirt and Pants Maker", main.Title);
+        Assert.True(s.Undo());                                          // Undo closes the burst as one step and undoes it: back to the save
+        Assert.False(s.IsDirty);
+        Assert.True(main.Files.ConfirmDiscardChanges());                // clean: no prompt
+        Assert.Empty(dialogs.SavePrompts);
+
+        string second = WriteText("second.r15proj", """{ "mode": "Pants", "bgColor": "#112233" }""");
+        Assert.True(s.Apply(d => d with { ShowGrid = true }));
+        files.ProjectPath = second;
+        dialogs.SaveAnswer = SaveChoice.DontSave;
+        await main.Home.File.OpenCommand.ExecuteAsync(null);
+        Assert.Equal(new[] { "first.r15proj" }, dialogs.SavePrompts);
+        Assert.Equal((TemplateMode.Pants, "#112233"), (s.Document.Mode, s.Document.BgColor));
+        Assert.Empty(main.Layers.Rows);
+        Assert.False(s.Undo());                                         // history cleared on open
+        Assert.Equal("second.r15proj - RBX15 Classic Shirt and Pants Maker", main.Title);
+        var reread = ProjectIO.Read(File.ReadAllText(first));
+        Assert.Equal("art", Assert.Single(reread.Document.Layers).Name);   // first.r15proj kept the save, not the unsaved grid toggle
+        Assert.False(reread.Document.ShowGrid);
+    }
+
     sealed class Picker(params string?[] answers) : IColorPicker
     {
         readonly Queue<string?> _answers = new(answers);
@@ -1025,6 +1068,16 @@ public sealed class LedgerScenarioTests : IDisposable
         }
 
         public void Alert(string message) => Alerts.Add(message);
+
+        public SaveChoice SaveAnswer { get; set; } = SaveChoice.Cancel;
+
+        public List<string> SavePrompts { get; } = [];
+
+        public SaveChoice AskSaveChanges(string documentName)
+        {
+            SavePrompts.Add(documentName);
+            return SaveAnswer;
+        }
     }
 
     sealed class Files(string? savePath) : IFileDialogs
@@ -1038,6 +1091,20 @@ public sealed class LedgerScenarioTests : IDisposable
             Suggested.Add(suggestedFileName);
             return savePath;
         }
+
+        public string? ProjectPath { get; set; }
+
+        public List<string> ProjectSuggested { get; } = [];
+
+        public string? OpenProject(string? initialDirectory) => ProjectPath;
+
+        public string? SaveProject(string suggestedFileName, string? initialDirectory)
+        {
+            ProjectSuggested.Add(suggestedFileName);
+            return ProjectPath;
+        }
+
+        public string? PickFolder(string? initialDirectory) => null;
     }
 
     sealed class Status : IStatus

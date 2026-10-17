@@ -75,6 +75,8 @@ public sealed class CanvasInteraction
         _brush.PropertyChanged += OnBrushChanged;
         _session.Changed += (_, e) =>
         {
+            // M4a R11: an Open swapped the document under a stroke or an erase; their points and preview belong to the old one.
+            if (e.What.HasFlag(SessionChange.Replaced)) Cancel();
             if (e.What.HasFlag(SessionChange.Selection)) EndWheelBurst();
         };
         // R7 (critic MJ1): any other change entry point (a panel field or slider, Flip, Reset, a region paint, an

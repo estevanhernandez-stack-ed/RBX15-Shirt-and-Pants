@@ -25,6 +25,13 @@
     <InternalsVisibleTo Include="RBX15.App.Tests" />
   </ItemGroup>
 
+  <!-- The built-in packs (ledger packs-inventory-drips, packs-inventory-wordart, pack-contents, packs-resolve-dir): the
+       repo's packs/**/*.png, byte for byte, at packs/<name>/<file> in every output that references the App, as 4.1's
+       extraResources filter **/*.png shipped them (package.json:31-38); README.md stays out. PackSource reads them. -->
+  <ItemGroup>
+    <Content Include="..\..\packs\**\*.png" LinkBase="packs" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <!-- The 3 UI families (styles.css:6, styles.css:89-91), embedded from the read-only vendored set
        (assets/fonts/README.md rows inter, spacegrotesk, jetbrainsmono). Link renames each file so the
        pack URI has no brackets or commas: pack://application:,,,/RBX15.App;component/Fonts/#Inter.

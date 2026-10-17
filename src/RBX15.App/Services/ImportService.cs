@@ -35,6 +35,27 @@ public sealed class ImportService(EditorSession session, IStatus status)
         return result.Images.Count;
     }
 
+    /// <summary>
+    /// The asset browser's right-click add (thumb.oncontextmenu, editor.js:2512-2539; ledger asset-rightclick-full):
+    /// the file at full template size through <see cref="LayerOps.AddFull"/>, as one undo step, on top and selected,
+    /// then the Select tool (setTool('select'), editor.js:2532). A failure is named on the status strip, as
+    /// <see cref="Import"/> names it. Returns the number of layers added, 0 or 1.
+    /// </summary>
+    public int ImportFull(string path)
+    {
+        ArgumentNullException.ThrowIfNull(path);
+        var result = ImageImporter.Load([path]);
+        if (result.Images.Count > 0)
+        {
+            var image = result.Images[0];
+            session.ApplyWithSelection(s => LayerOps.AddFull(s, image.Image, session.TakeId(), image.Name));
+            status.Clear();
+            LayersAdded?.Invoke(this, EventArgs.Empty);
+        }
+        else status.Show(FailureMessage(result.Failures));
+        return result.Images.Count;
+    }
+
     /// <summary>One line naming every file that failed and why.</summary>
     public static string FailureMessage(IReadOnlyList<ImportFailure> failures)
     {

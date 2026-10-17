@@ -74,8 +74,8 @@ public partial class AssetLibraryPanel : UserControl
         if (HandleKey(e.Key)) e.Handled = true;
     }
 
-    /// <summary>The physical left button. Task 4 Step 5 replaces this read with PointerState.LeftButton(e) (interfaces 3.3; critic C2).</summary>
-    static bool LeftDown(MouseEventArgs e) => e.LeftButton == MouseButtonState.Pressed;
+    /// <summary>The left button, read through <see cref="PointerState"/> (the bridge's seam, M4a R8; critic C2).</summary>
+    static bool LeftDown(MouseEventArgs e) => PointerState.LeftButton(e) == MouseButtonState.Pressed;
 
     /// <summary>A left press. On a tile it arms a drag; anywhere else it disarms. A drag still running (its release was missed) is cancelled.</summary>
     internal void HandleTilePress(AssetTileViewModel? tile, Point inPanel)

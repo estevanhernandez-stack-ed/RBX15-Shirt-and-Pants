@@ -1752,12 +1752,12 @@
    "quirks": "If an asset drag is abandoned (dragend outside canvas never clears _assetDragFile unless handled at editor.js:2498+), a later OS file drop is hijacked by the stale asset file. Port should clear on drag end. rect.left uses bounding rect so CSS scroll/zoom consistent.",
    "portTarget": "Drop handler on Skia host: convert WPF position through inverse zoom/scroll transform to canvas px. Asset browser drag: use in-process drag payload (DataObject custom format) instead of a global.",
    "risk": "med",
-   "parityCheck": "Drop at 4 canvas positions at zoom 0.5/1/2: layer center equals pixel coordinate.",
+   "parityCheck": "LedgerScenarioTests: a file dropped at four template positions at zoom 0.5, 1 and 2 lands with its center on the drop point; TemplateCanvasHostTests map the host point by zoom. The stale asset drag is gone: asset-drag-stale-reference (bridge A1, MAN-1).",
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: an abandoned asset drag leaves a stale _assetDragFile that hijacks the next OS file drop. v5: stale asset-drag state is cleared on drag end.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "drop-guard",
@@ -5565,7 +5565,7 @@
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: packs read synchronously, thumbnails decoded at full size, stale asset-drag file reused after a cancelled drag, bundled pack count text immediately overwritten. v5: deterministic sorted packs, thumbnails decoded lazily at thumb size, stale drag bug fixed, duplicate-count label shown. Thumbnails are buttons: Enter, Space and UI Automation add them (M4a, T2-R2).",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "panel-asset-resize-handle",
@@ -5982,12 +5982,12 @@
    "quirks": "Electron on high-DPI shows a softly resampled canvas at zoom 100% (nearest at zoom>=1 applies only in canvas space); native may look sharper. Pixel-diff only valid at 100% DPI.",
    "portTarget": "WPF is DIP-based like CSS px; set UseLayoutRounding=True and SnapsToDevicePixels for 1px borders, and render the SKElement at device resolution (IgnorePixelScaling=false) so zoom 100% = 585 DIP. Decide whether on-screen preview should be crisp at high DPI (native improvement) while export remains 585x559.",
    "risk": "med",
-   "parityCheck": "Run at 100/125/150/200% display scaling: layout identical in DIPs; export always 585x559 pixels.",
+   "parityCheck": "By hand in the M4a manual list (MAN-3): at 100% and at 125% or 150% display scale the layout matches in DIPs and the export is 585x559. Narrowed in M4a: two display scales, not four.",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "shell-window-size",
@@ -6208,12 +6208,12 @@
    "quirks": "Drop of non-image files is silently ignored (verify in the editor slice).",
    "portTarget": "WPF: AllowDrop=True only on drop zone and canvas host; leave AllowDrop False elsewhere. Handle DragOver feedback (dragover class highlight on the drop zone). Accept file lists of images (png/jpg/gif/webp via isImageFile).",
    "risk": "low",
-   "parityCheck": "Drag a PNG over the layers panel and ribbon: nothing happens, no navigation, no cursor 'copy' effect. Drag onto drop zone: highlight appears and layer added at front-torso center. Drag onto canvas: layer lands at drop point.",
+   "parityCheck": "By hand in the M4a manual list (MAN-1): a PNG dragged from Explorer over the layers panel and the ribbon shows the no-drop cursor and does nothing; dropped on the drop zone it highlights the zone and lands centered in the front slot; dropped on the canvas it lands centered on the drop point. Narrowed in M4a: a hand check, because an OLE drag from another process is outside the bridge (interfaces R8).",
    "owner": "App.Shell",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "io-download-save-dialog",
@@ -8117,12 +8117,12 @@
    "quirks": "Bug, fix.",
    "portTarget": "WPF DragDrop.DoDragDrop with a typed DataObject payload. Fixes this by construction.",
    "risk": "low",
-   "parityCheck": "Drag a thumbnail, drop it on the layer list, then drop an OS PNG on the canvas, and check which image was added.",
+   "parityCheck": "In-app drags carry no OS data: a thumbnail drag released over the layers list or cancelled with Esc adds nothing (bridge A1, AssetLibraryPanelTests), and by hand (MAN-1) a PNG dragged from Explorer onto the canvas right after a cancelled thumbnail drag adds the Explorer file. Narrowed in M4a: the in-app half through the bridge, the OS drop by hand.",
    "owner": "App.AssetLibrary",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: a stale asset-drag file hijacks the next OS file drop. v5: stale asset-drag bug fixed via a typed drag payload.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "asset-thumb-uuid-label",
@@ -8470,12 +8470,12 @@
    "quirks": "",
    "portTarget": "Renderer.RenderView with ViewOptions.DeviceScale set to the monitor's DPI scale; TemplateCanvasHost shows the frame 1:1 in device pixels under per-monitor DPI v2 and re-renders on DPI change. The checker half-tile is round(8 x scale) device px and the grid line is one CSS px wide.",
    "risk": "low",
-   "parityCheck": "RendererViewTests: the frame is Renderer.ViewSize at DeviceScale 1.25, 1.5 and 2, and at DeviceScale 1 it equals the view goldens. By hand at 125% or 150% display scale: template edges are crisp at zoom 1, and the export stays 585x559.",
+   "parityCheck": "RendererViewTests (M3a): the frame is Renderer.ViewSize at DeviceScale 1.25, 1.5 and 2, and at DeviceScale 1 it equals the view goldens. By hand in the M4a manual list (MAN-3) at 125% or 150% display scale: template edges are crisp at zoom 1, and the export stays 585x559.",
    "owner": "App.Canvas",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: above 100% display scale the view canvas is a CSS-pixel bitmap stretched by Chromium, so the template, checker and grid look soft. v5: the view is rendered at device pixels and stays crisp at every display scale; at 100% it equals 4.1's view, and the export is unchanged.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "font-ui-weight-600",

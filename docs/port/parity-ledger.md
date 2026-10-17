@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**420 rows.** Status: done 248, open 172. Disposition: fix 203, keep 189, drop 26, new 2. Checks: ui-auto 120, unit 120, manual 67, golden 66, none-retired 25, doc 22.
+**420 rows.** Status: done 254, open 166. Disposition: fix 203, keep 189, drop 26, new 2. Checks: ui-auto 120, unit 120, manual 67, golden 66, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -19,13 +19,13 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `asset-grid-thumbnails` | Asset grid thumbnails rendering | ui-auto | fix | med |
 | done | `asset-drag-to-canvas` | Drag a thumbnail onto the canvas | ui-auto | fix | med |
 | open | `asset-resizable-browser` | Resizable asset browser (drag handle) | ui-auto | keep | low |
-| open | `panel-asset-library` | Asset library: packs, folder, browser | manual | fix | high |
+| done | `panel-asset-library` | Asset library: packs, folder, browser | manual | fix | high |
 | done | `panel-asset-resize-handle` | Asset browser vertical resize handle | ui-auto | keep | low |
 | open | `panel-drop-zone` | Drop art here zone | ui-auto | fix | low |
 | done | `io-folder-picker` | Asset library folder picker semantics | unit | fix | med |
 | open | `io-image-formats` | Accepted image inputs (drop, Add image, Background, folder) | manual | fix | med |
 | done | `pack-builtin-load` | Built-in Drips and Word art pack loading | manual | keep | low |
-| open | `asset-drag-stale-reference` | Stale asset-drag file hijacks the next OS file drop | ui-auto | fix | low |
+| done | `asset-drag-stale-reference` | Stale asset-drag file hijacks the next OS file drop | ui-auto | fix | low |
 | done | `asset-thumb-uuid-label` | Thumbnail caption substitutes parent folder name for UUID filenames | manual | keep | low |
 | done | `asset-count-label-overwritten` | Count label's dedupe/pack message is immediately overwritten | ui-auto | fix | low |
 | done | `pack-load-sync-and-mime` | Built-in pack load is synchronous and labels every file image/png | ui-auto | fix | low |
@@ -49,7 +49,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `tools-toggle-off` | Re-click or re-press active tool returns to Select | ui-auto | keep | low |
 | done | `tools-auto-select-switch` | Tool auto-reverts to Select on layer add and layer select | ui-auto | keep | low |
 | done | `tools-cursor` | Canvas cursor per tool, eraser ring cursor | manual | fix | med |
-| open | `drop-canvas` | Drop on canvas places layer at drop point | ui-auto | fix | med |
+| done | `drop-canvas` | Drop on canvas places layer at drop point | ui-auto | fix | med |
 | done | `select-move` | Move drag | ui-auto | fix | low |
 | done | `select-rotate-handle` | Rotation handle | ui-auto | fix | med |
 | done | `select-hover-idle` | Idle hover cursor | ui-auto | fix | low |
@@ -74,7 +74,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `wheel-sign-only-and-midstroke` | Wheel uses sign only; wheel mid-shape changes live stroke width | ui-auto | fix | low |
 | done | `layers-multi-file-async-order` | Multi-file add: z-order follows decode completion, one undo per file | ui-auto | fix | low |
 | done | `canvas-zoom-clipped-no-pan` | Zoomed canvas is clipped with no scrollbars or pan | ui-auto | fix | med |
-| open | `canvas-device-pixel-render` | View canvas rendered at device pixels | manual | fix | low |
+| done | `canvas-device-pixel-render` | View canvas rendered at device pixels | manual | fix | low |
 | done | `zoom-pill-limits` | Zoom buttons disabled at 25% and 300% | unit | fix | low |
 | done | `wheel-scale-undo-burst` | A burst of wheel scaling is one undo step | unit | fix | low |
 | done | `canvas-automation-peer` | The canvas is exposed to UI Automation | unit | fix | low |
@@ -229,12 +229,12 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `cross-undo-disabled-style` | Button visual states (base, hover, active, disabled) | manual | keep | med |
 | open | `cross-inline-style-overrides` | Inline styles override CSS (effective values) | manual | keep | low |
 | open | `cross-text-select-and-selection` | Text selection, context menu, tooltips | manual | fix | low |
-| open | `cross-window-dpi-rendering` | Pixel scale / DPI behavior | manual | keep | med |
+| done | `cross-window-dpi-rendering` | Pixel scale / DPI behavior | manual | keep | med |
 | open | `shell-window-size` | Initial window 1200x800, centered, resizable | ui-auto | fix | low |
 | done | `shell-window-title` | Window title is a static product name | ui-auto | keep | low |
 | open | `shell-lifecycle-quit` | Quit on last window closed; macOS activate branch is dead code | ui-auto | fix | low |
 | open | `shell-single-instance` | No single-instance lock | manual | keep | low |
-| open | `shell-external-drop-guard` | Dropping files outside the drop zone/canvas is swallowed, not navigated | ui-auto | keep | low |
+| done | `shell-external-drop-guard` | Dropping files outside the drop zone/canvas is swallowed, not navigated | ui-auto | keep | low |
 | open | `shell-header-version-hardcoded` | Header version string is hand-typed and drifts from docs | manual | fix | low |
 | done | `font-ui-weight-600` | UI labels at CSS weight 600 in the vendored variable fonts | manual | fix | low |
 | done | `window-title-dirty-marker` | Window title names the project file and marks unsaved changes | unit | fix | low |

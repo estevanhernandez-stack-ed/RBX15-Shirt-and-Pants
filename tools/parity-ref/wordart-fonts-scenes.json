@@ -1,0 +1,257 @@
+[
+  {
+    "name": "wordart-font-anton",
+    "actions": [
+      {
+        "op": "wordart",
+        "text": "RIZZ",
+        "font": "Anton",
+        "style": "solid",
+        "size": 64,
+        "fill": "#17d4fa",
+        "stroke": "#000000",
+        "grad": "#f22f89",
+        "strokeWidth": 3,
+        "angle": 0
+      }
+    ]
+  },
+  {
+    "name": "wordart-font-bebas-neue",
+    "actions": [
+      {
+        "op": "wordart",
+        "text": "RIZZ",
+        "font": "Bebas Neue",
+        "style": "solid",
+        "size": 64,
+        "fill": "#17d4fa",
+        "stroke": "#000000",
+        "grad": "#f22f89",
+        "strokeWidth": 3,
+        "angle": 0
+      }
+    ]
+  },
+  {
+    "name": "wordart-font-dancing-script",
+    "actions": [
+      {
+        "op": "wordart",
+        "text": "RIZZ",
+        "font": "Dancing Script",
+        "style": "solid",
+        "size": 64,
+        "fill": "#17d4fa",
+        "stroke": "#000000",
+        "grad": "#f22f89",
+        "strokeWidth": 3,
+        "angle": 0
+      }
+    ]
+  },
+  {
+    "name": "wordart-font-great-vibes",
+    "actions": [
+      {
+        "op": "wordart",
+        "text": "RIZZ",
+        "font": "Great Vibes",
+        "style": "solid",
+        "size": 64,
+        "fill": "#17d4fa",
+        "stroke": "#000000",
+        "grad": "#f22f89",
+        "strokeWidth": 3,
+        "angle": 0
+      }
+    ]
+  },
+  {
+    "name": "wordart-font-pacifico",
+    "actions": [
+      {
+        "op": "wordart",
+        "text": "RIZZ",
+        "font": "Pacifico",
+        "style": "solid",
+        "size": 64,
+        "fill": "#17d4fa",
+        "stroke": "#000000",
+        "grad": "#f22f89",
+        "strokeWidth": 3,
+        "angle": 0
+      }
+    ]
+  },
+  {
+    "name": "wordart-font-creepster",
+    "actions": [
+      {
+        "op": "wordart",
+        "text": "RIZZ",
+        "font": "Creepster",
+        "style": "solid",
+        "size": 64,
+        "fill": "#17d4fa",
+        "stroke": "#000000",
+        "grad": "#f22f89",
+        "strokeWidth": 3,
+        "angle": 0
+      }
+    ]
+  },
+  {
+    "name": "wordart-font-poppins",
+    "actions": [
+      {
+        "op": "wordart",
+        "text": "RIZZ",
+        "font": "Poppins",
+        "style": "solid",
+        "size": 64,
+        "fill": "#17d4fa",
+        "stroke": "#000000",
+        "grad": "#f22f89",
+        "strokeWidth": 3,
+        "angle": 0
+      }
+    ]
+  },
+  {
+    "name": "wordart-font-lato",
+    "actions": [
+      {
+        "op": "wordart",
+        "text": "RIZZ",
+        "font": "Lato",
+        "style": "solid",
+        "size": 64,
+        "fill": "#17d4fa",
+        "stroke": "#000000",
+        "grad": "#f22f89",
+        "strokeWidth": 3,
+        "angle": 0
+      }
+    ]
+  },
+  {
+    "name": "wordart-font-bangers",
+    "actions": [
+      {
+        "op": "wordart",
+        "text": "RIZZ",
+        "font": "Bangers",
+        "style": "solid",
+        "size": 64,
+        "fill": "#17d4fa",
+        "stroke": "#000000",
+        "grad": "#f22f89",
+        "strokeWidth": 3,
+        "angle": 0
+      }
+    ]
+  },
+  {
+    "name": "wordart-font-permanent-marker",
+    "actions": [
+      {
+        "op": "wordart",
+        "text": "RIZZ",
+        "font": "Permanent Marker",
+        "style": "solid",
+        "size": 64,
+        "fill": "#17d4fa",
+        "stroke": "#000000",
+        "grad": "#f22f89",
+        "strokeWidth": 3,
+        "angle": 0
+      }
+    ]
+  },
+  {
+    "name": "wordart-font-bungee-shade",
+    "actions": [
+      {
+        "op": "wordart",
+        "text": "RIZZ",
+        "font": "Bungee Shade",
+        "style": "solid",
+        "size": 64,
+        "fill": "#17d4fa",
+        "stroke": "#000000",
+        "grad": "#f22f89",
+        "strokeWidth": 3,
+        "angle": 0
+      }
+    ]
+  },
+  {
+    "name": "wordart-font-rubik-mono-one",
+    "actions": [
+      {
+        "op": "wordart",
+        "text": "RIZZ",
+        "font": "Rubik Mono One",
+        "style": "solid",
+        "size": 64,
+        "fill": "#17d4fa",
+        "stroke": "#000000",
+        "grad": "#f22f89",
+        "strokeWidth": 3,
+        "angle": 0
+      }
+    ]
+  },
+  {
+    "name": "wordart-font-press-start-2p",
+    "actions": [
+      {
+        "op": "wordart",
+        "text": "RIZZ",
+        "font": "Press Start 2P",
+        "style": "solid",
+        "size": 64,
+        "fill": "#17d4fa",
+        "stroke": "#000000",
+        "grad": "#f22f89",
+        "strokeWidth": 3,
+        "angle": 0
+      }
+    ]
+  },
+  {
+    "name": "wordart-font-righteous",
+    "actions": [
+      {
+        "op": "wordart",
+        "text": "RIZZ",
+        "font": "Righteous",
+        "style": "solid",
+        "size": 64,
+        "fill": "#17d4fa",
+        "stroke": "#000000",
+        "grad": "#f22f89",
+        "strokeWidth": 3,
+        "angle": 0
+      }
+    ]
+  },
+  {
+    "name": "wordart-font-orbitron",
+    "actions": [
+      {
+        "op": "wordart",
+        "text": "RIZZ",
+        "font": "Orbitron",
+        "style": "solid",
+        "size": 64,
+        "fill": "#17d4fa",
+        "stroke": "#000000",
+        "grad": "#f22f89",
+        "strokeWidth": 3,
+        "angle": 0
+      }
+    ]
+  }
+]

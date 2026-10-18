@@ -33,7 +33,7 @@ Each has a recommended answer. The run applies the recommendation unless Este sa
 | K1 | Which focused controls keep a key that is also a shortcut? | Text fields (every `TextBoxBase`, so the Word Art text and size boxes), the layer list (Up, Down, Alt+Up, Alt+Down, Delete), a focused region tile (Delete, Shift+F10, Menu, per `layout-template-regions`), the 3D viewport (arrows, Home), and any open color picker popup. Everything else, including sliders, checkboxes, swatches, buttons and ribbon tabs, never traps a shortcut (`kbd-input-focus-trap`). Space and Enter on a focused button stay WPF's own (`kbd-focused-button-enter-space`, keep). | Text fields only. The layer list then loses arrow navigation, which is an accessibility regression. |
 | K2 | How are character shortcuts matched? 4.1 matched `e.key`, the character, for `[ ] { } + = - _ r v b l u o e`. | Characters come from the window's `PreviewTextInput`, so they follow the keyboard layout as 4.1 did. Arrows, Delete, Backspace and Ctrl chords come from `PreviewKeyDown` and KeyBindings. | Virtual keys only (`OemOpenBrackets` and so on). Non-US layouts then differ from 4.1, recorded as a divergence. |
 | K3 | `kbd-shortcuts`, `keys-tool-shortcuts` and `kbd-ctrl-combo-tool-toggles` promise "Ctrl+V pastes", which is an M5 upgrade. | M4b proves that Ctrl+V no longer toggles a tool, and item 16 narrows the Ctrl+V paste clause to M5's new paste row ("Narrowed in M4b"). | The three rows stay open until M5. |
-| T1 | Word Art with long text at size 300 throws `InvalidOperationException` (carry-forward from M2b). | `WordArt.Render` refuses a full render above the image caps (16384 per side, 50 MP) with a typed failure. The Text tab shows "Text is too large to add. Shorten it or lower the size." on the status strip and records no step. The preview still renders scaled to fit. | Clamp the size silently. |
+| T1 | Word Art with long text at size 300 throws `InvalidOperationException` (carry-forward from M2b). | **Ruled by Este 2026-10-18: degrade gracefully, never refuse.** When the full render would exceed the image caps (16384 per side, 50 MP), `WordArt.Render` renders at the largest size inside the caps and the layer's scale makes up the difference, so the layer lands at the requested size with no error and no status message. The template is 585 px wide, so the capped render still has far more pixels than any region can show. Tests: a size-300 long string adds one layer, one undo step, its on-canvas size equals the uncapped size, and the bitmap is within the caps. Recorded as a fix on `wordart-edge-cases` (4.1 failed or froze on such text). Motivation: very wide text, e.g. a phrase spread across a series of shirts (a separate future feature, not M4b). | Refuse with a status message. |
 | T2 | Preview resolution | The preview renders at device pixels (sharp at 125% and above). Parity applies only to the full-resolution output (ledger `wordart-preview-live` quirk). | 200x80 logical pixels, soft on HiDPI as in 4.1. |
 | W1 | `wordart-font-list` and `fonts-google-runtime` ask for all 15 fonts compared against 4.1. The frozen goldens cover 3 fonts. | Item 8 adds a controller-run capture: `tools/parity-ref/wordart-ref.js`, with the M2b Task 3 Step 21 procedure, writes 15 new PNGs ("RIZZ", Solid, every font) to `tests/goldens/app/wordart-fonts/`. They are held to the Word Art rule and frozen from that commit. | Narrow both rows to the 3 golden fonts plus a test that each of the 15 renders in its vendored face with no fallback. |
 | F1 | Item 3 moves Fill Style and the region grid back to a Layout tab, as in 4.1. On 2026-10-18 Este reworked both on Home into one fill tool (no divider, "CLICK REGIONS TO FILL", gradient stops, limb caps, ALL; ledger ribbon-fill-regions-joined). | Keep Fill Style and the region grid on Home as the one fill tool. Layout carries Background, BG Settings, Placement and Presets. Item 3 shrinks to the fill rows' remaining checks, recorded as a divergence on `layout-fill-style` and `layout-template-regions` ("4.1: on the Layout tab. v5: on Home, next to the tools"). Item 12 measures the ribbon with that split. | Move them to Layout as the plan drafted. |
@@ -228,7 +228,7 @@ M5 note: none of the four upgrades has a ledger row yet (paste, recents, jump li
   What to build:
   - Engine fixes for the M2b carry-forwards:
     - NaN or negative stroke width goes through 4.1's rule (`+v || 0`, then clamped 0-20).
-    - Long or oversized text gives a typed `WordArtTooLarge` result (T1) instead of throwing.
+    - Long or oversized text renders at the largest size inside the image caps and reports the scale factor the layer needs to reach the requested size (T1, graceful); it never throws or refuses.
     - Dispose the `SKPixmap` in `WordArt.CreateLayer`.
     - `WordArt.Covers` caches one `SKFont` per family and size instead of one per character.
     - `Fonts.Get` uses `Lazy` so the GetOrAdd race cannot leak a typeface.
@@ -252,7 +252,7 @@ M5 note: none of the four upgrades has a ledger row yet (paste, recents, jump li
     - `Preview : ImageSource`, rendered through `WordArt.Render(s, 200, 80)` at device scale (T2), centered in a black box with a #333 border (the approved divergence)
     - `AddCommand`
   - Every control change re-renders the preview, coalesced at Dispatcher `Background` priority. The first preview exists before the first frame (no font gate).
-  - Add: `WordArt.CreateLayer` gives one `ApplyWithSelection`; select the layer, set the Select tool, name "✨ RIZZ [Anton]". A T1 failure gives a status line and no step.
+  - Add: `WordArt.CreateLayer` gives one `ApplyWithSelection`; select the layer, set the Select tool, name "✨ RIZZ [Anton]". An oversized render (T1) still adds the layer in one step, its scale set so it lands at the requested size.
   - `TextRibbon.xaml` with groups Text, Colors & Size, Style and Preview. Show the tab.
   - New `TextTabTests`.
   Done when:
@@ -469,7 +469,7 @@ Every color well (Background, Details, Text) uses the shared picker, so `picker.
 
 **Estimate:** 16 items, about 22-30 worker-hours. Items 3, 6, 9, 10 and 15 are L; 4, 5, 7, 8, 11 and 14 are M; 1, 2, 12, 13 and 16 are S to M. As sessions:
 
-- 1 session for Este's rulings (B1, R1, K1-K3, T1, T2, W1) and starting the run.
+- Rulings: Este accepted every recommendation on 2026-10-18 and changed T1 to graceful downscaling (no refusal).
 - 2 unattended Cart runs: items 1-8 overnight, then 9-14.
 - 1 session for the smoke, look sign-off, MAN items and ledger close (15-16), with the usual triage pass.
 

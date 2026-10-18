@@ -310,6 +310,19 @@ public partial class ProjectIOTests
         Assert.Equal((2, 2), (only.Image.Width, only.Image.Height));
     }
 
+    [Fact] // fill-gradient-stops: a 4.1 file and a v5 file without the key read exactly as before
+    public void A_file_without_stops_loads_with_none()
+    {
+        foreach (var name in new[] { "proj-pants-legacy" })
+        {
+            var doc = ProjectIO.Read(Fixture(name)).Document;
+            Assert.All(doc.RegionFills, e => Assert.True(e.Fill.Stops.IsEmpty));
+        }
+        var load = ProjectIO.Read("""{ "regionColors": { "torso_front": { "type": "linear", "c1": "#ff0000", "c2": "#0000ff", "angle": 0, "scale": 16 } } }""");
+        Assert.True(load.Document.RegionFills[0].Fill.Stops.IsEmpty);
+        Assert.Equal("linear|#ff0000|#0000ff|0|16", load.Document.RegionFills[0].Fill.Key);
+    }
+
     [Theory] // a non-data background refuses the whole file: nothing 4.1 saves carries one
     [InlineData("http://example.com/bg.png")]
     [InlineData("file:///C:/bg.png")]
@@ -356,6 +369,12 @@ public partial class ProjectIOTests
     [InlineData("{ \"regionColors\": { \"torso_front\": [\"#fff\"] } }", "regionColors.torso_front must be a color string or a fill object")]
     [InlineData("{ \"regionColors\": { \"torso_front\": { \"c1\": 255 } } }", "regionColors.torso_front.c1 must be a string")]
     [InlineData("{ \"regionColors\": { \"torso_front\": { \"angle\": \"45\" } } }", "regionColors.torso_front.angle must be a number")]
+    [InlineData("{ \"regionColors\": { \"torso_front\": { \"stops\": \"#00ff00\" } } }", "regionColors.torso_front.stops must be an array")]
+    [InlineData("{ \"regionColors\": { \"torso_front\": { \"stops\": [\"#00ff00\", 5] } } }", "regionColors.torso_front.stops[1] must be a color string")]
+    [InlineData("{ \"regionColors\": { \"torso_front\": { \"stops\": [null] } } }", "regionColors.torso_front.stops[0] must be a color string")]
+    [InlineData("{ \"regionColors\": { \"torso_front\": { \"stops\": [\"green\"] } } }", "regionColors.torso_front.stops[0] must be a #rgb or #rrggbb color")]
+    [InlineData("{ \"regionColors\": { \"torso_front\": { \"stops\": [\"#00ff0g\"] } } }", "regionColors.torso_front.stops[0] must be a #rgb or #rrggbb color")]
+    [InlineData("{ \"regionColors\": { \"torso_front\": { \"stops\": [\"#111\", \"#222\", \"#333\", \"#444\"] } } }", "regionColors.torso_front.stops holds 4 colors")]
     [InlineData("{ \"layers\": {} }", "layers must be an array")]
     [InlineData("{ \"layers\": [5] }", "layers[0] must be an object")]
     [InlineData("{ \"layers\": [null] }", "layers[0] must be an object")]

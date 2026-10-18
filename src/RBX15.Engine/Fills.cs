@@ -1,15 +1,69 @@
+using System.Collections.Immutable;
 using System.Globalization;
 using SkiaSharp;
 
 namespace RBX15.Engine;
 
-/// <summary>A region fill (lib/fills.js descriptor). Legacy v4.0 string fills are Fill.Solid.</summary>
-public sealed record Fill(string Type, string? C1 = null, string? C2 = null, double? Angle = null, double? Scale = null)
+/// <summary>
+/// A region fill (lib/fills.js descriptor). Legacy v4.0 string fills are Fill.Solid.
+/// <para>
+/// <see cref="Stops"/> (v5 only, ledger <c>fill-gradient-stops</c>) are optional middle colors for the
+/// "linear" and "radial" types: C1 sits at 0, the stops evenly between, C2 at 1. At most
+/// <see cref="MaxStops"/>; a longer list throws <see cref="ArgumentException"/> wherever it is set. A fill
+/// without stops is value-identical to a 4.1 fill: same <see cref="Key"/>, same pixels. Equality is
+/// structural, stops compared in order (a record's own equality would compare the list by reference).
+/// </para>
+/// </summary>
+public sealed record Fill(string Type, string? C1 = null, string? C2 = null, double? Angle = null, double? Scale = null,
+                          ImmutableArray<string> Stops = default)
 {
+    /// <summary>Most middle colors a fill carries: five colors in all.</summary>
+    public const int MaxStops = 3;
+
+    readonly ImmutableArray<string> _stops = CheckStops(Stops);
+
+    /// <summary>The middle colors, never default; empty when there are none. Setting more than <see cref="MaxStops"/> throws.</summary>
+    public ImmutableArray<string> Stops
+    {
+        get => _stops.IsDefault ? ImmutableArray<string>.Empty : _stops;
+        init => _stops = CheckStops(value);
+    }
+
+    static ImmutableArray<string> CheckStops(ImmutableArray<string> stops)
+    {
+        if (stops.IsDefault) return ImmutableArray<string>.Empty;
+        if (stops.Length > MaxStops) throw new ArgumentException($"A fill holds at most {MaxStops} color stops, not {stops.Length}.", nameof(stops));
+        foreach (var s in stops) ArgumentNullException.ThrowIfNull(s, nameof(stops));
+        return stops;
+    }
+
     public static Fill Solid(string color) => new("solid", color);
 
-    /// <summary>fillKey: [type, c1||'', c2||'', angle||0, scale||0].join('|').</summary>
-    public string Key => string.Join('|', Type, C1 ?? "", C2 ?? "", JsNumber(Angle ?? 0), JsNumber(Scale ?? 0));
+    /// <summary>
+    /// fillKey: [type, c1||'', c2||'', angle||0, scale||0].join('|'). A fill with stops appends
+    /// <c>|</c> and its stops joined by commas, so it never collides with a 4.1 key; without stops the key is 4.1's.
+    /// </summary>
+    public string Key
+    {
+        get
+        {
+            string key = string.Join('|', Type, C1 ?? "", C2 ?? "", JsNumber(Angle ?? 0), JsNumber(Scale ?? 0));
+            return Stops.IsEmpty ? key : key + "|" + string.Join(',', Stops);
+        }
+    }
+
+    public bool Equals(Fill? other) =>
+        other is not null &&
+        Type == other.Type && C1 == other.C1 && C2 == other.C2 && Angle == other.Angle && Scale == other.Scale &&
+        Stops.AsSpan().SequenceEqual(other.Stops.AsSpan());
+
+    public override int GetHashCode()
+    {
+        var h = new HashCode();
+        h.Add(Type); h.Add(C1); h.Add(C2); h.Add(Angle); h.Add(Scale);
+        foreach (var s in Stops) h.Add(s);
+        return h.ToHashCode();
+    }
 
     /// <summary>JS Number to string for the values fills carry (integers and plain decimals).</summary>
     public static string JsNumber(double v) =>
@@ -62,6 +116,27 @@ public static class Fills
         b.ArcTo(oval, 180, 180, false);
     }
 
+    /// <summary>
+    /// The color ramp of a linear or radial gradient: C1 at 0, each stop at k/(n+1), C2 at 1. With no stops
+    /// this is exactly 4.1's two-color ramp (offsets 0 and 1), so those pixels do not move.
+    /// </summary>
+    internal static (SKColor[] Colors, float[] Positions) GradientRamp(Fill f, string c1, string c2)
+    {
+        var stops = f.Stops;
+        if (stops.IsEmpty) return (new[] { CssColor.ToSk(c1), CssColor.ToSk(c2) }, new float[] { 0, 1 });
+        var colors = new SKColor[stops.Length + 2];
+        var positions = new float[stops.Length + 2];
+        colors[0] = CssColor.ToSk(c1);
+        for (int k = 0; k < stops.Length; k++)
+        {
+            colors[k + 1] = CssColor.ToSk(stops[k]);
+            positions[k + 1] = (float)(k + 1) / (stops.Length + 1);
+        }
+        colors[^1] = CssColor.ToSk(c2);
+        positions[^1] = 1;
+        return (colors, positions);
+    }
+
     public static void PaintRegionFill(SKCanvas ctx, SKRect region, Fill f, SKRect? extent = null)
     {
         var ext = extent ?? region;
@@ -78,19 +153,21 @@ public static class Fills
         {
             case "linear":
             {
+                var (colors, positions) = GradientRamp(f, c1, c2);
                 float cx = ext.Left + ext.Width / 2, cy = ext.Top + ext.Height / 2;
                 float dx = (float)(Math.Cos(angle) * ext.Width / 2), dy = (float)(Math.Sin(angle) * ext.Height / 2);
                 using var sh = SKShader.CreateLinearGradient(new SKPoint(cx - dx, cy - dy), new SKPoint(cx + dx, cy + dy),
-                    new[] { CssColor.ToSk(c1), CssColor.ToSk(c2) }, new float[] { 0, 1 }, SKShaderTileMode.Clamp);
+                    colors, positions, SKShaderTileMode.Clamp);
                 using var p = new SKPaint { Shader = sh, IsAntialias = true };
                 ctx.DrawRect(region, p);
                 break;
             }
             case "radial":
             {
+                var (colors, positions) = GradientRamp(f, c1, c2);
                 float cx = ext.Left + ext.Width / 2, cy = ext.Top + ext.Height / 2;
                 using var sh = SKShader.CreateRadialGradient(new SKPoint(cx, cy), Math.Max(ext.Width, ext.Height) / 2,
-                    new[] { CssColor.ToSk(c1), CssColor.ToSk(c2) }, new float[] { 0, 1 }, SKShaderTileMode.Clamp);
+                    colors, positions, SKShaderTileMode.Clamp);
                 using var p = new SKPaint { Shader = sh, IsAntialias = true };
                 ctx.DrawRect(region, p);
                 break;

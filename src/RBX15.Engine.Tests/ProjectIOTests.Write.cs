@@ -108,6 +108,38 @@ public partial class ProjectIOTests
         Assert.Equal(("solid", "#333"), ((string?)fill["type"], (string?)fill["c1"]));
     }
 
+    [Fact] // fill-gradient-stops: stops are written after scale, only when there are some
+    public void Stops_are_written_only_when_present_and_round_trip()
+    {
+        var withStops = new Fill("linear", "#ff0000", "#0000ff", 90, 16, ["#00ff00", "#ffffff"]);
+        var plain = new Fill("radial", "#ff0000", "#0000ff", 45, 16);
+        var doc = new Document { RegionFills = [("torso_front", withStops), ("torso_back", plain)] };
+
+        var json = ProjectIO.Write(doc, Pinned);
+        var node = JsonNode.Parse(json)!["regionColors"]!.AsObject();
+        Assert.Equal(new[] { "type", "c1", "c2", "angle", "scale", "stops" }, node["torso_front"]!.AsObject().Select(p => p.Key));
+        Assert.Equal(new[] { "#00ff00", "#ffffff" }, node["torso_front"]!["stops"]!.AsArray().Select(n => (string?)n));
+        Assert.Equal(new[] { "type", "c1", "c2", "angle", "scale" }, node["torso_back"]!.AsObject().Select(p => p.Key));
+        Assert.DoesNotContain("\"stops\": []", json);
+
+        var back = ProjectIO.Read(json).Document;
+        Assert.Equal(doc.RegionFills, back.RegionFills);
+        Assert.Equal(new[] { "#00ff00", "#ffffff" }, back.RegionFills[0].Fill.Stops.ToArray());
+        Assert.Empty(back.RegionFills[1].Fill.Stops);
+    }
+
+    [Fact] // a fill saved with an empty stops list reads as none and is written back without the key
+    public void An_empty_or_null_stops_array_reads_as_none_and_is_not_written()
+    {
+        foreach (var stops in new[] { "[]", "null" })
+        {
+            var json = "{ \"regionColors\": { \"torso_front\": { \"type\": \"linear\", \"c1\": \"#ff0000\", \"c2\": \"#0000ff\", \"stops\": " + stops + " } } }";
+            var doc = ProjectIO.Read(json).Document;
+            Assert.Empty(doc.RegionFills[0].Fill.Stops);
+            Assert.DoesNotContain("stops", ProjectIO.Write(doc, Pinned));
+        }
+    }
+
     [Fact] // ledger project-template-name-not-saved: an optional field 4.1 ignores, after 4.1's fields
     public void A_title_is_written_last_so_4_1_field_order_stays_a_prefix()
     {

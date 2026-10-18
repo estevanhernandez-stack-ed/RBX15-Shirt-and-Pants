@@ -1,0 +1,79 @@
+<UserControl x:Class="RBX15.App.Views.DetailButtonsGroup"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- One of the Details tab's button groups (editor.html:187-222; ledger details-buttons-inventory, details-buttons).
+         DataContext: DetailGroup. A row of .preset-btn.detail-btn (10px, padding 3x7), gap 4. The buttons have no title in
+         4.1, so none has a tooltip. Full Set keeps a pink border and text even on hover (the inline style beats :hover).
+         The last group has no divider (styles.css:207). -->
+    <UserControl.Resources>
+        <!-- .preset-btn (styles.css:499-515) as PresetsGroup draws it, with the detail-btn padding. -->
+        <Style x:Key="DetailButton" TargetType="Button" BasedOn="{StaticResource SecondaryButtonSm}">
+            <Setter Property="Padding" Value="7,3" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Foreground" Value="{DynamicResource Fg2Brush}" />
+            <Setter Property="Background" Value="{DynamicResource BrandNavyBrush}" />
+            <Setter Property="Margin" Value="0,0,4,0" />
+        </Style>
+        <!-- Full Set (#f22f89 border, #ff5aa3 text): both stay on hover; the glow still shows. -->
+        <Style x:Key="DetailAccentButton" TargetType="Button" BasedOn="{StaticResource DetailButton}">
+            <Setter Property="Foreground" Value="{DynamicResource BrandMagentaBrightBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BrandMagentaBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Chrome" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{DynamicResource RSmRadius}"
+                                Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="False" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Chrome" Property="Effect">
+                                    <Setter.Value>
+                                        <DropShadowEffect Color="#F22F89" ShadowDepth="0" BlurRadius="8" Opacity="0.25" />
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="DetailGroupFrame" TargetType="Border" BasedOn="{StaticResource RibbonGroup}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsLast}" Value="True">
+                    <Setter Property="BorderThickness" Value="0" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Border x:Name="Frame" Style="{StaticResource DetailGroupFrame}">
+        <DockPanel>
+            <TextBlock Style="{DynamicResource RibbonGroupLabel}" Text="{Binding Caption}" />
+            <ItemsControl x:Name="Buttons" ItemsSource="{Binding Buttons}" VerticalAlignment="Center" Focusable="False" IsTabStop="False"
+                          AutomationProperties.Name="{Binding Label}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button x:Name="DetailBtn" Style="{StaticResource DetailButton}" Content="{Binding Label}" Command="{Binding Command}"
+                                AutomationProperties.Name="{Binding AutomationName}" />
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding IsAccent}" Value="True">
+                                <Setter TargetName="DetailBtn" Property="Style" Value="{StaticResource DetailAccentButton}" />
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </DockPanel>
+    </Border>
+</UserControl>

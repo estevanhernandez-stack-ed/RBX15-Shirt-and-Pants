@@ -4,8 +4,9 @@
     <!-- The 3D preview (v5.1 spec, App; ledger avatar-preview-3d, new). DataContext: AvatarPreviewViewModel.
          The model group is built in code (the boxes and the texture change with the document); the camera, the lights and
          the two rotations live here. Lights sit outside the turning group, so the light stays on the viewer's side as the
-         avatar turns. PerspectiveCamera.FieldOfView is the horizontal angle: 30 degrees at 13 studs sees 7 studs across,
-         which holds the 4 stud arm span with room for the turn. The camera looks at the body's middle, 2.6 studs up. -->
+         avatar turns. PerspectiveCamera.FieldOfView is the horizontal angle, so the panel's width sets
+         the scale: 30 degrees at 9.5 studs sees 5.1 studs across, and an arm corner never reaches past 2.06 studs from the
+         turning axis, so the body fills the panel without clipping at any angle (13 studs left it a third of the panel). The camera looks at the body's middle, 2.6 studs up. -->
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -20,7 +21,7 @@
             <Viewport3D x:Name="Viewport" Focusable="True" ClipToBounds="True"
                         AutomationProperties.Name="3D preview">
                 <Viewport3D.Camera>
-                    <PerspectiveCamera x:Name="Camera" Position="0,2.6,13" LookDirection="0,0,-1" UpDirection="0,1,0"
+                    <PerspectiveCamera x:Name="Camera" Position="0,2.6,9.5" LookDirection="0,0,-1" UpDirection="0,1,0"
                                        FieldOfView="30" NearPlaneDistance="1" FarPlaneDistance="60" />
                 </Viewport3D.Camera>
                 <ModelVisual3D>

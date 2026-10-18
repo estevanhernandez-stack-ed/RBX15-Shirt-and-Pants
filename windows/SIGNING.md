@@ -1,5 +1,7 @@
 # Code signing
 
+> **v5 (native WPF):** the NSIS installer is retired. v5 ships an unsigned Store MSIX plus an unsigned portable zip, both built by `scripts/build-msix.ps1`; see [`msix/README.md`](msix/README.md) for the v5 build and the sideload upgrade test. Paths 2 and 3 below apply to the retired 4.x NSIS channel. Path 4 is corrected for v5 (the old `-PublisherCN` parameter never existed).
+
 Runbook for signing the Windows installer and the MSIX package. Covers three distribution paths — Microsoft Store, direct GitHub Releases download, and sideload testing — and what signing each one actually needs.
 
 ## TL;DR
@@ -8,7 +10,7 @@ Runbook for signing the Windows installer and the MSIX package. Covers three dis
 |---|---|---|
 | **Microsoft Store (MSIX)** | No cert on our end | Partner Center signs on ingestion |
 | **GitHub Releases (NSIS `.exe`)** | Yes, eventually | We sign with a code-signing cert |
-| **Sideload testing (local MSIX)** | Yes, self-signed | `make-msix.ps1 -SelfSign` |
+| **Sideload testing (local MSIX)** | Yes, self-signed | v5: `scripts/build-msix.ps1 -SelfSign` (4.x: `windows/msix/make-msix.ps1 -SelfSign`) |
 
 Microsoft Store approval eliminates the SmartScreen prompt for Store installs. For direct downloads from GitHub Releases, SmartScreen will keep warning users until we sign the `.exe` with a real cert.
 
@@ -27,7 +29,7 @@ Paying users of the app will click through it. Casual users will not.
 
 This is the preferred distribution path. **No code signing work required on our end.**
 
-1. Build an unsigned MSIX: `windows/msix/make-msix.ps1`
+1. Build an unsigned MSIX: `scripts/build-msix.ps1` (v5) or `windows/msix/make-msix.ps1` (4.x)
 2. Upload to Partner Center
 3. Partner Center's ingestion process signs the MSIX with Microsoft's cert
 4. Installs from the Store show zero prompts to users
@@ -165,12 +167,13 @@ Decode and write to disk in the workflow:
 For local MSIX testing before Partner Center submission. Never ship these to users.
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File windows/msix/make-msix.ps1 `
-  -SelfSign `
-  -PublisherCN "CN=YOUR_PARTNER_CENTER_CN"
+# v5: the cert subject is always the manifest Publisher; there is no -PublisherCN parameter.
+powershell -ExecutionPolicy Bypass -File scripts/build-msix.ps1 -SelfSign
 ```
 
-First run creates a dev cert in `Cert:\CurrentUser\My`. To actually install the signed MSIX locally, trust the dev cert once — the script prints the exact `Export-Certificate` + `certlm.msc` steps.
+v5: the first run creates a dev cert as a `.pfx` under `%LOCALAPPDATA%\RBX15\msix-dev` (password protected with DPAPI) and exports the public `rbx15-dev.cer` next to it. Nothing is added to any certificate store and nothing is trusted automatically. To install the signed MSIX on a test machine, trust that `.cer` yourself as administrator; the exact steps are in [`msix/README.md`](msix/README.md).
+
+4.x (`windows/msix/make-msix.ps1 -SelfSign`): the first run creates a dev cert in `Cert:\CurrentUser\My` and prints the `Export-Certificate` + `certlm.msc` steps. It takes no `-PublisherCN` either; the script hardcodes the Publisher.
 
 ## Decision: what we're doing right now
 

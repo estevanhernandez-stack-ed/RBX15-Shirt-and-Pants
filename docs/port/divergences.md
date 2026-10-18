@@ -2,7 +2,7 @@
 
 Every deliberate behavior change in v5, generated from `parity-ledger.json` rows whose disposition is `fix` or `drop`. The bug policy: fix anything clearly unintended, keep anything a user could reasonably rely on. A change that is not in this table is a regression. Rows with a visual effect get a new golden image with a note.
 
-## Fixed in v5 (205)
+## Fixed in v5 (206)
 
 | ID | Owner | Change |
 |---|---|---|
@@ -103,6 +103,7 @@ Every deliberate behavior change in v5, generated from `parity-ledger.json` rows
 | `placement-selection-guard` | App.Ribbon.Layout | 4.1: Placement buttons are always enabled and silently do nothing without a selection. v5: The Placement and Presets groups are hidden until a layer is selected. |
 | `presets-six-buttons` | App.Ribbon.Layout | 4.1: Meme, Allover, Mirror and Scatter push two identical undo entries per click. v5: every action is exactly one undo step; the Presets group is hidden until a layer is selected. |
 | `props-center-front` | App.Ribbon.Layout | 4.1: Center on front torso is not undoable and the Placement group is always shown. v5: it is one undo step and the Placement group is hidden until a layer is selected. |
+| `ribbon-fill-regions-joined` | App.Ribbon.Layout | 4.1: Fill Style and Template Regions are separate ribbon groups with a divider, the grid labelled TEMPLATE REGIONS. v5: no divider between them and the grid labelled CLICK REGIONS TO FILL, so the two read as one fill tool (Este, 2026-10-18). |
 | `text-add-to-canvas` | App.Ribbon.Text | 4.1: Add to canvas fails in Pants mode because it reads torso_front directly. v5: the front slot resolves per mode so it works in both, with the same layer name and full-resolution bitmap. |
 | `text-preview` | App.Ribbon.Text | 4.1: preview content is drawn at the top-left of the box, leaving blank space right and bottom (clearly unintended, not named in the design). v5: preview is centered in the box with the same uniform fit scale. |
 | `wordart-state-defaults` | App.Ribbon.Text | 4.1: Word Art size is not clamped, so 0 falls back to 64 and 5000 makes a giant canvas. v5: size clamped to 8-300 (unintended, named divergence). |

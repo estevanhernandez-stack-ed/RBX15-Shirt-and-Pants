@@ -12,7 +12,8 @@
     <!-- Template Regions (editor.html:168-171; buildRegionGrid, editor.js:1624-1649). The last group: no right divider (styles.css:207). -->
     <Border Style="{StaticResource RibbonGroup}" BorderThickness="0">
         <DockPanel>
-            <TextBlock Style="{StaticResource RibbonGroupLabel}" Text="TEMPLATE REGIONS" />
+            <!-- 4.1 labelled it TEMPLATE REGIONS; v5 names what a click does (ledger ribbon-fill-regions-joined). -->
+            <TextBlock Style="{StaticResource RibbonGroupLabel}" Text="CLICK REGIONS TO FILL" />
             <!-- #regionGrid is a .ribbon-group-items row (styles.css:208): the cross and the limbs side by side, centered, 4px gap -->
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
 

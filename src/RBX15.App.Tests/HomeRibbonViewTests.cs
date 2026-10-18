@@ -137,8 +137,8 @@ public class HomeRibbonViewTests
         Descendants<TextBox>(view).Single().Text = "Hoodie";
         Assert.Equal("Hoodie", session.TemplateTitle);
 
-        Assert.Equal(new[] { "MODE", "TOOLS", "BRUSH", "EDIT", "SETTINGS", "FILL STYLE", "TEMPLATE REGIONS" },
-            texts.Where(t => t is "MODE" or "TOOLS" or "BRUSH" or "PLACEMENT" or "EDIT" or "SETTINGS" or "FILL STYLE" or "TEMPLATE REGIONS"));
+        Assert.Equal(new[] { "MODE", "TOOLS", "BRUSH", "EDIT", "SETTINGS", "FILL STYLE", "CLICK REGIONS TO FILL" },
+            texts.Where(t => t is "MODE" or "TOOLS" or "BRUSH" or "PLACEMENT" or "EDIT" or "SETTINGS" or "FILL STYLE" or "CLICK REGIONS TO FILL"));
         Assert.Contains(buttons, b => b.Content is "Draw");
         Assert.DoesNotContain(buttons, b => b.Content is "Fit Front" or "Keys: ON");
         Assert.Contains(buttons, b => b.Content is "Save work");

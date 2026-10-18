@@ -9,8 +9,9 @@
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <!-- Fill Style (editor.html:145-167) -->
-    <Border Style="{StaticResource RibbonGroup}">
+    <!-- Fill Style (editor.html:145-167). No right divider: the regions beside it are where the style lands, so the two
+         read as one fill tool (Este, 2026-10-18; ledger ribbon-fill-regions-joined). -->
+    <Border Style="{StaticResource RibbonGroup}" BorderThickness="0">
         <DockPanel>
             <TextBlock Style="{StaticResource RibbonGroupLabel}" Text="FILL STYLE" />
             <StackPanel VerticalAlignment="Top">

@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**424 rows.** Status: done 258, open 166. Disposition: fix 205, keep 188, drop 26, new 5. Checks: unit 123, ui-auto 121, manual 67, golden 66, none-retired 25, doc 22.
+**425 rows.** Status: done 259, open 166. Disposition: fix 206, keep 188, drop 26, new 5. Checks: unit 123, ui-auto 122, manual 67, golden 66, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -196,6 +196,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `layout-bg-settings` | BG Settings: color, image, opacity | ui-auto | fix | low |
 | open | `layout-fill-style` | Fill Style: type, colors, angle, scale | ui-auto | keep | med |
 | open | `layout-template-regions` | Template Regions grid (dynamic) | ui-auto | fix | med |
+| done | `ribbon-fill-regions-joined` | Fill Style and the region grid read as one fill tool | ui-auto | fix | low |
 
 ## App.Ribbon.Text
 

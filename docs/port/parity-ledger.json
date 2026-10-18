@@ -5464,6 +5464,26 @@
    "status": "open"
   },
   {
+   "id": "ribbon-fill-regions-joined",
+   "area": "ribbon",
+   "name": "Fill Style and the region grid read as one fill tool",
+   "source": "gap:v5.1-feature",
+   "behavior": "Fill Style and Template Regions are two .ribbon-group blocks with a 1px divider between them, and the grid is labelled TEMPLATE REGIONS, which names the template rather than what a click does.",
+   "codeRefs": [
+    "editor.html:145-171",
+    "styles.css:200-207"
+   ],
+   "quirks": "",
+   "portTarget": "FillStyleGroup's border drops its right divider (BorderThickness 0) and RegionsGrid's label reads CLICK REGIONS TO FILL.",
+   "risk": "low",
+   "parityCheck": "HomeRibbonViewTests pins the group labels, CLICK REGIONS TO FILL in place of TEMPLATE REGIONS.",
+   "owner": "App.Ribbon.Layout",
+   "check": "ui-auto",
+   "disposition": "fix",
+   "divergence": "4.1: Fill Style and Template Regions are separate ribbon groups with a divider, the grid labelled TEMPLATE REGIONS. v5: no divider between them and the grid labelled CLICK REGIONS TO FILL, so the two read as one fill tool (Este, 2026-10-18).",
+   "status": "done"
+  },
+  {
    "id": "details-settings",
    "area": "details",
    "name": "Details tab: stroke settings",

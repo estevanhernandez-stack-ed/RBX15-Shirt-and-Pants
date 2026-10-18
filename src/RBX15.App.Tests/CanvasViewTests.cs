@@ -63,8 +63,11 @@ public class CanvasViewTests
         Assert.Equal(0.25, host.Zoom);
     });
 
-    [Fact] // canvas-zoom-clipped-no-pan: scrollbars appear only when the frame outgrows the area
-    public void The_frame_scrolls_when_it_outgrows_the_area_and_centers_when_it_fits() => StaThread.Run(() =>
+    [Theory] // canvas-zoom-clipped-no-pan: scrollbars appear only when the frame outgrows the area; 96, 120 and 144 DPI are 100%, 125% and 150%
+    [InlineData(96)]
+    [InlineData(120)]
+    [InlineData(144)]
+    public void The_frame_scrolls_when_it_outgrows_the_area_and_centers_when_it_fits(double dpi) => StaThread.Run(() =>
     {
         var vm = CanvasViewModelTests.Vm(new EditorSession());
         var view = Load(vm);
@@ -72,18 +75,32 @@ public class CanvasViewTests
         host.ApplyDpi(1);
         var scroller = (ScrollViewer)view.FindName("Scroller");
 
-        view.Measure(new Size(901, 701));
-        view.Arrange(new Rect(0, 0, 901, 701));
+        void Lay()
+        {
+            view.Measure(new Size(901, 701));
+            view.Arrange(new Rect(0, 0, 901, 701));
+            view.UpdateLayout();
+        }
+        Lay();                                   // builds the template, so the scale below reaches the whole view
+        DeviceRounding.SetRootDpi(view, dpi);
+        Lay();
+        double scale = DeviceRounding.ScaleOf(view);
+        Assert.Equal(dpi / 96, scale);
+
         Assert.Equal(0, scroller.ScrollableWidth);
         Assert.Equal(0, scroller.ScrollableHeight);
-        // The 587x561 wrap (585x559 and its 1px border) is centered, so the frame starts 1px inside it. Layout rounding
-        // snaps to the view's device pixels, so off 100% the offset lands within one device pixel of the DIP value
-        // (measured at 125%: (157.6, 71.2) for (158, 71)); compare in device pixels (pre-flight M2).
-        double scale = VisualTreeHelper.GetDpi(view).DpiScaleX;
-        var expected = new Point((901 - 587) / 2 + 1, (701 - 561) / 2 + 1);
-        var at = host.TranslatePoint(new Point(0, 0), view);
-        Assert.True(Math.Abs(at.X - expected.X) * scale < 1 && Math.Abs(at.Y - expected.Y) * scale < 1,
-            $"the frame is at {at}, not within one device pixel of {expected} at display scale {scale}");
+        // The wrap (the 585x559 frame inside a 1 DIP border) is centered: layout centers the unrounded 587x561 box, then snaps its
+        // offset to the view's device pixels, and the border to a whole number of them (Math.Round, as DeviceRounding.Snap).
+        // So the expectation is the 96 DPI value snapped once, in device pixels, with no slack (measured at 125%:
+        // (157.6, 71.2) for the 96 DPI model's (158, 71)).
+        var border = (Border)host.Parent;
+        var wrap = (Grid)border.Parent;
+        var wrapAt = wrap.TranslatePoint(new Point(0, 0), view);
+        Assert.Equal(DeviceRounding.Snap((901 - 587) / 2.0, scale), wrapAt.X, 6);
+        Assert.Equal(DeviceRounding.Snap((701 - 561) / 2.0, scale), wrapAt.Y, 6);
+        var inside = host.TranslatePoint(new Point(0, 0), wrap);   // one border in
+        Assert.Equal(DeviceRounding.Snap(1, scale), inside.X, 6);
+        Assert.Equal(DeviceRounding.Snap(1, scale), inside.Y, 6);
 
         for (int i = 0; i < 8; i++) vm.ZoomInCommand.Execute(null); // 300%: 1755x1677
         view.UpdateLayout(); // the host invalidated its measure; run the queued layout pass

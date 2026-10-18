@@ -31,19 +31,31 @@ public class AssetLibraryPanelTests
         new(new ImportService(session, new FakeStatus()), new FakeFileDialogs(), dialogs ?? new FakeDialogService(), new FakeStatus(),
             new FakeSettingsStore(), new PackSource(packs ?? PackSource.DefaultDirectory), new AssetThumbnailLoader());
 
-    static AssetLibraryPanel Panel(AssetLibraryViewModel vm)
+    /// <summary>
+    /// A standalone panel has no window, so its display scale is the system's unless a test sets it. The facts that depend
+    /// on the scale run as theories at 96, 120 and 144 DPI (100%, 125%, 150%), set as the panel's root DPI after the first
+    /// layout built its template (DeviceRounding.SetRootDpi), and kept on every tile a later layout realizes (Layout).
+    /// </summary>
+    static AssetLibraryPanel Panel(AssetLibraryViewModel vm, double dpi = 96)
     {
         var panel = new AssetLibraryPanel { DataContext = vm };
         Layout(panel);
+        DeviceRounding.SetRootDpi(panel, dpi);
+        Layout(panel);
+        Assert.Equal(dpi / 96, DeviceRounding.ScaleOf(panel.AssetBrowser));
         return panel;
     }
 
     static void Layout(FrameworkElement e)
     {
         StaThread.Pump();
-        e.Measure(new Size(PanelWidth, 2000));
-        e.Arrange(new Rect(0, 0, PanelWidth, Math.Max(e.DesiredSize.Height, 1)));
-        e.UpdateLayout();
+        for (int pass = 0; pass < 2; pass++)
+        {
+            e.Measure(new Size(PanelWidth, 2000));
+            e.Arrange(new Rect(0, 0, PanelWidth, Math.Max(e.DesiredSize.Height, 1)));
+            e.UpdateLayout();
+            DeviceRounding.Propagate(e);   // tiles made by this pass start at the default scale; give them the panel's
+        }
     }
 
     static IEnumerable<T> Descendants<T>(DependencyObject root) where T : DependencyObject
@@ -181,17 +193,22 @@ public class AssetLibraryPanelTests
         Assert.False(panel.IsDragging);
     });
 
-    [Fact] // R6: only a move past the system distance starts a drag; a release off the canvas adds nothing and clears the state
-    public void A_drag_starts_past_the_distance_and_a_release_off_the_canvas_adds_nothing() => StaThread.Run(() =>
+    [Theory] // R6: only a move past the system distance starts a drag; a release off the canvas adds nothing and clears the state
+    [InlineData(96)]
+    [InlineData(120)]
+    [InlineData(144)]
+    public void A_drag_starts_past_the_distance_and_a_release_off_the_canvas_adds_nothing(double dpi) => StaThread.Run(() =>
     {
         var session = new EditorSession();
         var vm = Vm(session);
         vm.LoadWordArtCommand.Execute(null);
-        var panel = Panel(vm);
+        var panel = Panel(vm, dpi);
         var tile = vm.Rows[0].Tiles[0];
         var at = Center(Tiles(panel)[0], panel);
         panel.HandleTilePress(tile, at);
-        panel.HandleMove(new Point(at.X + SystemParameters.MinimumHorizontalDragDistance, at.Y), leftButtonDown: true);
+        // Exactly the distance away, which is still a click. The system distance is 3.2 DIPs at 125%, so "at.X + 3.2" can sit an ulp
+        // past it; AtMost puts the probe on the boundary without going over (not a tolerance).
+        panel.HandleMove(new Point(DeviceRounding.AtMost(at.X, SystemParameters.MinimumHorizontalDragDistance), at.Y), leftButtonDown: true);
         Assert.False(panel.IsDragging);                                       // within the distance: still a click
         panel.HandleMove(new Point(at.X + 20, at.Y + 20), leftButtonDown: true);
         Assert.True(panel.IsDragging);
@@ -246,11 +263,14 @@ public class AssetLibraryPanelTests
         Assert.False(panel.IsDragging);
     });
 
-    [Fact] // asset-resizable-browser, panel-asset-resize-handle: 1:1 from the rendered height, clamped to 80 and 70% of the client
-    public void The_handle_resizes_the_browser_from_its_rendered_height_within_the_clamps() => StaThread.Run(() =>
+    [Theory] // asset-resizable-browser, panel-asset-resize-handle: 1:1 from the rendered height, clamped to 80 and 70% of the client
+    [InlineData(96)]
+    [InlineData(120)]
+    [InlineData(144)]
+    public void The_handle_resizes_the_browser_from_its_rendered_height_within_the_clamps(double dpi) => StaThread.Run(() =>
     {
         var vm = Vm(new EditorSession());
-        var panel = Panel(vm);
+        var panel = Panel(vm, dpi);
         panel.HandleResizePress();                       // hidden: offsetHeight is 0, so it starts from 180 (editor.js:2724)
         panel.HandleResize(20);
         Assert.Equal(200, vm.BrowserHeight);
@@ -273,6 +293,29 @@ public class AssetLibraryPanelTests
         Assert.Equal(140, vm.BrowserHeight);
     });
 
+    [Fact] // asset-resizable-browser parityCheck: "cursor shows ns-resize; after release no stuck cursor"
+    public void The_handle_shows_the_ns_resize_cursor_and_restores_it_after_release() => StaThread.Run(() =>
+    {
+        var panel = Panel(Vm(new EditorSession()));
+        var handle = panel.ResizeHandle;
+        Assert.Equal(Cursors.SizeNS, handle.Cursor);                       // over the handle, before any press (4.1: cursor ns-resize)
+
+        MouseButtonEventArgs Button(RoutedEvent routed) =>
+            new(Mouse.PrimaryDevice, Environment.TickCount, MouseButton.Left) { RoutedEvent = routed, Source = handle };
+        handle.RaiseEvent(Button(UIElement.MouseLeftButtonDownEvent));
+        Assert.True(panel.IsResizing);
+        Assert.Equal(Cursors.SizeNS, handle.Cursor);                       // the whole drag: the handle's own cursor
+        Assert.Null(Mouse.OverrideCursor);                                 // 4.1 set the body's cursor; WPF needs no document-wide override that could stick
+        Assert.Null(panel.ReadLocalValue(FrameworkElement.CursorProperty) as Cursor);
+
+        handle.RaiseEvent(Button(UIElement.MouseLeftButtonUpEvent));
+        Assert.False(panel.IsResizing);
+        Assert.Equal(Cursors.SizeNS, handle.Cursor);                       // still the handle's, and nothing else holds a cursor after the release
+        Assert.Null(Mouse.OverrideCursor);
+        Assert.Null(panel.ReadLocalValue(FrameworkElement.CursorProperty) as Cursor);
+        Assert.False(handle.IsMouseCaptured);
+    });
+
     [Fact] // with only a few thumbnails, max-height changes nothing visible: the drag starts from the rendered height (quirk, keep)
     public void A_short_grid_resizes_from_its_rendered_height() => StaThread.Run(() =>
     {
@@ -293,7 +336,8 @@ public class AssetLibraryPanelTests
 
     sealed record Shell(MainViewModel Main, EditorSession Session, FrameworkElement Root, AssetLibraryPanel Panel, TemplateCanvasHost Host);
 
-    static Shell InWindow()
+    /// <summary>The window is built but never shown, so a test may set its root DPI (a shown window takes its monitor's).</summary>
+    static Shell InWindow(double dpi = 96)
     {
         var session = new EditorSession();
         var main = TestShell.Main(session);
@@ -301,15 +345,22 @@ public class AssetLibraryPanelTests
         main.Assets.LoadWordArtCommand.Execute(null);
         var root = (FrameworkElement)w.Content;
         Lay(root);
+        DeviceRounding.SetRootDpi(root, dpi);   // the window was never shown, so its content is the visual root
+        Lay(root);
+        Assert.Equal(dpi / 96, DeviceRounding.ScaleOf(root));
         return new Shell(main, session, root, Descendants<AssetLibraryPanel>(root).Single(), Descendants<TemplateCanvasHost>(root).Single());
     }
 
     static void Lay(FrameworkElement root)
     {
         StaThread.Pump();
-        root.Measure(new Size(1184, 761));
-        root.Arrange(new Rect(0, 0, 1184, 761));
-        root.UpdateLayout();
+        for (int pass = 0; pass < 2; pass++)
+        {
+            root.Measure(new Size(1184, 761));
+            root.Arrange(new Rect(0, 0, 1184, 761));
+            root.UpdateLayout();
+            DeviceRounding.Propagate(root);
+        }
     }
 
     static void StartDrag(Shell s)
@@ -399,13 +450,20 @@ public class AssetLibraryPanelTests
         Assert.False(again.Handled);                                         // the handler left with the drag
     });
 
-    [Fact] // the resize's upper clamp is 70% of the window's client height (window.innerHeight * 0.7, editor.js:2732)
-    public void In_the_window_the_resize_clamps_at_70_percent_of_the_client() => StaThread.Run(() =>
+    [Theory] // the resize's upper clamp is 70% of the window's client height (window.innerHeight * 0.7, editor.js:2732)
+    [InlineData(96)]
+    [InlineData(120)]
+    [InlineData(144)]
+    public void In_the_window_the_resize_clamps_at_70_percent_of_the_client(double dpi) => StaThread.Run(() =>
     {
-        var s = InWindow();
+        var s = InWindow(dpi);
         s.Panel.HandleResizePress();
         s.Panel.HandleResize(5000);
-        Assert.Equal(0.7 * 761, s.Main.Assets.BrowserHeight, 9);
+        // The client is 761 DIPs asked for, and layout rounding gives it the nearest whole number of device pixels
+        // (760.8 at 125%): the clamp is 70% of the height the root really has.
+        double client = DeviceRounding.Snap(761, dpi / 96);
+        Assert.Equal(client, s.Root.ActualHeight, 9);
+        Assert.Equal(0.7 * client, s.Main.Assets.BrowserHeight, 9);
         s.Panel.HandleResizeEnd();
     });
 }

@@ -72,7 +72,7 @@ public class ShellTests
         Assert.Equal(panel, ShellLayout.PanelWidthFor(viewport));
     }
 
-    [Fact] // the window: title, theme, 4.1's size default, the skeleton's regions, one Home tab
+    [Fact] // the window: title, theme, 4.1's size default, the skeleton's regions, four tabs
     public void The_main_window_builds_the_skeleton()
     {
         var store = new FakeSettingsStore();
@@ -97,6 +97,7 @@ public class ShellTests
                     ? (f.FontSize, ((System.Windows.Media.SolidColorBrush)f.Foreground).Color.ToString(), f.HorizontalAlignment)
                     : default,
                 Tabs = tabs.Children.OfType<RadioButton>().Select(r => ((string)r.Content, r.IsChecked)).ToArray(),
+                TabVisibility = tabs.Children.OfType<RadioButton>().Select(r => r.Visibility).ToArray(),
                 Panel = ((ColumnDefinition)w.FindName("PanelColumn")).Width.Value,
                 Regions = new[] { "RibbonPane", "LeftPanelContent", "CanvasArea" }.All(n => w.FindName(n) is not null),
                 RightPanel = w.FindName("RightPanel"),
@@ -111,7 +112,8 @@ public class ShellTests
         Assert.Equal((true, 18.0, "626Labs"), facts.Mark);
         Assert.Equal("DEVELOPED AT 626LABS", facts.Footer);
         Assert.Equal((10.0, "#FF5E6B7F", HorizontalAlignment.Center), facts.FooterLook);   // styles.css:678-689: 10px fg-muted, centered
-        Assert.Equal([("Home", (bool?)true)], facts.Tabs);
+        Assert.Equal([("Home", (bool?)true), ("Layout", (bool?)false), ("Details", (bool?)false), ("Text", (bool?)false)], facts.Tabs);   // four tabs; the three empty ones are Collapsed until a pane has a group (RibbonTabsTests)
+        Assert.Equal([Visibility.Visible, Visibility.Collapsed, Visibility.Collapsed, Visibility.Collapsed], facts.TabVisibility);
         Assert.Equal(280, facts.Panel);
         Assert.True(facts.Regions);
         Assert.Null(facts.RightPanel);

@@ -1,9 +1,11 @@
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using RBX15.App.Controls;
 using RBX15.App.Services;
 using RBX15.App.ViewModels;
+using RBX15.App.Views;
 
 namespace RBX15.App;
 
@@ -25,6 +27,8 @@ public partial class MainWindow : Window
         DataContext = viewModel;
         InitializeComponent();
         CaptionTheme.Apply(this);
+        RefreshTabs();
+        RibbonTabs.KeyDown += OnTabKeyDown;
         ApplyPlacement(PlacementGuard.Resolve(settings.LoadWindowPlacement(), workAreas ?? MonitorWorkAreas.Get(),
                                               ShellLayout.DefaultWidth, ShellLayout.DefaultHeight));
         Viewport.SizeChanged += (_, e) => ApplyColumnWidths(e.NewSize.Width);
@@ -53,6 +57,52 @@ public partial class MainWindow : Window
     {
         PanelColumn.Width = new GridLength(ShellLayout.PanelWidthFor(viewportWidth));
         PreviewColumn.Width = new GridLength(ViewModel.AvatarPreview.IsVisible ? ShellLayout.PreviewWidthFor(viewportWidth) : 0);
+    }
+
+    bool _showAllTabsForTest;
+
+    /// <summary>
+    /// Shows the Layout, Details and Text tabs although their panes have no group yet. A test hook (M4b item 2): the shipped
+    /// rule is that a tab shows only when its pane has a group (<see cref="IRibbonPane.HasGroups"/>), so the tests that
+    /// exercise all four tabs turn this on until items 3, 7 and 9 give the panes content.
+    /// </summary>
+    internal bool ShowAllTabsForTest
+    {
+        get => _showAllTabsForTest;
+        set
+        {
+            _showAllTabsForTest = value;
+            RefreshTabs();
+        }
+    }
+
+    /// <summary>Whether a tab is on show: Home always, the others once their pane has a group (or the test hook is on).</summary>
+    internal bool IsTabShown(RibbonTab tab) => tab == RibbonTab.Home || _showAllTabsForTest || PaneOf(tab).HasGroups;
+
+    IRibbonPane PaneOf(RibbonTab tab) => tab switch
+    {
+        RibbonTab.Home => HomePane,
+        RibbonTab.Layout => LayoutPane,
+        RibbonTab.Details => DetailsPane,
+        RibbonTab.Text => TextPane,
+        _ => throw new ArgumentOutOfRangeException(nameof(tab)),
+    };
+
+    void RefreshTabs()
+    {
+        foreach (var (tab, button) in new[] { (RibbonTab.Layout, LayoutTab), (RibbonTab.Details, DetailsTab), (RibbonTab.Text, TextTab) })
+            button.Visibility = IsTabShown(tab) ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    /// <summary>
+    /// Enter checks a focused tab, as Enter clicked 4.1's tab buttons (Space already does: RadioButton handles it).
+    /// A focused text field keeps its keys; the tabs are never inside one.
+    /// </summary>
+    void OnTabKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter || e.OriginalSource is not RadioButton { IsChecked: false } tab) return;
+        tab.IsChecked = true;
+        e.Handled = true;
     }
 
     public MainViewModel ViewModel => (MainViewModel)DataContext;

@@ -104,7 +104,16 @@ public class InputBridgeTests
         rig.Ok("""{"id":5,"cmd":"pointer","action":"up","at":{"canvas":{"x":80,"y":90}}}""");
         var end = rig.Ok("""{"id":6,"cmd":"inspect","target":"canvas"}""");
         Assert.Equal(("None", false, 1, 1), (end["gesture"]!.GetValue<string>(), end["captured"]!.GetValue<bool>(), end["undo"]!.GetValue<int>(), end["selected"]!.GetValue<int>()));
-        StaThread.Run(() => Assert.Equal((30.0, 40.0), (L(rig.Session, 1).X, L(rig.Session, 1).Y)));
+        StaThread.Run(() =>
+        {
+            // The bridge injects whole device pixels, so at 125% a canvas y of 90 lands on a pixel 0.4 DIP off. The layer moves
+            // by the difference of the two points as they landed, which is exactly (30, 40) only when the scale makes them whole.
+            var host = First<TemplateCanvasHost>(rig.Window);
+            var down = Landed(host, new Point(50, 50));
+            var up = Landed(host, new Point(80, 90));
+            Assert.Equal(up.X - down.X, L(rig.Session, 1).X, 6);
+            Assert.Equal(up.Y - down.Y, L(rig.Session, 1).Y, 6);
+        });
     }
 
     [Fact] // draw-release-outside-canvas / select-move: a release outside the window reaches the captured canvas
@@ -117,9 +126,11 @@ public class InputBridgeTests
         StaThread.Run(() =>
         {
             var host = First<TemplateCanvasHost>(rig.Window);
-            var released = CanvasCoordinates.ToTemplate(rig.Window.TranslatePoint(new Point(-40, -30), host), host.Zoom);
-            Assert.Equal(released.X - 50, L(rig.Session, 1).X, 6);
-            Assert.Equal(released.Y - 50, L(rig.Session, 1).Y, 6);
+            // Both ends are whole device pixels as injected: the press at canvas (50, 50), the release at window (-40, -30).
+            var released = CanvasCoordinates.ToTemplate(rig.Window.TranslatePoint(DeviceRounding.Injected(rig.Window, new Point(-40, -30)), host), host.Zoom);
+            var pressed = Landed(host, new Point(50, 50));
+            Assert.Equal(released.X - pressed.X, L(rig.Session, 1).X, 6);
+            Assert.Equal(released.Y - pressed.Y, L(rig.Session, 1).Y, 6);
             Assert.Equal(CanvasGesture.None, host.Interaction!.Gesture);
             Assert.False(host.IsMouseCaptured);
             Assert.Equal(1, rig.Session.UndoCount);
@@ -285,13 +296,13 @@ public class InputBridgeTests
             var elsewhere = source.CompositionTarget.TransformToDevice.Transform(host.TranslatePoint(new Point(10, 10), rig.Window));
             RawMouse.Inject(source, "AbsoluteMove", elsewhere, 0, extraInformation: 0);
             RawMouse.Inject(source, "Button1Press", elsewhere, 0, extraInformation: 0);
-            Assert.Equal(new Point(100, 80), RoundedTemplate(host));
+            AssertTemplate(Landed(host, new Point(100, 80)), host);   // still the bridge's point, to the whole device pixel it landed on
             Assert.Equal(CanvasGesture.None, host.Interaction!.Gesture);
             Assert.Null(rig.Session.SelectedLayerId);
 
             rig.Bridge.Dispose();
             RawMouse.Inject(source, "AbsoluteMove", elsewhere, 0, extraInformation: 0);
-            Assert.Equal(new Point(10, 10), RoundedTemplate(host));
+            AssertTemplate(Landed(host, new Point(10, 10)), host);   // the hardware report now lands, rounded to a whole device pixel
         });
     }
 
@@ -315,6 +326,18 @@ public class InputBridgeTests
         });
         rig.Ok("""{"id":2,"cmd":"pointer","action":"up","at":{"canvas":{"x":50,"y":50}}}""");
         StaThread.Run(() => Assert.Equal((0.0, 0.0), (L(rig.Session, 1).X, L(rig.Session, 1).Y)));
+    }
+
+    /// <summary>Where a template point lands once injected as whole device pixels (DeviceRounding.Injected), back in template space.</summary>
+    static Point Landed(TemplateCanvasHost host, Point template) =>
+        CanvasCoordinates.ToTemplate(DeviceRounding.Injected(host, CanvasCoordinates.ToFrame(template, host.Zoom)), host.Zoom);
+
+    /// <summary>The mouse position in template space, exact: the report landed on a whole device pixel and nothing else rounds it.</summary>
+    static void AssertTemplate(Point expected, TemplateCanvasHost host)
+    {
+        var actual = CanvasCoordinates.ToTemplate(Mouse.GetPosition(host), host.Zoom);
+        Assert.Equal(expected.X, actual.X, 6);
+        Assert.Equal(expected.Y, actual.Y, 6);
     }
 
     static Point RoundedTemplate(TemplateCanvasHost host)

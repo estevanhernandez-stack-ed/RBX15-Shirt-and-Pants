@@ -54,6 +54,10 @@
                            StaysOpen="False" Opened="OnPaletteOpened" Closed="OnPaletteClosed" AllowsTransparency="False">
                         <Border x:Name="PaletteFrame" Background="{DynamicResource Bg1Brush}" BorderBrush="{DynamicResource BorderAccentBrush}"
                                 BorderThickness="1" Padding="10">
+                            <StackPanel>
+                            <!-- The heading the color picker's palette row uses, so the two read as one feature. -->
+                            <TextBlock Text="FROM YOUR ART" FontFamily="{DynamicResource FontMono}" FontSize="10" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource Fg3Brush}" Margin="0,0,0,6" />
                             <Grid>
                                 <ItemsControl x:Name="PaletteSwatches" Width="200" ItemsSource="{Binding PaletteColors}">
                                     <ItemsControl.ItemsPanel>
@@ -93,6 +97,7 @@
                                     </TextBlock.Style>
                                 </TextBlock>
                             </Grid>
+                            </StackPanel>
                         </Border>
                     </Popup>
                 </StackPanel>

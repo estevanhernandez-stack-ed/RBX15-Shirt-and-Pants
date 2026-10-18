@@ -1,4 +1,8 @@
-name: Windows CI
+name: Windows CI (4.x Electron, legacy)
+
+# Gates the Electron 4.x app until the cutover PR deletes it. v5 work (src/**, scripts/**, the v5 manifest) is
+# covered by dotnet-ci.yml and v5-package.yml; the v5-only files under windows/ are excluded here so a v5 PR does not
+# spend a runner building Electron.
 
 on:
   push:
@@ -11,6 +15,9 @@ on:
       - "package.json"
       - "package-lock.json"
       - "windows/**"
+      - "!windows/RELEASE_NOTES_v5.md"
+      - "!windows/msix/Package.v5.appxmanifest.template"
+      - "!windows/msix/make-app-icon.py"
       - ".github/workflows/windows-ci.yml"
   pull_request:
     paths:
@@ -21,6 +28,9 @@ on:
       - "package.json"
       - "package-lock.json"
       - "windows/**"
+      - "!windows/RELEASE_NOTES_v5.md"
+      - "!windows/msix/Package.v5.appxmanifest.template"
+      - "!windows/msix/make-app-icon.py"
       - ".github/workflows/windows-ci.yml"
 
 jobs:

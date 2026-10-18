@@ -1,9 +1,12 @@
-name: Windows Release
+name: Windows Release (4.x Electron, legacy)
+
+# Fenced to v4.* tags. This workflow builds the ELECTRON app (NSIS + MSIX). A v5.* tag is built and released by
+# v5-release.yml; without this fence a v5.0.0 tag would ship the 4.1 Electron build labelled 5.0.0.
 
 on:
   push:
     tags:
-      - "v*.*.*"
+      - "v4.*.*"
 
 jobs:
   build:

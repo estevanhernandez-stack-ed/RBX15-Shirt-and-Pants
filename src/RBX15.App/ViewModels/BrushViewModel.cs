@@ -11,13 +11,15 @@ namespace RBX15.App.ViewModels;
 /// tools-draw-props): the draw color, the brush size and the shape fill. Defaults are 4.1's:
 /// #17d4fa, 4 and off (editor.js:90-92, editor.html:56-59). None of it is document state, so no
 /// change here is ever an undo step (draw-brush-controls; interfaces R7). The color opens the themed
-/// picker with live preview; a cancel puts the seed back (IColorPicker contract).
+/// picker with live preview; a cancel puts the seed back (IColorPicker contract). The Palette button offers the colors of
+/// the user's art (ledger <c>art-palette</c>, new); choosing one sets the color like any other pick.
 /// </summary>
 public sealed partial class BrushViewModel : ObservableObject
 {
     public const string DefaultColor = "#17d4fa";
 
     readonly IColorPicker _picker;
+    ArtPalette? _palette;
     string _color = DefaultColor;
     int _size = Tools.DefaultBrushSize;
 
@@ -25,7 +27,30 @@ public sealed partial class BrushViewModel : ObservableObject
     {
         _picker = picker ?? throw new ArgumentNullException(nameof(picker));
         PickColorCommand = new RelayCommand<object?>(Pick);
+        UsePaletteColorCommand = new RelayCommand<string?>(hex => { if (hex is not null) Color = hex; });
     }
+
+    /// <summary>The colors of the user's art; null leaves the Palette popup showing its empty line. Set once, by the composition root.</summary>
+    public ArtPalette? Palette
+    {
+        get => _palette;
+        init
+        {
+            _palette = value;
+            if (value is not null)
+                value.PropertyChanged += (_, e) =>
+                {
+                    if (e.PropertyName != nameof(ArtPalette.Colors)) return;
+                    OnPropertyChanged(nameof(PaletteColors));
+                    OnPropertyChanged(nameof(HasPaletteColors));
+                };
+        }
+    }
+
+    /// <summary>The palette's colors, lowercase <c>#rrggbb</c>; empty without a palette.</summary>
+    public IReadOnlyList<string> PaletteColors => _palette?.Colors ?? Array.Empty<string>();
+
+    public bool HasPaletteColors => PaletteColors.Count > 0;
 
     /// <summary>drawColor (editor.js:492): lowercase #rrggbb, as an input of type color reports it.</summary>
     public string Color
@@ -54,6 +79,9 @@ public sealed partial class BrushViewModel : ObservableObject
 
     /// <summary>Opens the picker under the anchor (the swatch); every preview sets Color, and a cancel restores the seed.</summary>
     public IRelayCommand<object?> PickColorCommand { get; }
+
+    /// <summary>Sets <see cref="Color"/> to a palette swatch's hex (the command parameter). Brush state, so never an undo step.</summary>
+    public IRelayCommand<string?> UsePaletteColorCommand { get; }
 
     /// <summary>The wheel's brush step (editor.js:1316-1318): +1 for sign &gt;= 0, else -1, clamped 1..50.</summary>
     public void StepSize(int sign) => Size = Tools.StepBrushSize(Size, sign);

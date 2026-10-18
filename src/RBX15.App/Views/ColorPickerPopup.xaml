@@ -104,10 +104,32 @@
                          LostKeyboardFocus="OnHexLostFocus" />
             </DockPanel>
 
+            <!-- The colors of the user's art (ledger art-palette, new): shown only when there are some. A click sets the
+                 color as typing the hex would and leaves the picker open; OK still commits. Width 200 is the square's:
+                 an unbounded wrap panel would measure as one long row; the -6 cancels the last row's swatch margin. -->
+            <StackPanel x:Name="PaletteSection" Margin="0,10,0,0">
+                <TextBlock Text="FROM YOUR ART" FontFamily="{DynamicResource FontMono}" FontSize="10" FontWeight="SemiBold"
+                           Foreground="{DynamicResource Fg3Brush}" Margin="0,0,0,6" />
+                <ItemsControl x:Name="PaletteSwatches" Width="200" Margin="0,0,0,-6" ItemsSource="{Binding Palette}" IsTabStop="False"
+                              KeyboardNavigation.TabIndex="3">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Style="{StaticResource PaletteSwatchButton}" KeyboardNavigation.TabIndex="3" Background="{Binding}" ToolTip="{Binding}"
+                                    AutomationProperties.Name="{Binding}" Click="OnSwatch" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
-                <Button x:Name="OkButton" Content="OK" MinWidth="64" KeyboardNavigation.TabIndex="3"
+                <Button x:Name="OkButton" Content="OK" MinWidth="64" KeyboardNavigation.TabIndex="4"
                         Style="{DynamicResource PrimaryButtonSm}" AutomationProperties.Name="OK" Click="OnOk" />
-                <Button x:Name="CancelButton" Content="Cancel" MinWidth="64" Margin="8,0,0,0" KeyboardNavigation.TabIndex="4"
+                <Button x:Name="CancelButton" Content="Cancel" MinWidth="64" Margin="8,0,0,0" KeyboardNavigation.TabIndex="5"
                         Style="{DynamicResource SecondaryButtonSm}" AutomationProperties.Name="Cancel" Click="OnCancel" />
             </StackPanel>
         </StackPanel>

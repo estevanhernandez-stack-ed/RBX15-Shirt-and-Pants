@@ -38,6 +38,7 @@ public partial class ColorPickerPopup : Window
         _spokenSv = SaturationValueSurface.Describe(viewModel.Saturation, viewModel.Value);
         viewModel.PropertyChanged += OnViewModelChanged;
         PlaceMarkers();
+        PaletteSection.Visibility = viewModel.Palette.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         PreviewKeyDown += (_, e) => e.Handled = HandleKey(e.Key == Key.System ? e.SystemKey : e.Key, e.KeyboardDevice.Modifiers, Keyboard.FocusedElement);
         Loaded += (_, _) => SvSquare.Focus();
         Deactivated += (_, _) =>
@@ -51,7 +52,7 @@ public partial class ColorPickerPopup : Window
 
     /// <summary>
     /// Maps one key press to the picker; returns whether it was used. Esc cancels; Enter commits unless
-    /// Cancel has focus; arrows move the focused square or strip (Shift: the big step).
+    /// Cancel or a palette swatch has focus; arrows move the focused square or strip (Shift: the big step).
     /// </summary>
     internal bool HandleKey(Key key, ModifierKeys modifiers, IInputElement? focused)
     {
@@ -60,6 +61,8 @@ public partial class ColorPickerPopup : Window
             case Key.Escape:
                 Finish(commit: false);
                 return true;
+            case Key.Enter when focused is Button { DataContext: string }:
+                return false;   // a palette swatch takes its own Enter (it sets the color); OK or Enter elsewhere commits
             case Key.Enter:
                 Finish(commit: !ReferenceEquals(focused, CancelButton));
                 return true;
@@ -86,6 +89,11 @@ public partial class ColorPickerPopup : Window
             }
         }
         return false;
+    }
+
+    void OnSwatch(object sender, RoutedEventArgs e)
+    {
+        if (((FrameworkElement)sender).DataContext is string hex) ViewModel.UseSwatch(hex);
     }
 
     /// <summary>Ends the pick once (commit or cancel) and closes. Later calls do nothing.</summary>

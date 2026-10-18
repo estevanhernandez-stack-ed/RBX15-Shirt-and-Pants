@@ -18,6 +18,7 @@ internal static class TestShell
     {
         var main = Composition.Build(session, new FakeFileDialogs(), new FakeDialogService(), new FakeColorPicker(), new FakeSettingsStore());
         main.AvatarPreview.IsVisible = previewVisible;
+        main.Palette.Dispose();   // see Quiet: the palette's idle pass would read layer images a test may have freed
         return main;
     }
 
@@ -25,11 +26,13 @@ internal static class TestShell
     /// Turns the 3D preview off in a shell a test built with Composition.Build directly. The preview rebuilds its texture
     /// on a later dispatcher turn; a test that disposes its layer images before that turn would have the rebuild render
     /// freed native bitmaps (an access violation in a later test), so the kit's shells start with the preview off and the
-    /// preview's own tests ask for it on.
+    /// preview's own tests ask for it on. The art palette is the same: its idle pass reads the visible layers' images, so a
+    /// quiet shell stops it following (its colors stay as they were); the palette's own tests build an ArtPalette directly.
     /// </summary>
     public static MainViewModel Quiet(MainViewModel main)
     {
         main.AvatarPreview.IsVisible = false;
+        main.Palette.Dispose();
         return main;
     }
 }

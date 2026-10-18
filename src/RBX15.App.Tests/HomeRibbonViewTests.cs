@@ -46,16 +46,18 @@ public class HomeRibbonViewTests
     static Button[] Tiles(HomeRibbon view) =>
         Descendants<Button>(view).Where(b => b.DataContext is RegionTileViewModel).ToArray();
 
-    [Fact] // regions-grid-layout-shirt parityCheck: exactly 14 paintable tiles, each a focusable button with an automation name
-    public void The_grid_shows_fourteen_named_focusable_tiles() => StaThread.Run(() =>
+    [Fact] // regions-grid-layout-shirt parityCheck (4.1's 14 tiles) plus the limbs' Top and Bot (regions-limb-caps): 18, every region
+    public void The_grid_shows_all_eighteen_named_focusable_tiles() => StaThread.Run(() =>
     {
         var view = Load(Home(new EditorSession()));
         var tiles = Tiles(view);
 
-        Assert.Equal(14, tiles.Length);
+        Assert.Equal(18, tiles.Length);
         Assert.All(tiles, t => Assert.True(t.Focusable && t.IsTabStop));
-        Assert.Equal(14, tiles.Select(AutomationProperties.GetName).Distinct().Count());
+        Assert.Equal(18, tiles.Select(AutomationProperties.GetName).Distinct().Count());
         Assert.Contains("Torso Front", tiles.Select(AutomationProperties.GetName));
+        Assert.Contains("Right Arm Top", tiles.Select(AutomationProperties.GetName));
+        Assert.Contains("Left Arm Bot (Bottom)", tiles.Select(AutomationProperties.GetName));
     });
 
     [Fact] // the clear gestures reach ClearCommand: right-click (editor.js:1677) and Delete, Shift+F10, Menu

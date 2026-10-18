@@ -3165,6 +3165,25 @@
    "status": "done"
   },
   {
+   "id": "regions-limb-caps",
+   "area": "regions",
+   "name": "Limb top and bottom tiles in the region grid",
+   "source": "gap:v5.1-feature",
+   "behavior": "buildRegionGrid offers only each limb's four sides (L, Bk, R, Fr); the limbs' up and down regions (rarm_up/down, larm_up/down, rleg/lleg in Pants) have no button, so the shoulder top and the hand or foot opening can never be filled from the grid.",
+   "codeRefs": [
+    "editor.js:1630-1646"
+   ],
+   "quirks": "",
+   "portTarget": "RegionsGroupViewModel.Limb1Top/Limb1Bot/Limb2Top/Limb2Bot (labels Top and Bot); RegionsGrid lays each limb out as a small cross with Top above and Bot below Fr, where those regions sit on the template, as tall as the body's cross.",
+   "risk": "low",
+   "parityCheck": "RegionsGroupTests.Each_limb_has_a_top_and_a_bottom_tile (both modes, all 18 regions reachable) and A_limb_cap_paints_its_region; HomeRibbonViewTests.The_grid_shows_all_eighteen_named_focusable_tiles; ShellLookTests hold the ribbon height.",
+   "owner": "App.Ribbon.Layout",
+   "check": "ui-auto",
+   "disposition": "fix",
+   "divergence": "4.1: the region grid has no button for a limb's top or bottom, so the shoulder top and the hand or foot opening stay unfilled. v5: each limb gets Top and Bot tiles, so all 18 regions can be filled (Este, 2026-10-18).",
+   "status": "done"
+  },
+  {
    "id": "regions-button-swatch-paint",
    "area": "regions",
    "name": "Region button swatch preview (paintRegionButton)",

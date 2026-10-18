@@ -36,14 +36,15 @@ public class BridgeSecurityTests
     static List<PipeAccessRule> Rules(PipeSecurity security) =>
         security.GetAccessRules(includeExplicit: true, includeInherited: true, typeof(SecurityIdentifier)).Cast<PipeAccessRule>().ToList();
 
-    [Fact] // protected, owned by the current user, the only Allow is the current user, and NETWORK is denied
+    [Fact] // protected, owned by the token's default owner (what a CurrentUserOnly client checks), the only Allow is the current user, and NETWORK is denied
     public void The_pipe_acl_allows_only_the_current_user()
     {
         var security = TestInputBridge.CreatePipeSecurity();
         var user = CurrentUser();
+        using var identity = WindowsIdentity.GetCurrent();
         var network = new SecurityIdentifier(WellKnownSidType.NetworkSid, null);
         Assert.True(security.AreAccessRulesProtected);
-        Assert.Equal(user, security.GetOwner(typeof(SecurityIdentifier)));
+        Assert.Equal(identity.Owner, security.GetOwner(typeof(SecurityIdentifier)));
         var rules = Rules(security);
         var allow = Assert.Single(rules, r => r.AccessControlType == AccessControlType.Allow);
         Assert.Equal((user, PipeAccessRights.FullControl), ((SecurityIdentifier)allow.IdentityReference, allow.PipeAccessRights));

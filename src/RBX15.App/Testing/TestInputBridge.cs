@@ -14,7 +14,7 @@ namespace RBX15.App.Testing;
 /// <list type="bullet">
 /// <item>One named pipe per launch, <c>rbx15-bridge-&lt;pid&gt;-&lt;32 random hex&gt;</c>, printed once to stdout as
 ///   <see cref="PipeLinePrefix"/> + name. Its ACL (<see cref="CreatePipeSecurity"/>) is protected, owned by the
-///   current user, allows only the current user and denies network logons.</item>
+///   token's default owner, allows only the current user and denies network logons.</item>
 /// <item>One client for the process lifetime: when it disconnects, the server closes, never listens again, and the
 ///   dispatcher is disposed, so hardware input works again.</item>
 /// <item>UTF-8 NDJSON: one request line, one response line. A line over <see cref="MaxLineBytes"/>, invalid UTF-8 or
@@ -83,14 +83,20 @@ public sealed class TestInputBridge : IDisposable
     internal static string NewPipeName() =>
         $"rbx15-bridge-{Environment.ProcessId}-{RandomNumberGenerator.GetHexString(32, lowercase: true)}";
 
-    /// <summary>Protected (no inherited entries); owner and only Allow: the current user, FullControl; Deny: NETWORK.</summary>
+    /// <summary>
+    /// Protected (no inherited entries); only Allow: the current user, FullControl; Deny: NETWORK. The owner is the
+    /// token's default owner, because a <see cref="PipeOptions.CurrentUserOnly"/> client compares the pipe owner with
+    /// <see cref="WindowsIdentity.Owner"/>: that is the user unelevated, but BUILTIN\Administrators when elevated
+    /// (the CI runner), where an owner of the user SID made every client connect throw.
+    /// </summary>
     internal static PipeSecurity CreatePipeSecurity()
     {
         using var identity = WindowsIdentity.GetCurrent();
         var user = identity.User ?? throw new InvalidOperationException("the current user has no SID");
+        var owner = identity.Owner ?? user;
         var security = new PipeSecurity();
         security.SetAccessRuleProtection(isProtected: true, preserveInheritance: false);
-        security.SetOwner(user);
+        security.SetOwner(owner);
         security.AddAccessRule(new PipeAccessRule(user, PipeAccessRights.FullControl, AccessControlType.Allow));
         security.AddAccessRule(new PipeAccessRule(new SecurityIdentifier(WellKnownSidType.NetworkSid, null), PipeAccessRights.FullControl, AccessControlType.Deny));
         return security;

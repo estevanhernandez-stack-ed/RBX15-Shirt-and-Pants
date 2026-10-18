@@ -8767,6 +8767,23 @@
    "disposition": "new",
    "divergence": "",
    "status": "done"
+  },
+  {
+   "id": "fill-gradient-stops",
+   "area": "fill-style",
+   "name": "Color stops on gradient and radial fills (new in v5.1)",
+   "source": "gap:v5.1-feature",
+   "behavior": "4.1's gradient and radial fills have exactly two colors, Color 1 and Color 2, so a three-color blend (a sunset, a metallic band) means painting regions in separate fills by hand.",
+   "codeRefs": [],
+   "quirks": "",
+   "portTarget": "Engine Fill gains Stops, an ImmutableArray of up to 3 lowercase #rrggbb middle colors (a longer list throws ArgumentException; ProjectIO refuses one as a ProjectFormatException). The colors are evenly spaced: Color 1 at 0, stop k of n at k/(n+1), Color 2 at 1; only \"linear\" and \"radial\" draw them, other types ignore them. With no stops the drawing path, every pixel and Fill.Key are 4.1's, byte for byte (the 4.1 goldens are untouched); with stops Key appends them after a second bar, so regions sharing a fill still group by key. Fill equality is structural for Stops (custom Equals and GetHashCode, since a record compares a list member by reference). ProjectIO writes \"stops\": [...] after scale in a region fill only when it has any, reads it when present (an array of #rgb or #rrggbb strings, a bad entry is a ProjectFormatException naming regionColors.<region>.stops[i]), and a file without it loads as before; 4.1 ignores the unknown key. App Fill Style group: for Gradient and Radial, one swatch per stop between Color 1 and Color 2 and a \"+\" button (\"Add a color stop\") after Color 2; \"+\" adds a stop halfway (RGB average) between the last stop, or Color 1, and Color 2, and is disabled at 3 stops; a click opens the same themed picker as Color 1 and 2 with live preview and cancel-reverts; right-click, Delete, Shift+F10 or the Menu key removes it. The other styles hide the stops and the \"+\" and keep the stops for the return to Gradient or Radial. Stops live in the current fill, so they follow the existing rules: session state, applyFillEdit's retarget by key, one undo step per edit that changes a region, a pick as one gesture, undo never moving the controls. Region button previews and the canvas paint through Fills and show the stops. The group's height does not change.",
+   "risk": "low",
+   "parityCheck": "Engine FillStopsTests: a red, green, blue linear at angle 0 is red, green-dominant and blue at the left, middle and right; two stops sit at thirds; a radial with one stop has the stop color at mid-radius; no stops give the two-color ramp and the same pixels, other types ignore stops; Key is 4.1's without stops and appends them with them; equality, hash and Key are structural for Stops; more than 3 stops throw; painting an equal stop fill is a no-op and retargeting follows the stops. ProjectIOTests: stops are written after scale only when present and round-trip, an empty or null array reads as none and is not written, a file without stops loads with none and the 4.1 key, a bad stops entry or a fourth stop throws ProjectFormatException naming its path. All 4.1 fills and goldens pass unchanged. App FillStopsTests: \"+\" adds the halfway color and disables at 3; remove drops the chosen stop; a stale swatch does nothing; a stop pick previews live, commits as one step and a cancel reverts; stops hide for Solid, Stripes, Checker, Dots and Camo and return for Gradient and Radial; painting stores the fill with its stops; add and remove retarget painted regions one step each and undo leaves the controls; a region tile swatch shows the middle color; the \"+\" button and swatches are named, ordered, hidden and shown as above; the Fill Style group and the Home ribbon keep their height with three stops.",
+   "owner": "Engine.Fills",
+   "check": "unit",
+   "disposition": "new",
+   "divergence": "",
+   "status": "done"
   }
  ]
 }

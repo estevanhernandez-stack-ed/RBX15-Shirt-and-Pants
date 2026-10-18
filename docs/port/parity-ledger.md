@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**425 rows.** Status: done 259, open 166. Disposition: fix 206, keep 188, drop 26, new 5. Checks: unit 123, ui-auto 122, manual 67, golden 66, none-retired 25, doc 22.
+**426 rows.** Status: done 260, open 166. Disposition: fix 206, keep 188, drop 26, new 6. Checks: unit 124, ui-auto 122, manual 67, golden 66, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -387,6 +387,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `project-and-export-dependency-note` | Export depends on fill/paintRegions code paths (spike-proven) | golden | keep | med |
 | done | `fillstyle-live-edit-rule` | Live-edit rule: edits retarget every region sharing the current fill key | unit | keep | med |
 | done | `tests-lib-fills` | fills.test.js: 14 tests that define the fill contract | unit | keep | med |
+| done | `fill-gradient-stops` | Color stops on gradient and radial fills (new in v5.1) | unit | new | low |
 
 ## Engine.History
 

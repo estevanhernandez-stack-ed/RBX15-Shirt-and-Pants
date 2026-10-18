@@ -1,0 +1,34 @@
+<UserControl x:Class="RBX15.App.Views.DetailsSettingsGroup"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- The Details tab's Settings group (editor.html:175-186; ledger details-settings-controls, details-settings).
+         DataContext: DetailsViewModel. One row, gap 4: the color well (26x22, no border), "W" (9px #888), the 50 px width slider
+         (1 to 8, default 2) and the Stitch checkbox (9px #888). The values are read when a detail button is clicked. -->
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="HomeStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Border Style="{DynamicResource RibbonGroup}">
+        <DockPanel>
+            <TextBlock Style="{DynamicResource RibbonGroupLabel}" Text="SETTINGS" />
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Button x:Name="DetailColor" Style="{StaticResource ColorSwatchButton}" Background="{Binding Color}"
+                        Command="{Binding PickColorCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Self}}"
+                        ToolTip="Detail color" AutomationProperties.Name="Detail color"
+                        AutomationProperties.HelpText="{Binding Color}" Margin="0,0,4,0" />
+                <TextBlock Style="{StaticResource MiniLabel}" Text="W" Margin="0,0,4,0" />
+                <Slider x:Name="WidthSlider" Width="50" Minimum="1" Maximum="8" SmallChange="1" LargeChange="1"
+                        TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Width}" VerticalAlignment="Center"
+                        FocusVisualStyle="{DynamicResource FocusRing}" Margin="0,0,4,0"
+                        ToolTip="Detail line width" AutomationProperties.Name="Detail width" />
+                <CheckBox x:Name="StitchBox" Content="Stitch" IsChecked="{Binding Stitch}" VerticalAlignment="Center"
+                          FontSize="9" Foreground="#888888" VerticalContentAlignment="Center"
+                          FocusVisualStyle="{DynamicResource FocusRing}" AutomationProperties.Name="Stitch" />
+            </StackPanel>
+        </DockPanel>
+    </Border>
+</UserControl>

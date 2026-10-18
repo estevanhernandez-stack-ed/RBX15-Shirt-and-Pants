@@ -18,7 +18,7 @@ public class ThemeKeyGuardTests
     {
         var theme = string.Concat(Directory.EnumerateFiles(Path.Combine(App, "Themes"), "*.xaml").Select(File.ReadAllText));
         var views = Directory.EnumerateFiles(Path.Combine(App, "Views"), "*.xaml").Append(Path.Combine(App, "MainWindow.xaml")).ToList();
-        Assert.Equal(24, views.Count); // the 10 M3a view files, ColorPickerPopup.xaml, MainWindow.xaml, ToolsGroup.xaml and BrushGroup.xaml (M3b Task 2), LayerPropertiesPanel.xaml (M3b Task 3), AssetLibraryPanel.xaml (M4a Task 2), AvatarPreviewPanel.xaml (v5.1 item 2), LayoutRibbon.xaml, DetailsRibbon.xaml and TextRibbon.xaml (M4b item 2), PlacementGroup.xaml and PresetsGroup.xaml (M4b item 5), BackgroundGroup.xaml and BgSettingsGroup.xaml (M4b item 6)
+        Assert.Equal(26, views.Count); // the 10 M3a view files, ColorPickerPopup.xaml, MainWindow.xaml, ToolsGroup.xaml and BrushGroup.xaml (M3b Task 2), LayerPropertiesPanel.xaml (M3b Task 3), AssetLibraryPanel.xaml (M4a Task 2), AvatarPreviewPanel.xaml (v5.1 item 2), LayoutRibbon.xaml, DetailsRibbon.xaml and TextRibbon.xaml (M4b item 2), PlacementGroup.xaml and PresetsGroup.xaml (M4b item 5), BackgroundGroup.xaml and BgSettingsGroup.xaml (M4b item 6), DetailsSettingsGroup.xaml and DetailButtonsGroup.xaml (M4b item 7)
         var missing = new List<string>();
         foreach (var file in views)
         {

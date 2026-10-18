@@ -77,12 +77,16 @@ internal static class Composition
         var assets = new AssetLibraryViewModel(import, fileDialogs, dialogs, status, settings, new PackSource(PackSource.DefaultDirectory), new AssetThumbnailLoader());
         // M4a Task 3: one status line per asset set whose previews fail (diag-console-only-errors; editor.js:2473-2475).
         ThumbnailFailureReport.Attach(assets, status);
+        // M4b item 7: the Details tab; a created detail layer sets the Select tool (editor.js:1860-1861), as an import does.
+        var details = new DetailsViewModel(session, colorPicker);
+        details.LayersAdded += (_, _) => tools.Set(Tool.Select);
         // M3a: construction lines above this line.
         return new MainViewModel(session)
         {
             Canvas = canvas,
             Home = home,
             Layout = layout,
+            Details = details,
             Layers = layers,
             Status = status,
             LayerProperties = layerProperties,

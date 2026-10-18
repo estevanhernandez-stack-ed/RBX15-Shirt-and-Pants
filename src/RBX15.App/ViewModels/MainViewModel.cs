@@ -28,6 +28,18 @@ public sealed partial class MainViewModel : ObservableObject
 
     public EditorSession Session { get; }
 
+    RibbonTab _activeTab = RibbonTab.Home;
+
+    /// <summary>
+    /// The ribbon tab showing (ledger ribbon-tab-switch). Window state only: it starts on Home, is not in the document,
+    /// is not an undo step and is not saved, and each window has its own.
+    /// </summary>
+    public RibbonTab ActiveTab
+    {
+        get => _activeTab;
+        set => SetProperty(ref _activeTab, value);
+    }
+
     /// <summary>
     /// The window title (interfaces R3): 4.1's product name while the document is untitled and clean (main.js:8,
     /// editor.html:6; ledger shell-window-title, keep), otherwise the Windows convention

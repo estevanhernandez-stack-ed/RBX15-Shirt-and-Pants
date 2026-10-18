@@ -18,6 +18,12 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <!-- M4b item 8 (W1): the 15-font gate compiles once the controller's capture is committed (tools/parity-ref/freeze-wordart-fonts.py
+       writes tests/goldens/app/wordart-fonts/index.json). Until then it is out of the build; nothing else changes. -->
+  <ItemGroup Condition="!Exists('$(MSBuildThisFileDirectory)..\..\tests\goldens\app\wordart-fonts\index.json')">
+    <Compile Remove="GoldenWordArtFontTests.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\RBX15.Engine\RBX15.Engine.csproj" />
     <ProjectReference Include="..\RBX15.Parity\RBX15.Parity.csproj" />

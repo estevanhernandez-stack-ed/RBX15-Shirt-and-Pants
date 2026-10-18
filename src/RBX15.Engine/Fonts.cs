@@ -41,7 +41,9 @@ public static partial class Fonts
 
     static readonly Lazy<IReadOnlyList<Face>> Declared = new(() => ParseManifest(File.ReadAllText(Path.Combine(Root, "README.md"))));
     static readonly ConcurrentDictionary<string, byte[]> Files = new(StringComparer.Ordinal);
-    static readonly ConcurrentDictionary<Face, SKTypeface> Typefaces = new();
+    // Lazy so the GetOrAdd factory runs once per face: ConcurrentDictionary may run a factory on several
+    // threads and keep one result, which would leak the losers' native typefaces.
+    static readonly ConcurrentDictionary<Face, Lazy<SKTypeface>> Typefaces = new();
 
     internal static readonly uint WghtTag = 'w' << 24 | 'g' << 16 | 'h' << 8 | 't';
 
@@ -83,7 +85,10 @@ public static partial class Fonts
     /// The typeface for a request: the matched file, its wght axis (when it has one) at the face's
     /// declared weight. Cache-owned; callers must not dispose.
     /// </summary>
-    public static SKTypeface Get(string family, int weight) => Typefaces.GetOrAdd(Match(family, weight), face =>
+    public static SKTypeface Get(string family, int weight) =>
+        Typefaces.GetOrAdd(Match(family, weight), face => new Lazy<SKTypeface>(() => Load(face))).Value;
+
+    static SKTypeface Load(Face face)
     {
         using var data = SKData.CreateCopy(FileBytes(face.File));
         var typeface = SKTypeface.FromData(data) ?? throw new InvalidDataException($"not a font: {face.File}");
@@ -94,7 +99,7 @@ public static partial class Fonts
         });
         typeface.Dispose();
         return instanced;
-    });
+    }
 
     /// <summary>The wght axis value a request draws at, or null for a static file.</summary>
     internal static float? AxisWeight(string family, int weight) =>

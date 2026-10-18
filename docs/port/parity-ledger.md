@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**425 rows.** Status: done 259, open 166. Disposition: fix 206, keep 188, drop 26, new 5. Checks: unit 123, ui-auto 122, manual 67, golden 66, none-retired 25, doc 22.
+**426 rows.** Status: done 260, open 166. Disposition: fix 207, keep 188, drop 26, new 5. Checks: ui-auto 123, unit 123, manual 67, golden 66, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -190,6 +190,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `bg-color-opacity` | Background color picker and opacity slider | ui-auto | keep | med |
 | open | `bg-image` | Background image picker | ui-auto | fix | med |
 | open | `placement-selection-guard` | Placement actions with no selection | ui-auto | fix | low |
+| done | `regions-limb-caps` | Limb top and bottom tiles in the region grid | ui-auto | fix | low |
 | open | `presets-six-buttons` | Layout presets row (6 buttons) | ui-auto | fix | low |
 | open | `layout-presets` | Layout tab: Presets (6 buttons) | ui-auto | fix | low |
 | open | `layout-background-swatches` | Background swatches (12) | ui-auto | fix | low |

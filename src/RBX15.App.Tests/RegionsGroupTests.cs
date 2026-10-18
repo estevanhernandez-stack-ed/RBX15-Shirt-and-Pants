@@ -37,8 +37,36 @@ public class RegionsGroupTests
         Assert.Equal(new[] { "larm_front", "larm_left", "larm_back", "larm_right" }, Keys(regions.Limb2));
         Assert.Equal(new[] { "Fr", "L", "Bk", "R" }, Labels(regions.Limb2));
         Assert.Equal(("Torso", "Right Arm", "Left Arm"), (regions.BodyLabel, regions.LimbLabel1, regions.LimbLabel2));
-        // limb up and down have no tile (regions-grid-layout-shirt quirk, keep)
+        // the side rows stay 4.1's; the limbs' top and bottom are separate tiles (regions-limb-caps)
         Assert.DoesNotContain(regions.Limb1.Concat(regions.Limb2), t => t.Region.EndsWith("_up") || t.Region.EndsWith("_down"));
+    }
+
+    [Theory] // regions-limb-caps (fix): each limb gets Top and Bot; 4.1 had no button for its shoulder or hand opening
+    [InlineData(false, "rarm", "larm", "Right Arm", "Left Arm")]
+    [InlineData(true, "rleg", "lleg", "Right Leg", "Left Leg")]
+    public void Each_limb_has_a_top_and_a_bottom_tile(bool pants, string right, string left, string rightLabel, string leftLabel)
+    {
+        var (session, regions, _) = Make();
+        if (pants) session.Apply(DocumentOps.ToggleMode);
+
+        Assert.Equal(new[] { right + "_up", right + "_down", left + "_up", left + "_down" },
+            new[] { regions.Limb1Top, regions.Limb1Bot, regions.Limb2Top, regions.Limb2Bot }.Select(t => t.Region));
+        Assert.Equal(new[] { "Top", "Bot", "Top", "Bot" },
+            new[] { regions.Limb1Top, regions.Limb1Bot, regions.Limb2Top, regions.Limb2Bot }.Select(t => t.Label));
+        Assert.Equal($"{rightLabel} Bot (Bottom)", regions.Limb1Bot.AutomationName);
+        Assert.Equal($"{leftLabel} Top", regions.Limb2Top.AutomationName);
+        Assert.Equal(18, regions.AllTiles.Select(t => t.Region).Distinct().Count());   // every region of the template
+    }
+
+    [Fact] // a cap paints like any tile, and the tile follows the document
+    public void A_limb_cap_paints_its_region()
+    {
+        var (session, regions, _) = Make();
+        regions.Limb1Top.PaintCommand.Execute(null);
+        Assert.NotNull(DocumentOps.RegionFill(session.Document, "rarm_up"));
+        Assert.NotNull(regions.Limb1Top.Fill);
+        regions.Limb1Top.ClearCommand.Execute(null);
+        Assert.Null(DocumentOps.RegionFill(session.Document, "rarm_up"));
     }
 
     [Fact] // regions-grid-layout-pants: same structure, waist/rleg/lleg keys, Leg headings, rebuilt on toggle

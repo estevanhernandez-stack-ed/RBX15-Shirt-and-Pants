@@ -245,13 +245,14 @@ Every deliberate behavior change in v5, generated from `parity-ledger.json` rows
 | `tests-smoke-parse` | Retired | 4.1: new Function() parse check on main.js and editor.js. v5: the compiler with warnings-as-errors is the syntax floor. |
 | `vestigial-hidden-controls` | Retired | 4.1: hidden unused assetType select and btnExport2 button exist in markup. v5: not carried over. |
 
-## New in v5 (6)
+## New in v5 (7)
 
 | ID | Owner | Behavior |
 |---|---|---|
 | `view-region-guide` | Engine.Render | Region guide on the canvas (view only) |
 | `shell-unsaved-work-loss` | App.Storage | No unsaved-changes guard on close, reload or quit |
 | `avatar-preview-3d` | App.Shell | 3D avatar preview (new in v5.1) |
+| `avatar-preview-r15` | App.Shell | R15 body in the 3D preview (new in v5.1) |
 | `test-input-bridge` | Parity | Test-only input bridge (absent from Release and Store builds) |
 | `art-palette` | App.Ribbon.Home | Palette from the user's art (new in v5.1) |
 | `fill-gradient-stops` | Engine.Fills | Color stops on gradient and radial fills (new in v5.1) |

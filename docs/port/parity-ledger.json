@@ -8404,6 +8404,23 @@
    "status": "done"
   },
   {
+   "id": "avatar-preview-r15",
+   "area": "shell",
+   "name": "R15 body in the 3D preview (new in v5.1)",
+   "source": "gap:v5.1-feature",
+   "behavior": "4.1 has no 3D view, so no body to switch. The 3D preview (avatar-preview-3d) shows only Roblox's classic blocky body; Roblox R15 avatars cut the same template into more parts (DevForum, \"Classic Clothing UV Mapping Guidelines [R15]\").",
+   "codeRefs": [],
+   "quirks": "",
+   "portTarget": "A small \"Classic | R15\" switch in the preview panel's header picks the body (AvatarPreviewViewModel.Body, classic on every launch; session state only: not in the document, no undo step, never dirty, not saved). R15 is approximate and the note under the viewport says so: 15 parts (head, UpperTorso over LowerTorso, and per limb an upper, lower and hand or foot part) sized as their template slices at 64 px a stud, the classic silhouette in pieces, since no official stud sizes are published. The template is cut where the DevForum guideline cuts it: on every 128 px tall torso face the UpperTorso takes the top 96 rows and the LowerTorso the bottom 32; on every 128 px tall limb side the upper limb takes the top 64, the lower limb the next 48 and the hand or foot the last 16, each slice inset 0.5 px. Outer caps wear the Up and Down regions; the caps where two parts meet are undressed body-color geometry. A fixed pose (arms 6 degrees outward at the shoulder, forearm and hand 14 degrees forward at the elbow, legs 3 degrees outward at the hip) is applied as rigid rotations in Engine Avatar, so the view draws every face from its corners. The head stays the styled cylinder. Rthro and mesh bodies are still out of scope.",
+   "risk": "low",
+   "parityCheck": "Engine AvatarR15Tests: Build(mode) equals Build(mode, Classic) face for face and Classic is unchanged; R15 has exactly 15 boxes; every side face's UV is its region's V slice (torso 0-96 and 96-128, limbs 0-64, 64-112, 112-128, all inset 0.5); outer caps map to Up and Down, inner caps are undressed; dressing per mode; every box stays rigid after posing (all edges and diagonals), the posed left and right limbs are mirror images, every posed face still faces outward, and the unposed chains share their joint faces with no gap. App AvatarPreviewTests: switching Body rebuilds Boxes (15 against 6), adds no undo step and leaves the Document unchanged; the switch buttons \"Classic body\" and \"R15 body\" set the body and the note text follows; a rendered R15 shirt panel with rarm_front split at row 64 shows red on the projected upper arm and green on the lower arm and hand, and torso_front split at row 96 shows red on the UpperTorso and green on the LowerTorso.",
+   "owner": "App.Shell",
+   "check": "ui-auto",
+   "disposition": "new",
+   "divergence": "",
+   "status": "done"
+  },
+  {
    "id": "diag-console-only-errors",
    "area": "dialogs",
    "name": "Image decode/read failures are console-only (silent to user)",

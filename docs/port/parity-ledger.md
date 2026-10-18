@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**427 rows.** Status: done 261, open 166. Disposition: fix 207, keep 188, drop 26, new 6. Checks: unit 124, ui-auto 123, manual 67, golden 66, none-retired 25, doc 22.
+**428 rows.** Status: done 262, open 166. Disposition: fix 207, keep 188, drop 26, new 7. Checks: ui-auto 124, unit 124, manual 67, golden 66, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -240,6 +240,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `shell-external-drop-guard` | Dropping files outside the drop zone/canvas is swallowed, not navigated | ui-auto | keep | low |
 | open | `shell-header-version-hardcoded` | Header version string is hand-typed and drifts from docs | manual | fix | low |
 | done | `avatar-preview-3d` | 3D avatar preview (new in v5.1) | ui-auto | new | low |
+| done | `avatar-preview-r15` | R15 body in the 3D preview (new in v5.1) | ui-auto | new | low |
 | done | `font-ui-weight-600` | UI labels at CSS weight 600 in the vendored variable fonts | manual | fix | low |
 | done | `window-title-dirty-marker` | Window title names the project file and marks unsaved changes | unit | fix | low |
 

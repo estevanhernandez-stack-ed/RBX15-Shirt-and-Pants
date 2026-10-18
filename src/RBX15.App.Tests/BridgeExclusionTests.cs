@@ -36,6 +36,21 @@ public class BridgeExclusionTests
     public void The_app_under_test_has_no_bridge() =>
         Assert.Equal((false, false), Scan(typeof(App).Assembly.Location));
 
+    /// <summary>
+    /// Set by scripts/build-msix.ps1 to the RBX15.App.dll it unpacked from the finished MSIX. Unset in a plain test run.
+    /// </summary>
+    public const string PackagedDllVariable = "RBX15_PACKAGED_APP_DLL";
+
+    [Fact] // the DLL inside the shipped MSIX (ledger msix-make-script): the script unpacks the package and points this at it
+    public void The_packaged_app_has_no_bridge()
+    {
+        string? path = Environment.GetEnvironmentVariable(PackagedDllVariable);
+        if (string.IsNullOrEmpty(path)) return; // not a packaging run; the script asserts this test ran and passed
+        Assert.True(File.Exists(path), $"{PackagedDllVariable} names a file that does not exist: {path}");
+        Assert.Equal("RBX15.App.dll", Path.GetFileName(path));
+        Assert.Equal((false, false), Scan(path));
+    }
+
     [Fact] // a plain Release build of the app has no bridge; the same build with the flag has it (positive control)
     public void A_release_build_has_no_bridge_and_a_flagged_build_does()
     {

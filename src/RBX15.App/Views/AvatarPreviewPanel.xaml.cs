@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -61,6 +62,12 @@ public partial class AvatarPreviewPanel : UserControl
 
     internal PerspectiveCamera CameraElement => Camera;
 
+    internal ToggleButton ClassicBodyButtonElement => ClassicBodyButton;
+
+    internal ToggleButton R15BodyButtonElement => R15BodyButton;
+
+    internal TextBlock NoteElement => BodyNoteText;
+
     /// <summary>Left / Right turn 15 degrees, Home returns to the front (spec, Panel). Returns whether the key was taken.</summary>
     internal bool HandleKey(Key key)
     {
@@ -80,6 +87,7 @@ public partial class AvatarPreviewPanel : UserControl
         _vm = vm;
         if (vm is not null) vm.PropertyChanged += OnVmChanged;
         SyncRotation();
+        SyncBodySwitch();
         RebuildModels();
         UpdateRendering();
     }
@@ -99,7 +107,24 @@ public partial class AvatarPreviewPanel : UserControl
             case nameof(AvatarPreviewViewModel.IsVisible):
                 UpdateRendering();
                 break;
+            case nameof(AvatarPreviewViewModel.Body):
+                SyncBodySwitch();
+                break;
         }
+    }
+
+    /// <summary>The segmented switch shows the view-model's body; a click sets it (the buttons do nothing else).</summary>
+    void SyncBodySwitch()
+    {
+        var body = _vm?.Body ?? AvatarBody.Classic;
+        ClassicBodyButton.IsChecked = body == AvatarBody.Classic;
+        R15BodyButton.IsChecked = body == AvatarBody.R15;
+    }
+
+    void OnBodyButton(object sender, RoutedEventArgs e)
+    {
+        if (_vm is not null) _vm.Body = ReferenceEquals(sender, R15BodyButton) ? AvatarBody.R15 : AvatarBody.Classic;
+        SyncBodySwitch();   // a click on the checked button toggles it off; put it back
     }
 
     void SyncRotation()
@@ -127,6 +152,10 @@ public partial class AvatarPreviewPanel : UserControl
         }
         var body = new SolidColorBrush(BodyColor);
         body.Freeze();
+        var dressedMaterial = textureBrush is null ? null : new DiffuseMaterial(textureBrush);
+        dressedMaterial?.Freeze();
+        var bodyMaterial = new DiffuseMaterial(body);
+        bodyMaterial.Freeze();
         Body.Children.Add(Stage.Value);
         foreach (var box in _vm.Boxes)
         {
@@ -135,12 +164,11 @@ public partial class AvatarPreviewPanel : UserControl
                 Body.Children.Add(Head.Value);
                 continue;
             }
-            bool textured = box.Dressed && textureBrush is not null;
-            var material = new DiffuseMaterial(textured ? textureBrush! : body);
-            material.Freeze();
             foreach (var face in box.Faces)
             {
-                var model = new GeometryModel3D(Mesh(face, textured), material);
+                // per face: an R15 part wears the template on its sides and outer caps, not on the caps where parts meet
+                bool textured = face.Region is not null && dressedMaterial is not null;
+                var model = new GeometryModel3D(Mesh(face, textured), textured ? dressedMaterial! : bodyMaterial);
                 model.Freeze();
                 Body.Children.Add(model);
             }

@@ -46,6 +46,7 @@ public sealed class AvatarPreviewViewModel : ObservableObject, IDisposable
     bool _stale = true, _scheduled, _visible = true, _dragging, _disposed;
     double _yaw, _pitch;
     TemplateMode _mode;
+    AvatarBody _body = AvatarBody.Classic;
     IReadOnlyList<AvatarBox> _boxes;
     BitmapSource? _texture;
 
@@ -66,7 +67,7 @@ public sealed class AvatarPreviewViewModel : ObservableObject, IDisposable
         _clock = clock;
         _dispatcher = Dispatcher.CurrentDispatcher;
         _mode = session.Document.Mode;
-        _boxes = Avatar.Build(_mode);
+        _boxes = Avatar.Build(_mode, _body);
         session.Changed += OnSessionChanged;
         HideCommand = new RelayCommand(() => IsVisible = false);
         ShowCommand = new RelayCommand(() => IsVisible = true);
@@ -81,8 +82,33 @@ public sealed class AvatarPreviewViewModel : ObservableObject, IDisposable
 
     public TemplateMode Mode => _mode;
 
-    /// <summary>The six boxes for <see cref="Mode"/> (<see cref="Avatar.Build"/>).</summary>
+    /// <summary>The classic six boxes or the approximate R15 fifteen for <see cref="Mode"/> (<see cref="Avatar.Build"/>).</summary>
     public IReadOnlyList<AvatarBox> Boxes => _boxes;
+
+    /// <summary>The note under the viewport, per <see cref="Body"/>.</summary>
+    public const string ClassicNote = "Classic body. R15 and Rthro avatars stretch the texture.";
+
+    public const string R15Note = "R15 (approximate): parts split where Roblox cuts the template. Rthro and other mesh bodies differ.";
+
+    /// <summary>
+    /// Which body the preview wears; classic on every launch. Session state only: not in the document, not an undo step, not
+    /// saved. A change rebuilds <see cref="Boxes"/> (the texture is the same either way).
+    /// </summary>
+    public AvatarBody Body
+    {
+        get => _body;
+        set
+        {
+            if (_body == value) return;
+            _body = value;
+            _boxes = Avatar.Build(_mode, _body);
+            OnPropertyChanged(nameof(Body));
+            OnPropertyChanged(nameof(BodyNote));
+            OnPropertyChanged(nameof(Boxes));
+        }
+    }
+
+    public string BodyNote => _body == AvatarBody.R15 ? R15Note : ClassicNote;
 
     /// <summary>The document on the body color (<see cref="Avatar.RenderTexture"/>) as a frozen 96 DPI bitmap; null before the first build.</summary>
     public BitmapSource? Texture => _texture;
@@ -198,7 +224,7 @@ public sealed class AvatarPreviewViewModel : ObservableObject, IDisposable
         if (modeMoved)
         {
             _mode = doc.Mode;
-            _boxes = Avatar.Build(_mode);
+            _boxes = Avatar.Build(_mode, _body);
         }
         using (SKImage image = Avatar.RenderTexture(doc))
             _texture = AssetThumbnailLoader.ToBitmapSource(image);

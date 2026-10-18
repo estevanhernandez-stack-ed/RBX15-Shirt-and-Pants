@@ -440,4 +440,170 @@ public class AvatarPreviewTests
         vm.Yaw = 180;
         Assert.True(Darkest(Render(view), Project(view, new Point3D(0, 4.55, -0.6))) > 70, "ink on the back of the head");
     });
+
+    // ---- the R15 body (ledger avatar-preview-r15) ----
+
+    /// <summary>Where the middle of <paramref name="part"/>'s <paramref name="face"/> lands in the panel, posed geometry included.</summary>
+    static Point FaceCenter(AvatarPreviewPanel view, AvatarPreviewViewModel vm, AvatarPart part, Face face)
+    {
+        var c = vm.Boxes.Single(b => b.Part == part).Faces.Single(f => f.Face == face).Corners;
+        return Project(view, new Point3D(c.Average(v => v.X), c.Average(v => v.Y), c.Average(v => v.Z)));
+    }
+
+    /// <summary>A document whose template-sized layer paints <paramref name="region"/>'s top <paramref name="split"/> rows red and the rest green.</summary>
+    static Document SplitDoc(TemplateMode mode, string region, int split)
+    {
+        Assert.True(Template.TryFind(mode, region, out var r));
+        var info = new SkiaSharp.SKImageInfo(TemplateSize.Width, TemplateSize.Height, SkiaSharp.SKColorType.Rgba8888, SkiaSharp.SKAlphaType.Premul);
+        using var surface = SkiaSharp.SKSurface.Create(info);
+        using var red = new SkiaSharp.SKPaint { Color = new SkiaSharp.SKColor(255, 0, 0) };
+        using var green = new SkiaSharp.SKPaint { Color = new SkiaSharp.SKColor(0, 255, 0) };
+        surface.Canvas.DrawRect(r.X, r.Y, r.W, split, red);
+        surface.Canvas.DrawRect(r.X, r.Y + split, r.W, r.H - split, green);
+        return new Document
+        {
+            Mode = mode,
+            BgOpacity = 0,
+            Layers = ImmutableList.Create(new Layer { Id = 1, Image = surface.Snapshot() }),
+        };
+    }
+
+    [Fact]
+    public void The_body_defaults_to_classic_and_switching_rebuilds_the_boxes_without_touching_the_document() => StaThread.Run(() =>
+    {
+        var session = new EditorSession(DocWith(TemplateMode.Shirt));
+        var vm = Vm(session);
+        Assert.Equal(AvatarBody.Classic, vm.Body);
+        Assert.Equal(6, vm.Boxes.Count);
+        var doc = session.Document;
+        int undo = session.UndoCount;
+
+        var seen = new List<string?>();
+        vm.PropertyChanged += (_, e) => seen.Add(e.PropertyName);
+        vm.Body = AvatarBody.R15;
+        Assert.Equal(15, vm.Boxes.Count);
+        Assert.Contains(nameof(AvatarPreviewViewModel.Boxes), seen);
+        Assert.Contains(nameof(AvatarPreviewViewModel.BodyNote), seen);
+        Assert.Equal(["LeftHand", "LeftLowerArm", "LeftUpperArm", "LowerTorso", "RightHand", "RightLowerArm", "RightUpperArm", "UpperTorso"], DressedParts(vm));
+
+        vm.Body = AvatarBody.Classic;
+        Assert.Equal(6, vm.Boxes.Count);
+
+        // session state: no undo step, document untouched, not dirty
+        vm.Body = AvatarBody.R15;
+        Assert.Same(doc, session.Document);
+        Assert.Equal(undo, session.UndoCount);
+        Assert.False(session.IsDirty);
+
+        // a mode change keeps the body
+        session.Apply(d => d with { Mode = TemplateMode.Pants });
+        StaThread.Pump();
+        Assert.Equal(AvatarBody.R15, vm.Body);
+        Assert.Equal(15, vm.Boxes.Count);
+        Assert.Equal(["LeftFoot", "LeftLowerLeg", "LeftUpperLeg", "LowerTorso", "RightFoot", "RightLowerLeg", "RightUpperLeg", "UpperTorso"], DressedParts(vm));
+    });
+
+    [Fact]
+    public void Setting_the_same_body_again_changes_nothing() => StaThread.Run(() =>
+    {
+        var vm = Vm(new EditorSession(DocWith(TemplateMode.Shirt)));
+        var boxes = vm.Boxes;
+        var seen = new List<string?>();
+        vm.PropertyChanged += (_, e) => seen.Add(e.PropertyName);
+        vm.Body = AvatarBody.Classic;
+        Assert.Same(boxes, vm.Boxes);
+        Assert.Empty(seen);
+    });
+
+    [Fact]
+    public void The_switch_has_two_named_toggles_and_clicking_them_sets_the_body() => StaThread.Run(() =>
+    {
+        var (vm, view) = Panel(DocWith(TemplateMode.Shirt));
+        var classic = view.ClassicBodyButtonElement;
+        var r15 = view.R15BodyButtonElement;
+        Assert.Equal("Classic body", System.Windows.Automation.AutomationProperties.GetName(classic));
+        Assert.Equal("R15 body", System.Windows.Automation.AutomationProperties.GetName(r15));
+        Assert.True(classic.IsChecked);
+        Assert.False(r15.IsChecked);
+
+        r15.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+        Assert.Equal(AvatarBody.R15, vm.Body);
+        Assert.True(r15.IsChecked);
+        Assert.False(classic.IsChecked);
+
+        classic.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+        Assert.Equal(AvatarBody.Classic, vm.Body);
+        Assert.True(classic.IsChecked);
+        Assert.False(r15.IsChecked);
+
+        // a second click on the checked one keeps it on
+        classic.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+        Assert.Equal(AvatarBody.Classic, vm.Body);
+        Assert.True(classic.IsChecked);
+
+        // and a body set from code shows on the switch
+        vm.Body = AvatarBody.R15;
+        Assert.True(r15.IsChecked);
+        Assert.False(classic.IsChecked);
+    });
+
+    [Fact]
+    public void The_note_under_the_viewport_follows_the_body() => StaThread.Run(() =>
+    {
+        var (vm, view) = Panel(DocWith(TemplateMode.Shirt));
+        Assert.Equal("Classic body. R15 and Rthro avatars stretch the texture.", view.NoteElement.Text);
+        vm.Body = AvatarBody.R15;
+        Assert.Equal("R15 (approximate): parts split where Roblox cuts the template. Rthro and other mesh bodies differ.", view.NoteElement.Text);
+        vm.Body = AvatarBody.Classic;
+        Assert.Equal("Classic body. R15 and Rthro avatars stretch the texture.", view.NoteElement.Text);
+    });
+
+    [Fact]
+    public void R15_shirt_mode_splits_the_right_arm_texture_at_row_64_into_red_upper_arm_and_green_lower_arm() => StaThread.Run(() =>
+    {
+        var (vm, view) = Panel(SplitDoc(TemplateMode.Shirt, "rarm_front", 64));
+        vm.Body = AvatarBody.R15;
+        var image = Render(view);
+
+        AssertRed(Patch(image, FaceCenter(view, vm, AvatarPart.RightUpperArm, Face.Front)));
+        AssertGreen(Patch(image, FaceCenter(view, vm, AvatarPart.RightLowerArm, Face.Front)));
+        // rows 112..128 are the hand's: green too
+        AssertGreen(Patch(image, FaceCenter(view, vm, AvatarPart.RightHand, Face.Front)));
+        // the left arm and the torso carry nothing of it
+        AssertGrey(Patch(image, FaceCenter(view, vm, AvatarPart.LeftUpperArm, Face.Front)));
+        AssertGrey(Patch(image, FaceCenter(view, vm, AvatarPart.UpperTorso, Face.Front)));
+    });
+
+    [Fact]
+    public void R15_torso_splits_the_texture_at_row_96_into_red_upper_torso_and_green_lower_torso() => StaThread.Run(() =>
+    {
+        var (vm, view) = Panel(SplitDoc(TemplateMode.Shirt, "torso_front", 96));
+        vm.Body = AvatarBody.R15;
+        var image = Render(view);
+        AssertRed(Patch(image, FaceCenter(view, vm, AvatarPart.UpperTorso, Face.Front)));
+        AssertGreen(Patch(image, FaceCenter(view, vm, AvatarPart.LowerTorso, Face.Front)));
+    });
+
+    [Fact]
+    public void R15_pants_mode_dresses_the_legs_and_the_arms_stay_body_color() => StaThread.Run(() =>
+    {
+        var (vm, view) = Panel(SplitDoc(TemplateMode.Pants, "rleg_front", 64));
+        vm.Body = AvatarBody.R15;
+        var image = Render(view);
+        AssertRed(Patch(image, FaceCenter(view, vm, AvatarPart.RightUpperLeg, Face.Front)));
+        AssertGreen(Patch(image, FaceCenter(view, vm, AvatarPart.RightLowerLeg, Face.Front)));
+        AssertGrey(Patch(image, FaceCenter(view, vm, AvatarPart.RightUpperArm, Face.Front)));
+    });
+
+    [Fact]
+    public void Switching_back_to_classic_restores_the_classic_render() => StaThread.Run(() =>
+    {
+        var (vm, view) = Panel(DocWith(TemplateMode.Shirt, ("rarm_front", "#00ff00")));
+        vm.Body = AvatarBody.R15;
+        Render(view);
+        vm.Body = AvatarBody.Classic;
+        var image = Render(view);
+        AssertGreen(ColorAt(view, image, -1.5, 3, 0.5));
+        Assert.Equal(6, vm.Boxes.Count);
+    });
 }

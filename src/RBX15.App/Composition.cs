@@ -27,7 +27,7 @@ internal static class Composition
     /// The wiring, once: the native services come in, so the app passes the real ones and the tests'
     /// TestShell passes fakes. Every line that connects view-models lives here and nowhere else.
     /// </summary>
-    public static MainViewModel Build(EditorSession session, IFileDialogs fileDialogs, IDialogService dialogs, IColorPicker colorPicker, ISettingsStore settings)
+    public static MainViewModel Build(EditorSession session, IFileDialogs fileDialogs, IDialogService dialogs, IColorPicker colorPicker, ISettingsStore settings, Func<Random>? random = null)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(fileDialogs);
@@ -56,8 +56,13 @@ internal static class Composition
         var layerProperties = new LayerPropertiesViewModel(session);
         // v5.1: the 3D avatar preview over the session; the Settings group's "3D preview" box toggles it.
         var avatarPreview = new AvatarPreviewViewModel(session);
+        // M4b item 5: Placement (Home) and Presets (Layout) share the app's random source; tests pass a seeded one through <paramref name="random"/>.
+        Func<Random> placementRng = random ?? (() => Random.Shared);
+        var placement = new PlacementViewModel(session, placementRng);
+        var layout = new LayoutViewModel { Presets = new PresetsViewModel(session, placementRng) };
         var home = new HomeViewModel(session, colorPicker)
         {
+            Placement = placement,
             AvatarPreview = avatarPreview,
             Tools = tools,
             Brush = brush,
@@ -72,6 +77,7 @@ internal static class Composition
         {
             Canvas = canvas,
             Home = home,
+            Layout = layout,
             Layers = layers,
             Status = status,
             LayerProperties = layerProperties,

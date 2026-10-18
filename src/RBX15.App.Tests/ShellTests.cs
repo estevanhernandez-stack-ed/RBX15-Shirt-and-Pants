@@ -112,8 +112,8 @@ public class ShellTests
         Assert.Equal((true, 18.0, "626Labs"), facts.Mark);
         Assert.Equal("DEVELOPED AT 626LABS", facts.Footer);
         Assert.Equal((10.0, "#FF5E6B7F", HorizontalAlignment.Center), facts.FooterLook);   // styles.css:678-689: 10px fg-muted, centered
-        Assert.Equal([("Home", (bool?)true), ("Layout", (bool?)false), ("Details", (bool?)false), ("Text", (bool?)false)], facts.Tabs);   // four tabs; the three empty ones are Collapsed until a pane has a group (RibbonTabsTests)
-        Assert.Equal([Visibility.Visible, Visibility.Collapsed, Visibility.Collapsed, Visibility.Collapsed], facts.TabVisibility);
+        Assert.Equal([("Home", (bool?)true), ("Layout", (bool?)false), ("Details", (bool?)false), ("Text", (bool?)false)], facts.Tabs);   // four tabs; a tab is Collapsed until its pane has a group, so Layout shows (Presets, M4b item 5) and Details and Text do not yet (RibbonTabsTests)
+        Assert.Equal([Visibility.Visible, Visibility.Visible, Visibility.Collapsed, Visibility.Collapsed], facts.TabVisibility);
         Assert.Equal(280, facts.Panel);
         Assert.True(facts.Regions);
         Assert.Null(facts.RightPanel);

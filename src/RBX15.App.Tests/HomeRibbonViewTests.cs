@@ -211,7 +211,7 @@ public class HomeRibbonViewTests
         Assert.Equal(new[] { "Left Arm", "Right Arm" }, Headings());
     });
 
-    [Fact] // the mode button, settings and edit bindings; M3b shows Tools and Brush; Placement and Keys stay hidden (M4b); Save work and Open show (M4a)
+    [Fact] // the mode button, settings and edit bindings; M3b shows Tools and Brush; Placement is collapsed until a layer is selected (M4b item 5) and Keys stays hidden until item 10; Save work and Open show (M4a)
     public void Mode_settings_and_edit_bind_and_hidden_groups_are_absent() => StaThread.Run(() =>
     {
         var session = new EditorSession();
@@ -238,6 +238,7 @@ public class HomeRibbonViewTests
         Assert.Equal(new[] { "MODE", "TOOLS", "BRUSH", "EDIT", "SETTINGS", "FILL STYLE", "CLICK REGIONS TO FILL" },
             texts.Where(t => t is "MODE" or "TOOLS" or "BRUSH" or "PLACEMENT" or "EDIT" or "SETTINGS" or "FILL STYLE" or "CLICK REGIONS TO FILL"));
         Assert.Contains(buttons, b => b.Content is "Draw");
+        Assert.Equal(Visibility.Collapsed, ((UserControl)view.FindName("Placement")).Visibility);   // nothing selected
         Assert.DoesNotContain(buttons, b => b.Content is "Fit Front" or "Keys: ON");
         Assert.Contains(buttons, b => b.Content is "Save work");
         Assert.Contains(buttons, b => b.Content is "Open");

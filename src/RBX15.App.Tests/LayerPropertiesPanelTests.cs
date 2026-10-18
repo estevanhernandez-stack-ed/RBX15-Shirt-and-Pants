@@ -110,14 +110,89 @@ public class LayerPropertiesPanelTests
         props.AdjustmentsExpanded = true;
         Layout(view);
         var focusable = Descendants<Control>(view).Where(c => c.Focusable && Shown(c) && c is not ScrollViewer).ToList();
-        Assert.Equal(20, focusable.OfType<TextBox>().Count() + focusable.OfType<Slider>().Count() + focusable.OfType<ButtonBase>().Count());
+        Assert.Equal(21, focusable.OfType<TextBox>().Count() + focusable.OfType<Slider>().Count() + focusable.OfType<ButtonBase>().Count());
         Assert.All(focusable, c => Assert.False(string.IsNullOrEmpty(AutomationProperties.GetName(c)), c.GetType().Name + " " + c.Name));
         Assert.Equal(
             new[] { "Flip horizontally.", "Flip vertically.", "Duplicate layer.", "Move layer up.", "Move layer down." },
             new[] { "FlipHButton", "FlipVButton", "DuplicateButton", "UpButton", "DownButton" }.Select(n => (string)Named<Button>(view, n).ToolTip));
-        Assert.Null(view.FindName("CenterFrontButton"));             // props-center-front is M4 (interface R13)
-        Assert.DoesNotContain(Descendants<Button>(view), b => b.Content as string == "Center on front torso");
+        var center = Named<Button>(view, "CenterFrontButton");       // props-center-front (M4b item 5): 4.1's button has no title, so it has no tooltip
+        Assert.Equal("Center on front torso", center.Content);
+        Assert.Equal("Center on front torso", AutomationProperties.GetName(center));
+        Assert.Null(center.ToolTip);
+        Assert.Same(Application.Current.FindResource("FocusRing"), center.FocusVisualStyle);
     });
+
+    [Fact] // props-center-front: full width, under Up and Down and above Image adjustments (editor.js:776-778)
+    public void The_center_button_is_full_width_between_Up_Down_and_the_adjustments() => StaThread.Run(() =>
+    {
+        var (_, _, view) = Make();
+        var center = Named<Button>(view, "CenterFrontButton");
+        var controls = Named<StackPanel>(view, "Controls");
+        var order = controls.Children.Cast<UIElement>().ToList();
+
+        Assert.Equal(HorizontalAlignment.Stretch, center.HorizontalAlignment);
+        Assert.Equal(controls.ActualWidth, center.ActualWidth, 0.5);
+        Assert.Equal(order.IndexOf((UIElement)Named<Button>(view, "DownButton").Parent) + 1, order.IndexOf(center));
+        Assert.Equal(order.IndexOf(center) + 1, order.IndexOf(Named<Expander>(view, "Adjustments")));
+    });
+
+    [Theory] // props-center-front parityCheck: numeric x,y for several scales; scale and rotation stay; one undo step
+    [InlineData(1.0, TemplateMode.Shirt)]
+    [InlineData(0.5, TemplateMode.Shirt)]
+    [InlineData(0.25, TemplateMode.Shirt)]
+    [InlineData(0.5, TemplateMode.Pants)]   // the label stays "front torso" and the Body Front slot is the target in Pants too
+    public void Center_on_front_torso_is_one_undo_step_that_leaves_scale_and_rotation_alone(double scale, TemplateMode mode) => StaThread.Run(() =>
+    {
+        var layer = LayerOf(1, 200, 100) with { Scale = scale, Rotation = 33, X = 5, Y = 6 };
+        var session = new EditorSession(new Document { Mode = mode, Layers = SessionWith(layer).Document.Layers });
+        session.Select(1);
+        var props = new LayerPropertiesViewModel(session);
+        var view = new LayerPropertiesPanel(() => true) { DataContext = props };
+        Layout(view);
+
+        Invoke(Named<Button>(view, "CenterFrontButton"));
+
+        var front = Template.Slot(mode, BodyPart.Body, Face.Front);
+        var l = session.Document.Layers.Single();
+        Assert.Equal(front.X + (front.W - 200 * scale) / 2, l.X, 9);
+        Assert.Equal(front.Y + (front.H - 100 * scale) / 2, l.Y, 9);
+        Assert.Equal((scale, 33.0), (l.Scale, l.Rotation));
+        Assert.Equal(1, session.UndoCount);
+        Assert.True(session.Undo());
+        Assert.Equal((5.0, 6.0), (session.Document.Layers.Single().X, session.Document.Layers.Single().Y));
+    });
+
+    [Fact] // 200x100 at scale 1 in the Shirt front slot (231, 74, 128, 128): x 231 + (128 - 200) / 2, y 74 + (128 - 100) / 2
+    public void Center_on_front_torso_gives_the_hand_computed_position() => StaThread.Run(() =>
+    {
+        var (session, _, view) = Make(null, LayerOf(1, 200, 100));
+        Invoke(Named<Button>(view, "CenterFrontButton"));
+        Assert.Equal((195.0, 88.0), (session.Document.Layers.Single().X, session.Document.Layers.Single().Y));
+    });
+
+    [Fact] // a layer already centered records no step (undo-empty-steps), and the button is off with nothing selected
+    public void Centering_twice_records_one_step_and_the_button_follows_the_selection() => StaThread.Run(() =>
+    {
+        var (session, props, view) = Make(null, LayerOf(1, 200, 100));
+        var button = Named<Button>(view, "CenterFrontButton");
+        Invoke(button);
+        var doc = session.Document;
+        Invoke(button);
+        Assert.Equal(1, session.UndoCount);
+        Assert.Same(doc, session.Document);
+
+        session.Select(null);
+        Assert.False(props.CenterFrontCommand.CanExecute(null));
+        props.CenterFrontCommand.Execute(null);   // a stray invocation with nothing selected still does nothing
+        Assert.Equal(1, session.UndoCount);
+    });
+
+    /// <summary>A click as UI Automation sends it; the peer queues the click on the dispatcher, so the queue runs before this returns.</summary>
+    static void Invoke(Button b)
+    {
+        ((IInvokeProvider)UIElementAutomationPeer.CreatePeerForElement(b).GetPattern(PatternInterface.Invoke)).Invoke();
+        StaThread.Pump();
+    }
 
     [Fact] // the Expander exposes expand/collapse to assistive tech and opens with ▼ (editor.js:862-872)
     public void The_adjustments_expander_opens_from_the_view_model_and_for_assistive_tech() => StaThread.Run(() =>

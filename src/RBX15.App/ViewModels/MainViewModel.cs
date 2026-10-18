@@ -88,6 +88,9 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>The Home tab (Task 3).</summary>
     public required HomeViewModel Home { get; init; }
 
+    /// <summary>The Layout tab (M4b item 5: Presets; item 6 adds Background and BG Settings).</summary>
+    public required LayoutViewModel Layout { get; init; }
+
     /// <summary>The drop zone and layers panel (Task 4).</summary>
     public required LayersViewModel Layers { get; init; }
 

@@ -163,14 +163,15 @@ public class RibbonTabsTests
         Assert.Equal([RibbonTab.Text], Visible(second));
     });
 
-    [Fact] // the hide rule: a tab shows once its pane has a group; the test hook shows all four now
+    [Fact] // the hide rule: a tab shows once its pane has a group. Layout has one since item 5 (Presets); Details and Text do not yet
     public void A_tab_is_collapsed_until_its_pane_has_a_group() => StaThread.Run(() =>
     {
         var w = Built(showAll: false);
-        Assert.Equal([Visibility.Visible, Visibility.Collapsed, Visibility.Collapsed, Visibility.Collapsed],
+        Assert.Equal([Visibility.Visible, Visibility.Visible, Visibility.Collapsed, Visibility.Collapsed],
                      Order.Select(t => Tab(w, t).Visibility));
-        Assert.Equal([true, false, false, false], Order.Select(w.IsTabShown));
-        Assert.False(((IRibbonPane)Pane(w, RibbonTab.Layout)).HasGroups);
+        Assert.Equal([true, true, false, false], Order.Select(w.IsTabShown));
+        Assert.True(((IRibbonPane)Pane(w, RibbonTab.Layout)).HasGroups);
+        Assert.False(((IRibbonPane)Pane(w, RibbonTab.Details)).HasGroups);
         w.ShowAllTabsForTest = true;
         Assert.All(Order, t => Assert.Equal(Visibility.Visible, Tab(w, t).Visibility));
         w.ShowAllTabsForTest = false;
@@ -180,13 +181,14 @@ public class RibbonTabsTests
     [Fact] // the rule later items flip: adding one group to a pane's Groups panel is all it takes to make HasGroups true
     public void A_pane_reports_content_as_soon_as_it_has_a_group() => StaThread.Run(() =>
     {
-        foreach (var pane in new IRibbonPane[] { new LayoutRibbon(), new DetailsRibbon(), new TextRibbon() })
+        foreach (var pane in new IRibbonPane[] { new DetailsRibbon(), new TextRibbon() })   // Layout has its first group (Presets), so it is not empty any more
         {
             Assert.False(pane.HasGroups);
             ((StackPanel)((UserControl)pane).FindName("Groups")).Children.Add(new Border());
             Assert.True(pane.HasGroups);
         }
         Assert.True(((IRibbonPane)new HomeRibbon()).HasGroups);
+        Assert.True(((IRibbonPane)new LayoutRibbon()).HasGroups);
     });
 
     [Fact] // each pane brings its own horizontal ScrollViewer and the 12,8 margin, as HomeRibbon has

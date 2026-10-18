@@ -394,7 +394,7 @@ public sealed class DialogInventoryTests : IDisposable
         var session = new EditorSession();
         var dialogs = new RecordingDialogs();
         var picks = new ScriptedPicks();
-        var main = Composition.Build(session, picks, dialogs, new FakeColorPicker(), new FakeSettingsStore());
+        var main = TestShell.Quiet(Composition.Build(session, picks, dialogs, new FakeColorPicker(), new FakeSettingsStore()));
         return (session, main, dialogs, picks);
     }
 

@@ -48,8 +48,11 @@ internal static class Composition
         canvas.DropHandler = d => import.Import(d.Paths, (d.TemplatePoint.X, d.TemplatePoint.Y));
         // M3b Task 3: the "Selected layer" panel (editor.html:320-323).
         var layerProperties = new LayerPropertiesViewModel(session);
+        // v5.1: the 3D avatar preview over the session; the Settings group's "3D preview" box toggles it.
+        var avatarPreview = new AvatarPreviewViewModel(session);
         var home = new HomeViewModel(session, colorPicker)
         {
+            AvatarPreview = avatarPreview,
             Tools = tools,
             Brush = brush,
             File = fileGroup,
@@ -68,6 +71,7 @@ internal static class Composition
             LayerProperties = layerProperties,
             Files = projectFiles,
             Assets = assets,
+            AvatarPreview = avatarPreview,
             // M3a: required members above this line.
         };
     }

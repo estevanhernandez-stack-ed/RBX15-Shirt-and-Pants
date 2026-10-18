@@ -27,7 +27,13 @@ public partial class MainWindow : Window
         CaptionTheme.Apply(this);
         ApplyPlacement(PlacementGuard.Resolve(settings.LoadWindowPlacement(), workAreas ?? MonitorWorkAreas.Get(),
                                               ShellLayout.DefaultWidth, ShellLayout.DefaultHeight));
-        Viewport.SizeChanged += (_, e) => PanelColumn.Width = new GridLength(ShellLayout.PanelWidthFor(e.NewSize.Width));
+        Viewport.SizeChanged += (_, e) => ApplyColumnWidths(e.NewSize.Width);
+        // The 3D preview column follows the toggle: width 0 when hidden, the breakpoint width when shown.
+        viewModel.AvatarPreview.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(AvatarPreviewViewModel.IsVisible)) ApplyColumnWidths(Viewport.ActualWidth);
+        };
+        ApplyColumnWidths(ShellLayout.DefaultWidth);
         // The window's shortcuts (spec §4 "Keyboard"; M4a: the three file chords, the rest is M4b). A focused text field
         // keeps each key even when it has nothing to do with it (final fix wave 5); anywhere else it is the command.
         AddShortcut(viewModel.Home.Edit.UndoCommand, Key.Z, ModifierKeys.Control);
@@ -40,6 +46,13 @@ public partial class MainWindow : Window
         {
             if (e.PropertyName == nameof(MainViewModel.IsBusy)) Mouse.OverrideCursor = viewModel.IsBusy ? Cursors.Wait : null;
         };
+    }
+
+    /// <summary>Sets the left panel and the 3D preview column for a viewport (window client) width in DIPs.</summary>
+    internal void ApplyColumnWidths(double viewportWidth)
+    {
+        PanelColumn.Width = new GridLength(ShellLayout.PanelWidthFor(viewportWidth));
+        PreviewColumn.Width = new GridLength(ViewModel.AvatarPreview.IsVisible ? ShellLayout.PreviewWidthFor(viewportWidth) : 0);
     }
 
     public MainViewModel ViewModel => (MainViewModel)DataContext;

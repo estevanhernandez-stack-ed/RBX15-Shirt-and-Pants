@@ -1327,7 +1327,7 @@ public sealed class LedgerScenarioTests : IDisposable
         var s = new EditorSession();
         var dialogs = new Dialogs();
         var files = new Files(null);
-        var main = Composition.Build(s, files, dialogs, new Picker(), new Fakes.FakeSettingsStore());
+        var main = TestShell.Quiet(Composition.Build(s, files, dialogs, new Picker(), new Fakes.FakeSettingsStore()));
         Assert.True(s.ApplyWithSelection(x => LayerOps.AddImage(x, red, s.TakeId(), "art")));
         string first = Path.Combine(_dir, "first.r15proj");
         files.ProjectPath = first;
@@ -1365,7 +1365,7 @@ public sealed class LedgerScenarioTests : IDisposable
         var files = new ProjectDialogs();
         var dialogs = new PromptDialogs();
         var settings = new MemorySettings();
-        return (s, Composition.Build(s, files, dialogs, new Picker(), settings), files, dialogs, settings);
+        return (s, TestShell.Quiet(Composition.Build(s, files, dialogs, new Picker(), settings)), files, dialogs, settings);
     }
 
     /// <summary>Pumps the STA dispatcher until <paramref name="task"/> completes: Open reads on the pool and resumes here.</summary>

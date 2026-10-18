@@ -133,7 +133,7 @@
         <Grid x:Name="RibbonPane">
           <views:HomeRibbon x:Name="HomePane" DataContext="{Binding Home}"
                             Style="{StaticResource RibbonPaneHost}" Tag="{x:Static vm:RibbonTab.Home}" />
-          <views:LayoutRibbon x:Name="LayoutPane" Style="{StaticResource RibbonPaneHost}" Tag="{x:Static vm:RibbonTab.Layout}" />
+          <views:LayoutRibbon x:Name="LayoutPane" DataContext="{Binding Layout}" Style="{StaticResource RibbonPaneHost}" Tag="{x:Static vm:RibbonTab.Layout}" />
           <views:DetailsRibbon x:Name="DetailsPane" Style="{StaticResource RibbonPaneHost}" Tag="{x:Static vm:RibbonTab.Details}" />
           <views:TextRibbon x:Name="TextPane" Style="{StaticResource RibbonPaneHost}" Tag="{x:Static vm:RibbonTab.Text}" />
         </Grid>

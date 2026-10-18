@@ -1,0 +1,39 @@
+<UserControl x:Class="RBX15.App.Views.PlacementGroup"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- The Home tab's Placement group (editor.html:63-76; ledger home-placement-group, placement-selection-guard).
+         DataContext: PlacementViewModel. .ribbon-group-items.vert: two rows, gap 4; each row is a flex row with a 3px gap
+         of .btn.btn-sm.btn-secondary buttons. Collapsed until a layer is selected (spec §4; 4.1 always showed it). -->
+    <UserControl.Style>
+        <Style TargetType="UserControl">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding HasSelection}" Value="True">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Style>
+
+    <Border Style="{DynamicResource RibbonGroup}">
+        <DockPanel>
+            <TextBlock Style="{DynamicResource RibbonGroupLabel}" Text="PLACEMENT" />
+            <StackPanel VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal">
+                    <Button x:Name="FitFrontButton" Content="Fit Front" ToolTip="Fit to front torso" Command="{Binding FitFrontCommand}"
+                            Style="{DynamicResource SecondaryButtonSm}" Margin="0,0,3,0" AutomationProperties.Name="Fit Front" />
+                    <Button x:Name="FrontBackButton" Content="F+B" ToolTip="Front + Back" Command="{Binding FrontBackCommand}"
+                            Style="{DynamicResource SecondaryButtonSm}" Margin="0,0,3,0" AutomationProperties.Name="Front and back" />
+                    <Button x:Name="StretchButton" Content="Stretch" ToolTip="Stretch across torso" Command="{Binding StretchCommand}"
+                            Style="{DynamicResource SecondaryButtonSm}" AutomationProperties.Name="Stretch" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                    <Button x:Name="AlloverButton" Content="Allover" ToolTip="Tile allover" Command="{Binding AlloverCommand}"
+                            Style="{DynamicResource SecondaryButtonSm}" Margin="0,0,3,0" AutomationProperties.Name="Allover" />
+                    <Button x:Name="ScatterButton" Content="Scatter" ToolTip="Scatter randomly" Command="{Binding ScatterCommand}"
+                            Style="{DynamicResource SecondaryButtonSm}" AutomationProperties.Name="Scatter" />
+                </StackPanel>
+            </StackPanel>
+        </DockPanel>
+    </Border>
+</UserControl>

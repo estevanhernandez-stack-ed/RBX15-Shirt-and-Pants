@@ -63,12 +63,20 @@ public sealed class EditorSession
     Document _saved;      // the saved-state marker (R2)
     string _templateTitle = "";
 
-    /// <param name="document">The starting document; null gives 4.1's startup state (editor.js:76-107, the <see cref="Engine.Document"/> defaults).</param>
+    /// <summary>
+    /// The document a new session starts with: 4.1's startup state (editor.js:76-107, the <see cref="Engine.Document"/>
+    /// defaults) except the background, which starts transparent (ledger doc-new-transparent-background, fix; Este,
+    /// 2026-10-18). 4.1 started every template on navy at 100%, so an untouched region exported navy. Opened projects keep
+    /// their own background, and a project without one still loads at 4.1's opacity 1 (ProjectIO).
+    /// </summary>
+    public static Document NewDocument() => new() { BgOpacity = 0 };
+
+    /// <param name="document">The starting document; null gives <see cref="NewDocument"/>.</param>
     /// <param name="historyCapacity">Undo depth; 4.1 uses 30 (editor.js:86).</param>
     public EditorSession(Document? document = null, int historyCapacity = 30)
     {
         _history = new History(historyCapacity);
-        Document = document ?? new Document();
+        Document = document ?? NewDocument();
         _saved = Document;
         NextId = MaxLayerId(Document) + 1;
     }

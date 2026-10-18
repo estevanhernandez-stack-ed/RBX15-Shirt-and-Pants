@@ -115,7 +115,7 @@ public sealed class LedgerScenarioTests : IDisposable
         using var b = Solid(20, 40, Blue);
         var s = new EditorSession();
         Assert.True(s.Apply(d => DocumentOps.PaintRegion(d, "torso_front", Fill.Solid("#ff0000"))));
-        Assert.True(s.Apply(d => d with { BgColor = "#336699" }));
+        Assert.True(s.Apply(d => d with { BgColor = "#336699", BgOpacity = 1 }));   // a new document's background starts transparent
         Assert.True(s.ApplyWithSelection(x => LayerOps.AddImage(x, a, s.TakeId(), "a")));
         Assert.True(s.ApplyWithSelection(x => LayerOps.AddImage(x, b, s.TakeId(), "b")));
         var full = s.Document;

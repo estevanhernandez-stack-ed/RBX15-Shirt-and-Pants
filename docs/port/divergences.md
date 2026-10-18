@@ -2,7 +2,7 @@
 
 Every deliberate behavior change in v5, generated from `parity-ledger.json` rows whose disposition is `fix` or `drop`. The bug policy: fix anything clearly unintended, keep anything a user could reasonably rely on. A change that is not in this table is a regression. Rows with a visual effect get a new golden image with a note.
 
-## Fixed in v5 (204)
+## Fixed in v5 (205)
 
 | ID | Owner | Change |
 |---|---|---|
@@ -119,6 +119,7 @@ Every deliberate behavior change in v5, generated from `parity-ledger.json` rows
 | `shell-window-frame` | App.Shell | 4.1: Electron's default Windows caption, light or dark by the system setting. v5: the native caption is themed through DWM (immersive dark mode, brand-navy-deep caption, ink-100 caption text, brand-navy-soft border) with the system frame, caption buttons and snap layouts kept, per Este's call (2026-10-14); MainWindow and the themed dialog take it (the borderless color picker has no caption). |
 | `shell-window-size` | App.Shell | 4.1: fixed 1200x800 centered window with no memory of size or position. v5: window remembers size and position. The window has a 640x480 minimum (4.1 had none, and its panels overlapped when shrunk). |
 | `window-title-dirty-marker` | App.Shell | 4.1: the title is always the product name. v5: it is the product name at launch, then '[*]<file> - RBX15 Classic Shirt and Pants Maker', with * while the document differs from its last save or open and 'Untitled' before the first save (interfaces R3). |
+| `doc-new-transparent-background` | App.Storage | 4.1: a new template starts on a navy background at 100% opacity, so untouched regions export navy. v5: a new template starts with the background at 0% opacity, so untouched regions export transparent (Este, 2026-10-18). |
 | `io-download-save-dialog` | App.Storage | 4.1: Electron anchor-download Save As with no current-file memory and no feedback after saving. v5: native save/open/folder dialogs with a current-file model and a status message. |
 | `shell-no-persistence` | App.Storage | 4.1: zero persisted settings and no hidden data. v5: remembers window rect, autosaves every 60s while dirty for crash recovery, and keeps 10 recent projects and a jump list, with PRIVACY docs updated to match. |
 | `shell-no-unsaved-changes-guard` | App.Storage | 4.1: closing or reloading silently discards all work. v5: save-changes prompt on close plus 60s autosave and crash recovery, not shown on a pristine or just-saved document. The prompt (Save, Don't save, Cancel, in the Windows wording) and the window title's * marker ship in M4a, ahead of M5's autosave and recovery (Este, 2026-10-16); the prompt also guards Open, and undoing back to the saved state reads clean. |

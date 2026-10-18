@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**421 rows.** Status: done 255, open 166. Disposition: fix 204, keep 188, drop 26, new 3. Checks: ui-auto 121, unit 120, manual 67, golden 66, none-retired 25, doc 22.
+**422 rows.** Status: done 256, open 166. Disposition: fix 205, keep 188, drop 26, new 3. Checks: ui-auto 121, unit 121, manual 67, golden 66, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -244,6 +244,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
+| done | `doc-new-transparent-background` | A new template's background starts transparent | unit | fix | low |
 | done | `project-save-filename` | Save filename and dialog behavior | ui-auto | keep | low |
 | open | `shell-no-persistence` | Zero persisted settings: window rect, tool state, last folder, template name | doc | fix | low |
 | done | `io-download-save-dialog` | Exports and project saves go through anchor-download, relying on Chromium/Electron's Save As behavior | manual | fix | med |

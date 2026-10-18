@@ -804,6 +804,26 @@
    "status": "done"
   },
   {
+   "id": "doc-new-transparent-background",
+   "area": "document",
+   "name": "A new template's background starts transparent",
+   "source": "gap:v5.1-feature",
+   "behavior": "Startup state sets bgColor '#192e44' and bgOpacity 1, so every new template is navy at 100% and an untouched region exports navy; the Layout tab's opacity slider is the only way to clear it.",
+   "codeRefs": [
+    "editor.js:78-80",
+    "editor.html:134-140"
+   ],
+   "quirks": "",
+   "portTarget": "EditorSession.NewDocument(): 4.1's startup state with BgOpacity 0. The color stays #192e44, so raising the opacity shows 4.1's navy. Opened projects keep their own background, and a project without bgOpacity still loads at 1 (ProjectIO, editor.js:2602).",
+   "risk": "low",
+   "parityCheck": "EditorSessionTests.A_new_session_is_4_1s_startup_state pins the new state (4.1's document with opacity 0, color #192e44); ProjectIO's missing-bgOpacity default stays 1 (Engine tests unchanged); Engine goldens keep 4.1's Document defaults.",
+   "owner": "App.Storage",
+   "check": "unit",
+   "disposition": "fix",
+   "divergence": "4.1: a new template starts on a navy background at 100% opacity, so untouched regions export navy. v5: a new template starts with the background at 0% opacity, so untouched regions export transparent (Este, 2026-10-18).",
+   "status": "done"
+  },
+  {
    "id": "render-region-fills-step",
    "area": "render",
    "name": "Region fills painted over background, under layers",

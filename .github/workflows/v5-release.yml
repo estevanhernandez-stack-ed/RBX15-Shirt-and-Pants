@@ -37,13 +37,15 @@ jobs:
           if ($notes -match 'RELEASE-NOTES-PLACEHOLDER') { throw "windows/RELEASE_NOTES_v5.md is still the placeholder. Fill it with real notes (/cut-release) and re-tag." }
           if ($notes.Trim().Length -lt 80) { throw "windows/RELEASE_NOTES_v5.md is empty or link-only." }
 
-      - name: Ledger check, and no open rows (v5 ships only when no row is open)
+      - name: Ledger check, and no open rows except Retired (those close in the cutover PR, after 5.0 certifies)
         shell: pwsh
         run: |
           python tools/ledger/ledger.py check
           if ($LASTEXITCODE -ne 0) { throw "ledger check failed" }
           $rows = (Get-Content docs/port/parity-ledger.json -Raw | ConvertFrom-Json).rows
-          $open = @($rows | Where-Object { $_.status -eq 'open' })
+          # Retired rows describe 4.1 code that the cutover PR deletes, and cutover runs only after Store 5.0
+          # certifies (spec section 7), so they cannot close before the release they would otherwise block.
+          $open = @($rows | Where-Object { $_.status -eq 'open' -and $_.owner -ne 'Retired' })
           if ($open.Count -gt 0) { throw "$($open.Count) ledger row(s) still open: $(($open | Select-Object -First 10 | ForEach-Object { $_.id }) -join ', ')" }
 
       - name: Build (warnings are errors)

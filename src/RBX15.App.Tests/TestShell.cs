@@ -13,9 +13,23 @@ namespace RBX15.App.Tests;
 internal static class TestShell
 {
 #pragma warning disable CS0028 // The name Main is the interface sheet's; the test SDK's generated Program.Main is the entry point.
-    public static MainViewModel Main(EditorSession session)
+    public static MainViewModel Main(EditorSession session, bool previewVisible = false)
 #pragma warning restore CS0028
     {
-        return Composition.Build(session, new FakeFileDialogs(), new FakeDialogService(), new FakeColorPicker(), new FakeSettingsStore());
+        var main = Composition.Build(session, new FakeFileDialogs(), new FakeDialogService(), new FakeColorPicker(), new FakeSettingsStore());
+        main.AvatarPreview.IsVisible = previewVisible;
+        return main;
+    }
+
+    /// <summary>
+    /// Turns the 3D preview off in a shell a test built with Composition.Build directly. The preview rebuilds its texture
+    /// on a later dispatcher turn; a test that disposes its layer images before that turn would have the rebuild render
+    /// freed native bitmaps (an access violation in a later test), so the kit's shells start with the preview off and the
+    /// preview's own tests ask for it on.
+    /// </summary>
+    public static MainViewModel Quiet(MainViewModel main)
+    {
+        main.AvatarPreview.IsVisible = false;
+        return main;
     }
 }

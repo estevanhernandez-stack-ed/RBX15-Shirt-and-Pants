@@ -260,7 +260,7 @@ public class ShellTests
         var dialogs = new FakeDialogService();
         var files = new FakeFileDialogs();
         var store = new FakeSettingsStore();
-        var main = Composition.Build(session, files, dialogs, new FakeColorPicker(), store);
+        var main = TestShell.Quiet(Composition.Build(session, files, dialogs, new FakeColorPicker(), store));
         var window = new MainWindow(main, store, [Primary]);
         StaThread.Pump();
         return (window, session, dialogs, files, store);

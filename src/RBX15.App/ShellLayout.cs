@@ -12,6 +12,12 @@ public static class ShellLayout
     /// <summary>The left panel width at the breakpoint (styles.css:694-697).</summary>
     public const double NarrowPanelWidth = 200;
 
+    /// <summary>The v5.1 3D preview column's width (spec, App: styled like the left panel; 4.1 has no such column).</summary>
+    public const double PreviewWidth = 260;
+
+    /// <summary>The preview column's width at the same breakpoint as the left panel's.</summary>
+    public const double NarrowPreviewWidth = 200;
+
     /// <summary><c>@media (max-width: 900px)</c> (styles.css:694): a viewport 900 wide or less is narrow.</summary>
     public const double Breakpoint = 900;
 
@@ -26,4 +32,7 @@ public static class ShellLayout
 
     /// <summary>The left panel width for a viewport (window client) width in DIPs, which equal CSS px.</summary>
     public static double PanelWidthFor(double viewportWidth) => viewportWidth <= Breakpoint ? NarrowPanelWidth : PanelWidth;
+
+    /// <summary>The preview column width for a viewport width in DIPs when it is shown.</summary>
+    public static double PreviewWidthFor(double viewportWidth) => viewportWidth <= Breakpoint ? NarrowPreviewWidth : PreviewWidth;
 }

@@ -8309,6 +8309,23 @@
    "status": "done"
   },
   {
+   "id": "avatar-preview-3d",
+   "area": "shell",
+   "name": "3D avatar preview (new in v5.1)",
+   "source": "gap:v5.1-feature",
+   "behavior": "4.1 has no 3D view: the template is only ever seen flat, and its right-hand .rpanel (styles.css:462-469) is styled but never used.",
+   "codeRefs": [],
+   "quirks": "",
+   "portTarget": "A column right of the canvas (260 wide, 200 at the 900 DIP breakpoint, styled like the left panel) hosts a WPF Viewport3D of the six R15 boxes dressed in the live template, turning on its own and by mouse drag or Left / Right arrows (AvatarPreviewViewModel, AvatarPreviewPanel, Engine Avatar). A \"3D preview\" checkbox after Mask and Grid in the Settings group, on by default, collapses the column and stops the rendering; it is session state only: not in the document, no undo step, never dirty, not saved.",
+   "risk": "low",
+   "parityCheck": "Engine AvatarTests: the box geometry, the texture mapping and the body-color render per mode. App AvatarPreviewTests: the view-model follows the document, rebuilds once per idle moment, renders nothing while hidden, the 2 s spin-resume rule with a fake clock and the clamp on pitch. ShellPreviewTests: the column holds the AvatarPreviewPanel right of the canvas at 260 and at 200 at the breakpoint; unchecking \"3D preview\" collapses the column and hides the view-model, rechecking restores both; toggling it adds no undo step, leaves the Document unchanged and never dirties the session.",
+   "owner": "App.Shell",
+   "check": "ui-auto",
+   "disposition": "new",
+   "divergence": "",
+   "status": "done"
+  },
+  {
    "id": "diag-console-only-errors",
    "area": "dialogs",
    "name": "Image decode/read failures are console-only (silent to user)",

@@ -330,4 +330,21 @@ public class HomeRibbonViewTests
         Assert.Equal("Undo", buttons.Single(b => (string)b.Content == "Undo").ToolTip);
         Assert.Equal("Redo", buttons.Single(b => (string)b.Content == "Redo").ToolTip);
     });
+    [Fact] // regions-fill-all: the All tile sits in the cross, named, focusable, and fills every region; right-click clears
+    public void The_all_tile_fills_and_right_click_clears_every_region() => StaThread.Run(() =>
+    {
+        var session = new EditorSession();
+        var view = Load(Home(session));
+        var all = Descendants<Button>(view).Single(b => AutomationProperties.GetName(b) == "Fill all regions");
+        Assert.True(all.Focusable && all.IsTabStop);
+
+        ((System.Windows.Automation.Provider.IInvokeProvider)new System.Windows.Automation.Peers.ButtonAutomationPeer(all)
+            .GetPattern(System.Windows.Automation.Peers.PatternInterface.Invoke)).Invoke();
+        StaThread.Pump();
+        Assert.Equal(18, session.Document.RegionFills.Count);
+
+        var clear = all.InputBindings.OfType<System.Windows.Input.MouseBinding>().Single();
+        clear.Command.Execute(null);
+        Assert.Empty(session.Document.RegionFills);
+    });
 }

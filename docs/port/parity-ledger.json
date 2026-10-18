@@ -3184,6 +3184,25 @@
    "status": "done"
   },
   {
+   "id": "regions-fill-all",
+   "area": "regions",
+   "name": "Fill all regions at once (All tile)",
+   "source": "gap:v5.1-feature",
+   "behavior": "4.1 has no way to fill every region at once: each region button paints one region, so a full-template fill is 14 clicks (and 4 regions were unreachable, regions-limb-caps).",
+   "codeRefs": [
+    "editor.js:1650-1687"
+   ],
+   "quirks": "",
+   "portTarget": "An ALL tile in the body cross's empty top-left cell: RegionsGroupViewModel.FillAllCommand paints every region of the mode with FillStyle.Current as one Apply (one undo step), never fitting the selected layer; right-click, Delete, Shift+F10 or Menu runs ClearAllCommand, clearing every fill in one step (no step when none).",
+   "risk": "low",
+   "parityCheck": "RegionsGroupTests: Fill_all_paints_every_region_in_one_step (both modes, undo restores), Fill_all_with_a_layer_selected_still_paints, Clear_all_clears_every_fill_in_one_step; HomeRibbonViewTests.The_all_tile_fills_and_right_click_clears_every_region.",
+   "owner": "App.Ribbon.Layout",
+   "check": "ui-auto",
+   "disposition": "new",
+   "divergence": "",
+   "status": "done"
+  },
+  {
    "id": "regions-button-swatch-paint",
    "area": "regions",
    "name": "Region button swatch preview (paintRegionButton)",

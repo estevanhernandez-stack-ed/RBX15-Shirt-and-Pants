@@ -98,6 +98,30 @@
         </Setter>
     </Style>
 
+    <!-- The All tile (ledger regions-fill-all): a region tile's chrome with cyan text, bound to the group, not a region. -->
+    <Style x:Key="RegionAllTile" TargetType="Button">
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Margin" Value="1" />
+        <Setter Property="FocusVisualStyle" Value="{DynamicResource FocusRing}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd" CornerRadius="{DynamicResource RXsRadius}" BorderThickness="1" Padding="4"
+                            Background="{DynamicResource BrandNavyBrush}" BorderBrush="{DynamicResource BorderAccentBrush}">
+                        <TextBlock x:Name="Text" Text="ALL" FontFamily="{DynamicResource FontMono}" FontSize="9" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource BrandCyanBrush}" HorizontalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource BrandCyanBrush}" />
+                            <Setter TargetName="Text" Property="Foreground" Value="{DynamicResource Fg1Brush}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!--
       A tile with its clear gestures. Right-click is 4.1's contextmenu (editor.js:1677); Delete,
       Shift+F10 and the Menu key reach the same command from the keyboard (spec §4 accessibility).

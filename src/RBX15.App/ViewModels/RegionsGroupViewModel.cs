@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using RBX15.Engine;
 
 namespace RBX15.App.ViewModels;
@@ -38,6 +39,9 @@ public sealed class RegionsGroupViewModel : ObservableObject
         _session = session ?? throw new ArgumentNullException(nameof(session));
         _fillStyle = fillStyle ?? throw new ArgumentNullException(nameof(fillStyle));
         Build(session.Document.Mode);
+        FillAllCommand = new RelayCommand(() => _session.Apply(d =>
+            Template.Regions(d.Mode).Aggregate(d, (doc, r) => DocumentOps.PaintRegion(doc, r.Name, _fillStyle.Current))));
+        ClearAllCommand = new RelayCommand(() => _session.Apply(d => d.RegionFills.IsEmpty ? d : d with { RegionFills = d.RegionFills.Clear() }));
         session.Changed += (_, e) =>
         {
             if (!e.What.HasFlag(SessionChange.Document)) return;
@@ -61,6 +65,16 @@ public sealed class RegionsGroupViewModel : ObservableObject
                 tile.Fill = DocumentOps.RegionFill(doc, tile.Region);
         };
     }
+
+    /// <summary>
+    /// The All tile (Este, 2026-10-18; ledger regions-fill-all, new): paints every region of the mode with the current
+    /// Fill Style as one undo step. Regions sharing a fill share one gradient or pattern across all of them, as 4.1 draws
+    /// any group of regions with the same fill. Unlike a region tile it never fits the selected layer.
+    /// </summary>
+    public IRelayCommand FillAllCommand { get; }
+
+    /// <summary>The All tile's right-click and Delete: clears every region fill, one undo step.</summary>
+    public IRelayCommand ClearAllCommand { get; }
 
     /// <summary>"Torso" or "Waist" (editor.js:1622). 4.1 never rendered it; v5 uses it in the body tiles' automation names.</summary>
     public string BodyLabel => _mode == TemplateMode.Shirt ? "Torso" : "Waist";

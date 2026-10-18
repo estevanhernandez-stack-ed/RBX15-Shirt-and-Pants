@@ -31,6 +31,17 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
+                    <!-- All, in the cross's empty top-left corner so the grid keeps its size (ledger regions-fill-all) -->
+                    <Button x:Name="FillAllTile" Grid.Row="0" Grid.Column="0" Style="{StaticResource RegionAllTile}"
+                            Command="{Binding FillAllCommand}" AutomationProperties.Name="Fill all regions"
+                            ToolTip="Fill every region with this style. Right-click clears every region.">
+                        <Button.InputBindings>
+                            <MouseBinding Gesture="RightClick" Command="{Binding ClearAllCommand}" />
+                            <KeyBinding Key="Delete" Command="{Binding ClearAllCommand}" />
+                            <KeyBinding Key="F10" Modifiers="Shift" Command="{Binding ClearAllCommand}" />
+                            <KeyBinding Key="Apps" Command="{Binding ClearAllCommand}" />
+                        </Button.InputBindings>
+                    </Button>
                     <ContentPresenter Grid.Row="0" Grid.Column="2" Content="{Binding Body[0]}" ContentTemplate="{StaticResource RegionTileTemplate}" />
                     <ContentPresenter Grid.Row="1" Grid.Column="1" Content="{Binding Body[1]}" ContentTemplate="{StaticResource RegionTileTemplate}" />
                     <ContentPresenter Grid.Row="1" Grid.Column="2" Content="{Binding Body[2]}" ContentTemplate="{StaticResource RegionTileTemplate}" />

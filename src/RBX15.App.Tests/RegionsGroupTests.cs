@@ -253,4 +253,54 @@ public class RegionsGroupTests
         Assert.True(At(127, 64).B > 240 && At(127, 64).R < 15, $"right {At(127, 64)}");
         Assert.Equal(At(64, 0), At(64, 127));
     });
+    [Theory] // regions-fill-all: All paints every region of the mode with the current fill, one undo step
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Fill_all_paints_every_region_in_one_step(bool pants)
+    {
+        var (session, regions, fillStyle) = Make();
+        if (pants) session.Apply(DocumentOps.ToggleMode);
+        int undo = session.UndoCount;
+
+        regions.FillAllCommand.Execute(null);
+
+        Assert.Equal(undo + 1, session.UndoCount);
+        Assert.Equal(Template.Regions(session.Document.Mode).Select(r => r.Name).Order(),
+            session.Document.RegionFills.Select(f => f.Item1).Order());
+        Assert.All(session.Document.RegionFills, f => Assert.Equal(fillStyle.Current, f.Item2));
+        Assert.All(regions.AllTiles, t => Assert.NotNull(t.Fill));
+        Assert.True(session.Undo());
+        Assert.Empty(session.Document.RegionFills);
+    }
+
+    [Fact] // All paints even with a layer selected: it never fits the layer, unlike a region tile
+    public void Fill_all_with_a_layer_selected_still_paints()
+    {
+        var session = SessionWith(LayerOf(1, 200, 100));
+        session.Select(1);
+        var (_, regions, _) = Make(session);
+        var layer = session.Document.Layers[0];
+
+        regions.FillAllCommand.Execute(null);
+
+        Assert.Equal(18, session.Document.RegionFills.Count);
+        Assert.Same(layer, session.Document.Layers[0]);
+    }
+
+    [Fact] // right-click on All clears every fill in one step; with nothing filled it records nothing
+    public void Clear_all_clears_every_fill_in_one_step()
+    {
+        var (session, regions, _) = Make();
+        regions.ClearAllCommand.Execute(null);
+        Assert.Equal(0, session.UndoCount);
+
+        Tile(regions, "torso_front").PaintCommand.Execute(null);
+        regions.Limb1Top.PaintCommand.Execute(null);
+        int undo = session.UndoCount;
+        regions.ClearAllCommand.Execute(null);
+
+        Assert.Empty(session.Document.RegionFills);
+        Assert.Equal(undo + 1, session.UndoCount);
+        Assert.All(regions.AllTiles, t => Assert.Null(t.Fill));
+    }
 }

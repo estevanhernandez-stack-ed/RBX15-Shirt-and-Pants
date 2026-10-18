@@ -824,6 +824,25 @@
    "status": "done"
   },
   {
+   "id": "view-region-guide",
+   "area": "render",
+   "name": "Region guide on the canvas (view only)",
+   "source": "gap:v5.1-feature",
+   "behavior": "4.1 has no region guide: the regions show only as the navy background inside the mask (or the yellow grid when Grid is on), so a transparent template's regions look like the checkerboard around them.",
+   "codeRefs": [
+    "editor.js:339-359"
+   ],
+   "quirks": "",
+   "portTarget": "ViewOptions.ShowRegionGuide (Engine, default off so the view goldens keep 4.1's frame); TemplateCanvasHost turns it on. Under the composite: each region tinted white at 7% and outlined in brand cyan at 45%, one device pixel inside its edge. Never in the export or the 3D preview.",
+   "risk": "low",
+   "parityCheck": "RegionGuideTests: a transparent region differs from the unguided frame while gaps and the outside do not, opaque art covers the guide, every region of both modes is outlined, the export is unchanged. TemplateCanvasHostTests compare the host frame with the engine view with the guide on.",
+   "owner": "Engine.Render",
+   "check": "unit",
+   "disposition": "new",
+   "divergence": "",
+   "status": "done"
+  },
+  {
    "id": "render-region-fills-step",
    "area": "render",
    "name": "Region fills painted over background, under layers",

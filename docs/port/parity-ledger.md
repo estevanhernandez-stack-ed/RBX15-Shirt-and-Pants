@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**422 rows.** Status: done 256, open 166. Disposition: fix 205, keep 188, drop 26, new 3. Checks: ui-auto 121, unit 121, manual 67, golden 66, none-retired 25, doc 22.
+**423 rows.** Status: done 257, open 166. Disposition: fix 205, keep 188, drop 26, new 4. Checks: unit 122, ui-auto 121, manual 67, golden 66, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -433,6 +433,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `layer-skip-rules` | Layer visibility and null image skip | golden | keep | low |
 | done | `render-offscreen` | Persistent offscreen composite | golden | keep | med |
 | done | `render-background` | Background image vs color with opacity | golden | keep | med |
+| done | `view-region-guide` | Region guide on the canvas (view only) | unit | new | low |
 | done | `render-region-fills-step` | Region fills painted over background, under layers | golden | keep | low |
 | done | `render-live-preview` | Live drawing preview composite | golden | keep | low |
 | done | `render-mask-step` | Mask application (destination-in) | golden | keep | med |

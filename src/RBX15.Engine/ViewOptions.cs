@@ -30,6 +30,15 @@ public sealed record ViewOptions(double Zoom, double DeviceScale = 1, bool ShowG
     /// </summary>
     public int? SelectedLayerId { get; init; }
 
+    /// <summary>
+    /// Draw the region guide under the template (new in v5; ledger view-region-guide): each region of the document's mode
+    /// tinted white at 7% over the checkerboard and outlined in brand cyan at 45%, one device pixel inside its edge. A
+    /// working aid only: it is never in the export or the 3D preview. With a transparent background (a new template,
+    /// doc-new-transparent-background) the regions would otherwise read as the same checkerboard as the gaps between
+    /// them. Default off, so the frame stays 4.1's for the view goldens; the app turns it on.
+    /// </summary>
+    public bool ShowRegionGuide { get; init; }
+
     /// <summary>The live drawing preview (editor.js:324-330), composited after the layers and before the mask. Null: none.</summary>
     public LivePreview? Preview { get; init; }
 

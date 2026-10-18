@@ -303,6 +303,7 @@ public sealed class TemplateCanvasHost : FrameworkElement
         {
             SelectedLayerId = overlay?.SelectedLayerId,
             Preview = overlay?.Preview,
+            ShowRegionGuide = true,   // the regions stay visible on a transparent template (ledger view-region-guide)
         };
         var size = Renderer.ViewSize(options);
         double dpi = 96 * _deviceScale;

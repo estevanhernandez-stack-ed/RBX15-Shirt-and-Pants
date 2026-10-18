@@ -28,7 +28,8 @@ public sealed class ViewRenderer : IDisposable
     /// <summary>
     /// The view frame: the composite (clear, background, fills, layers, <see cref="ViewOptions.Preview"/> at its alpha,
     /// the mask iff <c>doc.ShowMask</c>) at identity on the persistent surface; then on <paramref name="canvas"/> the
-    /// checker, the composite stretched to <see cref="Renderer.ViewSize"/>, the grid when <see cref="ViewOptions.ShowGrid"/>,
+    /// checker, the region guide when <see cref="ViewOptions.ShowRegionGuide"/>, the composite stretched to
+    /// <see cref="Renderer.ViewSize"/>, the grid when <see cref="ViewOptions.ShowGrid"/>,
     /// and the selection overlay when <see cref="ViewOptions.SelectedLayerId"/> names a visible layer.
     /// Precondition as <see cref="Renderer.RenderView"/>: <paramref name="canvas"/> is <see cref="Renderer.ViewSize"/>
     /// pixels, kN32 premultiplied, identity matrix. Throws <see cref="ObjectDisposedException"/> after <see cref="Dispose"/>.
@@ -51,6 +52,7 @@ public sealed class ViewRenderer : IDisposable
             canvas.DrawRect(frame, checker);
 
         double scale = options.Scale;
+        if (options.ShowRegionGuide) DrawRegionGuide(canvas, doc.Mode, scale, options.DeviceScale);
         using (var composite = _composite.Snapshot())
             canvas.DrawImage(composite, frame, scale < 1 ? Renderer.LayerSampling : Renderer.NearestSampling);
 
@@ -69,6 +71,21 @@ public sealed class ViewRenderer : IDisposable
 
         if (options.SelectedLayerId is int id && doc.Layers.Find(l => l.Id == id) is { Visible: true } selected)
             Renderer.DrawSelectionOverlay(canvas, selected, options);
+    }
+
+    /// <summary><see cref="ViewOptions.ShowRegionGuide"/>: under the composite, so art covers it and transparency shows it.</summary>
+    static void DrawRegionGuide(SKCanvas canvas, TemplateMode mode, double scale, double deviceScale)
+    {
+        using var fill = new SKPaint { Color = new SKColor(0xFF, 0xFF, 0xFF, 0x12) };
+        float line = (float)Math.Max(1, Math.Round(deviceScale));
+        using var edge = new SKPaint { Style = SKPaintStyle.Stroke, StrokeWidth = line, Color = new SKColor(0x17, 0xD4, 0xFA, 0x73) };
+        foreach (var r in Template.Regions(mode))
+        {
+            var rect = SKRect.Create((float)Math.Round(r.X * scale), (float)Math.Round(r.Y * scale),
+                                     (float)Math.Round(r.W * scale), (float)Math.Round(r.H * scale));
+            canvas.DrawRect(rect, fill);
+            canvas.DrawRect(SKRect.Inflate(rect, -line / 2, -line / 2), edge);
+        }
     }
 
     SKShader Checker(int half)

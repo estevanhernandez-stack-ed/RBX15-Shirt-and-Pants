@@ -1,0 +1,56 @@
+<UserControl x:Class="RBX15.App.Views.AvatarPreviewPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- The 3D preview (v5.1 spec, App; ledger avatar-preview-3d, new). DataContext: AvatarPreviewViewModel.
+         The model group is built in code (the boxes and the texture change with the document); the camera, the lights and
+         the two rotations live here. Lights sit outside the turning group, so the light stays on the viewer's side as the
+         avatar turns. PerspectiveCamera.FieldOfView is the horizontal angle: 30 degrees at 13 studs sees 7 studs across,
+         which holds the 4 stud arm span with room for the turn. The camera looks at the body's middle, 2.6 studs up. -->
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="3D preview" Style="{DynamicResource PanelHeading}" />
+
+        <!-- The hit surface: a Viewport3D hit-tests only its models, so the drag listens on this transparent grid. -->
+        <Grid x:Name="DragSurface" Grid.Row="1" Background="Transparent" MinHeight="120">
+            <Viewport3D x:Name="Viewport" Focusable="True" ClipToBounds="True"
+                        AutomationProperties.Name="3D preview">
+                <Viewport3D.Camera>
+                    <PerspectiveCamera x:Name="Camera" Position="0,2.6,13" LookDirection="0,0,-1" UpDirection="0,1,0"
+                                       FieldOfView="30" NearPlaneDistance="1" FarPlaneDistance="60" />
+                </Viewport3D.Camera>
+                <ModelVisual3D>
+                    <ModelVisual3D.Content>
+                        <Model3DGroup>
+                            <AmbientLight Color="#606060" />
+                            <DirectionalLight Color="#FFFFFF" Direction="1,-1,-1.5" />
+                            <Model3DGroup x:Name="Body">
+                                <Model3DGroup.Transform>
+                                    <Transform3DGroup>
+                                        <RotateTransform3D CenterX="0" CenterY="2.6" CenterZ="0">
+                                            <RotateTransform3D.Rotation>
+                                                <AxisAngleRotation3D x:Name="YawRotation" Axis="0,1,0" Angle="0" />
+                                            </RotateTransform3D.Rotation>
+                                        </RotateTransform3D>
+                                        <RotateTransform3D CenterX="0" CenterY="2.6" CenterZ="0">
+                                            <RotateTransform3D.Rotation>
+                                                <AxisAngleRotation3D x:Name="PitchRotation" Axis="1,0,0" Angle="0" />
+                                            </RotateTransform3D.Rotation>
+                                        </RotateTransform3D>
+                                    </Transform3DGroup>
+                                </Model3DGroup.Transform>
+                            </Model3DGroup>
+                        </Model3DGroup>
+                    </ModelVisual3D.Content>
+                </ModelVisual3D>
+            </Viewport3D>
+        </Grid>
+
+        <TextBlock Grid.Row="2" Text="Classic body. R15 and Rthro avatars stretch the texture." TextWrapping="Wrap"
+                   FontFamily="{DynamicResource FontBody}" FontSize="11" Foreground="{DynamicResource Fg3Brush}" Margin="0,8,0,0" />
+    </Grid>
+</UserControl>

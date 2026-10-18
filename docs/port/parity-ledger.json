@@ -8730,6 +8730,23 @@
    "disposition": "fix",
    "divergence": "4.1: the title is always the product name. v5: it is the product name at launch, then '[*]<file> - RBX15 Classic Shirt and Pants Maker', with * while the document differs from its last save or open and 'Untitled' before the first save (interfaces R3).",
    "status": "done"
+  },
+  {
+   "id": "art-palette",
+   "area": "ribbon",
+   "name": "Palette from the user's art (new in v5.1)",
+   "source": "gap:v5.1-feature",
+   "behavior": "4.1 has no palette from the user's art: a color is picked from the browser's color dialog or typed as hex, so matching the colors of an imported image or asset means eyedropping it by eye or guessing.",
+   "codeRefs": [],
+   "quirks": "",
+   "portTarget": "Engine Palette.Extract / FromDocument: each visible layer's image is sampled to at most 64 px on its long side, opaque pixels (alpha 128 or more) are binned at 4 bits per channel, and the busiest bins' average colors are taken, skipping a color within 48 (RGB distance) of one already taken and a bin under 0.5% of the counted pixels, up to 12 (lowercase #rrggbb). App ArtPalette follows the session at Background priority and recomputes only when the sequence of visible layers' images changes. The themed color picker (brush color, Fill Style colors, region swatches) shows a \"From your art\" row of 20x20 swatches under the hex field when the palette is not empty; a click sets the color as typing the hex would and leaves the picker open. The Brush group has a Palette button right of Fill (as tall as the Fill box, so the group keeps its height) opening a popup of the same swatches below it, or \"Add an image or asset to build a palette.\" when there are none; a swatch sets the brush color and closes it. Session state only: not in the document, no undo step, never dirty.",
+   "risk": "low",
+   "parityCheck": "Engine PaletteTests: a solid image gives its one color, a 75/25 image gives both with the 75% first, near colors merge, transparent pixels and specks are ignored, max caps the count, no images or all-transparent give empty, the same input gives the same list, FromDocument skips hidden layers. App ArtPaletteTests: ArtPalette recomputes once for many layer changes in one turn, not for a grid toggle, region fill or layer move, and follows hiding a layer; ColorPickerViewModel.UseSwatch sets Hex and previews as typing would; the popup shows its swatch row only for a non-empty palette and a click keeps the pick open; the app's picker is fed by the one ArtPalette; the Palette button exists named \"Palette\" and fits the Fill row; the brush palette command sets the color and is no undo step.",
+   "owner": "App.Ribbon.Home",
+   "check": "unit",
+   "disposition": "new",
+   "divergence": "",
+   "status": "done"
   }
  ]
 }

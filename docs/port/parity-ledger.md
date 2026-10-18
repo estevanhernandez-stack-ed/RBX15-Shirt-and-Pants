@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**423 rows.** Status: done 257, open 166. Disposition: fix 205, keep 188, drop 26, new 4. Checks: unit 122, ui-auto 121, manual 67, golden 66, none-retired 25, doc 22.
+**424 rows.** Status: done 258, open 166. Disposition: fix 205, keep 188, drop 26, new 5. Checks: unit 123, ui-auto 121, manual 67, golden 66, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -177,6 +177,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `home-settings-group` | Settings group: Template name, Mask, Grid | ui-auto | keep | low |
 | done | `region-front-highlight-lost` | Front region button loses its purple base highlight once cleared | ui-auto | fix | low |
 | open | `fillstyle-ui-not-synced-from-region` | Fill Style controls are one-way (never read back from regions) | manual | keep | low |
+| done | `art-palette` | Palette from the user's art (new in v5.1) | unit | new | low |
 
 ## App.Ribbon.Layout
 

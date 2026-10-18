@@ -167,6 +167,59 @@
         </Setter>
     </Style>
 
+    <!--
+      The "+" beside Color 2 (ledger fill-gradient-stops, new): 22x22 like the swatches' height, drawn like a type button
+      (navy, 1px border, cyan on hover). Hidden unless the style is Gradient or Radial; dimmed when it cannot add (three stops).
+    -->
+    <Style x:Key="AddStopButton" TargetType="Button">
+        <Setter Property="Width" Value="22" />
+        <Setter Property="Height" Value="22" />
+        <Setter Property="Margin" Value="0,0,4,0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{DynamicResource FocusRing}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd" CornerRadius="{DynamicResource RXsRadius}" BorderThickness="1"
+                            Background="{DynamicResource BrandNavyBrush}" BorderBrush="{DynamicResource Border1Brush}">
+                        <TextBlock x:Name="Plus" Text="+" FontFamily="{DynamicResource FontBody}" FontSize="14" FontWeight="Medium"
+                                   Foreground="{DynamicResource Fg2Brush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource BrandCyanBrush}" />
+                            <Setter TargetName="Plus" Property="Foreground" Value="{DynamicResource BrandCyanBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Bd" Property="Opacity" Value="0.4" />
+                            <Setter Property="Cursor" Value="Arrow" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding ShowStops}" Value="False">
+                <Setter Property="Visibility" Value="Collapsed" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- A stop's swatch: the Color 1 and Color 2 swatch, a little narrower; right-click, Delete, Shift+F10 and the Menu key remove it -->
+    <DataTemplate x:Key="FillStopTemplate">
+        <Button Style="{StaticResource ColorSwatchButton}" Width="22" Background="{Binding Color}" Margin="0,0,4,0"
+                Command="{Binding PickCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Self}}"
+                ToolTip="{Binding Tip}" AutomationProperties.Name="{Binding Name}"
+                AutomationProperties.HelpText="{Binding Color}">
+            <Button.InputBindings>
+                <MouseBinding Gesture="RightClick" Command="{Binding RemoveCommand}" />
+                <KeyBinding Key="Delete" Command="{Binding RemoveCommand}" />
+                <KeyBinding Key="F10" Modifiers="Shift" Command="{Binding RemoveCommand}" />
+                <KeyBinding Key="Apps" Command="{Binding RemoveCommand}" />
+            </Button.InputBindings>
+        </Button>
+    </DataTemplate>
+
     <!-- 'Ang' and 'Scale' (editor.html:159, :161): 9px #888 -->
     <Style x:Key="MiniLabel" TargetType="TextBlock">
         <Setter Property="FontSize" Value="9" />

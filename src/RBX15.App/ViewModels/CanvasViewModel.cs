@@ -19,8 +19,14 @@ namespace RBX15.App.ViewModels;
 /// the tool is Select (editor.js:362), and the live preview. <see cref="Cursor"/> mirrors the interaction's
 /// cursor, and <see cref="AutomationValue"/> is the selected layer's name for the canvas automation peer.
 /// </para>
+/// <para>
+/// M4a: it is the canvas's <see cref="ICanvasLayerAutomation"/>. The layer automation peers select and transform
+/// through it, over the same session entry points the mouse uses, so each change is one undo step and a no-op is
+/// none (spec §5); <see cref="SelectedLayerId"/> raises PropertyChanged on every selection change, which the canvas
+/// peer turns into ElementSelected.
+/// </para>
 /// </summary>
-public sealed partial class CanvasViewModel : ObservableObject
+public sealed partial class CanvasViewModel : ObservableObject, ICanvasLayerAutomation
 {
     public const double MinZoom = 0.25;
     public const double MaxZoom = 3;
@@ -109,6 +115,37 @@ public sealed partial class CanvasViewModel : ObservableObject
 
     string SelectedName() => _session.SelectedLayer?.Name ?? "";
 
+    /// <summary>The selected layer's id (<see cref="ICanvasLayerAutomation"/>); PropertyChanged on every selection change.</summary>
+    public int? SelectedLayerId => _session.SelectedLayerId;
+
+    /// <summary>Selects through the session; a layer pick also sets the Select tool, as a layers-list pick does (editor.js:575-577).</summary>
+    public void SelectLayer(int? id)
+    {
+        _session.Select(id);
+        if (id is not null && _session.SelectedLayerId == id) _tools.Set(Tool.Select);
+    }
+
+    /// <summary>The X and Y fields' edit (editor.js:825-826) through LayerOps.MoveTo: one step, none if unchanged.</summary>
+    public bool MoveLayer(int id, double x, double y) => _session.Apply(d => LayerOps.MoveTo(d, id, x, y));
+
+    /// <summary>A corner-handle resize to a size (editor.js:1181-1190): uniform, about the center, clamped to 1-500%.</summary>
+    public bool ResizeLayer(int id, double width, double height)
+    {
+        if (!double.IsFinite(width) || !double.IsFinite(height) || width <= 0 || height <= 0)
+            throw new ArgumentOutOfRangeException(nameof(width), "The size must be finite and positive.");
+        if (_session.Document.Layers.Find(l => l.Id == id) is not { } layer) return false;
+        double scale = Math.Min(width / layer.Image.Width, height / layer.Image.Height);
+        return _session.Apply(d => LayerOps.ScaleAboutCenter(d, id, scale));
+    }
+
+    /// <summary>A rotate drag by a relative angle (editor.js:1172-1180), normalized to -180..180.</summary>
+    public bool RotateLayer(int id, double degrees)
+    {
+        if (!double.IsFinite(degrees)) throw new ArgumentOutOfRangeException(nameof(degrees), "The angle must be finite.");
+        if (_session.Document.Layers.Find(l => l.Id == id) is not { } layer) return false;
+        return _session.Apply(d => LayerOps.SetRotation(d, id, layer.Rotation + degrees));
+    }
+
     void OnSessionChanged(object? sender, SessionChangedEventArgs e)
     {
         if (e.What.HasFlag(SessionChange.Document)) Document = _session.Document;
@@ -117,5 +154,6 @@ public sealed partial class CanvasViewModel : ObservableObject
             Overlay = CurrentOverlay();
             AutomationValue = SelectedName();
         }
+        if (e.What.HasFlag(SessionChange.Selection)) OnPropertyChanged(nameof(SelectedLayerId));
     }
 }

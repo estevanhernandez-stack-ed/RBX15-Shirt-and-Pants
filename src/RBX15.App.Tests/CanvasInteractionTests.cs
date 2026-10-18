@@ -534,6 +534,20 @@ public class CanvasInteractionTests
         Assert.Equal(0, rig.Session.UndoCount);
     }
 
+    [Fact] // M4a R11: an Open mid stroke discards it, as a tool switch does; the release that follows adds nothing to the opened file
+    public void An_open_mid_stroke_discards_it()
+    {
+        var rig = new Rig();
+        rig.Tools.Set(Tool.Pen);
+        rig.I.PointerDown(new Point(100, 100), 1);
+        rig.I.PointerMove(new Point(150, 150), 1);
+        rig.Session.Open(new ProjectLoad(new Document(), 1, []), "x.r15proj");
+        Assert.Equal((CanvasGesture.None, (LivePreview?)null), (rig.I.Gesture, rig.I.Preview));
+        rig.I.PointerUp(new Point(150, 150), 1);
+        Assert.Empty(rig.Session.Document.Layers);
+        Assert.Equal((0, false), (rig.Session.UndoCount, rig.Session.IsDirty));
+    }
+
     [Fact] // draw-release-outside-canvas fix (R10): a lost capture commits the stroke at the last point
     public void Capture_loss_mid_stroke_commits_it_at_the_last_point()
     {

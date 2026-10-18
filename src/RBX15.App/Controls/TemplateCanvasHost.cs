@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Automation.Peers;
@@ -33,7 +34,9 @@ namespace RBX15.App.Controls;
 ///   (editor.js:1306 preventDefault) and a 400 ms quiet period closes a wheel burst (interfaces R7).</item>
 /// <item>The cursor is <see cref="CanvasCursor"/> through <see cref="CanvasCursors.ToWpf"/> at the current zoom and
 ///   device scale, so the eraser ring follows zoom too (tools-cursor fix).</item>
-/// <item>Its automation peer is an Image named "Template canvas" whose Value is <see cref="AutomationValue"/>.</item>
+/// <item>Its automation peer is an Image named "Template canvas" whose Value is <see cref="AutomationValue"/>. M4a: the
+///   peer's children are the visible layers (<see cref="LayerAutomationPeer"/>), which select and transform through
+///   <see cref="LayerAutomation"/>.</item>
 /// </list>
 /// </summary>
 public sealed class TemplateCanvasHost : FrameworkElement
@@ -43,7 +46,7 @@ public sealed class TemplateCanvasHost : FrameworkElement
 
     public static readonly DependencyProperty DocumentProperty = DependencyProperty.Register(
         nameof(Document), typeof(Document), typeof(TemplateCanvasHost),
-        new FrameworkPropertyMetadata(null, OnFrameInputChanged));
+        new FrameworkPropertyMetadata(null, OnDocumentChanged));
 
     public static readonly DependencyProperty ZoomProperty = DependencyProperty.Register(
         nameof(Zoom), typeof(double), typeof(TemplateCanvasHost),
@@ -67,6 +70,10 @@ public sealed class TemplateCanvasHost : FrameworkElement
     public static readonly DependencyProperty AutomationValueProperty = DependencyProperty.Register(
         nameof(AutomationValue), typeof(string), typeof(TemplateCanvasHost),
         new FrameworkPropertyMetadata("", OnAutomationValueChanged));
+
+    public static readonly DependencyProperty LayerAutomationProperty = DependencyProperty.Register(
+        nameof(LayerAutomation), typeof(ICanvasLayerAutomation), typeof(TemplateCanvasHost),
+        new FrameworkPropertyMetadata(null, OnLayerAutomationChanged));
 
     readonly DispatcherTimer _wheelTimer;
     WriteableBitmap? _frame;
@@ -147,6 +154,16 @@ public sealed class TemplateCanvasHost : FrameworkElement
         set => SetValue(AutomationValueProperty, value);
     }
 
+    /// <summary>
+    /// What the layer automation peers select and transform through (M4a); CanvasView binds the CanvasViewModel.
+    /// Null leaves the layers readable but not selectable or movable through UI Automation.
+    /// </summary>
+    public ICanvasLayerAutomation? LayerAutomation
+    {
+        get => (ICanvasLayerAutomation?)GetValue(LayerAutomationProperty);
+        set => SetValue(LayerAutomationProperty, value);
+    }
+
     /// <summary>The bitmap on screen, rendered now if a frame is pending; null while there is no document. Read by tests.</summary>
     internal WriteableBitmap? Frame
     {
@@ -174,6 +191,41 @@ public sealed class TemplateCanvasHost : FrameworkElement
 
     static void OnFrameInputChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) => ((TemplateCanvasHost)d).RequestFrame();
 
+    static void OnDocumentChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var host = (TemplateCanvasHost)d;
+        host.RequestFrame();
+        host.CreatedPeer()?.OnLayersChanged();
+    }
+
+    static void OnLayerAutomationChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var host = (TemplateCanvasHost)d;
+        if (e.OldValue is INotifyPropertyChanged old) old.PropertyChanged -= host.OnLayerAutomationPropertyChanged;
+        if (e.NewValue is INotifyPropertyChanged now) now.PropertyChanged += host.OnLayerAutomationPropertyChanged;
+        host.CreatedPeer()?.OnSelectionChanged();
+    }
+
+    void OnLayerAutomationPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is null or nameof(ICanvasLayerAutomation.SelectedLayerId)) CreatedPeer()?.OnSelectionChanged();
+    }
+
+    /// <summary>The automation peer if a client has asked for it; null otherwise (no peer is made just to notify).</summary>
+    TemplateCanvasHostAutomationPeer? CreatedPeer() => UIElementAutomationPeer.FromElement(this) as TemplateCanvasHostAutomationPeer;
+
+    /// <summary>
+    /// The screen rectangle, in device pixels, around template points: each goes through CanvasCoordinates.ToFrame at
+    /// the current zoom, then PointToScreen. Rect.Empty while the control has no PresentationSource (not shown).
+    /// </summary>
+    internal Rect ScreenBounds(IEnumerable<Point> templatePoints)
+    {
+        if (PresentationSource.FromVisual(this) is null) return Rect.Empty;
+        var bounds = Rect.Empty;
+        foreach (var p in templatePoints) bounds.Union(PointToScreen(CanvasCoordinates.ToFrame(p, Zoom)));
+        return bounds;
+    }
+
     static void OnZoomChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var host = (TemplateCanvasHost)d;
@@ -181,11 +233,8 @@ public sealed class TemplateCanvasHost : FrameworkElement
         host.UpdateCursor();
     }
 
-    static void OnAutomationValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-        if (UIElementAutomationPeer.FromElement((TemplateCanvasHost)d) is TemplateCanvasHostAutomationPeer peer)
-            peer.RaiseValueChanged((string?)e.OldValue ?? "", (string?)e.NewValue ?? "");
-    }
+    static void OnAutomationValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) =>
+        ((TemplateCanvasHost)d).CreatedPeer()?.RaiseValueChanged((string?)e.OldValue ?? "", (string?)e.NewValue ?? "");
 
     protected override AutomationPeer OnCreateAutomationPeer() => new TemplateCanvasHostAutomationPeer(this);
 

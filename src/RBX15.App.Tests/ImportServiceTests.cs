@@ -154,4 +154,23 @@ public class ImportServiceTests
         import.Import([files.Image("b.png", 4, 4, SKColors.Red)]);
         Assert.Equal(2, Assert.Single(session.Document.Layers).Id);
     }
+
+    [Fact] // asset-rightclick-full: one file at full size, one step, on top and selected, LayersAdded raised; a failure is named
+    public void Import_full_adds_one_cover_layer_as_one_step_or_names_the_failure()
+    {
+        using var files = new TestFiles();
+        var session = new EditorSession();
+        var status = new FakeStatus();
+        var import = new ImportService(session, status);
+        int raised = 0;
+        import.LayersAdded += (_, _) => raised++;
+        Assert.Equal(1, import.ImportFull(files.Image("wide.png", 390, 200, SKColors.Red)));
+        var l = session.SelectedLayer!;
+        Assert.Equal(("wide (full)", 0.0, 0.0, 2.795), (l.Name, l.X, l.Y, l.Scale));
+        Assert.Equal((1, 1, 1), (session.UndoCount, raised, status.Clears));
+
+        Assert.Equal(0, import.ImportFull(files.Write("logo.svg", [0x3C])));
+        Assert.Equal("Couldn't add logo.svg: SVG images can't be added. Use PNG, JPEG, WebP, BMP or GIF.", status.Current);
+        Assert.Equal((1, 1), (session.UndoCount, raised));
+    }
 }

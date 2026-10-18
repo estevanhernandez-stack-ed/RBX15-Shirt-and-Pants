@@ -20,6 +20,12 @@
     <Using Include="System.IO" />
   </ItemGroup>
 
+  <!-- The bridge's sources (excluded from the flagless app) compile into this assembly, so its tests run in every
+       configuration while the app under test stays bridge-free (M4a interfaces R9). -->
+  <ItemGroup>
+    <Compile Include="..\RBX15.App\Testing\**\*.cs" LinkBase="Bridge" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\RBX15.App\RBX15.App.csproj" />
     <ProjectReference Include="..\RBX15.Engine\RBX15.Engine.csproj" />

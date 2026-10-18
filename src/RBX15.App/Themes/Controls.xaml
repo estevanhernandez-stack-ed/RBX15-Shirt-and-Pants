@@ -13,6 +13,7 @@
   </ResourceDictionary.MergedDictionaries>
 
   <conv:UpperCaseConverter x:Key="UpperCase" />
+  <conv:NotConverter x:Key="Not" />
 
   <!-- Keyboard focus ring: outline 2px solid cyan, offset 2px (styles.css:357-367; ledger
        a11y-focus-rings). WPF draws FocusVisualStyle for keyboard focus only, like :focus-visible. -->

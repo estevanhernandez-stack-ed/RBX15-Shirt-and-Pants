@@ -38,7 +38,7 @@ public partial class ColorPickerPopup : Window
         _spokenSv = SaturationValueSurface.Describe(viewModel.Saturation, viewModel.Value);
         viewModel.PropertyChanged += OnViewModelChanged;
         PlaceMarkers();
-        PreviewKeyDown += (_, e) => e.Handled = HandleKey(e.Key == Key.System ? e.SystemKey : e.Key, Keyboard.Modifiers, Keyboard.FocusedElement);
+        PreviewKeyDown += (_, e) => e.Handled = HandleKey(e.Key == Key.System ? e.SystemKey : e.Key, e.KeyboardDevice.Modifiers, Keyboard.FocusedElement);
         Loaded += (_, _) => SvSquare.Focus();
         Deactivated += (_, _) =>
         {

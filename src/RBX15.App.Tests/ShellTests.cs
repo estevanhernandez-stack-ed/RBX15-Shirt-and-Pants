@@ -33,7 +33,8 @@ public class ShellTests
         Assert.Contains("<title>RBX15 Classic Shirt and Pants Maker</title>", File.ReadAllText(Path.Combine(Root, "editor.html")));
     }
 
-    [Fact] // shell-header: editor.html:16-17 verbatim, the byline's version is major.minor; shell-footer (fix): 4.1's
+    [Fact] // shell-header (fix): editor.html:16-17, with the 626Labs mark in place of "ItsjustEste" (Este, 2026-10-17) and
+           // the byline the version alone, major.minor; shell-footer (fix): 4.1's
            // editor.html:343 is unchanged, and v5 reads "Developed at 626Labs" (Este, 2026-10-14)
     public void Header_and_footer_text_match_4_1_and_the_footer_credit()
     {
@@ -45,7 +46,7 @@ public class ShellTests
 
         Assert.Equal(AppInfo.ProductName, vm.Title);
         Assert.Equal("RBX15 Classic Shirt & Pants Maker", vm.HeaderTitle);
-        Assert.Equal("ItsjustEste | v5.0", vm.HeaderByline);
+        Assert.Equal("v5.0", vm.HeaderByline);
         Assert.Equal("Developed at 626Labs", vm.FooterText);
     }
 
@@ -53,7 +54,7 @@ public class ShellTests
     public void Upper_case_converter_matches_css_text_transform()
     {
         var c = new UpperCaseConverter();
-        Assert.Equal("ITSJUSTESTE | V5.0", c.Convert("ItsjustEste | v5.0", typeof(string), null, CultureInfo.InvariantCulture));
+        Assert.Equal("V5.0", c.Convert("v5.0", typeof(string), null, CultureInfo.InvariantCulture));
         Assert.Equal("DEVELOPED AT 626LABS", c.Convert("Developed at 626Labs", typeof(string), null, CultureInfo.InvariantCulture));
         Assert.Null(c.Convert(null, typeof(string), null, CultureInfo.InvariantCulture));
         Assert.Throws<NotSupportedException>(() => c.ConvertBack("X", typeof(string), null, CultureInfo.InvariantCulture));
@@ -88,6 +89,9 @@ public class ShellTests
                 Min = (w.MinWidth, w.MinHeight),
                 Header = Text("HeaderTitle"),
                 Byline = Text("HeaderByline"),
+                Mark = ((Image)w.FindName("HeaderMark")) is var m
+                    ? (m.Source == w.FindResource("LabsMarkDuo"), m.Height, System.Windows.Automation.AutomationProperties.GetName(m))
+                    : default,
                 Footer = Text("FooterText"),
                 FooterLook = ((TextBlock)w.FindName("FooterText")) is var f
                     ? (f.FontSize, ((System.Windows.Media.SolidColorBrush)f.Foreground).Color.ToString(), f.HorizontalAlignment)
@@ -103,7 +107,8 @@ public class ShellTests
         Assert.Equal((360.0, 120.0, 1200.0, 800.0, WindowState.Normal), facts.Size);
         Assert.Equal((640.0, 480.0), facts.Min);
         Assert.Equal("RBX15 Classic Shirt & Pants Maker", facts.Header);
-        Assert.Equal("ITSJUSTESTE | V5.0", facts.Byline);
+        Assert.Equal("V5.0", facts.Byline);
+        Assert.Equal((true, 18.0, "626Labs"), facts.Mark);
         Assert.Equal("DEVELOPED AT 626LABS", facts.Footer);
         Assert.Equal((10.0, "#FF5E6B7F", HorizontalAlignment.Center), facts.FooterLook);   // styles.css:678-689: 10px fg-muted, centered
         Assert.Equal([("Home", (bool?)true)], facts.Tabs);
@@ -203,6 +208,94 @@ public class ShellTests
         Assert.Equal(0, session.UndoCount);
         Assert.True(TextFieldShortcutCommand.TextFieldHasFocus(box));
         Assert.False(TextFieldShortcutCommand.TextFieldHasFocus(new Button()));
+    });
+
+    // ---- M4a Task 1: the three file chords and the close guard ----
+
+    public static TheoryData<Key, ModifierKeys, string> FileChords => new()
+    {
+        { Key.S, ModifierKeys.Control, nameof(FileGroupViewModel.SaveCommand) },
+        { Key.S, ModifierKeys.Control | ModifierKeys.Shift, nameof(FileGroupViewModel.SaveAsCommand) },
+        { Key.O, ModifierKeys.Control, nameof(FileGroupViewModel.OpenCommand) },
+    };
+
+    [Theory, MemberData(nameof(FileChords))] // spec §4 "New: Ctrl+O, Ctrl+S, Ctrl+Shift+S"; each binding: its gesture, its inner command, the text-field guard
+    public void A_file_chord_runs_its_file_group_command_unless_a_text_field_has_focus(Key key, ModifierKeys modifiers, string command) => StaThread.Run(() =>
+    {
+        var main = TestShell.Main(new EditorSession());
+        var window = new MainWindow(main, new FakeSettingsStore(), [Primary]);
+        StaThread.Pump();
+        var binding = Assert.Single(window.InputBindings.OfType<KeyBinding>(), b => b.Key == key && b.Modifiers == modifiers);
+        var guard = Assert.IsType<TextFieldShortcutCommand>(binding.Command);
+        var expected = typeof(FileGroupViewModel).GetProperty(command)!.GetValue(main.Home.File);
+        Assert.Same(expected, guard.Inner);
+
+        window.FocusedElement = () => new TextBox();
+        Assert.False(guard.CanExecute(null));                       // the key stays the text field's
+        window.FocusedElement = () => null;
+        Assert.True(guard.CanExecute(null));
+    });
+
+    [Fact] // the window has exactly the four chords: Ctrl+Z (M3b) and the three file chords; the rest of the keyboard is M4b
+    public void The_window_binds_only_ctrl_z_and_the_three_file_chords() => StaThread.Run(() =>
+    {
+        var window = new MainWindow(TestShell.Main(new EditorSession()), new FakeSettingsStore(), [Primary]);
+        StaThread.Pump();
+        var gestures = window.InputBindings.OfType<KeyBinding>().Select(b => (b.Key, b.Modifiers)).ToArray();
+        Assert.Equal(new[]
+        {
+            (Key.Z, ModifierKeys.Control),
+            (Key.S, ModifierKeys.Control),
+            (Key.S, ModifierKeys.Control | ModifierKeys.Shift),
+            (Key.O, ModifierKeys.Control),
+        }, gestures);
+        Assert.Equal(4, window.InputBindings.Count);
+        Assert.All(window.InputBindings.OfType<KeyBinding>(), b => Assert.IsType<TextFieldShortcutCommand>(b.Command));
+    });
+
+    /// <summary>A main window over fakes the test can reach, closed without ever being shown.</summary>
+    static (MainWindow Window, EditorSession Session, FakeDialogService Dialogs, FakeFileDialogs Files, FakeSettingsStore Store) ClosableShell()
+    {
+        var session = new EditorSession();
+        var dialogs = new FakeDialogService();
+        var files = new FakeFileDialogs();
+        var store = new FakeSettingsStore();
+        var main = Composition.Build(session, files, dialogs, new FakeColorPicker(), store);
+        var window = new MainWindow(main, store, [Primary]);
+        StaThread.Pump();
+        return (window, session, dialogs, files, store);
+    }
+
+    [Fact] // shell-no-unsaved-changes-guard parityCheck: closing with no edits shows no prompt and closes
+    public void Closing_a_clean_document_shows_no_prompt() => StaThread.Run(() =>
+    {
+        var (window, _, dialogs, _, store) = ClosableShell();
+        bool closed = false;
+        window.Closed += (_, _) => closed = true;
+        window.Close();
+        Assert.True(closed);
+        Assert.Empty(dialogs.SaveChanges);
+        Assert.Single(store.Saves);                                  // the placement is saved on a real close
+    });
+
+    [Theory] // R13: closing dirty asks; Cancel, and Save with a cancelled Save As, keep the window open; Don't save closes
+    [InlineData(SaveChoice.Cancel, false)]
+    [InlineData(SaveChoice.DontSave, true)]
+    [InlineData(SaveChoice.Save, false)]
+    public void Closing_dirty_work_asks_save_dont_save_or_cancel(SaveChoice answer, bool closes) => StaThread.Run(() =>
+    {
+        var (window, session, dialogs, files, store) = ClosableShell();
+        Assert.True(session.Apply(d => d with { ShowGrid = true }));
+        dialogs.SaveChoiceAnswer = answer;
+        bool closed = false;
+        window.Closed += (_, _) => closed = true;
+        window.Close();
+        Assert.Equal(new[] { "Untitled" }, dialogs.SaveChanges);
+        Assert.Equal(closes, closed);
+        Assert.Equal(closes ? 1 : 0, store.Saves.Count);             // no placement save when the close was cancelled
+        Assert.Equal(answer == SaveChoice.Save ? 1 : 0, files.SaveProjectCalls.Count);
+        if (!closes) window.Close();                                 // the guard asks again on the next attempt
+        if (!closes) Assert.Equal(2, dialogs.SaveChanges.Count);
     });
 
     [Fact] // final fix wave 6: each window's ribbon tabs are their own group; one window's tab never unchecks another's

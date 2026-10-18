@@ -35,8 +35,8 @@ public sealed class SliderGestureTracker
         _leftButtonDown = leftButtonDown ?? throw new ArgumentNullException(nameof(leftButtonDown));
     }
 
-    /// <summary>The real mouse: <c>Mouse.LeftButton == Pressed</c>.</summary>
-    public static bool RealLeftButtonDown() => Mouse.LeftButton == MouseButtonState.Pressed;
+    /// <summary>The real mouse: <c>Mouse.LeftButton == Pressed</c>, read through <see cref="PointerState"/> (the bridge's seam, M4a R8).</summary>
+    public static bool RealLeftButtonDown() => PointerState.LeftButtonDown();
 
     /// <summary>True while a gesture is open.</summary>
     public bool IsOpen => _gesture is not null;

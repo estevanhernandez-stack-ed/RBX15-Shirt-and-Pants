@@ -1006,12 +1006,12 @@
    "quirks": "Cursor URI regenerated (SVG string + btoa) on every render while eraser active, e.g. every mouse-move-driven render; expensive but fine.",
    "portTarget": "Cursor updated via property-changed handlers for tool, brush size and zoom (not per frame).",
    "risk": "low",
-   "parityCheck": "Changing brush size or zoom with eraser active updates ring size immediately.",
+   "parityCheck": "Through the bridge (H5): with the Eraser active, a brush size change (UI Automation RangeValue) and a zoom change (the zoom buttons) each change the ring the canvas sets before any pointer move; TemplateCanvasHostTests and CanvasCursorsTests. Reworded in M4a: the bridge reads the cursor the canvas sets (TemplateCanvasHost.CanvasCursor and its WPF cursor) after routed hover and drag input; the OS cursor image is not observable to automation, and CanvasCursorsTests pin the WPF cursors and the ring bitmap (H5).",
    "owner": "App.Canvas",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "cursor-default",
@@ -1025,12 +1025,12 @@
    "quirks": "Select tool shows crosshair even over handles (no hover feedback); resize/rotate hover cursors may be in the mouse slice but not here.",
    "portTarget": "Cursor = Cursors.Cross on the SKElement.",
    "risk": "low",
-   "parityCheck": "Hover over canvas with each tool: crosshair, except eraser.",
+   "parityCheck": "Through the bridge (H2, H5): idle hover gives the crosshair (Cross) on empty canvas with Select and everywhere with Draw, Line, Rect and Ellipse, the ring with the Eraser, and Grab (Hand) on the knob, ResizeNwse (SizeNWSE) on each corner and Move (SizeAll) on the body. Reworded in M4a: the bridge reads the cursor the canvas sets (TemplateCanvasHost.CanvasCursor and its WPF cursor) after routed hover and drag input; the OS cursor image is not observable to automation, and CanvasCursorsTests pin the WPF cursors and the ring bitmap (H2, H5).",
    "owner": "App.Canvas",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: every non-eraser tool shows a crosshair, with no hover feedback over handles. v5: hover cursors for move, resize and rotate (approved decision).",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "cursor-eraser",
@@ -1044,12 +1044,12 @@
    "quirks": "Brush size is NOT clamped to the ring cap: at large size*zoom the ring under-represents the actual eraser footprint (cap 120 radius). r can be fractional while d uses ceil, so ring is slightly off-center by <1px. Decide to keep cap or draw an overlay uncapped (fix).",
    "portTarget": "WPF: create a custom Cursor from a rendered bitmap (CreateIconIndirect with hotspot) at the computed size, regenerate when drawSize/zoom/DPI change; or hide system cursor and draw the ring as an overlay in the SkiaSharp surface (better, no size cap, but then 'cap at 120' is a decision).",
    "risk": "med",
-   "parityCheck": "Eraser size 4/20/100 at zoom 1/2/4: ring diameter matches formula; min 8px diameter at tiny sizes; clamps at 240px; hotspot centered on the stroke point.",
+   "parityCheck": "Through the bridge (H5): ring radius max(4, size x zoom / 2) DIPs (diameter size x zoom) at sizes 4 and 50 and zoom 25-300%, hotspot centered (CanvasCursorsTests), capped by the Win32 cursor size (128 - ceil(2 x display scale) device px). Reworded in M3b: 4.1's 240 px clamp is the fixed behavior; size 100 and zoom 4 are outside v5's ranges. Reworded in M4a: the bridge reads the cursor the canvas sets (TemplateCanvasHost.CanvasCursor and its WPF cursor) after routed hover and drag input; the OS cursor image is not observable to automation, and CanvasCursorsTests pin the WPF cursors and the ring bitmap (H5).",
    "owner": "App.Canvas",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: eraser ring radius is capped at 120 so it under-represents the real footprint at large size and zoom, and is off-center by under 1px. v5: ring drawn at the true brush footprint, radius max(4, size x zoom / 2) DIPs, centered, at device pixels (clearly unintended mismatch). A Win32 cursor bitmap is at most 256x256 device px, so the radius is capped at 128 - ceil(2 x display scale) device px (126 at 100%, 124 at 200%), which binds only above a 124 DIP ring diameter at 200%.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "render-order-summary",
@@ -1188,12 +1188,12 @@
    "quirks": "Zoom changes may not refresh eraser cursor unless another call occurs (check zoom handler outside slice); consider fixing by refreshing on zoom. Resize cursor is always nwse regardless of corner. After a drag ends, cursor reset occurs in mouseup (outside slice).",
    "portTarget": "Render ring to a WPF Cursor via CursorInteropHelper from a bitmap (or draw ring as overlay in Skia on pointer move, preferred for arbitrary size). Standard cursors: Cross, Hand (grab), SizeAll (move), SizeNWSE (resize), closed-hand custom for grabbing.",
    "risk": "med",
-   "parityCheck": "Screenshot eraser cursor at sizes 1, 4, 100, 300 and zoom 0.5/2: radius clamps 4..120 px. Verify crosshair for pen/line/rect/circle.",
+   "parityCheck": "Through the bridge (H5): with the Eraser the canvas cursor is the ring with radius max(4, size x zoom / 2) DIPs at sizes 4 and 50 and zoom 25%, 100%, 200% and 300%, rebuilt as soon as size or zoom changes; Draw, Line, Rect and Ellipse hover with the crosshair. CanvasCursorsTests: the ring bitmap at device scale and the 256-px Win32 cap. Reworded in M4a: the bridge reads the cursor the canvas sets (TemplateCanvasHost.CanvasCursor and its WPF cursor) after routed hover and drag input; the OS cursor image is not observable to automation, and CanvasCursorsTests pin the WPF cursors and the ring bitmap (H5).",
    "owner": "App.Canvas",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: eraser ring cursor is not refreshed when zoom changes, so it drifts from the real brush size. v5: cursor refreshes on zoom as well as tool and brush size changes.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "tools-draw-props",
@@ -1390,12 +1390,12 @@
    "quirks": "Stale layerDragOverId: if you drag over a row, then leave to empty list area and drop, the drop uses the last hovered target (list container has no drop handler except rows). Drag from outside (a file) over rows triggers dragover with layerDragId null, harmless but shows indicator. Dropping at 'top' of the topmost row etc works. Drop does not stopPropagation of dragover so document-level preventDefault applies.",
    "portTarget": "WPF DragDrop.DoDragDrop from PreviewMouseMove after SystemParameters.MinimumHorizontal/VerticalDragDistance; DragOver sets insert-adorner line top/bottom; Drop applies same index math on underlying list. Use custom data format, not Text.",
    "risk": "med",
-   "parityCheck": "Unit-test reorder index math with 4 layers across all (from,to,pos) combos against JS; UI test drag top row to bottom half of last row.",
+   "parityCheck": "LayerOpsEditTests and LayersReorderTests check the reorder index math with 4 layers over every (from, to, position) against editor.js:621-655. Through the bridge (H7, H7b): the bottom of four rows dropped on the top row's top half becomes the top, and with 20 layers the top row dropped on the last row's lower half becomes the bottom, each one undo step. Narrowed in M4a: the gesture is real WPF routed input injected in-process by the test-only input bridge (brg smoke; interfaces R7, R8) and read back through its inspect command and UI Automation; the bridge cannot show the OS cursor image or drive a physical device (H7, H7b).",
    "owner": "App.Layers",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: dropping outside a row reuses the last hovered target (stale drag target). v5: stale drag target is cleared so only a live target reorders.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "layers-move-updown",
@@ -1652,12 +1652,12 @@
    "quirks": "Expensive per-move DOM rebuild; native binding removes. Move drag leaving stale X/Y is likely unintentional.",
    "portTarget": "Two-way binding keeps all live; decide to refresh X/Y live while moving (improvement).",
    "risk": "low",
-   "parityCheck": "During rotate drag, rotation slider tracks.",
+   "parityCheck": "During a knob drag the Rotation slider equals the layer's rotation after every move, and during a corner drag the Scale slider equals its scale (bridge H2, read through UI Automation RangeValue); LayerPropertiesViewModelTests and LedgerScenarioTests pin the live X and Y and the panel after a fit. Narrowed in M4a: the gesture is real WPF routed input injected in-process by the test-only input bridge (brg smoke; interfaces R7, R8) and read back through its inspect command and UI Automation; the bridge cannot show the OS cursor image or drive a physical device (H2).",
    "owner": "App.LayerProperties",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: move drag leaves panel X/Y stale while rotate/resize rebuild the whole panel and drop focus. v5: bound properties update live without rebuilds or lost focus.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "bg-swatches",
@@ -1752,12 +1752,12 @@
    "quirks": "If an asset drag is abandoned (dragend outside canvas never clears _assetDragFile unless handled at editor.js:2498+), a later OS file drop is hijacked by the stale asset file. Port should clear on drag end. rect.left uses bounding rect so CSS scroll/zoom consistent.",
    "portTarget": "Drop handler on Skia host: convert WPF position through inverse zoom/scroll transform to canvas px. Asset browser drag: use in-process drag payload (DataObject custom format) instead of a global.",
    "risk": "med",
-   "parityCheck": "Drop at 4 canvas positions at zoom 0.5/1/2: layer center equals pixel coordinate.",
+   "parityCheck": "LedgerScenarioTests: a file dropped at four template positions at zoom 0.5, 1 and 2 lands with its center on the drop point; TemplateCanvasHostTests map the host point by zoom. The stale asset drag is gone: asset-drag-stale-reference (bridge A1, MAN-1).",
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: an abandoned asset drag leaves a stale _assetDragFile that hijacks the next OS file drop. v5: stale asset-drag state is cleared on drag end.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "drop-guard",
@@ -1831,12 +1831,12 @@
    "quirks": "Browser canvas mouse events stop when pointer leaves the canvas unless handlers on window/document exist (mouseup likely document-level, see 1242, 1298); native should capture. Move-end undo snapshot is outside this slice: verify where saveUndo is pushed for move/rotate/resize (not in mousedown), otherwise select drags are not undoable.",
    "portTarget": "CaptureMouse on canvas host so drags continue outside control; delta in canvas space.",
    "risk": "low",
-   "parityCheck": "Drag by (50,30) screen px at zoom 2 moves layer (25,15) canvas px.",
+   "parityCheck": "A 50x30 px drag at zoom 2 moves the layer 25x15 template px, as one undo step, and the layer keeps following past the canvas edge under mouse capture (bridge H1; LedgerScenarioTests, TemplateCanvasHostTests). Narrowed in M4a: the gesture is real WPF routed input injected in-process by the test-only input bridge (brg smoke; interfaces R7, R8) and read back through its inspect command and UI Automation; the bridge cannot show the OS cursor image or drive a physical device (H1).",
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: move drag stops tracking when the pointer leaves the canvas and the move has no undo step. v5: mouse capture across the edge and each move is exactly one undo step.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "select-rotate-handle",
@@ -1912,12 +1912,12 @@
    "quirks": "Cursor only becomes move/resize/grabbing after press; restored at mouseup (outside slice).",
    "portTarget": "PointerMoved handler setting Cursor; consider adding resize/move cursors (improvement, not parity).",
    "risk": "low",
-   "parityCheck": "Hover over handle vs body.",
+   "parityCheck": "Through the bridge (H2): idle hover over the knob, each corner and the body gives Grab, ResizeNwse and Move, else the crosshair. Reworded in M4a: the bridge reads the cursor the canvas sets (TemplateCanvasHost.CanvasCursor and its WPF cursor) after routed hover and drag input; the OS cursor image is not observable to automation, and CanvasCursorsTests pin the WPF cursors and the ring bitmap (H2).",
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: idle hover shows only grab or crosshair, with no move or resize cursors. v5: hover cursors for rotate, resize and move.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "draw-begin",
@@ -2001,12 +2001,12 @@
    "quirks": "Because render() resets the cursor to crosshair on every move, the move/rotate/resize drag cursors effectively flash only until the first mousemove. Port decision: keep (crosshair during drags) or fix (hold drag cursor). Hover 'grab' also gets overwritten by the render path only when render runs, but hover branch returns without render so grab sticks.",
    "portTarget": "FrameworkElement.Cursor: Cursors.Cross, Cursors.Hand/ScrollAll, Cursors.SizeNWSE. Set only if you keep the intent.",
    "risk": "low",
-   "parityCheck": "Manual: hover handle shows hand; drag shows what Electron shows (see quirk).",
+   "parityCheck": "Through the bridge (H2): hovering the knob gives Grab (Hand), and the knob drag holds Grabbing (Hand) and the corner drag ResizeNwse (SizeNWSE) after every move until the release. Reworded in M4a: the bridge reads the cursor the canvas sets (TemplateCanvasHost.CanvasCursor and its WPF cursor) after routed hover and drag input; the OS cursor image is not observable to automation, and CanvasCursorsTests pin the WPF cursors and the ring bitmap (H2).",
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: render() resets the cursor to crosshair on every move, so drag cursors flash only until the first move. v5: drag cursor is held for the whole drag. Grab and grabbing show the Windows Hand cursor (WPF has no stock grab cursor); provisional, M3b look sign-off.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "select-rotate-handle-hit",
@@ -2104,12 +2104,12 @@
    "quirks": "Clicking transparent areas of a layer picks it (rect-based). Layers can be dragged fully off-canvas and become unrecoverable by mouse (still in list panel). A move-drag that begins on an already selected layer still calls selectLayer, which re-renders the sidebar (updateUI) every mousedown.",
    "portTarget": "Hit test with inverse rotation about center, as in pointInRotatedRect (note sign convention: rotates point by -rotation). Move via delta in template space.",
    "risk": "low",
-   "parityCheck": "Overlapping layers: click selects topmost visible; transparent pixels of PNG still select; hidden layers ignored. Drag by (30,-20) at zoom 2 moves layer by (15,-10) template px.",
+   "parityCheck": "Overlapping layers: a press on a fully transparent pixel inside the top layer's box selects the top layer, and with that layer hidden the same press selects the layer under it (bridge H1; LayerOpsTests, SelectionGeometryTests, LedgerScenarioTests). A (30,-20) px drag at zoom 2 moves the layer (15,-10) template px, and every drag is one undo step (bridge H1). Narrowed in M4a: the gesture is real WPF routed input injected in-process by the test-only input bridge (brg smoke; interfaces R7, R8) and read back through its inspect command and UI Automation; the bridge cannot show the OS cursor image or drive a physical device (H1).",
    "owner": "Engine.Tools",
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: move drag has no undo step and no capture, so a drag can strand a layer off-canvas by mouse. v5: rect-based hit-test kept, drag is exactly one undo step with capture and selection survives undo.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "select-deselect-click",
@@ -2144,12 +2144,12 @@
    "quirks": "Leaving the canvas edge cancels the drag but keeps the changed position (no revert).",
    "portTarget": "Handle MouseLeave to end drag, or use CaptureMouse and keep dragging (behavior change; decide).",
    "risk": "low",
-   "parityCheck": "Start a move drag, leave surface boundary: layer stops following and stays at last position; re-entering with button held does not resume.",
+   "parityCheck": "Reworded in M3b to the fixed behavior: a move drag follows the pointer past the canvas edge (template x 700 and 760) and back, and a release outside the window ends it where released, as one undo step (bridge H1); a lost capture ends it as a release at the last point (CanvasInteractionTests, TemplateCanvasHostTests). Narrowed in M4a: the gesture is real WPF routed input injected in-process by the test-only input bridge (brg smoke; interfaces R7, R8) and read back through its inspect command and UI Automation; the bridge cannot show the OS cursor image or drive a physical device (H1).",
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: Leaving the canvas edge cancels a drag and hover cursors are limited to grab/crosshair. v5: Left-button mouse capture keeps the drag alive across the edge and hover cursors reflect handles.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "select-handle-render",
@@ -2365,12 +2365,12 @@
    "quirks": "Known bug class: 'phantom stroke' after dragging out of the window. Not likely relied on by users.",
    "portTarget": "Use Mouse.Capture on MouseDown and release on MouseUp so the stroke commits reliably. This differs from Electron: choose and document (recommended fix).",
    "risk": "med",
-   "parityCheck": "Press in canvas, release outside, re-enter: Electron keeps drawing; native expected per decision (test both).",
+   "parityCheck": "Reworded to the fixed behavior: a Line drag released outside the window is committed as one layer, and moving back over the canvas with the button up draws nothing (bridge H4; CanvasInteractionTests, TemplateCanvasHostTests). Narrowed in M4a: the gesture is real WPF routed input injected in-process by the test-only input bridge (brg smoke; interfaces R7, R8) and read back through its inspect command and UI Automation; the bridge cannot show the OS cursor image or drive a physical device (H4).",
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: Releasing outside the canvas leaves a phantom stroke that resumes on re-entry. v5: Mouse capture on left button commits the stroke at release even outside the canvas.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "draw-tool-switch-midstroke",
@@ -2426,12 +2426,12 @@
    "quirks": "Asymmetric steps (0.95 vs 1.05) so up-down does not return to the original scale. Scaling anchors at top-left, so the layer drifts visually (center moves), unlike corner-drag resize which keeps the center. High-resolution wheels/trackpads on WPF raise many small Delta events; Electron deltaY for those also fires many events; match per-event not per-notch. deltaY===0 (horizontal scroll) grows 5%.",
    "portTarget": "MouseWheel e.Delta: Delta<0 (wheel down) means shrink 0.95, else grow 1.05; handle e.Handled = true. Per-event step, not per-120-unit, to match.",
    "risk": "med",
-   "parityCheck": "Inject 10 down-notches then 10 up-notches: scale = s*0.95^10*1.05^10 (about 0.9794 s, not s). Layer x,y unchanged.",
+   "parityCheck": "Reworded to the fixed behavior: one notch up scales x1.05 about the center and one down returns; ten notches down then ten up return to the start scale with the center unchanged (4.1 ends near 0.9794 s); 200 fast notches stop at 500% (bridge H3; SelectionGeometryTests, LedgerScenarioTests). Narrowed in M4a: the gesture is real WPF routed input injected in-process by the test-only input bridge (brg smoke; interfaces R7, R8) and read back through its inspect command and UI Automation; the bridge cannot show the OS cursor image or drive a physical device (H3).",
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: Wheel scales about the top-left with asymmetric 0.95/1.05 steps and no upper bound. v5: Wheel scaling is centered with symmetric steps under the single 1%-500% scale clamp.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "wheel-brush-size",
@@ -2464,12 +2464,12 @@
    "quirks": "Cap of r=120 means brush ring understates size beyond 240 px on screen (size 50 at zoom 3 = 150 px diameter so never reached with current ranges). Min r=4 overstates size 1-8 brushes at low zoom.",
    "portTarget": "Generate an SKBitmap/WPF Cursor (via CreateIconIndirect/ CUR stream) per size, or hide system cursor and draw the ring as an overlay on the canvas at the mouse position.",
    "risk": "low",
-   "parityCheck": "Visual: ring diameter equals brush diameter on screen (drawSize*zoom) at zoom 0.25 and 3, capped at diameter 240.",
+   "parityCheck": "Through the bridge (H5): the ring diameter equals size x zoom DIPs at zoom 0.25 and 3, with no 240 cap (amended to fix in M3b); CanvasCursorsTests. Reworded in M4a: the bridge reads the cursor the canvas sets (TemplateCanvasHost.CanvasCursor and its WPF cursor) after routed hover and drag input; the OS cursor image is not observable to automation, and CanvasCursorsTests pin the WPF cursors and the ring bitmap (H5).",
    "owner": "App.Canvas",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: the ring radius is max(4, min(120, drawSize x zoom / 2)) CSS px, an SVG cursor that is not redrawn on zoom (editor.js:443-454). v5: the ring is the true brush footprint, max(4, size x zoom / 2) DIPs, drawn at device pixels and redrawn on zoom, tool and size changes; the Win32 cursor-size cap is stated on cursor-eraser.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "eraser-apply",
@@ -3297,12 +3297,12 @@
    "quirks": "No alpha. Native picker has no eyedropper/hex entry beyond Chromium's; the port will likely be nicer, which is fine.",
    "portTarget": "A ColorPicker control (e.g. custom popup with HSV square, hex box, optional eyedropper) or WPF Extended Toolkit ColorPicker; must emit lowercase hex into FillSpec. Add ToolTip text 'Color 1' / 'Color 2'.",
    "risk": "med",
-   "parityCheck": "Tests: ColorMathTests (HSV/RGB round trips for primaries, grays and edge hues; hex parsing), ColorPickerViewModelTests (preview, keys, hex field, commit, cancel), ColorPickerPopupTests (automation names, arrow keys, Esc/Enter, anchored on-screen placement, theme-only brushes, owner-click detection), FillStyleTests (preview, cancel, commit and unchanged picks as one or zero steps; anchor plumbing; a preview through another region's color leaves it alone), LedgerScenarioTests.A_color_pick_retargets_matching_regions_in_one_step_and_a_cancel_changes_nothing. Smoke: open Color 1 and Color 2, drag the square and hue strip and watch painted regions follow, type a hex, Esc reverts, Enter and a click outside commit, one Ctrl+Z undoes the pick.",
+   "parityCheck": "Tests: ColorMathTests (HSV/RGB round trips for primaries, grays and edge hues; hex parsing), ColorPickerViewModelTests (preview, keys, hex field, commit, cancel), ColorPickerPopupTests (automation names, arrow keys, Esc/Enter, anchored on-screen placement, theme-only brushes, owner-click detection), FillStyleTests (preview, cancel, commit and unchanged picks as one or zero steps; anchor plumbing; a preview through another region's color leaves it alone), LedgerScenarioTests.A_color_pick_retargets_matching_regions_in_one_step_and_a_cancel_changes_nothing. Smoke: open Color 1 and Color 2, drag the square and hue strip and watch painted regions follow, type a hex, Esc reverts, Enter and a click outside commit, one Ctrl+Z undoes the pick. Through the bridge (H10): dragging in the square and along the hue strip repaints a painted Front live, a click on the canvas through the disabled owner commits the pick as one step with the owner hook's WM_SETCURSOR handled (no beep), and one Ctrl+Z reverts it. Narrowed in M4a: Color 1 only through the bridge; Color 2, the hex field, Esc and Enter come from the M3a themed run.",
    "owner": "App.Ribbon.Home",
    "check": "manual",
    "disposition": "fix",
-   "divergence": "4.1: Color 1 and Color 2 open Chromium's Win32 ChooseColor dialog, which cannot be themed and changes the color only when it closes. v5: a themed in-app picker (saturation/value square, hue strip, #rgb/#rrggbb hex field, old and new swatches, OK and Cancel) opens under the swatch button, previews the color live on the canvas, and records the whole pick as one undo step (none when it ends on its seed, none on Esc or Cancel), per Este's call (2026-10-14).",
-   "status": "open"
+   "divergence": "4.1: Color 1 and Color 2 open Chromium's Win32 ChooseColor dialog, which cannot be themed and changes the color only when it closes. v5: a themed in-app picker (saturation/value square, hue strip, #rgb/#rrggbb hex field, old and new swatches, OK and Cancel) opens under the swatch button, previews the color live on the canvas, and records the whole pick as one undo step (none when it ends on its seed, none on Esc or Cancel), per Este's call (2026-10-14). A click on the main window while the picker is open commits it through the owner's WM_SETCURSOR hook, which marks the message handled so Windows does not beep (M3b; checked through the M4a bridge).",
+   "status": "done"
   },
   {
    "id": "fillstyle-angle-scale",
@@ -4429,12 +4429,12 @@
    "quirks": "packs/README.md says 'front, back, sleeve, and pants' but there are no back variants. Update docs. Only *.png are copied into the package (extraResources filter **/*.png), README.md is excluded.",
    "portTarget": "Copy to project as <Content Include=\"packs\\**\\*.png\"> with CopyToOutputDirectory/MSIX payload at Assets\\packs\\drips; enumerate with Directory.EnumerateFiles sorted ordinal-ignore-case.",
    "risk": "low",
-   "parityCheck": "Native pack browser shows exactly 156 items for Drips, same filenames, SHA256 of each file equals source.",
+   "parityCheck": "LedgerScenarioTests: the build output's packs/drips holds 156 files with the repo's names, each SHA-256 equal to the source, and the library lists 156 tiles under those names in ordinal-ignore-case order; the bridge (A1) reads '156 images in built-in drips pack'. Narrowed in M4a: the browser is virtualized, so the 156 are counted in the view model and only the realized tiles are read through UI Automation.",
    "owner": "Package",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "packs-inventory-wordart",
@@ -4454,7 +4454,7 @@
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "packs-resolve-dir",
@@ -4492,12 +4492,12 @@
    "quirks": "The count text assigned here ('N images in built-in <pack> pack') is immediately overwritten by showAssetFolder('(all)') which sets '<N> images in all folders', so the intended message never shows. Port decision: show the intended built-in text (fix) or the effective one (parity). Hard-coded MIME image/png even for jpg is harmless.",
    "portTarget": "AssetBrowserViewModel.LoadPack(name): enumerate files, create AssetItem{Name, Path, ParentFolder=packName}. Load thumbnails lazily/async (Task.Run decode to downscaled SKBitmap) to avoid the Electron sync-read hitch. Reuse the same pipeline as folder loading.",
    "risk": "low",
-   "parityCheck": "Click Drips: grid shows 156 thumbs alphabetically; Word art: 25. Count label per quirk below.",
+   "parityCheck": "Click Drips: the view model holds 156 tiles in ordinal-ignore-case order, three per row, and the realized tiles are the first ones in that order (LedgerScenarioTests, bridge A1); Word art: 25; the count reads '156 images in built-in drips pack' and stays (the fix). Narrowed in M4a: thumbnails decode as rows scroll into view (asset-grid-thumbnails).",
    "owner": "App.AssetLibrary",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: the intended 'N images in built-in <pack> pack' count is immediately overwritten by 'N images in all folders'. v5: the built-in pack count text is shown.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "asset-open-folder",
@@ -4513,12 +4513,12 @@
    "quirks": "Filter excludes bmp/svg that other image loaders (isImageFile) accept. Browser shows a Chromium permission prompt ('Upload N files?') in Electron; native has no such prompt. Large folders (thousands) are all read into a File list and every thumbnail is created eagerly.",
    "portTarget": "Use Microsoft.Win32.OpenFolderDialog (.NET 8+) then Directory.EnumerateFiles(SearchOption.AllDirectories) with the same extension filter (case-insensitive: png, jpg, jpeg, gif, webp). Same MessageBox text on empty. Preserve relative paths (root folder name + subpath) to feed the grouping logic.",
    "risk": "low",
-   "parityCheck": "Pick a folder with mixed files incl. .bmp/.svg/.txt; only 5 extensions listed; empty folder shows the alert.",
+   "parityCheck": "Reworded in M4a: a folder with .png, .bmp, .txt and .svg files lists the six import formats (.png, .jpg, .jpeg, .webp, .bmp, .gif; interfaces R14) and skips the rest; an empty folder shows 'No images found in that folder. Pick a folder with PNG, JPG, GIF, or WEBP files.' verbatim (LedgerScenarioTests, AssetScanTests, bridge A2 and F4).",
    "owner": "App.AssetLibrary",
    "check": "ui-auto",
-   "disposition": "keep",
-   "divergence": "",
-   "status": "open"
+   "disposition": "fix",
+   "divergence": "4.1: the folder picker lists .png, .jpg, .jpeg, .gif and .webp only (editor.js:2381). v5: it lists the import formats, .bmp included, in a deterministic order (io-folder-picker); the no-images alert keeps 4.1's text (M4a, interfaces R14).",
+   "status": "done"
   },
   {
    "id": "asset-dedupe-by-name",
@@ -4538,7 +4538,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "asset-folder-grouping",
@@ -4559,7 +4559,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "asset-count-label",
@@ -4575,12 +4575,12 @@
    "quirks": "The duplicate-removal message is dead code in practice. Port decision: surface it (fix) or keep. Recommend show 'N images in all folders (D duplicates removed)'.",
    "portTarget": "TextBlock bound to CountText; computed in SelectFolder only unless fixing.",
    "risk": "low",
-   "parityCheck": "After opening a folder with duplicates the label reads '<N> images in all folders'.",
+   "parityCheck": "Reworded in M4a to the fixed behavior: after a folder with duplicates loads, the label reads '<U> unique images (<D> duplicates removed)' (editor.js:2448) and stays; a subfolder button sets '<N> images in <folder>' and All sets '<N> images in all folders' (editor.js:2544) (LedgerScenarioTests, bridge A2).",
    "owner": "App.AssetLibrary",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: the duplicates-removed count message is dead code, overwritten before display. v5: the duplicate-count label is shown.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "asset-grid-thumbnails",
@@ -4600,7 +4600,7 @@
    "owner": "App.AssetLibrary",
    "check": "ui-auto",
    "disposition": "fix",
-   "divergence": "4.1: every full-size image is decoded eagerly and pack order is whatever the OS returns. v5: thumbnails decode lazily at thumb size and packs are deterministically sorted.",
+   "divergence": "4.1: every full-size image is decoded eagerly and pack order is whatever the OS returns. v5: thumbnails decode lazily at thumb size and packs are deterministically sorted. The grid is virtualized by rows of three, and only realized rows decode, at 160 px on one background worker (M4a, interfaces R5).",
    "status": "open"
   },
   {
@@ -4622,7 +4622,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "asset-rightclick-full",
@@ -4641,7 +4641,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "asset-drag-to-canvas",
@@ -4662,8 +4662,8 @@
    "owner": "App.AssetLibrary",
    "check": "ui-auto",
    "disposition": "fix",
-   "divergence": "4.1: a cancelled asset drag leaves a stale file that replaces the next external file drop. v5: drag state is cleared on drag end or cancel.",
-   "status": "open"
+   "divergence": "4.1: a cancelled asset drag leaves a stale file that replaces the next external file drop. v5: drag state is cleared on drag end or cancel. The drag is in-app with mouse capture, not an OLE drag: it starts past the system drag distance and ends with nothing added on Esc, a lost capture or a release off the canvas, and it shows the Hand cursor over the canvas and No elsewhere, with no drag image (M4a, interfaces R6, T2-R1).",
+   "status": "done"
   },
   {
    "id": "asset-resizable-browser",
@@ -4698,12 +4698,12 @@
    "quirks": "Version string stays '4.0' even though the app is 4.1.0 and is never read on load. Not saved: undo history, zoom, active tool, selected layer, currentFill (active fill style config), export title, drawing state, bg swatch, asset browser. Store compliance: privacy doc states .r15proj is plain inspectable JSON.",
    "portTarget": "System.Text.Json writer with property order and camelCase names exactly as above, indented 2 spaces, UTF-8 no BOM. LayerImage -> PNG-encode to 'data:image/png;base64,...' (preserve original MIME if source was jpg only if the source data URL is retained; recommend retaining original data URL string to keep round-trip byte-identical). Fill descriptors serialize via the same schema as lib/fills.js (type, c1, c2, angle, scale ...) - reuse the existing JSON contract.",
    "risk": "high",
-   "parityCheck": "Golden files: save from Electron and from native with the same scenario, diff JSON ignoring savedAt and image bytes; native must open Electron files and Electron must open native files (schema-equivalent).",
+   "parityCheck": "ProjectIOTests (M2b): Write keeps saveProject's field set and order for the three 4.1-saved fixtures in tests/goldens/projects and round-trips them to equal documents. LedgerScenarioTests: a save through the File group writes version 5.0 with no title and reopens to the same export. 4.1 reads a v5 file: tools/parity-ref/app-render.js loads a v5-saved project through 4.1's real Open path with no alert, and its export equals v5's export of the same file under the golden rule (M4a Task 5 P41, brg compare). Narrowed in M4a: the JSON is compared field by field with 4.1's own saves, not diffed against a same-scenario Electron save.",
    "owner": "Engine.ProjectIO",
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: writes version '4.0'. v5: writes the same fields with version '5.0'.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "project-save-filename",
@@ -4723,7 +4723,7 @@
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "project-load-flow",
@@ -4739,12 +4739,12 @@
    "quirks": "No undo entry is pushed and history is NOT cleared on load, so Ctrl+Z after Open restores the pre-edit state of the previous project (mixes projects). Loading ignores 'version', 'app', 'savedAt'. mode is not validated: an unknown mode string is stored in currentMode and goes to the Shirt branch. currentFill and showMask default are not reset when the field is absent (showMask keeps previous value). Decide: clear history on load (fix) or keep. Current-fill style controls are not restored.",
    "portTarget": "Microsoft.Win32.OpenFileDialog (Filter 'RBX15 project|*.r15proj;*.json', single select). Deserialize with System.Text.Json into a tolerant DTO (all properties nullable, JsonElement for regionColors fill which may be string or object). Catch JsonException/any -> MessageBox 'Failed to load project. <message>' (message text will differ; document).",
    "risk": "high",
-   "parityCheck": "Open fixtures: v4 file from Electron 4.1.0, minimal '{}' file, legacy color-string regionColors file, corrupt JSON, huge file. State after load matches field-by-field.",
+   "parityCheck": "ProjectIOTests (M2b) open the 4.1 fixtures (a v4 file and the legacy color-string pants file), '{}' and every structural refusal field by field; LedgerScenarioTests and the bridge (F1) show a non-JSON and a truncated file alerting 'Failed to load project. ...' with the document, history and title unchanged and no save prompt first; the read runs off the UI thread (ProjectFileServiceTests) and a file past the caps is refused by them (ImagesCapsTests). Narrowed in M4a: 'huge file' is the decode caps, not a timed load.",
    "owner": "Engine.ProjectIO",
    "check": "unit",
    "disposition": "fix",
-   "divergence": "4.1: load applies fields piecemeal, accepts bad shapes and unknown modes, and leaves the previous project's undo history in place. v5: all-or-nothing validated load with history cleared.",
-   "status": "open"
+   "divergence": "4.1: load applies fields piecemeal, accepts bad shapes and unknown modes, and leaves the previous project's undo history in place. v5: all-or-nothing validated load with history cleared. The Open dialog lists RBX15 project (*.r15proj) first and JSON project (*.json) second, keeping 4.1's .json reach (editor.html:108); the file is read and decoded off the UI thread with the window blocked, and a file that fails to read alerts before any save prompt (M4a, interfaces R4).",
+   "status": "done"
   },
   {
    "id": "project-load-layers",
@@ -4758,12 +4758,12 @@
    "quirks": "BUGS: (1) if the last-finishing event is an onerror (or the final records have no imgSrc and no loads), sorting, nextId update and selection are skipped; layers are left in decode-completion order and nextId stale -> id collisions with later added layers. (2) If all records lack imgSrc and none load, UI is never refreshed. (3) Sorting uses id lookup: duplicate ids order unspecified. (4) `scale: 0` and `x: NaN` coerce via ||. Native should sort deterministically and always set nextId/selection; document deliberate fix. Layer ids in the file are preserved verbatim.",
    "portTarget": "Decode synchronously/in parallel (Task.WhenAll) then build ordered list by array index; selection = last; nextId = max+1 (use int). Preserve all defaulting rules incl. `scale: 0 -> 1` and `opacity: 0 stays 0`.",
    "risk": "high",
-   "parityCheck": "Fixtures: layers with missing fields, opacity 0, scale 0, visible false, corrupt imgSrc in middle/last position, duplicate ids, 50 layers with large images. Resulting layer list order, ids, and nextId must match.",
+   "parityCheck": "ProjectIOTests (M2b): missing fields, opacity 0, scale 0, visible false, an undecodable image in the middle and in the last position, duplicate ids and nextId follow loadProject's rules; LedgerScenarioTests: stored values out of range open raw. Narrowed in M4a: the 50-large-image fixture is covered by the decode caps (ImagesCapsTests) and the off-thread read, not run.",
    "owner": "Engine.ProjectIO",
    "check": "unit",
    "disposition": "fix",
-   "divergence": "4.1: layer order, nextId and selection depend on async decode completion and are skipped when the last event is an error. v5: deterministic ordering with nextId and selection always set, and a visible warning naming dropped layers.",
-   "status": "open"
+   "divergence": "4.1: layer order, nextId and selection depend on async decode completion and are skipped when the last event is an error. v5: deterministic ordering with nextId and selection always set, and a visible warning naming dropped layers. Stored rotation, scale, opacity and adjustment values open raw, in range or not, as 4.1 opens them; only the field a gesture or the panel edits is clamped (M4a, interfaces R12).",
+   "status": "done"
   },
   {
    "id": "project-version-compat",
@@ -4931,11 +4931,11 @@
    "quirks": "Gradient text is clipped to the h1 box only (not the whole header). Letter-spacing in WPF needs a workaround; budget for it for all mono uppercase labels (tabs, group labels, h3, .info, footer).",
    "portTarget": "Border with LinearGradientBrush background; TextBlock for title using a gradient foreground (LinearGradientBrush Foreground with StartPoint/EndPoint 0,0->1,1 in bounding box) and FontFamily Space Grotesk; subtitle TextBlock with CharacterSpacing equivalent (WPF has no letter-spacing: use Typography or per-glyph Run spacing / a custom TextBlock with TextOptions; or use FormattedText + DrawingContext). Bind version text to assembly/MSIX version formatted 'v{Major}.{Minor}'.",
    "risk": "med",
-   "parityCheck": "Pixel-compare header strip against 4.1 screenshots; text bounds within 1 px; gradient endpoints cyan at left, magenta at right of the h1 box. Version string equals MSIX identity version major.minor.",
+   "parityCheck": "Pixel-compare header strip against 4.1 screenshots; text bounds within 1 px; gradient endpoints cyan at left, magenta at right of the h1 box. Version string equals MSIX identity version major.minor. ShellTests: the byline is 'v<major.minor>' (shown 'V5.0') and the HeaderMark image shows the LabsMarkDuo resource at 18 DIP, named '626Labs' for UI Automation.",
    "owner": "App.Shell",
    "check": "manual",
-   "disposition": "keep",
-   "divergence": "",
+   "disposition": "fix",
+   "divergence": "4.1: the header span reads 'ItsjustEste | v4.1' (editor.html:17). v5: the 626Labs signature mark (bold duo, no 'LLC'; 626labs-design/assets/Logos/626labs-signature-bold-duo.svg as a vector DrawingImage, 18 DIP high) stands in for the name, followed by the version alone ('v5.0', shown as 'V5.0'), per Este's call (2026-10-17).",
    "status": "open"
   },
   {
@@ -5294,7 +5294,7 @@
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: Save/Open/Download go through anchor downloads and hidden file inputs with no current-file model. v5: native save/open dialogs with a current-file model (Ctrl+S / Ctrl+Shift+S), same default names and 585x559 PNG output.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "home-settings-group",
@@ -5564,8 +5564,8 @@
    "owner": "App.AssetLibrary",
    "check": "manual",
    "disposition": "fix",
-   "divergence": "4.1: packs read synchronously, thumbnails decoded at full size, stale asset-drag file reused after a cancelled drag, bundled pack count text immediately overwritten. v5: deterministic sorted packs, thumbnails decoded lazily at thumb size, stale drag bug fixed, duplicate-count label shown.",
-   "status": "open"
+   "divergence": "4.1: packs read synchronously, thumbnails decoded at full size, stale asset-drag file reused after a cancelled drag, bundled pack count text immediately overwritten. v5: deterministic sorted packs, thumbnails decoded lazily at thumb size, stale drag bug fixed, duplicate-count label shown. Thumbnails are buttons: Enter, Space and UI Automation add them (M4a, T2-R2).",
+   "status": "done"
   },
   {
    "id": "panel-asset-resize-handle",
@@ -5586,7 +5586,7 @@
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "panel-drop-zone",
@@ -5645,12 +5645,12 @@
    "quirks": "Dragging text/ids is set as text/plain id; harmless.",
    "portTarget": "WPF drag/drop with insertion-line adorner; compute above/below from pointer Y vs row midpoint; reorder the backing list preserving the same z semantics.",
    "risk": "med",
-   "parityCheck": "Drag bottom layer onto top half of top row: it becomes the new top; indicators draw at correct edge; one Ctrl+Z restores.",
+   "parityCheck": "Through the bridge (H7, H7b): the bottom row dropped on the top half of the top row becomes the top while the drop line shows above that row; a drag released off every row, or cancelled with Esc, moves nothing and leaves no mark; with 20 layers the left panel wheels down mid-drag and the drop lands below the last row; Alt+Up moves a focused row one place; and one Ctrl+Z (the window's KeyBinding) undoes each. LayersReorderTests, LayersPanelDragTests, ShellTests and LedgerScenarioTests pin the same; a lost capture (Alt+Tab) cancelling the drag is pinned by LayersPanelDragTests only. Narrowed in M4a: the gesture is real WPF routed input injected in-process by the test-only input bridge (brg smoke; interfaces R7, R8) and read back through its inspect command and UI Automation; the bridge cannot show the OS cursor image or drive a physical device (H7, H7b).",
    "owner": "App.Layers",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: reorder is mouse-drag only and can leave a stale drag target. v5: stale drag target fixed and reorder is keyboard operable, with the same above/below z semantics and one undo step. Pressing a row selects it, so a dragged row ends selected; Alt+Up and Alt+Down move a focused row (M3b Task 4).",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "layers-selected-panel",
@@ -5746,12 +5746,12 @@
    "quirks": "No undo for move/rotate/resize/wheel. mouse button not filtered. With draw tools, releasing the mouse outside the canvas leaves isDrawing true and the stroke keeps extending on re-entry (mouseleave only handles Select). Single click with pen/eraser (no movement) does nothing visible but still pushes an undo entry.",
    "portTarget": "MouseDown/Move/Up on the SKElement with CaptureMouse (original loses the gesture when leaving the canvas; capture is an improvement). Reproduce hit-test radii in device pixels (not zoom scaled). Draw selection chrome in the same Skia pass (or a lightweight overlay).",
    "risk": "high",
-   "parityCheck": "Scripted pointer sequences (drag by (30,20) at zoom 1 and 2 moves layer by 30,20 in layer units; rotate across 45 snaps; corner drag scale ratio equals dist ratio).",
+   "parityCheck": "Pointer sequences through the bridge: a move drag at zoom 1 and 2, a corner drag whose scale ratio equals the distance ratio about a fixed center, a knob drag that snaps at 45 and wraps past 180 into the negative range (pointer 186 reads -173.66, about -174; 182 would snap to -180, 4.1's 3-degree band, editor.js:1176-1179), and wheel bursts up to the 500% clamp, each one undo step (bridge H1-H3); the same sequences through CanvasInteraction (LedgerScenarioTests, CanvasInteractionTests, SelectionGeometryTests). Narrowed in M4a: the gesture is real WPF routed input injected in-process by the test-only input bridge (brg smoke; interfaces R7, R8) and read back through its inspect command and UI Automation; the bridge cannot show the OS cursor image or drive a physical device (H1-H3).",
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: any mouse button starts a gesture, no capture across the edge, rotation not normalized, hidden layers can show handles, wheel steps asymmetric with no clamp, and move/rotate/resize push no undo. v5: left button only, mouse capture, hover cursors, rotation normalized -180..180, no handles on hidden layers, symmetric centered wheel scaling with the 1%-500% clamp, and each gesture is one undo step.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "canvas-draw-tools",
@@ -5812,7 +5812,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: writes version '4.0', applies state before layers parse (half-loaded documents), and accepts any image source. v5: reads all 4.1 files, writes the same fields with version '5.0', all-or-nothing validated load, data: URLs only, and a visible warning naming dropped layers.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "file-undo-snapshot-scope",
@@ -5872,12 +5872,12 @@
    "quirks": "alert() blocks the renderer and shows the Electron page title as caption. confirm Cancel is a pure abort.",
    "portTarget": "MessageBox.Show with identical captions/strings (title = app name) for the 5 alerts and the 1 confirm; add inline UX only by decision. Pickers per item. Decide whether to add silent-failure messages (recommended: a non-blocking InfoBar) while keeping the strings above intact.",
    "risk": "low",
-   "parityCheck": "Trigger each of the 6 messages and compare text exactly; verify no other modal text appears.",
+   "parityCheck": "DialogInventoryTests map each of 4.1's six sites to its themed dialog or status text verbatim; through the bridge (F1, F4) all six fire on the running app and read verbatim through UI Automation: the empty-template confirm (editor.js:1506), the eraser refusal in the status strip (:1270), no images in the folder (:2385), a missing and an empty built-in pack (:2344, :2364) and 'Failed to load project. ...' (:2676), each dialog titled with the product name. Narrowed in M4a: the only other modal text is the Save / Don't save / Cancel prompt, which 4.1 never had (shell-unsaved-work-loss).",
    "owner": "App.Dialogs",
    "check": "ui-auto",
    "disposition": "fix",
-   "divergence": "4.1: blocking native alert/confirm with no status feedback and silent console-only failures. v5: themed dialogs titled with the product name, message strings kept verbatim, and a status strip for previously console-only failures.",
-   "status": "open"
+   "divergence": "4.1: blocking native alert/confirm with no status feedback and silent console-only failures. v5: themed dialogs titled with the product name, message strings kept verbatim, and a status strip for previously console-only failures. The eraser's refusal (editor.js:1270) stays on the status strip at the press (eraser-selection-semantics, M3b); the only new modal is the unsaved-changes prompt (M4a, R13).",
+   "status": "done"
   },
   {
    "id": "bug-pants-mode-region-keys",
@@ -5982,12 +5982,12 @@
    "quirks": "Electron on high-DPI shows a softly resampled canvas at zoom 100% (nearest at zoom>=1 applies only in canvas space); native may look sharper. Pixel-diff only valid at 100% DPI.",
    "portTarget": "WPF is DIP-based like CSS px; set UseLayoutRounding=True and SnapsToDevicePixels for 1px borders, and render the SKElement at device resolution (IgnorePixelScaling=false) so zoom 100% = 585 DIP. Decide whether on-screen preview should be crisp at high DPI (native improvement) while export remains 585x559.",
    "risk": "med",
-   "parityCheck": "Run at 100/125/150/200% display scaling: layout identical in DIPs; export always 585x559 pixels.",
+   "parityCheck": "By hand in the M4a manual list (MAN-3): at 100% and at 125% or 150% display scale the layout matches in DIPs and the export is 585x559. Narrowed in M4a: two display scales, not four.",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "shell-window-size",
@@ -6208,12 +6208,12 @@
    "quirks": "Drop of non-image files is silently ignored (verify in the editor slice).",
    "portTarget": "WPF: AllowDrop=True only on drop zone and canvas host; leave AllowDrop False elsewhere. Handle DragOver feedback (dragover class highlight on the drop zone). Accept file lists of images (png/jpg/gif/webp via isImageFile).",
    "risk": "low",
-   "parityCheck": "Drag a PNG over the layers panel and ribbon: nothing happens, no navigation, no cursor 'copy' effect. Drag onto drop zone: highlight appears and layer added at front-torso center. Drag onto canvas: layer lands at drop point.",
+   "parityCheck": "By hand in the M4a manual list (MAN-1): a PNG dragged from Explorer over the layers panel and the ribbon shows the no-drop cursor and does nothing; dropped on the drop zone it highlights the zone and lands centered in the front slot; dropped on the canvas it lands centered on the drop point. Narrowed in M4a: a hand check, because an OLE drag from another process is outside the bridge (interfaces R8).",
    "owner": "App.Shell",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "io-download-save-dialog",
@@ -6229,12 +6229,12 @@
    "quirks": "Verify the actual Electron default start folder (expected Downloads) and keep or change deliberately. Cancel path currently silent. Object URL is revoked synchronously right after click; works only because Chromium has started the fetch.",
    "portTarget": "Microsoft.Win32.SaveFileDialog (or Windows.Storage.Pickers with window handle) with filter 'PNG image|*.png' and 'RBX15 project|*.r15proj', FileName seeded from the sanitized title, OverwritePrompt=true, AddExtension. Defaults: initial directory = user's Documents/Pictures (decide; Electron default is Downloads).",
    "risk": "med",
-   "parityCheck": "Click Download template with title 'My Shirt': dialog suggests My_Shirt_roblox.png; cancel produces no file and no error; confirm writes exactly 585x559 RGBA PNG. Same for .r15proj.",
+   "parityCheck": "Through the bridge (F1): with the title 'My Shirt v2!' Download template suggests My_Shirt_v2__roblox.png and writes a 585x559 RGBA PNG, a cancel writes nothing and shows nothing, and Save As suggests My_Shirt_v2_.r15proj; RendererTests pin 'My Shirt!' to My_Shirt__roblox.png and My_Shirt_.r15proj. Narrowed in M4a: the dialogs are the bridge's file-dialog queue, which logs each suggested name; the native dialogs are Win32FileDialogs (FileGroupTests, ProjectFileServiceTests).",
    "owner": "App.Storage",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: Electron anchor-download Save As with no current-file memory and no feedback after saving. v5: native save/open/folder dialogs with a current-file model and a status message.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "io-export-filename",
@@ -6298,7 +6298,7 @@
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: loadProject mutates mode, background and fills before layers parse, leaving a half-loaded document on failure. v5: parse and validate fully first, then apply atomically, leaving the current document untouched on failure.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "io-folder-picker",
@@ -6319,7 +6319,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: folder enumeration order is browser/OS-dependent. v5: deterministic sorted order, with the deepest-path dedup, parent-folder grouping and counts kept.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "io-image-formats",
@@ -6341,7 +6341,7 @@
    "owner": "App.AssetLibrary",
    "check": "manual",
    "disposition": "fix",
-   "divergence": "4.1: accept=image/* silently lets SVG/AVIF through the picker. v5: explicit PNG/JPG/GIF/WEBP/BMP filter, SVG import dropped with a message, first frame only for animated files.",
+   "divergence": "4.1: accept=image/* silently lets SVG/AVIF through the picker. v5: explicit PNG/JPG/GIF/WEBP/BMP filter, SVG import dropped with a message, first frame only for animated files. The folder picker lists the import formats, .bmp included, while its no-images alert keeps 4.1's text naming PNG, JPG, GIF and WEBP, and a .bmp keeps its extension in the thumbnail caption, whose regex is 4.1's (M4a, interfaces R14, T2-R6).",
    "status": "open"
   },
   {
@@ -6363,7 +6363,7 @@
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "pack-contents",
@@ -6385,7 +6385,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "fonts-google-runtime",
@@ -7264,7 +7264,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: writes version '4.0' and loads unvalidated, trusting imgSrc and numeric fields. v5: reads all 4.1 files, writes version '5.0', all-or-nothing validated load, data: URLs only, visible warning naming dropped layers.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "parity-store-update-path",
@@ -7347,7 +7347,7 @@
    "owner": "App.Storage",
    "check": "ui-auto",
    "disposition": "fix",
-   "divergence": "4.1: closing or reloading silently discards all work. v5: save-changes prompt on close plus 60s autosave and crash recovery, not shown on a pristine or just-saved document.",
+   "divergence": "4.1: closing or reloading silently discards all work. v5: save-changes prompt on close plus 60s autosave and crash recovery, not shown on a pristine or just-saved document. The prompt (Save, Don't save, Cancel, in the Windows wording) and the window title's * marker ship in M4a, ahead of M5's autosave and recovery (Este, 2026-10-16); the prompt also guards Open, and undoing back to the saved state reads clean.",
    "status": "open"
   },
   {
@@ -7387,12 +7387,12 @@
    "quirks": "The claim is false today. The port should make it true (a deliberate fix). Real saved projects only ever contain data: URLs because every image enters through FileReader, toDataURL or the pack Blob path (editor.js:539, 943, 979, 1007, 1282, 1864, 2290, 2507, 2536, 2703), so tightening the rule breaks no legitimate file.",
    "portTarget": "Use System.Text.Json DTOs. Accept only 'data:image/(png|jpeg|gif|webp);base64,' for imgSrc/bgImageSrc, decode with Convert.FromBase64String into SKBitmap.Decode, and skip (count as failed) anything else. Accept mode in {'Shirt','Pants'} only and default to Shirt. Run regionColors through fills normalize and drop unknown types.",
    "risk": "med",
-   "parityCheck": "Fuzz fixture set: a project with an http imgSrc, one with a file:// imgSrc, one with mode 'pants', and one with a junk regionColors object. The native build makes zero network or file reads (Process Monitor / Fiddler), opens without crashing, and loads the valid layers. Valid v3/v4/v4.1 fixtures load pixel-identical to Electron.",
+   "parityCheck": "ProjectIOTests (M2b): http and file image URLs and undecodable payloads are dropped and named, a background that is not a data: URL refuses the file, an unknown mode refuses it, and junk regionColors are skipped; LedgerScenarioTests: an http imgSrc layer is named in the status strip after Open; GoldenAppTests project-* scenes render the 4.1 fixtures against 4.1's goldens. Narrowed in M4a: no file or network read is possible because only data: URLs are decoded, from memory, and the app references no network API (Step 13's grep); a project file over 512 MiB is refused before it is read (ProjectFileServiceTests.A_file_over_the_size_limit_alerts_and_changes_nothing); no Process Monitor trace is taken.",
    "owner": "Engine.ProjectIO",
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: .r15proj load assigns any URL (http, file) from imgSrc/bgImageSrc/mode/regionColors without sanitizing. v5: all-or-nothing validated load accepts data: image URLs only, validates mode, with a visible warning naming dropped layers.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "project-load-no-imgsrc-hang",
@@ -7407,12 +7407,12 @@
    "quirks": "The stale-UI case is a bug and should be fixed. Undo crossing a project open is surprising and should probably be fixed by clearing history on load.",
    "portTarget": "A synchronous decode loop in C# (SKBitmap.Decode per layer), then one Refresh. Decide on undo-after-open: clear history (recommended) or push a snapshot.",
    "risk": "low",
-   "parityCheck": "Fixture with 2 layers that both lack imgSrc: the native build shows an empty layer list and the canvas is redrawn. Then Undo straight after Open: document the chosen behavior and assert it.",
+   "parityCheck": "ProjectIOTests.A_layer_without_an_image_is_dropped_and_named; LedgerScenarioTests: a project whose two layers lack imgSrc opens to an empty layer list, the canvas view model takes the opened document, the status strip names both layers, and Undo straight after Open does nothing (history cleared).",
    "owner": "Engine.ProjectIO",
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: a project whose layers all lack imgSrc never finalizes and leaves stale UI, and open leaves undo history intact. v5: synchronous decode with a single finalize and history cleared on open.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "project-template-name-not-saved",
@@ -7434,7 +7434,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "wordart-claim-wrap-any-size",
@@ -7582,7 +7582,7 @@
    "quirks": "Doc drift. Fix the TEST_PLAN expectation when porting.",
    "portTarget": "Bind the header text to the assembly version (major.minor), or to Package.Current.Id.Version under MSIX, so it cannot drift.",
    "risk": "low",
-   "parityCheck": "The header reads 'ItsjustEste | v<major.minor>' matching the MSIX Identity Version's first two components.",
+   "parityCheck": "The header byline reads 'v<major.minor>' (the name became the 626Labs mark, shell-header) matching the MSIX Identity Version's first two components.",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "fix",
@@ -7859,12 +7859,12 @@
    "quirks": "Likely unintended but harmless.",
    "portTarget": "WPF MouseDown fires for all buttons. Mirror it by handling MouseDown/Up generically, or restrict to the left button (decision).",
    "risk": "low",
-   "parityCheck": "With the Pen tool, right-drag on the canvas and check whether a drawing layer is created.",
+   "parityCheck": "With Draw, right and middle drags on the canvas add no layer and no undo step, and a right drag on the selected layer with Select moves nothing (bridge H4; TemplateCanvasHostTests). Narrowed in M4a: the gesture is real WPF routed input injected in-process by the test-only input bridge (brg smoke; interfaces R7, R8) and read back through its inspect command and UI Automation; the bridge cannot show the OS cursor image or drive a physical device (H4).",
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: right and middle buttons move layers and draw like left. v5: canvas input responds to the left button only.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "wheel-sign-only-and-midstroke",
@@ -7880,12 +7880,12 @@
    "quirks": "",
    "portTarget": "MouseWheel Delta sign only (Delta is a multiple of 120). Precision touchpads send smaller deltas, so normalize by sign to match.",
    "risk": "low",
-   "parityCheck": "Count the scale steps for one notch on a mouse and on a precision touchpad. Wheel during a rect drag and check the final stroke width.",
+   "parityCheck": "A mouse notch (delta 120) is one scale step, and five events of delta 8 are five steps, by sign not distance (bridge H3); three wheel notches during a Rect drag raise the brush by 3 and the Rect commits at the same size as one drawn at that width (bridge H4; CanvasInteractionTests, TemplateCanvasHostTests, LedgerScenarioTests). Narrowed in M4a: the gesture is real WPF routed input injected in-process by the test-only input bridge (brg smoke; interfaces R7, R8) and read back through its inspect command and UI Automation; the bridge cannot show the OS cursor image or drive a physical device; the small deltas are injected wheel reports of a precision touchpad's size, not a physical touchpad (H3, H4).",
    "owner": "App.Canvas",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: wheel scaling uses delta sign with asymmetric x1.05/x0.95 steps, no max clamp, and changes width mid-stroke. v5: wheel scaling centered with symmetric steps (x1.05 up, /1.05 down) under the single 1%-500% clamp. The wheel still counts one step per event by its sign, and a step mid-shape still redraws a Line, Rect or Ellipse at the new brush width (kept); Pen and Eraser keep the width of the press, as in 4.1.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "undo-empty-steps",
@@ -8075,12 +8075,12 @@
    "quirks": "Bug that disappears in the port.",
    "portTarget": "Microsoft.Win32.OpenFileDialog always returns, so the bug disappears naturally. Note it as a fix.",
    "risk": "low",
-   "parityCheck": "Pick the same image twice via the drop-zone click and count the layers.",
+   "parityCheck": "DialogInventoryTests.Picking_the_same_file_again_acts_again (drop-zone click, Add image, Open, Open folder) and bridge F4. Narrowed in M4a: the Background picker is the M4b Layout tab's.",
    "owner": "App.Dialogs",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: drop-zone and background pickers ignore re-picking the same file. v5: native open dialogs always return, so the bug is gone.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "bg-color-pick-clears-image",
@@ -8117,12 +8117,12 @@
    "quirks": "Bug, fix.",
    "portTarget": "WPF DragDrop.DoDragDrop with a typed DataObject payload. Fixes this by construction.",
    "risk": "low",
-   "parityCheck": "Drag a thumbnail, drop it on the layer list, then drop an OS PNG on the canvas, and check which image was added.",
+   "parityCheck": "In-app drags carry no OS data: a thumbnail drag released over the layers list or cancelled with Esc adds nothing (bridge A1, AssetLibraryPanelTests), and by hand (MAN-1) a PNG dragged from Explorer onto the canvas right after a cancelled thumbnail drag adds the Explorer file. Narrowed in M4a: the in-app half through the bridge, the OS drop by hand.",
    "owner": "App.AssetLibrary",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: a stale asset-drag file hijacks the next OS file drop. v5: stale asset-drag bug fixed via a typed drag payload.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "asset-thumb-uuid-label",
@@ -8142,7 +8142,7 @@
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "asset-count-label-overwritten",
@@ -8158,12 +8158,12 @@
    "quirks": "Dead message. Fix or drop.",
    "portTarget": "Decide which text to show. Parity is the 'in all folders' / 'in <folder>' form.",
    "risk": "low",
-   "parityCheck": "Load a folder with duplicates and screenshot the label.",
+   "parityCheck": "Through the bridge (A2): after a folder with duplicates loads, the label read through UI Automation is '4 unique images (3 duplicates removed)', with a PrintWindow capture (a2-folder.png); LedgerScenarioTests pin the same. Narrowed in M4a: read and captured, not compared by eye.",
    "owner": "App.AssetLibrary",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: dedupe/pack count message is immediately overwritten by 'in all folders'. v5: the duplicate-count label is shown.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "pack-load-sync-and-mime",
@@ -8182,8 +8182,8 @@
    "owner": "App.AssetLibrary",
    "check": "ui-auto",
    "disposition": "fix",
-   "divergence": "4.1: pack load is synchronous on the UI thread in readdir order. v5: deterministic sorted packs loaded without blocking the UI.",
-   "status": "open"
+   "divergence": "4.1: pack load is synchronous on the UI thread in readdir order. v5: deterministic sorted packs loaded without blocking the UI. The 156 names are listed synchronously; every read and decode runs off the UI thread (M4a, interfaces R5).",
+   "status": "done"
   },
   {
    "id": "asset-objecturl-lifecycle",
@@ -8224,7 +8224,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: a failed last image skips finalize (order, nextId, selection, render). v5: all-or-nothing validated load with a visible warning naming dropped layers.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "project-load-history-interplay",
@@ -8239,12 +8239,12 @@
    "quirks": "Surprising behavior. Fix recommended.",
    "portTarget": "Decide: clear history on open (common) or push a snapshot first. Log the decision.",
    "risk": "med",
-   "parityCheck": "Edit, Open a project, Ctrl+Z, and observe the result in both builds.",
+   "parityCheck": "Reworded in M4a to the fixed behavior: after an edit and an Open, the history is empty, Undo is disabled and Ctrl+Z changes nothing (LedgerScenarioTests, bridge F1); 4.1's Ctrl+Z back into the pre-load session is what this row fixes.",
    "owner": "Engine.ProjectIO",
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: opening a project leaves undo history so Ctrl+Z restores a pre-load session. v5: history cleared on open.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "project-load-field-coercion",
@@ -8301,12 +8301,12 @@
    "quirks": "Data-loss gap. The port can close it.",
    "portTarget": "Window.Closing with a dirty flag and a 'Save work?' prompt (a new feature, decision). No reload accelerator in WPF. Page zoom has no equivalent; optional LayoutTransform UI scale.",
    "risk": "med",
-   "parityCheck": "Manual: make an edit and close the window. Document the expected port behavior.",
+   "parityCheck": "Through the bridge (F2): closing with edits shows the themed Save / Don't save / Cancel prompt; Cancel keeps the window and the edits, Save saves to the current file and closes, Save on an untitled document runs Save As and a cancelled Save As cancels the close, Don't save closes without writing, and a window with no edits closes at once; the same prompt guards Open (F1). LedgerScenarioTests and ShellTests pin the guard. Reworded in M4a to the new behavior (Este, 2026-10-16).",
    "owner": "App.Storage",
    "check": "ui-auto",
    "disposition": "new",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "diag-console-only-errors",
@@ -8323,12 +8323,12 @@
    "quirks": "",
    "portTarget": "Debug.WriteLine or ILogger plus optional user toast (decision).",
    "risk": "low",
-   "parityCheck": "Drop a renamed .txt as .png and confirm no layer, no dialog (parity) or a toast (if fixed).",
+   "parityCheck": "Through the bridge (F4): a text file renamed .png and picked through Add image adds no layer, opens no dialog and names the file in the status strip ('Couldn't add not-an-image.png: ...'). Narrowed in M4a to the import, asset, project and preview routes (DialogInventoryTests: undecodable files through Add image, the drop zone, the canvas drop and an asset click; handleFiles' three console lines; a project layer that cannot load; preview failures once per set; bridge F4); the Background image route (editor.js:940-944) is the M4b Layout tab's.",
    "owner": "App.Dialogs",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: image decode and read failures are console-only and silent to the user. v5: status strip reports previously console-only failures.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "image-decode-format-matrix",
@@ -8408,12 +8408,12 @@
    "quirks": "",
    "portTarget": "WPF DragDrop with an adorner. Ghost appearance will differ, so accept a visual delta.",
    "risk": "low",
-   "parityCheck": "Manual visual: the dragged row dims, and the insertion line appears top or bottom.",
+   "parityCheck": "Mid-drag the bridge reads the source row's drag mark and the target row's drop line (above) through its inspect command, and a PrintWindow capture records them (.superpowers/m4a-smoke/out/h7-mid-drag.png); LayersPanelDragTests pin the look: the source row at opacity .4 and a 2 px #17d4fa line on the target's top or bottom edge (styles.css:310-312). Narrowed in M4a: the dim and the line are checked as state plus a capture, not by eye (H7).",
    "owner": "App.Layers",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "draw-canvas-template-clip",
@@ -8470,12 +8470,12 @@
    "quirks": "",
    "portTarget": "Renderer.RenderView with ViewOptions.DeviceScale set to the monitor's DPI scale; TemplateCanvasHost shows the frame 1:1 in device pixels under per-monitor DPI v2 and re-renders on DPI change. The checker half-tile is round(8 x scale) device px and the grid line is one CSS px wide.",
    "risk": "low",
-   "parityCheck": "RendererViewTests: the frame is Renderer.ViewSize at DeviceScale 1.25, 1.5 and 2, and at DeviceScale 1 it equals the view goldens. By hand at 125% or 150% display scale: template edges are crisp at zoom 1, and the export stays 585x559.",
+   "parityCheck": "RendererViewTests (M3a): the frame is Renderer.ViewSize at DeviceScale 1.25, 1.5 and 2, and at DeviceScale 1 it equals the view goldens. By hand in the M4a manual list (MAN-3) at 125% or 150% display scale: template edges are crisp at zoom 1, and the export stays 585x559.",
    "owner": "App.Canvas",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: above 100% display scale the view canvas is a CSS-pixel bitmap stretched by Chromium, so the template, checker and grid look soft. v5: the view is rendered at device pixels and stays crisp at every display scale; at 100% it equals 4.1's view, and the export is unchanged.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "font-ui-weight-600",
@@ -8551,12 +8551,12 @@
    "quirks": "",
    "portTarget": "CanvasInteraction opens one EditorSession gesture at the first wheel scale event of a burst; EndWheelBurst closes it, called by TemplateCanvasHost's 400 ms one-shot timer after the last wheel event, and by a press, a tool change, a selection change or any other session change (EditorSession.Changing, raised first by every change entry point). The gesture records one step iff the content changed.",
    "risk": "low",
-   "parityCheck": "LedgerScenarioTests.A_wheel_burst_scales_about_the_center_clamps_at_500_percent_and_is_one_step: three wheel steps are one undo step, two hundred more are one more, clamped at 500%. CanvasInteractionTests and TemplateCanvasHostTests pin the closes (the 400 ms timer, a press, a tool change, a selection change, and an edit or slider gesture made during the burst, which records as its own step). By hand in the M3b manual checklist (H3): a burst on a real wheel undoes in one step.",
+   "parityCheck": "LedgerScenarioTests.A_wheel_burst_scales_about_the_center_clamps_at_500_percent_and_is_one_step; CanvasInteractionTests and TemplateCanvasHostTests pin the closes (the 400 ms timer, a press, a tool change, a selection change, and an edit during the burst as its own step). Through the bridge (H3): 200 fast notches are one undo step and one Undo reverts the whole burst, and a burst of small deltas is one step. Narrowed in M4a: the gesture is real WPF routed input injected in-process by the test-only input bridge (brg smoke; interfaces R7, R8) and read back through its inspect command and UI Automation; the bridge cannot show the OS cursor image or drive a physical device (H3).",
    "owner": "App.Canvas",
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: wheel scaling records no undo step. v5: each burst of wheel steps is one undo step; a burst ends 400 ms after its last wheel event, or at a press, a tool change, a selection change or any other edit, which stays its own step.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "eraser-click-without-move",
@@ -8571,12 +8571,12 @@
    "quirks": "The approved pen dot (draw-pen-single-click) is not carried to the eraser: a click is not a destructive punch-out.",
    "portTarget": "Eraser.Apply returns the layer itself for fewer than 2 points and Eraser.ApplyTo returns the same document, so EditorSession records no step; the live preview shows nothing for one point.",
    "risk": "low",
-   "parityCheck": "EraserTests.A_press_without_movement_erases_nothing; CanvasInteractionTests.Eraser_click_without_move_changes_nothing_and_records_no_step; LedgerScenarioTests.The_eraser_refuses_without_a_selection_and_erases_only_the_selected_layer_even_when_hidden. By hand in the M3b manual checklist (H5).",
+   "parityCheck": "EraserTests.A_press_without_movement_erases_nothing; CanvasInteractionTests.Eraser_click_without_move_changes_nothing_and_records_no_step; LedgerScenarioTests.The_eraser_refuses_without_a_selection_and_erases_only_the_selected_layer_even_when_hidden. Through the bridge (H5): an eraser click leaves the layer's image and the undo count unchanged, and a stroke replaces only the selected layer's image, as one step. Narrowed in M4a: the gesture is real WPF routed input injected in-process by the test-only input bridge (brg smoke; interfaces R7, R8) and read back through its inspect command and UI Automation; the bridge cannot show the OS cursor image or drive a physical device (H5).",
    "owner": "Engine.Tools",
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "canvas-automation-peer",
@@ -8614,6 +8614,65 @@
    "check": "golden",
    "disposition": "fix",
    "divergence": "4.1: Chromium 146's Skia antialiases the knob's 1.5 px white glyph. v5: SkiaSharp 4.153.1 antialiases it differently at some knob offsets (5 and 35 to 60 screen px: up to 41 levels on about 14 px); the geometry is 4.1's call for call, and the view-select goldens hold it exact at the offsets they use.",
+   "status": "done"
+  },
+  {
+   "id": "test-input-bridge",
+   "area": "tests",
+   "name": "Test-only input bridge (absent from Release and Store builds)",
+   "source": "gap:m4a-bridge",
+   "behavior": "4.1 has no in-process test input: its UI was checked by hand and through tools/parity-ref's Electron harness, which drives the page's own DOM events.",
+   "codeRefs": [
+    "tools/parity-ref/app-harness.js"
+   ],
+   "quirks": "Limits (interfaces R7, R8): the OS cursor image is not observable; an OLE drag from another process, Alt+Tab and a second monitor are out of reach; a chord a control handles only on bubbling KeyDown (TextBox's own Ctrl+Z) is not reachable; the bridge pointer cannot click a WPF ButtonBase, whose ButtonState reads GetKeyState, so buttons are pressed by UI Automation Invoke (T4-R4); it raises no TextInput, so text is entered through UI Automation ValuePattern; the hardware keyboard is not neutralized, only the mouse is (T4-R17); its CaptureMouse is a real Win32 SetCapture on the app's own window; the file-dialog command lets the pipe's client, the current user, choose any path that user can write through Save (accepted by design).",
+   "portTarget": "src/RBX15.App/Testing/** compiles into RBX15.App only with the MSBuild property EnableTestInputBridge=true (never passed to a solution build, a Release build or Store packaging) and runs only with --test-input-bridge: a named pipe restricted to the current user with a per-launch random name, JSON commands for pointer, wheel, key, wait-idle, file-dialog and inspect, each dispatched on the UI thread into the app's own visual tree; native file dialogs are answered from a queue and settings go to a temp folder, deleted on exit (interfaces R7-R10). A publish or an MSIX build with the flag fails (RefuseTestInputBridgeOnPublish), and M6's packaging pipeline asserts EnableTestInputBridge is unset in its environment and runs BridgeExclusionTests' scan on the packaged RBX15.App.dll (critic M5).",
+   "risk": "medium",
+   "parityCheck": "BridgeExclusionTests: the App assembly under test and a Release build of RBX15.App contain no RBX15.App.Testing type and neither the launch flag nor the pipe line, and a build with EnableTestInputBridge=true contains them (the positive control). BridgeSecurityTests: the pipe ACL allows only the current user (protected, network denied) and Requested needs the exact flag. InputBridgeTests: a canvas drag as one step, a release outside the window, Ctrl+S through its KeyBinding with the text-field guard, Alt+Up in the layer list, a bare key, the physical-modifier refusal and wait-idle. The controller ran brg probe, brg smoke and brg files against a flagged build (M4a Task 5).",
+   "owner": "Parity",
+   "check": "unit",
+   "disposition": "new",
+   "divergence": "",
+   "status": "done"
+  },
+  {
+   "id": "canvas-layer-automation",
+   "area": "canvas",
+   "name": "Each canvas layer is exposed to UI Automation and can be moved through it",
+   "source": "gap:m4a-a11y",
+   "behavior": "4.1's <canvas id=mainCanvas> exposes nothing (editor.html:330): a screen reader or keyboard user cannot reach a layer on it, and moving one takes a mouse drag (editor.js:1056-1320).",
+   "codeRefs": [
+    "editor.html:330",
+    "editor.js:1056-1320"
+   ],
+   "quirks": "Move and Resize take template pixels, not UI Automation's screen coordinates (contract: 'in template units'); Rotate is relative, as UI Automation defines it.",
+   "portTarget": "TemplateCanvasHostAutomationPeer implements ISelectionProvider and has one LayerAutomationPeer per visible layer, top first, cached by id; LayerAutomationPeer is a ListItem with AutomationId Layer_<id>, ISelectionItemProvider and ITransformProvider over ICanvasLayerAutomation (LayerOps.MoveTo, ScaleAboutCenter, SetRotation), one undo step per call and none for a no-op (interfaces 3.7).",
+   "risk": "low",
+   "parityCheck": "CanvasLayerAutomationTests pin the children, SelectionItem and TransformPattern through the peers. Through UI Automation on the running app (bridge U1): each visible layer is a canvas child, top first, with AutomationId Layer_<id>; SelectionItem.Select selects it; only the selected layer can move; Move(100,120), Rotate(30) and Resize(195,100) set X/Y 100,120, rotation 30 and scale 0.5, one undo step each, and a no-op Move records none; a hidden layer is not a child.",
+   "owner": "App.Canvas",
+   "check": "unit",
+   "disposition": "fix",
+   "divergence": "4.1: layers on the canvas are invisible to assistive technology and move only by mouse. v5: each visible layer is a UI Automation child of the canvas (top first) that can be selected, and the selected layer takes TransformPattern Move, Resize and Rotate in template pixels, one undo step each (Este, 2026-10-16).",
+   "status": "done"
+  },
+  {
+   "id": "window-title-dirty-marker",
+   "area": "shell",
+   "name": "Window title names the project file and marks unsaved changes",
+   "source": "gap:m4a-files",
+   "behavior": "4.1's title is always the product name (main.js:8, editor.html:6); it never names the open project or shows unsaved work.",
+   "codeRefs": [
+    "main.js:8",
+    "editor.html:6"
+   ],
+   "quirks": "",
+   "portTarget": "MainViewModel.Title = MainViewModel.WindowTitle(CurrentFile, IsDirty): the product name when clean and untitled, else [*]<file name or Untitled> - RBX15 Classic Shirt and Pants Maker (the Windows convention; interfaces R3). IsDirty compares the document with the last saved or opened one (R2).",
+   "risk": "low",
+   "parityCheck": "WindowTitleTests pin MainViewModel.WindowTitle. Through UI Automation (bridge F1): the title is the product name at launch, '*Untitled - RBX15 Classic Shirt and Pants Maker' after an edit, 'smoke1.r15proj - RBX15 Classic Shirt and Pants Maker' after Ctrl+S, starred again after an edit, and clean after Ctrl+Z back to the saved state (LedgerScenarioTests pin the same through the view model).",
+   "owner": "App.Shell",
+   "check": "unit",
+   "disposition": "fix",
+   "divergence": "4.1: the title is always the product name. v5: it is the product name at launch, then '[*]<file> - RBX15 Classic Shirt and Pants Maker', with * while the document differs from its last save or open and 'Untitled' before the first save (interfaces R3).",
    "status": "done"
   }
  ]

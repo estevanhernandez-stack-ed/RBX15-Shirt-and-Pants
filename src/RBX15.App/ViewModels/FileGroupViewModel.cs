@@ -7,8 +7,8 @@ using RBX15.Engine;
 namespace RBX15.App.ViewModels;
 
 /// <summary>
-/// The Home tab's File group in M3a: Add image and Download template (editor.html:85-97; ledger
-/// home-file-group). Save work and Open are M4 and stay hidden until they work.
+/// The Home tab's File group (editor.html:85-97; ledger home-file-group): Save work, Open and Add image, then
+/// Download template. Save As has no button (interfaces §2.1); the window binds it to Ctrl+Shift+S.
 /// </summary>
 public sealed class FileGroupViewModel : ObservableObject
 {
@@ -18,16 +18,28 @@ public sealed class FileGroupViewModel : ObservableObject
     readonly IStatus _status;
     readonly ImportService _import;
 
-    public FileGroupViewModel(EditorSession session, IFileDialogs files, IDialogService dialogs, IStatus status, ImportService import)
+    public FileGroupViewModel(EditorSession session, IFileDialogs files, IDialogService dialogs, IStatus status, ImportService import,
+        ProjectFileService projectFiles)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(files);
         ArgumentNullException.ThrowIfNull(dialogs);
         ArgumentNullException.ThrowIfNull(status);
         ArgumentNullException.ThrowIfNull(import);
+        ArgumentNullException.ThrowIfNull(projectFiles);
         (_session, _files, _dialogs, _status, _import) = (session, files, dialogs, status, import);
         AddImageCommand = new RelayCommand(AddImage);
         DownloadTemplateCommand = new RelayCommand(DownloadTemplate);
+        SaveCommand = new RelayCommand(() => projectFiles.Save(), () => !projectFiles.IsBusy);
+        SaveAsCommand = new RelayCommand(() => projectFiles.SaveAs(), () => !projectFiles.IsBusy);
+        OpenCommand = new AsyncRelayCommand(projectFiles.OpenAsync, () => !projectFiles.IsBusy);
+        projectFiles.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName != nameof(ProjectFileService.IsBusy)) return;
+            SaveCommand.NotifyCanExecuteChanged();
+            SaveAsCommand.NotifyCanExecuteChanged();
+            OpenCommand.NotifyCanExecuteChanged();
+        };
     }
 
     /// <summary>btnLoadImage (editor.js:2692-2708; project-load-image-layer): pick, then one undo step for all.</summary>
@@ -35,6 +47,15 @@ public sealed class FileGroupViewModel : ObservableObject
 
     /// <summary>btnExport (exportPNG, editor.js:1500-1541; canvas-export-pipeline, export-png-guard, io-download-save-dialog).</summary>
     public IRelayCommand DownloadTemplateCommand { get; }
+
+    /// <summary>btnSaveProject, "Save work" (editor.html:88, editor.js:2682): the current file, or Save As. Waits while an Open reads.</summary>
+    public IRelayCommand SaveCommand { get; }
+
+    /// <summary>Save As, Ctrl+Shift+S only (spec §3, interfaces §2.1). Waits while an Open reads.</summary>
+    public IRelayCommand SaveAsCommand { get; }
+
+    /// <summary>btnLoadProject, "Open" (editor.html:89, editor.js:2683). One run at a time; waits while an Open reads.</summary>
+    public IAsyncRelayCommand OpenCommand { get; }
 
     void AddImage()
     {

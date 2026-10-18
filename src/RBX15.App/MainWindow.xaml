@@ -12,7 +12,7 @@
         xmlns:vm="clr-namespace:RBX15.App.ViewModels"
         xmlns:app="clr-namespace:RBX15.App"
         x:Name="Root"
-        Title="{x:Static app:AppInfo.ProductName}"
+        Title="{Binding Title}"
         Width="{x:Static app:ShellLayout.DefaultWidth}" Height="{x:Static app:ShellLayout.DefaultHeight}"
         MinWidth="{x:Static app:ShellLayout.MinWidth}" MinHeight="{x:Static app:ShellLayout.MinHeight}"
         Background="{StaticResource Bg0Brush}"
@@ -25,9 +25,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d">
 
-  <!-- Ctrl+Z, M3b's one shortcut, is added in MainWindow.xaml.cs behind TextFieldShortcutCommand. -->
+  <!-- Ctrl+Z, Ctrl+S, Ctrl+Shift+S and Ctrl+O are added in MainWindow.xaml.cs (AddShortcut) behind TextFieldShortcutCommand.
+       The title is MainViewModel.Title (M4a R3). While an Open reads its file the whole client takes no input (R4). -->
 
-  <Grid x:Name="Viewport">
+  <Grid x:Name="Viewport" IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
@@ -55,8 +56,11 @@
         <TextBlock x:Name="HeaderTitle" Text="{Binding HeaderTitle, Mode=OneTime}" VerticalAlignment="Center"
                    FontFamily="{StaticResource FontDisplay}" FontSize="20" FontWeight="SemiBold"
                    Foreground="{StaticResource BrandGradientBrush}" />
-        <!-- header span (styles.css:149-155): JetBrains Mono 11px fg-3 uppercase; gap 16px (:133). -->
-        <TextBlock x:Name="HeaderByline" Margin="16,0,0,0" VerticalAlignment="Center"
+        <!-- The 626Labs mark in place of 4.1's "ItsjustEste" (Este, 2026-10-17; ledger shell-header): bold duo, no "LLC". -->
+        <Image x:Name="HeaderMark" Source="{StaticResource LabsMarkDuo}" Height="18" Margin="16,0,0,0" VerticalAlignment="Center"
+               AutomationProperties.Name="626Labs" />
+        <!-- header span (styles.css:149-155): JetBrains Mono 11px fg-3 uppercase; gap 16px (:133). Now the version only. -->
+        <TextBlock x:Name="HeaderByline" Margin="12,0,0,0" VerticalAlignment="Center"
                    FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{StaticResource Fg3Brush}"
                    Text="{Binding HeaderByline, Mode=OneTime, Converter={StaticResource UpperCase}}" />
       </StackPanel>
@@ -115,6 +119,7 @@
         </Border.Background>
         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
           <StackPanel x:Name="LeftPanelContent" Margin="14">
+            <views:AssetLibraryPanel DataContext="{Binding Assets}" />
             <views:DropZone DataContext="{Binding Layers}" />
             <views:LayersPanel DataContext="{Binding Layers}" />
             <views:LayerPropertiesPanel DataContext="{Binding LayerProperties}" />

@@ -68,6 +68,31 @@ public static class LayerOps
     }
 
     /// <summary>
+    /// The asset browser's right-click add (thumb.oncontextmenu, editor.js:2513-2539; ledger asset-rightclick-full, keep):
+    /// named <paramref name="baseName"/> + " (full)", at X = Y = 0, scaled to cover the template,
+    /// max(585 / w, 559 / h) (editor.js:2525), with every other field at its default (editor.js:2523-2528); pushed on
+    /// top and selected (editor.js:2530-2531). The scale is not clamped to 500%: 4.1 stored the raw cover scale and v5
+    /// keeps stored values raw (interfaces R15, R12). An empty base name stays empty, as 4.1's concatenation.
+    /// </summary>
+    public static EditorSnapshot AddFull(EditorSnapshot s, SKImage image, int id, string baseName)
+    {
+        ArgumentNullException.ThrowIfNull(s);
+        ArgumentNullException.ThrowIfNull(image);
+        ArgumentNullException.ThrowIfNull(baseName);
+        RequireFreshId(s.Document, id);
+        var layer = new Layer
+        {
+            Id = id,
+            Image = image,
+            Name = baseName + " (full)",
+            X = 0,
+            Y = 0,
+            Scale = Math.Max((double)TemplateSize.Width / image.Width, (double)TemplateSize.Height / image.Height),
+        };
+        return new EditorSnapshot(s.Document with { Layers = s.Document.Layers.Add(layer) }, id);
+    }
+
+    /// <summary>
     /// removeLayer (editor.js:562-568): removing the selected layer selects the new topmost (last)
     /// layer, or none; removing another keeps the selection. A missing id returns <paramref name="s"/>
     /// (4.1 pushed an empty undo step there; divergence <c>layers-remove</c>).

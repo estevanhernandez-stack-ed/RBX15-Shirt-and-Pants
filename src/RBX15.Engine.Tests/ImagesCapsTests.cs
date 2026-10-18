@@ -175,4 +175,86 @@ public class ImagesCapsTests
         Assert.Equal(new[] { "Fine" }, load.Document.Layers.Select(l => l.Name));
         Assert.Equal(new[] { "Too wide" }, load.DroppedLayers);
     }
+
+    // ---- Release (M4a interfaces R11: the outgoing document's images after Open) ----
+
+    [Fact] // the image, its premultiplied drawing copy, its decode-cache pre-scale and its RGB shifts are all freed
+    public void Release_frees_the_image_and_every_derived_cache_entry()
+    {
+        var image = Images.Decode(RealPng(64, 64));                 // un-premultiplied RGBA, so ForDrawing makes a copy
+        var premul = Images.ForDrawing(image);
+        Assert.NotSame(image, premul);
+        var scaled = Images.DecodeCacheScaled(premul, 16, 16);
+        var shifted = Adjust.ShiftRgb(image, 10, 0, 0);
+        var shiftedPremul = Images.ForDrawing(shifted);
+
+        Images.Release(image);
+
+        Assert.All(new[] { image, premul, scaled, shifted, shiftedPremul }, i => Assert.Equal(IntPtr.Zero, i.Handle));
+    }
+
+    [Fact] // an image that is already premultiplied kN32 is its own drawing copy: it is disposed once, and a second Release is a no-op
+    public void Release_is_idempotent_and_safe_when_the_image_is_its_own_drawing_copy()
+    {
+        SKImage image;
+        using (var surface = SKSurface.Create(new SKImageInfo(8, 8, SKImageInfo.PlatformColorType, SKAlphaType.Premul)))
+        {
+            surface.Canvas.Clear(SKColors.Red);
+            image = surface.Snapshot();
+        }
+        Assert.Same(image, Images.ForDrawing(image));
+        Images.Release(image);
+        Images.Release(image);
+        Assert.Equal(IntPtr.Zero, image.Handle);
+        Assert.Throws<ArgumentNullException>(() => Images.Release(null!));
+    }
+
+    [Fact] // releasing one image leaves another image's cache entries alone, and a new image of the same pixels draws
+    public void Release_leaves_other_images_alone()
+    {
+        var a = Images.Decode(RealPng(8, 8));
+        var b = Images.Decode(RealPng(8, 8));
+        var bPremul = Images.ForDrawing(b);
+        Images.Release(a);
+        Assert.NotEqual(IntPtr.Zero, b.Handle);
+        Assert.Same(bPremul, Images.ForDrawing(b));
+        Assert.NotEqual(IntPtr.Zero, bPremul.Handle);
+    }
+
+    // ---- DecodeThumbnail (M4a Task 2; ledger asset-grid-thumbnails, asset-objecturl-lifecycle) ----
+
+    static byte[] Encoded(int w, int h, SKEncodedImageFormat format)
+    {
+        using var img = Px.Solid(w, h, new SKColor(200, 30, 60));
+        using var data = img.Encode(format, 100);
+        return data.ToArray();
+    }
+
+    [Theory] // the longer side lands on maxSide; a smaller image is never upscaled; JPEG and WebP take the codec's scaled decode
+    [InlineData(400, 100, "png", 160, 40)]
+    [InlineData(100, 400, "png", 40, 160)]
+    [InlineData(1600, 1200, "jpeg", 160, 120)]
+    [InlineData(1000, 500, "webp", 160, 80)]
+    [InlineData(50, 30, "png", 50, 30)]
+    [InlineData(160, 160, "png", 160, 160)]
+    public void A_thumbnail_fits_the_longer_side_and_never_upscales(int w, int h, string format, int tw, int th)
+    {
+        var f = format switch { "jpeg" => SKEncodedImageFormat.Jpeg, "webp" => SKEncodedImageFormat.Webp, _ => SKEncodedImageFormat.Png };
+        using var thumb = Images.DecodeThumbnail(Encoded(w, h, f), 160);
+        Assert.Equal((tw, th), (thumb.Width, thumb.Height));
+        Assert.Equal((SKImageInfo.PlatformColorType, SKAlphaType.Premul), (thumb.ColorType, thumb.AlphaType));
+        Px.Near(new SKColor(200, 30, 60), Px.At(thumb, tw / 2, th / 2), 3);
+    }
+
+    [Fact] // the same caps as Decode, from the header, before any pixel memory
+    public void A_thumbnail_is_capped_exactly_as_decode()
+    {
+        var side = Assert.Throws<ImageTooLargeException>(() => Images.DecodeThumbnail(PngHeader(20000, 20000), 160));
+        Assert.Equal("The image is 20000 x 20000 pixels; the limit is 16384 pixels on a side.", side.Message);
+        var pixels = Assert.Throws<ImageTooLargeException>(() => Images.DecodeThumbnail(JpegHeader(8000, 8000), 160));
+        Assert.Equal("The image is 8000 x 8000 pixels (64 megapixels); the limit is 50 megapixels.", pixels.Message);
+        Assert.Throws<ImageTooLargeException>(() => Images.DecodeThumbnail(new byte[Images.MaxEncodedBytes + 1], 160));
+        Assert.Throws<InvalidDataException>(() => Images.DecodeThumbnail([1, 2, 3, 4], 160));
+        Assert.Throws<ArgumentOutOfRangeException>(() => Images.DecodeThumbnail(Encoded(2, 2, SKEncodedImageFormat.Png), 0));
+    }
 }

@@ -2,7 +2,7 @@ using System.Windows.Controls;
 
 namespace RBX15.App.Views;
 
-/// <summary>The Layout tab pane (empty until its groups arrive). The tab shows once <see cref="HasGroups"/> is true.</summary>
+/// <summary>The Layout tab pane (Presets, Background, BG Settings). The tab shows once <see cref="HasGroups"/> is true.</summary>
 public partial class LayoutRibbon : UserControl, IRibbonPane
 {
     public LayoutRibbon() => InitializeComponent();

@@ -12,12 +12,14 @@
     </UserControl.Resources>
 
     <!-- .ribbon-pane.active (styles.css:197-198): padding 8px 12px, groups never shrink, horizontal scroll when narrow.
-         Presets (editor.html:113-124) is first; Background and BG Settings follow with M4b item 6. Fill Style and the region
-         grid stay on Home (M4b decision F1). DataContext: LayoutViewModel. The tab shows once this panel has a group
-         (IRibbonPane.HasGroups). -->
+         Presets (editor.html:113-124) is first (shown while a layer is selected); Background and BG Settings follow, always
+         shown (M4b item 6). Fill Style and the region grid stay on Home (M4b decision F1). DataContext: LayoutViewModel.
+         The tab shows once this panel has a group (IRibbonPane.HasGroups). -->
     <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Focusable="False">
         <StackPanel x:Name="Groups" Orientation="Horizontal" Margin="12,8">
             <views:PresetsGroup x:Name="Presets" DataContext="{Binding Presets}" />
+            <views:BackgroundGroup x:Name="BackgroundSwatches" DataContext="{Binding Background}" />
+            <views:BgSettingsGroup x:Name="BgSettings" DataContext="{Binding Background}" />
         </StackPanel>
     </ScrollViewer>
 </UserControl>

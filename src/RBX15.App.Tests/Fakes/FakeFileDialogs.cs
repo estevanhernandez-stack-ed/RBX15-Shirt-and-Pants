@@ -28,6 +28,16 @@ sealed class FakeFileDialogs : IFileDialogs
         return OpenResult;
     }
 
+    /// <summary>OpenImage's answer (null = cancel) and the number of calls (the Background button's single-select picker).</summary>
+    public string? OpenImageResult { get; set; }
+    public int OpenImageCalls { get; private set; }
+
+    public string? OpenImage()
+    {
+        OpenImageCalls++;
+        return OpenImageResult;
+    }
+
     public string? SavePng(string suggestedFileName)
     {
         SaveSuggestions.Add(suggestedFileName);

@@ -1,7 +1,8 @@
 <!--
   The shell skeleton (ledger shell-layout-skeleton): header, ribbon, the app row (left panel and
   canvas area), the status strip row, footer, top to bottom (styles.css:99-108, editor.html:15-343).
-  4.1 has no right panel: .rpanel (styles.css:462-469) is styled but never used, so it is not ported.
+  4.1 has no right panel: .rpanel (styles.css:462-469) is styled but never used, so it is not ported. The one
+  right-hand column is new in v5.1: the 3D avatar preview (PreviewColumn, ledger avatar-preview-3d).
   This is the final M3a file: Task 2's CanvasView in the CanvasArea, Task 3's HomeRibbon in the
   RibbonPane, and Task 4's drop zone, layers panel and status strip.
 -->
@@ -27,6 +28,10 @@
 
   <!-- Ctrl+Z, Ctrl+S, Ctrl+Shift+S and Ctrl+O are added in MainWindow.xaml.cs (AddShortcut) behind TextFieldShortcutCommand.
        The title is MainViewModel.Title (M4a R3). While an Open reads its file the whole client takes no input (R4). -->
+
+  <Window.Resources>
+    <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+  </Window.Resources>
 
   <Grid x:Name="Viewport" IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}">
     <Grid.RowDefinitions>
@@ -105,6 +110,7 @@
       <Grid.ColumnDefinitions>
         <ColumnDefinition x:Name="PanelColumn" Width="280" />
         <ColumnDefinition Width="*" />
+        <ColumnDefinition x:Name="PreviewColumn" Width="260" />
       </Grid.ColumnDefinitions>
 
       <!-- .panel (styles.css:246-253): 280px (200px at the breakpoint), 180deg navy-deep to ink-900,
@@ -130,7 +136,72 @@
       <!-- .canvas-area (styles.css:441-450): ink-950. Task 2 fills it with the canvas host and zoom pill. -->
       <Grid x:Name="CanvasArea" Grid.Column="1" Background="{StaticResource Ink950Brush}" ClipToBounds="True">
         <views:CanvasView DataContext="{Binding Canvas}" />
+        <!-- The "3D" edge tab (Este, 2026-10-18): only while the preview is closed, on the canvas's right edge, it opens
+             the panel again. Rounded on its open side, a cyan edge on the side the panel slides back from. -->
+        <Button x:Name="PreviewEdgeTab" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,14,0,0"
+                Command="{Binding AvatarPreview.ShowCommand}" Cursor="Hand"
+                AutomationProperties.Name="Show 3D preview" ToolTip="Show the 3D preview"
+                FocusVisualStyle="{StaticResource FocusRing}">
+          <Button.Style>
+            <Style TargetType="Button">
+              <Setter Property="Visibility" Value="Collapsed" />
+              <Setter Property="Foreground" Value="{StaticResource Fg2Brush}" />
+              <Setter Property="Template">
+                <Setter.Value>
+                  <ControlTemplate TargetType="Button">
+                    <Border x:Name="Chrome" CornerRadius="6,0,0,6" BorderBrush="{StaticResource BorderAccentBrush}"
+                            BorderThickness="1,1,0,1" Padding="7,10" SnapsToDevicePixels="True">
+                      <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                          <GradientStop Offset="0" Color="{StaticResource BrandNavySoftColor}" />
+                          <GradientStop Offset="1" Color="{StaticResource BrandNavyColor}" />
+                        </LinearGradientBrush>
+                      </Border.Background>
+                      <StackPanel>
+                        <!-- a small isometric cube -->
+                        <Path Width="14" Height="14" Stretch="Uniform" HorizontalAlignment="Center" StrokeThickness="1.3"
+                              StrokeLineJoin="Round" Stroke="{StaticResource BrandCyanBrush}"
+                              Data="M7,0 L14,3.5 L14,10.5 L7,14 L0,10.5 L0,3.5 Z M0,3.5 L7,7 L14,3.5 M7,7 L7,14" />
+                        <TextBlock Text="3D" Margin="0,6,0,0" HorizontalAlignment="Center" FontFamily="{StaticResource FontMono}"
+                                   FontSize="10" FontWeight="SemiBold" Foreground="{TemplateBinding Foreground}" />
+                      </StackPanel>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                      <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Foreground" Value="{StaticResource Fg1Brush}" />
+                        <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource BrandCyanBrush}" />
+                        <Setter TargetName="Chrome" Property="Effect">
+                          <Setter.Value>
+                            <DropShadowEffect Color="{StaticResource BrandCyanColor}" ShadowDepth="0" BlurRadius="10" Opacity="0.3" />
+                          </Setter.Value>
+                        </Setter>
+                      </Trigger>
+                    </ControlTemplate.Triggers>
+                  </ControlTemplate>
+                </Setter.Value>
+              </Setter>
+              <Style.Triggers>
+                <DataTrigger Binding="{Binding AvatarPreview.IsVisible}" Value="False">
+                  <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+              </Style.Triggers>
+            </Style>
+          </Button.Style>
+        </Button>
       </Grid>
+
+      <!-- The v5.1 3D preview column (spec, App): styled like the left panel, 1px border-1 on its LEFT, padding 14;
+           260 wide (200 at the breakpoint), collapsed with width 0 when "3D preview" is unchecked. -->
+      <Border x:Name="PreviewPanelHost" Grid.Column="2" BorderBrush="{StaticResource Border1Brush}" BorderThickness="1,0,0,0"
+              Visibility="{Binding AvatarPreview.IsVisible, Converter={StaticResource BoolToVisibility}}">
+        <Border.Background>
+          <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Offset="0" Color="{StaticResource BrandNavyDeepColor}" />
+            <GradientStop Offset="1" Color="{StaticResource Ink900Color}" />
+          </LinearGradientBrush>
+        </Border.Background>
+        <views:AvatarPreviewPanel x:Name="PreviewPanel" Margin="14" DataContext="{Binding AvatarPreview}" />
+      </Border>
     </Grid>
 
     <!-- The status strip row (spec §4, new in v5), above the footer; collapsed with no message. -->

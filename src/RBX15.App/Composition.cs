@@ -16,7 +16,11 @@ internal static class Composition
     public static MainViewModel Build(EditorSession session, Func<Window?> owner, ISettingsStore settings)
     {
         ArgumentNullException.ThrowIfNull(owner);
-        return Build(session, new Win32FileDialogs(owner), new ThemedDialogService(owner), new ThemedColorPicker(owner), settings);
+        var picker = new ThemedColorPicker(owner);
+        var main = Build(session, new Win32FileDialogs(owner), new ThemedDialogService(owner), picker, settings);
+        // Every themed pick (brush, Fill Style colors, region swatches) offers the colors of the user's art.
+        picker.Palette = () => main.Palette.Colors;
+        return main;
     }
 
     /// <summary>
@@ -33,7 +37,9 @@ internal static class Composition
         // M3b: the status strip, the tool and the brush come first; the canvas, the Home tab and the eraser share them.
         var status = new StatusViewModel();
         var tools = new ToolsViewModel();
-        var brush = new BrushViewModel(colorPicker);
+        // Art palette: the colors of the visible layers, for the Brush group's Palette button and (through the app's picker) every pick.
+        var palette = new ArtPalette(session);
+        var brush = new BrushViewModel(colorPicker) { Palette = palette };
         var canvas = new CanvasViewModel(session, tools, brush, status);
         // Task 4: import, export, layers and status (one ImportService serves Add image, the drop zone and the canvas).
         var import = new ImportService(session, status);
@@ -48,8 +54,11 @@ internal static class Composition
         canvas.DropHandler = d => import.Import(d.Paths, (d.TemplatePoint.X, d.TemplatePoint.Y));
         // M3b Task 3: the "Selected layer" panel (editor.html:320-323).
         var layerProperties = new LayerPropertiesViewModel(session);
+        // v5.1: the 3D avatar preview over the session; the Settings group's "3D preview" box toggles it.
+        var avatarPreview = new AvatarPreviewViewModel(session);
         var home = new HomeViewModel(session, colorPicker)
         {
+            AvatarPreview = avatarPreview,
             Tools = tools,
             Brush = brush,
             File = fileGroup,
@@ -68,6 +77,8 @@ internal static class Composition
             LayerProperties = layerProperties,
             Files = projectFiles,
             Assets = assets,
+            AvatarPreview = avatarPreview,
+            Palette = palette,
             // M3a: required members above this line.
         };
     }

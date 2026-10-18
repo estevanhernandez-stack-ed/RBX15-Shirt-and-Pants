@@ -59,7 +59,9 @@
                             <CheckBox x:Name="MaskBox" Content="Mask" Style="{StaticResource SettingsCheckBox}"
                                       IsChecked="{Binding ShowMask}" Margin="0,0,8,0" />
                             <CheckBox x:Name="GridBox" Content="Grid" Style="{StaticResource SettingsCheckBox}"
-                                      IsChecked="{Binding ShowGrid}" />
+                                      IsChecked="{Binding ShowGrid}" Margin="0,0,8,0" />
+                            <CheckBox x:Name="PreviewBox" Content="3D preview" Style="{StaticResource SettingsCheckBox}"
+                                      AutomationProperties.Name="3D preview" IsChecked="{Binding ShowPreview}" />
                         </StackPanel>
                     </StackPanel>
                 </DockPanel>

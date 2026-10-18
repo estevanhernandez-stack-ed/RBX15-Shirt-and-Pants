@@ -39,9 +39,68 @@
                             TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Size}" VerticalAlignment="Center"
                             ToolTip="Brush size" AutomationProperties.Name="Brush size" />
                 </StackPanel>
-                <CheckBox x:Name="BrushFill" Content="Fill" IsChecked="{Binding Fill}" FontSize="10" Foreground="#888888"
-                          VerticalContentAlignment="Center" FocusVisualStyle="{DynamicResource FocusRing}"
-                          AutomationProperties.Name="Fill shapes" />
+                <!-- Row 2: Fill, and the Palette button (ledger art-palette, new) opening the colors of the user's art. The
+                     button is a 15 DIP tall SecondaryButtonSm at 10px, as tall as the Fill box, so the group does not grow. -->
+                <StackPanel Orientation="Horizontal">
+                    <CheckBox x:Name="BrushFill" Content="Fill" IsChecked="{Binding Fill}" FontSize="10" Foreground="#888888"
+                              VerticalContentAlignment="Center" FocusVisualStyle="{DynamicResource FocusRing}"
+                              AutomationProperties.Name="Fill shapes" />
+                    <Button x:Name="PaletteButton" Content="Palette" Style="{DynamicResource SecondaryButtonSm}" Height="15"
+                            Padding="6,0" FontSize="10" Margin="8,0,0,0" VerticalAlignment="Center" Click="OnPalette"
+                            ToolTip="Colors from your art" AutomationProperties.Name="Palette" />
+                    <!-- Below the button; a click anywhere else closes it (StaysOpen false). It takes its DataContext
+                         through the logical tree. -->
+                    <Popup x:Name="PalettePopup" PlacementTarget="{Binding ElementName=PaletteButton}" Placement="Bottom"
+                           StaysOpen="False" Opened="OnPaletteOpened" Closed="OnPaletteClosed" AllowsTransparency="False">
+                        <Border x:Name="PaletteFrame" Background="{DynamicResource Bg1Brush}" BorderBrush="{DynamicResource BorderAccentBrush}"
+                                BorderThickness="1" Padding="10">
+                            <StackPanel>
+                            <!-- The heading the color picker's palette row uses, so the two read as one feature. -->
+                            <TextBlock Text="FROM YOUR ART" FontFamily="{DynamicResource FontMono}" FontSize="10" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource Fg3Brush}" Margin="0,0,0,6" />
+                            <Grid>
+                                <ItemsControl x:Name="PaletteSwatches" Width="200" ItemsSource="{Binding PaletteColors}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Button Style="{StaticResource PaletteSwatchButton}" Background="{Binding}" ToolTip="{Binding}"
+                                                    AutomationProperties.Name="{Binding}"
+                                                    Command="{Binding DataContext.UsePaletteColorCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                    CommandParameter="{Binding}" Click="OnPaletteSwatch" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                    <ItemsControl.Style>
+                                        <Style TargetType="ItemsControl">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasPaletteColors}" Value="False">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ItemsControl.Style>
+                                </ItemsControl>
+                                <TextBlock x:Name="PaletteEmpty" Text="Add an image or asset to build a palette." Width="200"
+                                           TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource FgMutedBrush}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasPaletteColors}" Value="False">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
+                            </StackPanel>
+                        </Border>
+                    </Popup>
+                </StackPanel>
             </StackPanel>
         </DockPanel>
     </Border>

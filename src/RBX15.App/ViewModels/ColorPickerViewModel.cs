@@ -22,14 +22,21 @@ public sealed class ColorPickerViewModel : ObservableObject
     string _hex;
     string _hexText;
 
-    public ColorPickerViewModel(string initialHex, Action<string>? preview = null)
+    public ColorPickerViewModel(string initialHex, Action<string>? preview = null, IReadOnlyList<string>? palette = null)
     {
+        Palette = palette ?? Array.Empty<string>();
         OriginalHex = ColorMath.NormalizeHex(initialHex) ?? throw new ArgumentException($"'{initialHex}' is not #rgb or #rrggbb.", nameof(initialHex));
         _preview = preview;
         ColorMath.TryParseHex(OriginalHex, out var rgb);
         (_hue, _saturation, _value) = ColorMath.RgbToHsv(rgb.R, rgb.G, rgb.B);
         _hex = _hexText = OriginalHex;
     }
+
+    /// <summary>
+    /// The colors of the user's art (ledger <c>art-palette</c>), lowercase <c>#rrggbb</c>, as they were when the picker opened.
+    /// Empty when there is none; the popup then hides its "From your art" row.
+    /// </summary>
+    public IReadOnlyList<string> Palette { get; }
 
     /// <summary>The color the picker opened on, lowercase <c>#rrggbb</c> (the old swatch).</summary>
     public string OriginalHex { get; }
@@ -109,6 +116,17 @@ public sealed class ColorPickerViewModel : ObservableObject
         if (s == 0 || v == 0) h = _hue;
         if (v == 0) s = _saturation;
         SetHsv(h, s, v, syncText: false);
+        return true;
+    }
+
+    /// <summary>
+    /// A palette swatch was chosen: sets the color exactly as typing <paramref name="hex"/> in the field would (so the preview
+    /// fires), and does not end the pick. Returns false, changing nothing, for text that is not a color or once the pick has ended.
+    /// </summary>
+    public bool UseSwatch(string hex)
+    {
+        if (IsFinished || !TrySetHex(hex)) return false;
+        SetHexText(_hex);
         return true;
     }
 

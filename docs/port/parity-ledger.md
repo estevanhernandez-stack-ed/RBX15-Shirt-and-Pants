@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**420 rows.** Status: done 254, open 166. Disposition: fix 204, keep 188, drop 26, new 2. Checks: ui-auto 120, unit 120, manual 67, golden 66, none-retired 25, doc 22.
+**429 rows.** Status: done 263, open 166. Disposition: fix 207, keep 188, drop 26, new 8. Checks: ui-auto 125, unit 124, manual 67, golden 66, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -177,6 +177,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `home-settings-group` | Settings group: Template name, Mask, Grid | ui-auto | keep | low |
 | done | `region-front-highlight-lost` | Front region button loses its purple base highlight once cleared | ui-auto | fix | low |
 | open | `fillstyle-ui-not-synced-from-region` | Fill Style controls are one-way (never read back from regions) | manual | keep | low |
+| done | `art-palette` | Palette from the user's art (new in v5.1) | unit | new | low |
 
 ## App.Ribbon.Layout
 
@@ -189,12 +190,15 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `bg-color-opacity` | Background color picker and opacity slider | ui-auto | keep | med |
 | open | `bg-image` | Background image picker | ui-auto | fix | med |
 | open | `placement-selection-guard` | Placement actions with no selection | ui-auto | fix | low |
+| done | `regions-limb-caps` | Limb top and bottom tiles in the region grid | ui-auto | fix | low |
+| done | `regions-fill-all` | Fill all regions at once (All tile) | ui-auto | new | low |
 | open | `presets-six-buttons` | Layout presets row (6 buttons) | ui-auto | fix | low |
 | open | `layout-presets` | Layout tab: Presets (6 buttons) | ui-auto | fix | low |
 | open | `layout-background-swatches` | Background swatches (12) | ui-auto | fix | low |
 | open | `layout-bg-settings` | BG Settings: color, image, opacity | ui-auto | fix | low |
 | open | `layout-fill-style` | Fill Style: type, colors, angle, scale | ui-auto | keep | med |
 | open | `layout-template-regions` | Template Regions grid (dynamic) | ui-auto | fix | med |
+| done | `ribbon-fill-regions-joined` | Fill Style and the region grid read as one fill tool | ui-auto | fix | low |
 
 ## App.Ribbon.Text
 
@@ -236,6 +240,8 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `shell-single-instance` | No single-instance lock | manual | keep | low |
 | done | `shell-external-drop-guard` | Dropping files outside the drop zone/canvas is swallowed, not navigated | ui-auto | keep | low |
 | open | `shell-header-version-hardcoded` | Header version string is hand-typed and drifts from docs | manual | fix | low |
+| done | `avatar-preview-3d` | 3D avatar preview (new in v5.1) | ui-auto | new | low |
+| done | `avatar-preview-r15` | R15 body in the 3D preview (new in v5.1) | ui-auto | new | low |
 | done | `font-ui-weight-600` | UI labels at CSS weight 600 in the vendored variable fonts | manual | fix | low |
 | done | `window-title-dirty-marker` | Window title names the project file and marks unsaved changes | unit | fix | low |
 
@@ -243,6 +249,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
+| done | `doc-new-transparent-background` | A new template's background starts transparent | unit | fix | low |
 | done | `project-save-filename` | Save filename and dialog behavior | ui-auto | keep | low |
 | open | `shell-no-persistence` | Zero persisted settings: window rect, tool state, last folder, template name | doc | fix | low |
 | done | `io-download-save-dialog` | Exports and project saves go through anchor-download, relying on Chromium/Electron's Save As behavior | manual | fix | med |
@@ -383,6 +390,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `project-and-export-dependency-note` | Export depends on fill/paintRegions code paths (spike-proven) | golden | keep | med |
 | done | `fillstyle-live-edit-rule` | Live-edit rule: edits retarget every region sharing the current fill key | unit | keep | med |
 | done | `tests-lib-fills` | fills.test.js: 14 tests that define the fill contract | unit | keep | med |
+| done | `fill-gradient-stops` | Color stops on gradient and radial fills (new in v5.1) | unit | new | low |
 
 ## Engine.History
 
@@ -431,6 +439,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `layer-skip-rules` | Layer visibility and null image skip | golden | keep | low |
 | done | `render-offscreen` | Persistent offscreen composite | golden | keep | med |
 | done | `render-background` | Background image vs color with opacity | golden | keep | med |
+| done | `view-region-guide` | Region guide on the canvas (view only) | unit | new | low |
 | done | `render-region-fills-step` | Region fills painted over background, under layers | golden | keep | low |
 | done | `render-live-preview` | Live drawing preview composite | golden | keep | low |
 | done | `render-mask-step` | Mask application (destination-in) | golden | keep | med |

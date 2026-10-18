@@ -22,9 +22,15 @@ public sealed class ThemedColorPicker(Func<Window?> owner, Func<IReadOnlyList<Re
 
     readonly Func<IReadOnlyList<Rect>> _workAreas = workAreas ?? MonitorWorkAreas.Get;
 
+    /// <summary>
+    /// The colors of the user's art (ledger <c>art-palette</c>), read each time the picker opens and shown as its
+    /// "From your art" row. Null, or an empty list, shows no row. Set by the composition root.
+    /// </summary>
+    public Func<IReadOnlyList<string>>? Palette { get; set; }
+
     public string? Pick(string initialHex, Action<string>? preview = null, object? anchor = null)
     {
-        var viewModel = new ColorPickerViewModel(initialHex, preview);
+        var viewModel = new ColorPickerViewModel(initialHex, preview, Palette?.Invoke());
         var popup = new ColorPickerPopup(viewModel);
         var o = owner();
         if (o is { IsVisible: true }) popup.Owner = o;

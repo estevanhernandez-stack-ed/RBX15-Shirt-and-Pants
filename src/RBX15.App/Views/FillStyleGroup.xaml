@@ -9,8 +9,9 @@
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <!-- Fill Style (editor.html:145-167) -->
-    <Border Style="{StaticResource RibbonGroup}">
+    <!-- Fill Style (editor.html:145-167). No right divider: the regions beside it are where the style lands, so the two
+         read as one fill tool (Este, 2026-10-18; ledger ribbon-fill-regions-joined). -->
+    <Border Style="{StaticResource RibbonGroup}" BorderThickness="0">
         <DockPanel>
             <TextBlock Style="{StaticResource RibbonGroupLabel}" Text="FILL STYLE" />
             <StackPanel VerticalAlignment="Top">
@@ -30,8 +31,28 @@
                 <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
                     <Button x:Name="Color1" Style="{StaticResource ColorSwatchButton}" Background="{Binding Color1}"
                             Command="{Binding PickColor1Command}" CommandParameter="{Binding RelativeSource={RelativeSource Self}}" ToolTip="Color 1" AutomationProperties.Name="Color 1" Margin="0,0,4,0" />
+                    <!-- Color stops between Color 1 and Color 2 (ledger fill-gradient-stops): Gradient and Radial only -->
+                    <ItemsControl x:Name="Stops" ItemsSource="{Binding StopSwatches}" ItemTemplate="{StaticResource FillStopTemplate}"
+                                  Focusable="False" IsTabStop="False">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.Style>
+                            <Style TargetType="ItemsControl">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ShowStops}" Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ItemsControl.Style>
+                    </ItemsControl>
                     <Button x:Name="Color2" Style="{StaticResource ColorSwatchButton}" Background="{Binding Color2}"
                             Command="{Binding PickColor2Command}" CommandParameter="{Binding RelativeSource={RelativeSource Self}}" ToolTip="Color 2" AutomationProperties.Name="Color 2" Margin="0,0,4,0" />
+                    <Button x:Name="AddStop" Style="{StaticResource AddStopButton}" Command="{Binding AddStopCommand}"
+                            ToolTip="Add a color stop" ToolTipService.ShowOnDisabled="True" AutomationProperties.Name="Add color stop" />
                     <TextBlock Style="{StaticResource MiniLabel}" Text="Ang" Margin="0,0,4,0" />
                     <Slider x:Name="AngleSlider" Width="44" Minimum="0" Maximum="360" SmallChange="1" LargeChange="1"
                             TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Angle}" VerticalAlignment="Center"

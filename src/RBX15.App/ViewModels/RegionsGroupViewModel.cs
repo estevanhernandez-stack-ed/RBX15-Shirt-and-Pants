@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using RBX15.Engine;
 
 namespace RBX15.App.ViewModels;
@@ -26,6 +27,9 @@ public sealed class RegionsGroupViewModel : ObservableObject
     static readonly (Face Face, string Label)[] Limb2Faces =
         [(Face.Front, "Fr"), (Face.Left, "L"), (Face.Back, "Bk"), (Face.Right, "R")];
 
+    // v5: each limb's top and bottom, labelled as the body's are (ledger regions-limb-caps).
+    static readonly (Face Face, string Label)[] LimbCaps = [(Face.Up, "Top"), (Face.Down, "Bot")];
+
     readonly EditorSession _session;
     readonly FillStyleViewModel _fillStyle;
     TemplateMode _mode;
@@ -35,6 +39,9 @@ public sealed class RegionsGroupViewModel : ObservableObject
         _session = session ?? throw new ArgumentNullException(nameof(session));
         _fillStyle = fillStyle ?? throw new ArgumentNullException(nameof(fillStyle));
         Build(session.Document.Mode);
+        FillAllCommand = new RelayCommand(() => _session.Apply(d =>
+            Template.Regions(d.Mode).Aggregate(d, (doc, r) => DocumentOps.PaintRegion(doc, r.Name, _fillStyle.Current))));
+        ClearAllCommand = new RelayCommand(() => _session.Apply(d => d.RegionFills.IsEmpty ? d : d with { RegionFills = d.RegionFills.Clear() }));
         session.Changed += (_, e) =>
         {
             if (!e.What.HasFlag(SessionChange.Document)) return;
@@ -48,12 +55,26 @@ public sealed class RegionsGroupViewModel : ObservableObject
                 OnPropertyChanged(nameof(Body));
                 OnPropertyChanged(nameof(Limb1));
                 OnPropertyChanged(nameof(Limb2));
+                OnPropertyChanged(nameof(Limb1Top));
+                OnPropertyChanged(nameof(Limb1Bot));
+                OnPropertyChanged(nameof(Limb2Top));
+                OnPropertyChanged(nameof(Limb2Bot));
                 return;
             }
-            foreach (var tile in Body.Concat(Limb1).Concat(Limb2))
+            foreach (var tile in AllTiles)
                 tile.Fill = DocumentOps.RegionFill(doc, tile.Region);
         };
     }
+
+    /// <summary>
+    /// The All tile (Este, 2026-10-18; ledger regions-fill-all, new): paints every region of the mode with the current
+    /// Fill Style as one undo step. Regions sharing a fill share one gradient or pattern across all of them, as 4.1 draws
+    /// any group of regions with the same fill. Unlike a region tile it never fits the selected layer.
+    /// </summary>
+    public IRelayCommand FillAllCommand { get; }
+
+    /// <summary>The All tile's right-click and Delete: clears every region fill, one undo step.</summary>
+    public IRelayCommand ClearAllCommand { get; }
 
     /// <summary>"Torso" or "Waist" (editor.js:1622). 4.1 never rendered it; v5 uses it in the body tiles' automation names.</summary>
     public string BodyLabel => _mode == TemplateMode.Shirt ? "Torso" : "Waist";
@@ -71,12 +92,31 @@ public sealed class RegionsGroupViewModel : ObservableObject
 
     public IReadOnlyList<RegionTileViewModel> Limb2 { get; private set; } = [];
 
+    /// <summary>
+    /// The limbs' top (shoulder or hip) and bottom (hand or foot opening) regions. 4.1's grid had no button for them
+    /// (editor.js:1630-1646), so they could not be filled (ledger regions-limb-caps, fix).
+    /// </summary>
+    public RegionTileViewModel Limb1Top { get; private set; } = null!;
+
+    public RegionTileViewModel Limb1Bot { get; private set; } = null!;
+
+    public RegionTileViewModel Limb2Top { get; private set; } = null!;
+
+    public RegionTileViewModel Limb2Bot { get; private set; } = null!;
+
+    /// <summary>Every tile: the cross, both limbs' sides, then their tops and bottoms.</summary>
+    public IEnumerable<RegionTileViewModel> AllTiles =>
+        Body.Concat(Limb1).Concat(Limb2).Concat([Limb1Top, Limb1Bot, Limb2Top, Limb2Bot]);
+
     void Build(TemplateMode mode)
     {
         _mode = mode;
         Body = Tiles(BodyPart.Body, BodyLabel, BodyFaces);
         Limb1 = Tiles(BodyPart.RightLimb, LimbLabel1, Limb1Faces);
         Limb2 = Tiles(BodyPart.LeftLimb, LimbLabel2, Limb2Faces);
+        var caps1 = Tiles(BodyPart.RightLimb, LimbLabel1, LimbCaps);
+        var caps2 = Tiles(BodyPart.LeftLimb, LimbLabel2, LimbCaps);
+        (Limb1Top, Limb1Bot, Limb2Top, Limb2Bot) = (caps1[0], caps1[1], caps2[0], caps2[1]);
     }
 
     /// <summary>

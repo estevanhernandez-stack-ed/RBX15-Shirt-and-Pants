@@ -231,6 +231,24 @@
     </Setter>
   </Style>
 
+  <!-- A palette swatch (ledger art-palette, new): 20x20, radius 4, a 1 px Border2 edge; the face is the color. Shared by the
+       color picker's "From your art" row and the Brush group's Palette popup. -->
+  <Style x:Key="PaletteSwatchButton" TargetType="Button">
+    <Setter Property="Width" Value="20" />
+    <Setter Property="Height" Value="20" />
+    <Setter Property="Margin" Value="0,0,6,6" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRing}" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border Background="{TemplateBinding Background}" BorderBrush="{StaticResource Border2Brush}" BorderThickness="1"
+                  CornerRadius="{StaticResource RXsRadius}" SnapsToDevicePixels="True" />
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
   <!-- .btn-sm (styles.css:407) -->
   <Style x:Key="SecondaryButtonSm" TargetType="ButtonBase" BasedOn="{StaticResource SecondaryButton}">
     <Setter Property="Padding" Value="10,5" />

@@ -101,4 +101,10 @@ public sealed partial class MainViewModel : ObservableObject
 
     /// <summary>The left panel's asset library (M4a Task 2; editor.html:291-309).</summary>
     public required AssetLibraryViewModel Assets { get; init; }
+
+    /// <summary>The v5.1 3D avatar preview in the right-hand column; the Settings group's "3D preview" box toggles it.</summary>
+    public required AvatarPreviewViewModel AvatarPreview { get; init; }
+
+    /// <summary>The colors of the user's art (ledger art-palette, new): the Brush group's Palette button and the picker's "From your art" row.</summary>
+    public required ArtPalette Palette { get; init; }
 }

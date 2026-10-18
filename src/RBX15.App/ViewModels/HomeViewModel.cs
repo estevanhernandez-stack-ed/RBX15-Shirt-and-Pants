@@ -35,4 +35,12 @@ public sealed class HomeViewModel
 
     /// <summary>The File group (Task 4): Add image and Download template.</summary>
     public required FileGroupViewModel File { get; init; }
+
+    /// <summary>The v5.1 3D preview, for the Settings group's "3D preview" box (set once by the composition root).</summary>
+    public AvatarPreviewViewModel AvatarPreview
+    {
+        get => Settings.Preview ?? throw new InvalidOperationException("AvatarPreview was not wired.");
+        init => Settings.Preview = value ?? throw new ArgumentNullException(nameof(value));
+    }
+
 }

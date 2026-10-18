@@ -2,7 +2,7 @@
 
 Every deliberate behavior change in v5, generated from `parity-ledger.json` rows whose disposition is `fix` or `drop`. The bug policy: fix anything clearly unintended, keep anything a user could reasonably rely on. A change that is not in this table is a regression. Rows with a visual effect get a new golden image with a note.
 
-## Fixed in v5 (204)
+## Fixed in v5 (207)
 
 | ID | Owner | Change |
 |---|---|---|
@@ -103,6 +103,8 @@ Every deliberate behavior change in v5, generated from `parity-ledger.json` rows
 | `placement-selection-guard` | App.Ribbon.Layout | 4.1: Placement buttons are always enabled and silently do nothing without a selection. v5: The Placement and Presets groups are hidden until a layer is selected. |
 | `presets-six-buttons` | App.Ribbon.Layout | 4.1: Meme, Allover, Mirror and Scatter push two identical undo entries per click. v5: every action is exactly one undo step; the Presets group is hidden until a layer is selected. |
 | `props-center-front` | App.Ribbon.Layout | 4.1: Center on front torso is not undoable and the Placement group is always shown. v5: it is one undo step and the Placement group is hidden until a layer is selected. |
+| `regions-limb-caps` | App.Ribbon.Layout | 4.1: the region grid has no button for a limb's top or bottom, so the shoulder top and the hand or foot opening stay unfilled. v5: each limb gets Top and Bot tiles, so all 18 regions can be filled (Este, 2026-10-18). |
+| `ribbon-fill-regions-joined` | App.Ribbon.Layout | 4.1: Fill Style and Template Regions are separate ribbon groups with a divider, the grid labelled TEMPLATE REGIONS. v5: no divider between them and the grid labelled CLICK REGIONS TO FILL, so the two read as one fill tool (Este, 2026-10-18). |
 | `text-add-to-canvas` | App.Ribbon.Text | 4.1: Add to canvas fails in Pants mode because it reads torso_front directly. v5: the front slot resolves per mode so it works in both, with the same layer name and full-resolution bitmap. |
 | `text-preview` | App.Ribbon.Text | 4.1: preview content is drawn at the top-left of the box, leaving blank space right and bottom (clearly unintended, not named in the design). v5: preview is centered in the box with the same uniform fit scale. |
 | `wordart-state-defaults` | App.Ribbon.Text | 4.1: Word Art size is not clamped, so 0 falls back to 64 and 5000 makes a giant canvas. v5: size clamped to 8-300 (unintended, named divergence). |
@@ -119,6 +121,7 @@ Every deliberate behavior change in v5, generated from `parity-ledger.json` rows
 | `shell-window-frame` | App.Shell | 4.1: Electron's default Windows caption, light or dark by the system setting. v5: the native caption is themed through DWM (immersive dark mode, brand-navy-deep caption, ink-100 caption text, brand-navy-soft border) with the system frame, caption buttons and snap layouts kept, per Este's call (2026-10-14); MainWindow and the themed dialog take it (the borderless color picker has no caption). |
 | `shell-window-size` | App.Shell | 4.1: fixed 1200x800 centered window with no memory of size or position. v5: window remembers size and position. The window has a 640x480 minimum (4.1 had none, and its panels overlapped when shrunk). |
 | `window-title-dirty-marker` | App.Shell | 4.1: the title is always the product name. v5: it is the product name at launch, then '[*]<file> - RBX15 Classic Shirt and Pants Maker', with * while the document differs from its last save or open and 'Untitled' before the first save (interfaces R3). |
+| `doc-new-transparent-background` | App.Storage | 4.1: a new template starts on a navy background at 100% opacity, so untouched regions export navy. v5: a new template starts with the background at 0% opacity, so untouched regions export transparent (Este, 2026-10-18). |
 | `io-download-save-dialog` | App.Storage | 4.1: Electron anchor-download Save As with no current-file memory and no feedback after saving. v5: native save/open/folder dialogs with a current-file model and a status message. |
 | `shell-no-persistence` | App.Storage | 4.1: zero persisted settings and no hidden data. v5: remembers window rect, autosaves every 60s while dirty for crash recovery, and keeps 10 recent projects and a jump list, with PRIVACY docs updated to match. |
 | `shell-no-unsaved-changes-guard` | App.Storage | 4.1: closing or reloading silently discards all work. v5: save-changes prompt on close plus 60s autosave and crash recovery, not shown on a pristine or just-saved document. The prompt (Save, Don't save, Cancel, in the Windows wording) and the window title's * marker ship in M4a, ahead of M5's autosave and recovery (Este, 2026-10-16); the prompt also guards Open, and undoing back to the saved state reads clean. |
@@ -242,9 +245,15 @@ Every deliberate behavior change in v5, generated from `parity-ledger.json` rows
 | `tests-smoke-parse` | Retired | 4.1: new Function() parse check on main.js and editor.js. v5: the compiler with warnings-as-errors is the syntax floor. |
 | `vestigial-hidden-controls` | Retired | 4.1: hidden unused assetType select and btnExport2 button exist in markup. v5: not carried over. |
 
-## New in v5 (2)
+## New in v5 (8)
 
 | ID | Owner | Behavior |
 |---|---|---|
+| `view-region-guide` | Engine.Render | Region guide on the canvas (view only) |
+| `regions-fill-all` | App.Ribbon.Layout | Fill all regions at once (All tile) |
 | `shell-unsaved-work-loss` | App.Storage | No unsaved-changes guard on close, reload or quit |
+| `avatar-preview-3d` | App.Shell | 3D avatar preview (new in v5.1) |
+| `avatar-preview-r15` | App.Shell | R15 body in the 3D preview (new in v5.1) |
 | `test-input-bridge` | Parity | Test-only input bridge (absent from Release and Store builds) |
+| `art-palette` | App.Ribbon.Home | Palette from the user's art (new in v5.1) |
+| `fill-gradient-stops` | Engine.Fills | Color stops on gradient and radial fills (new in v5.1) |

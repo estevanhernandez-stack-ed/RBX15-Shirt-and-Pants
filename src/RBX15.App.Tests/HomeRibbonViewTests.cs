@@ -46,16 +46,18 @@ public class HomeRibbonViewTests
     static Button[] Tiles(HomeRibbon view) =>
         Descendants<Button>(view).Where(b => b.DataContext is RegionTileViewModel).ToArray();
 
-    [Fact] // regions-grid-layout-shirt parityCheck: exactly 14 paintable tiles, each a focusable button with an automation name
-    public void The_grid_shows_fourteen_named_focusable_tiles() => StaThread.Run(() =>
+    [Fact] // regions-grid-layout-shirt parityCheck (4.1's 14 tiles) plus the limbs' Top and Bot (regions-limb-caps): 18, every region
+    public void The_grid_shows_all_eighteen_named_focusable_tiles() => StaThread.Run(() =>
     {
         var view = Load(Home(new EditorSession()));
         var tiles = Tiles(view);
 
-        Assert.Equal(14, tiles.Length);
+        Assert.Equal(18, tiles.Length);
         Assert.All(tiles, t => Assert.True(t.Focusable && t.IsTabStop));
-        Assert.Equal(14, tiles.Select(AutomationProperties.GetName).Distinct().Count());
+        Assert.Equal(18, tiles.Select(AutomationProperties.GetName).Distinct().Count());
         Assert.Contains("Torso Front", tiles.Select(AutomationProperties.GetName));
+        Assert.Contains("Right Arm Top", tiles.Select(AutomationProperties.GetName));
+        Assert.Contains("Left Arm Bot (Bottom)", tiles.Select(AutomationProperties.GetName));
     });
 
     [Fact] // the clear gestures reach ClearCommand: right-click (editor.js:1677) and Delete, Shift+F10, Menu
@@ -137,8 +139,8 @@ public class HomeRibbonViewTests
         Descendants<TextBox>(view).Single().Text = "Hoodie";
         Assert.Equal("Hoodie", session.TemplateTitle);
 
-        Assert.Equal(new[] { "MODE", "TOOLS", "BRUSH", "EDIT", "SETTINGS", "FILL STYLE", "TEMPLATE REGIONS" },
-            texts.Where(t => t is "MODE" or "TOOLS" or "BRUSH" or "PLACEMENT" or "EDIT" or "SETTINGS" or "FILL STYLE" or "TEMPLATE REGIONS"));
+        Assert.Equal(new[] { "MODE", "TOOLS", "BRUSH", "EDIT", "SETTINGS", "FILL STYLE", "CLICK REGIONS TO FILL" },
+            texts.Where(t => t is "MODE" or "TOOLS" or "BRUSH" or "PLACEMENT" or "EDIT" or "SETTINGS" or "FILL STYLE" or "CLICK REGIONS TO FILL"));
         Assert.Contains(buttons, b => b.Content is "Draw");
         Assert.DoesNotContain(buttons, b => b.Content is "Fit Front" or "Keys: ON");
         Assert.Contains(buttons, b => b.Content is "Save work");
@@ -327,5 +329,22 @@ public class HomeRibbonViewTests
         var buttons = Descendants<Button>(view);
         Assert.Equal("Undo", buttons.Single(b => (string)b.Content == "Undo").ToolTip);
         Assert.Equal("Redo", buttons.Single(b => (string)b.Content == "Redo").ToolTip);
+    });
+    [Fact] // regions-fill-all: the All tile sits in the cross, named, focusable, and fills every region; right-click clears
+    public void The_all_tile_fills_and_right_click_clears_every_region() => StaThread.Run(() =>
+    {
+        var session = new EditorSession();
+        var view = Load(Home(session));
+        var all = Descendants<Button>(view).Single(b => AutomationProperties.GetName(b) == "Fill all regions");
+        Assert.True(all.Focusable && all.IsTabStop);
+
+        ((System.Windows.Automation.Provider.IInvokeProvider)new System.Windows.Automation.Peers.ButtonAutomationPeer(all)
+            .GetPattern(System.Windows.Automation.Peers.PatternInterface.Invoke)).Invoke();
+        StaThread.Pump();
+        Assert.Equal(18, session.Document.RegionFills.Count);
+
+        var clear = all.InputBindings.OfType<System.Windows.Input.MouseBinding>().Single();
+        clear.Command.Execute(null);
+        Assert.Empty(session.Document.RegionFills);
     });
 }

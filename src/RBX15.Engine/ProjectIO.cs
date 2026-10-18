@@ -223,7 +223,8 @@ public static class ProjectIO
                 JsonValueKind.Object => new Fill(
                     OptString(v, "type", at + ".type") ?? "solid",
                     OptString(v, "c1", at + ".c1"), OptString(v, "c2", at + ".c2"),
-                    OptNumber(v, "angle", at + ".angle"), OptNumber(v, "scale", at + ".scale")),
+                    OptNumber(v, "angle", at + ".angle"), OptNumber(v, "scale", at + ".scale"),
+                    OptStops(v, at + ".stops")),
                 _ => throw new ProjectFormatException($"{at} must be a color string or a fill object, not a {Kind(v)}"),
             };
             int existing = result.FindIndex(r => r.Region == e.Name);
@@ -234,6 +235,33 @@ public static class ProjectIO
         }
         return [.. result];
     }
+
+    /// <summary>
+    /// A fill's optional <c>stops</c> (v5 only; 4.1 never wrote the key): an array of at most
+    /// <see cref="Fill.MaxStops"/> color strings, <c>#rgb</c> or <c>#rrggbb</c>, kept as written.
+    /// Absent or null reads as none; a bad entry names its index, as <c>regionColors.name.stops[1]</c>.
+    /// </summary>
+    static ImmutableArray<string> OptStops(JsonElement o, string what)
+    {
+        if (!o.TryGetProperty("stops", out var v) || v.ValueKind == JsonValueKind.Null) return ImmutableArray<string>.Empty;
+        if (v.ValueKind != JsonValueKind.Array) throw new ProjectFormatException($"{what} must be an array, not a {Kind(v)}");
+        if (v.GetArrayLength() > Fill.MaxStops)
+            throw new ProjectFormatException($"{what} holds {v.GetArrayLength()} colors; a fill carries at most {Fill.MaxStops}");
+        var stops = ImmutableArray.CreateBuilder<string>(v.GetArrayLength());
+        int i = 0;
+        foreach (var e in v.EnumerateArray())
+        {
+            string at = $"{what}[{i++}]";
+            if (e.ValueKind != JsonValueKind.String) throw new ProjectFormatException($"{at} must be a color string, not a {Kind(e)}");
+            string s = e.GetString()!;
+            if (!IsHexColor(s)) throw new ProjectFormatException($"{at} must be a #rgb or #rrggbb color, not \"{Clip(s)}\"");
+            stops.Add(s);
+        }
+        return stops.MoveToImmutable();
+    }
+
+    static bool IsHexColor(string s) =>
+        s.Length is 4 or 7 && s[0] == '#' && s.AsSpan(1).IndexOfAnyExcept("0123456789abcdefABCDEF") < 0;
 
     static string? OptString(JsonElement o, string key, string what) =>
         !o.TryGetProperty(key, out var v) || v.ValueKind == JsonValueKind.Null ? null
@@ -304,7 +332,7 @@ public static class ProjectIO
     /// A non-null <paramref name="title"/> adds a <c>title</c> field after <c>layers</c>, so 4.1's
     /// field order stays an exact prefix; 4.1 ignores unknown fields (ledger project-template-name-not-saved).
     /// Region fills are written as descriptors with only the fields they carry, in lib/fills.js order
-    /// (type, c1, c2, angle, scale); a legacy color string read from a 4.1 file comes back as
+    /// (type, c1, c2, angle, scale), then <c>stops</c> only when the fill has any (v5; 4.1 ignores the key); a legacy color string read from a 4.1 file comes back as
     /// <c>{ "type": "solid", "c1": ... }</c>, which 4.1 reads identically (lib/fills.js normalizeFill).
     /// </para>
     /// </summary>
@@ -334,6 +362,12 @@ public static class ProjectIO
                 if (fill.C2 is { } c2) w.WriteString("c2", c2);
                 if (fill.Angle is { } angle) Number(w, "angle", angle);
                 if (fill.Scale is { } scale) Number(w, "scale", scale);
+                if (!fill.Stops.IsEmpty)
+                {
+                    w.WriteStartArray("stops");
+                    foreach (var stop in fill.Stops) w.WriteStringValue(stop);
+                    w.WriteEndArray();
+                }
                 w.WriteEndObject();
             }
             w.WriteEndObject();

@@ -12,7 +12,8 @@
     <!-- Template Regions (editor.html:168-171; buildRegionGrid, editor.js:1624-1649). The last group: no right divider (styles.css:207). -->
     <Border Style="{StaticResource RibbonGroup}" BorderThickness="0">
         <DockPanel>
-            <TextBlock Style="{StaticResource RibbonGroupLabel}" Text="TEMPLATE REGIONS" />
+            <!-- 4.1 labelled it TEMPLATE REGIONS; v5 names what a click does (ledger ribbon-fill-regions-joined). -->
+            <TextBlock Style="{StaticResource RibbonGroupLabel}" Text="CLICK REGIONS TO FILL" />
             <!-- #regionGrid is a .ribbon-group-items row (styles.css:208): the cross and the limbs side by side, centered, 4px gap -->
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
 
@@ -30,6 +31,17 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
+                    <!-- All, in the cross's empty top-left corner so the grid keeps its size (ledger regions-fill-all) -->
+                    <Button x:Name="FillAllTile" Grid.Row="0" Grid.Column="0" Style="{StaticResource RegionAllTile}"
+                            Command="{Binding FillAllCommand}" AutomationProperties.Name="Fill all regions"
+                            ToolTip="Fill every region with this style. Right-click clears every region.">
+                        <Button.InputBindings>
+                            <MouseBinding Gesture="RightClick" Command="{Binding ClearAllCommand}" />
+                            <KeyBinding Key="Delete" Command="{Binding ClearAllCommand}" />
+                            <KeyBinding Key="F10" Modifiers="Shift" Command="{Binding ClearAllCommand}" />
+                            <KeyBinding Key="Apps" Command="{Binding ClearAllCommand}" />
+                        </Button.InputBindings>
+                    </Button>
                     <ContentPresenter Grid.Row="0" Grid.Column="2" Content="{Binding Body[0]}" ContentTemplate="{StaticResource RegionTileTemplate}" />
                     <ContentPresenter Grid.Row="1" Grid.Column="1" Content="{Binding Body[1]}" ContentTemplate="{StaticResource RegionTileTemplate}" />
                     <ContentPresenter Grid.Row="1" Grid.Column="2" Content="{Binding Body[2]}" ContentTemplate="{StaticResource RegionTileTemplate}" />
@@ -38,31 +50,54 @@
                     <ContentPresenter Grid.Row="2" Grid.Column="2" Content="{Binding Body[5]}" ContentTemplate="{StaticResource RegionTileTemplate}" />
                 </Grid>
 
-                <!-- The limbs: two equal columns, 4px gap, 4px top margin (editor.js:1630); 4 tiles each, 1px gap (:1633, :1642) -->
-                <UniformGrid x:Name="Limbs" Columns="2" Margin="4,4,0,0" VerticalAlignment="Center">
-                    <StackPanel Margin="0,0,2,0">
-                        <TextBlock Style="{StaticResource LimbLabel}" Text="{Binding LimbLabel1}" />
-                        <ItemsControl ItemsSource="{Binding Limb1}" ItemTemplate="{StaticResource RegionTileTemplate}"
-                                      Focusable="False" Margin="0,1,0,0">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <UniformGrid Columns="4" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                        </ItemsControl>
-                    </StackPanel>
-                    <StackPanel Margin="2,0,0,0">
-                        <TextBlock Style="{StaticResource LimbLabel}" Text="{Binding LimbLabel2}" />
-                        <ItemsControl ItemsSource="{Binding Limb2}" ItemTemplate="{StaticResource RegionTileTemplate}"
-                                      Focusable="False" Margin="0,1,0,0">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <UniformGrid Columns="4" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                        </ItemsControl>
-                    </StackPanel>
-                </UniformGrid>
+                <!-- The limbs, two side by side, 4px gap. 4.1 offered only their four sides (editor.js:1630-1646), so the shoulder
+                     top and the hand opening (rarm_up, rarm_down, ...) could never be filled; v5 adds Top and Bot above and below
+                     Fr, where those regions sit on the template, making each limb a small cross as tall as the body's (Este,
+                     2026-10-18; ledger regions-limb-caps). Right limb: L, Bk, R, Fr; left limb: Fr, L, Bk, R. -->
+                <StackPanel x:Name="Limbs" Orientation="Horizontal" Margin="4,0,0,0" VerticalAlignment="Center">
+                    <Grid x:Name="Limb1Cross" Grid.IsSharedSizeScope="True" Margin="0,0,2,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition SharedSizeGroup="Limb1Column" />
+                            <ColumnDefinition SharedSizeGroup="Limb1Column" />
+                            <ColumnDefinition SharedSizeGroup="Limb1Column" />
+                            <ColumnDefinition SharedSizeGroup="Limb1Column" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Style="{StaticResource LimbLabel}"
+                                   Text="{Binding LimbLabel1}" VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="0,0,0,3" />
+                        <ContentPresenter Grid.Row="0" Grid.Column="3" Content="{Binding Limb1Top}" ContentTemplate="{StaticResource RegionTileTemplate}" />
+                        <ContentPresenter Grid.Row="1" Grid.Column="0" Content="{Binding Limb1[0]}" ContentTemplate="{StaticResource RegionTileTemplate}" />
+                        <ContentPresenter Grid.Row="1" Grid.Column="1" Content="{Binding Limb1[1]}" ContentTemplate="{StaticResource RegionTileTemplate}" />
+                        <ContentPresenter Grid.Row="1" Grid.Column="2" Content="{Binding Limb1[2]}" ContentTemplate="{StaticResource RegionTileTemplate}" />
+                        <ContentPresenter Grid.Row="1" Grid.Column="3" Content="{Binding Limb1[3]}" ContentTemplate="{StaticResource RegionTileTemplate}" />
+                        <ContentPresenter Grid.Row="2" Grid.Column="3" Content="{Binding Limb1Bot}" ContentTemplate="{StaticResource RegionTileTemplate}" />
+                    </Grid>
+                    <Grid x:Name="Limb2Cross" Grid.IsSharedSizeScope="True" Margin="2,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition SharedSizeGroup="Limb2Column" />
+                            <ColumnDefinition SharedSizeGroup="Limb2Column" />
+                            <ColumnDefinition SharedSizeGroup="Limb2Column" />
+                            <ColumnDefinition SharedSizeGroup="Limb2Column" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" Style="{StaticResource LimbLabel}"
+                                   Text="{Binding LimbLabel2}" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,0,3" />
+                        <ContentPresenter Grid.Row="0" Grid.Column="0" Content="{Binding Limb2Top}" ContentTemplate="{StaticResource RegionTileTemplate}" />
+                        <ContentPresenter Grid.Row="1" Grid.Column="0" Content="{Binding Limb2[0]}" ContentTemplate="{StaticResource RegionTileTemplate}" />
+                        <ContentPresenter Grid.Row="1" Grid.Column="1" Content="{Binding Limb2[1]}" ContentTemplate="{StaticResource RegionTileTemplate}" />
+                        <ContentPresenter Grid.Row="1" Grid.Column="2" Content="{Binding Limb2[2]}" ContentTemplate="{StaticResource RegionTileTemplate}" />
+                        <ContentPresenter Grid.Row="1" Grid.Column="3" Content="{Binding Limb2[3]}" ContentTemplate="{StaticResource RegionTileTemplate}" />
+                        <ContentPresenter Grid.Row="2" Grid.Column="0" Content="{Binding Limb2Bot}" ContentTemplate="{StaticResource RegionTileTemplate}" />
+                    </Grid>
+                </StackPanel>
             </StackPanel>
         </DockPanel>
     </Border>

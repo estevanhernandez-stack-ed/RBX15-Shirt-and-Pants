@@ -13,6 +13,7 @@ public sealed class SettingsGroupViewModel : ObservableObject
 {
     readonly EditorSession _session;
     bool _showMask, _showGrid;
+    AvatarPreviewViewModel? _preview;
 
     public SettingsGroupViewModel(EditorSession session)
     {
@@ -40,6 +41,34 @@ public sealed class SettingsGroupViewModel : ObservableObject
     {
         get => _showMask;
         set => _session.Apply(d => d.ShowMask == value ? d : d with { ShowMask = value });
+    }
+
+    /// <summary>The 3D avatar preview this group's "3D preview" box toggles; set once by the composition root.</summary>
+    internal AvatarPreviewViewModel? Preview
+    {
+        get => _preview;
+        set
+        {
+            if (_preview is not null) _preview.PropertyChanged -= OnPreviewChanged;
+            _preview = value;
+            if (_preview is not null) _preview.PropertyChanged += OnPreviewChanged;
+            OnPropertyChanged(nameof(ShowPreview));
+        }
+    }
+
+    void OnPreviewChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(AvatarPreviewViewModel.IsVisible)) OnPropertyChanged(nameof(ShowPreview));
+    }
+
+    /// <summary>
+    /// The "3D preview" box (v5.1; ledger <c>avatar-preview-3d</c>, new), on by default. Session state only: it flips the
+    /// preview's visibility and nothing else, so it is no undo step, no document change and no dirt.
+    /// </summary>
+    public bool ShowPreview
+    {
+        get => _preview?.IsVisible ?? true;
+        set { if (_preview is not null) _preview.IsVisible = value; }
     }
 
     /// <summary>#showGrid (editor.html:103; ledger <c>overlay-grid-checkbox</c>).</summary>

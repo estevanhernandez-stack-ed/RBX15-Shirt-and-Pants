@@ -53,9 +53,10 @@ public class TemplateCanvasHostTests
     }
 
     /// <summary>The engine's own frame as premultiplied BGRA bytes, the layout of Pbgra32.</summary>
+    /// <summary>The engine's view for <paramref name="options"/>, with the region guide the host always turns on (view-region-guide).</summary>
     static byte[] EngineFrame(Document doc, ViewOptions options)
     {
-        using var image = Renderer.RenderViewImage(doc, options);
+        using var image = Renderer.RenderViewImage(doc, options with { ShowRegionGuide = true });
         var info = new SKImageInfo(image.Width, image.Height, SKColorType.Bgra8888, SKAlphaType.Premul);
         using var bitmap = new SKBitmap(info);
         Assert.True(image.ReadPixels(info, bitmap.GetPixels(), bitmap.RowBytes, 0, 0));

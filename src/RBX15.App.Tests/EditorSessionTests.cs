@@ -33,11 +33,12 @@ public class EditorSessionTests
 
     // ---- defaults ----
 
-    [Fact] // editor.js:76-107 (startup state), :86 (depth 30), :499 (nextId = 1)
+    [Fact] // editor.js:76-107 (startup state), :86 (depth 30), :499 (nextId = 1); the background starts transparent (doc-new-transparent-background)
     public void A_new_session_is_4_1s_startup_state()
     {
         var s = new EditorSession();
-        Assert.True(s.Document.ContentEquals(new Document()));
+        Assert.True(s.Document.ContentEquals(new Document() with { BgOpacity = 0 }));
+        Assert.Equal(("#192e44", 0.0), (s.Document.BgColor, s.Document.BgOpacity));   // 4.1's color kept, at opacity 0
         Assert.Null(s.SelectedLayerId);
         Assert.Null(s.SelectedLayer);
         Assert.Equal(1, s.NextId);
@@ -97,7 +98,7 @@ public class EditorSessionTests
         s.Apply(d => WithLayers(d, 1, 2, 3) with { ShowGrid = true, BgOpacity = 0.5 });
         Assert.Equal(1, s.UndoCount);
         Assert.True(s.Undo());
-        Assert.True(s.Document.ContentEquals(new Document()));
+        Assert.True(s.Document.ContentEquals(EditorSession.NewDocument()));
     }
 
     [Theory] // file-undo-snapshot-scope: every Document field is a step, including Mask and Grid (4.1 never pushed for them, editor.js:1494-1495)
@@ -352,7 +353,7 @@ public class EditorSessionTests
         Assert.True(s.IsDirty);
         Assert.Equal(Enumerable.Repeat(SessionChange.Document, 5).Append(SessionChange.History), seen);
         Assert.True(s.Undo());
-        Assert.Equal(1, s.Document.BgOpacity);
+        Assert.Equal(0, s.Document.BgOpacity);
     }
 
     [Fact] // a drag that ends where it started records nothing (editor.js:1570-1579 recorded nothing for an idle drag)
@@ -362,7 +363,7 @@ public class EditorSessionTests
         using (s.BeginGesture())
         {
             s.Apply(d => d with { BgOpacity = 0.3 });
-            s.Apply(d => d with { BgOpacity = 1 });
+            s.Apply(d => d with { BgOpacity = 0 });
         }
         Assert.Equal(0, s.UndoCount);
         Assert.False(s.IsDirty);
@@ -385,7 +386,7 @@ public class EditorSessionTests
         Assert.False(s.InGesture);
         Assert.Equal(1, s.UndoCount);
         s.Undo();
-        Assert.True(s.Document.ContentEquals(new Document()));
+        Assert.True(s.Document.ContentEquals(EditorSession.NewDocument()));
     }
 
     [Fact] // Review Focus: Ctrl+Z in the middle of a slider drag
@@ -398,7 +399,7 @@ public class EditorSessionTests
         s.Apply(d => d with { BgOpacity = 0.4 });
 
         Assert.True(s.Undo());                       // commits the drag so far, then undoes it
-        Assert.Equal(1, s.Document.BgOpacity);
+        Assert.Equal(0, s.Document.BgOpacity);
         Assert.True(s.Document.ShowGrid);
         Assert.Equal((1, 1), (s.UndoCount, s.RedoCount));
         Assert.True(s.InGesture);
@@ -410,7 +411,7 @@ public class EditorSessionTests
 
         Assert.Equal((2, 0), (s.UndoCount, s.RedoCount));
         Assert.True(s.Undo());
-        Assert.Equal(1, s.Document.BgOpacity);
+        Assert.Equal(0, s.Document.BgOpacity);
         Assert.True(s.Undo());
         Assert.False(s.Document.ShowGrid);
     }

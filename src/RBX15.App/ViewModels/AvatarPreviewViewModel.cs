@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using RBX15.App.Services;
 using RBX15.Engine;
 using SkiaSharp;
@@ -67,8 +68,16 @@ public sealed class AvatarPreviewViewModel : ObservableObject, IDisposable
         _mode = session.Document.Mode;
         _boxes = Avatar.Build(_mode);
         session.Changed += OnSessionChanged;
+        HideCommand = new RelayCommand(() => IsVisible = false);
+        ShowCommand = new RelayCommand(() => IsVisible = true);
         Rebuild();
     }
+
+    /// <summary>The panel header's close button: hides the panel, as unchecking "3D preview" does.</summary>
+    public IRelayCommand HideCommand { get; }
+
+    /// <summary>The "3D" edge tab shown while the panel is hidden: shows it again.</summary>
+    public IRelayCommand ShowCommand { get; }
 
     public TemplateMode Mode => _mode;
 

@@ -420,4 +420,24 @@ public class AvatarPreviewTests
         Assert.Equal(180, vm.Yaw, 6);
         AssertBlue(ColorAt(view, Render(view), 0, 3, -0.5));
     });
+    /// <summary>The darkest channel value in the 21 x 21 window around <paramref name="at"/>.</summary>
+    static int Darkest(BitmapSource image, Point at)
+    {
+        int x0 = (int)Math.Round(at.X) - 10, y0 = (int)Math.Round(at.Y) - 10;
+        var px = new byte[21 * 21 * 4];
+        image.CopyPixels(new Int32Rect(x0, y0, 21, 21), px, 21 * 4, 0);
+        int darkest = 255;
+        for (int i = 0; i < 21 * 21; i++) darkest = Math.Min(darkest, Math.Max(px[i * 4], Math.Max(px[i * 4 + 1], px[i * 4 + 2])));
+        return darkest;
+    }
+
+    [Fact] // the classic head wears its smile on the front only; a seam at the back once drew a squeezed second face there
+    public void The_head_smiles_on_the_front_and_is_plain_at_the_back() => StaThread.Run(() =>
+    {
+        var (vm, view) = Panel(DocWith(TemplateMode.Shirt));
+        Assert.True(Darkest(Render(view), Project(view, new Point3D(0, 4.55, 0.6))) < 70, "no face on the front of the head");
+
+        vm.Yaw = 180;
+        Assert.True(Darkest(Render(view), Project(view, new Point3D(0, 4.55, -0.6))) > 70, "ink on the back of the head");
+    });
 }

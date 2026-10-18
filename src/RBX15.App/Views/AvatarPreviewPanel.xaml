@@ -6,18 +6,67 @@
          the two rotations live here. Lights sit outside the turning group, so the light stays on the viewer's side as the
          avatar turns. PerspectiveCamera.FieldOfView is the horizontal angle, so the panel's width sets
          the scale: 30 degrees at 9.5 studs sees 5.1 studs across, and an arm corner never reaches past 2.06 studs from the
-         turning axis, so the body fills the panel without clipping at any angle (13 studs left it a third of the panel). The camera looks at the body's middle, 2.6 studs up. -->
+         turning axis, so the body fills the panel without clipping at any angle (13 studs left it a third of the panel). The camera looks at the body's middle, 2.6 studs up.
+         The look (Este, 2026-10-18, "give the mannequin some style"): a studio of three lights (a warm key from the front
+         upper left, a cool fill from the right, a blue rim from behind that outlines the turned-away side), a stage that
+         glows on a soft floor shadow, and the classic round head with the classic smile. The header's close button and the
+         shell's "3D" edge tab hide and show the panel through the view-model, as the Settings checkbox does. -->
+    <UserControl.Resources>
+        <!-- A quiet icon button: no chrome until hovered; fg-3 to fg-1. -->
+        <Style x:Key="PanelIconButton" TargetType="Button">
+            <Setter Property="FocusVisualStyle" Value="{DynamicResource FocusRing}" />
+            <Setter Property="Foreground" Value="{DynamicResource Fg3Brush}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Width" Value="22" />
+            <Setter Property="Height" Value="22" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Chrome" Background="Transparent" BorderBrush="Transparent" BorderThickness="1"
+                                CornerRadius="{DynamicResource RSmRadius}" SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="{DynamicResource Fg1Brush}" />
+                                <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource Ink800Brush}" />
+                                <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource Border2Brush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="3D preview" Style="{DynamicResource PanelHeading}" />
+        <DockPanel Grid.Row="0" LastChildFill="True">
+            <Button x:Name="CloseButton" DockPanel.Dock="Right" VerticalAlignment="Center" Style="{StaticResource PanelIconButton}"
+                    Command="{Binding HideCommand}" AutomationProperties.Name="Close 3D preview" ToolTip="Close the 3D preview">
+                <Path Data="M0,0 L8,8 M8,0 L0,8" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                      StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+            </Button>
+            <TextBlock Text="3D preview" Style="{DynamicResource PanelHeading}" VerticalAlignment="Center" />
+        </DockPanel>
 
-        <!-- The hit surface: a Viewport3D hit-tests only its models, so the drag listens on this transparent grid. -->
-        <Grid x:Name="DragSurface" Grid.Row="1" Background="Transparent" MinHeight="120">
+        <!-- The stage: a rounded well lit from its middle. The hit surface is this border: a Viewport3D hit-tests only its
+             models, so the drag listens here. -->
+        <Border x:Name="DragSurface" Grid.Row="1" MinHeight="120" CornerRadius="8" ClipToBounds="True"
+                BorderBrush="{DynamicResource Border1Brush}" BorderThickness="1">
+            <Border.Background>
+                <RadialGradientBrush Center="0.5,0.42" GradientOrigin="0.5,0.38" RadiusX="0.85" RadiusY="0.6">
+                    <GradientStop Offset="0" Color="#FF2A4562" />
+                    <GradientStop Offset="0.55" Color="{DynamicResource BrandNavyDeepColor}" />
+                    <GradientStop Offset="1" Color="{DynamicResource Ink950Color}" />
+                </RadialGradientBrush>
+            </Border.Background>
             <Viewport3D x:Name="Viewport" Focusable="True" ClipToBounds="True"
                         AutomationProperties.Name="3D preview">
                 <Viewport3D.Camera>
@@ -27,8 +76,13 @@
                 <ModelVisual3D>
                     <ModelVisual3D.Content>
                         <Model3DGroup>
-                            <AmbientLight Color="#606060" />
-                            <DirectionalLight Color="#FFFFFF" Direction="1,-1,-1.5" />
+                            <AmbientLight Color="#3C4048" />
+                            <!-- key: warm, from the front upper left -->
+                            <DirectionalLight Color="#F2EEE6" Direction="0.6,-0.7,-1" />
+                            <!-- fill: cool and low, from the right -->
+                            <DirectionalLight Color="#404A58" Direction="-1,-0.2,-0.6" />
+                            <!-- rim: brand blue from behind, so the far side reads against the dark stage -->
+                            <DirectionalLight Color="#3A6E8C" Direction="0.2,-0.3,1" />
                             <Model3DGroup x:Name="Body">
                                 <Model3DGroup.Transform>
                                     <Transform3DGroup>
@@ -49,9 +103,11 @@
                     </ModelVisual3D.Content>
                 </ModelVisual3D>
             </Viewport3D>
-        </Grid>
+        </Border>
 
-        <TextBlock Grid.Row="2" Text="Classic body. R15 and Rthro avatars stretch the texture." TextWrapping="Wrap"
-                   FontFamily="{DynamicResource FontBody}" FontSize="11" Foreground="{DynamicResource Fg3Brush}" Margin="0,8,0,0" />
+        <TextBlock Grid.Row="2" Text="DRAG TO TURN · DOUBLE-CLICK TO FACE FRONT" TextWrapping="Wrap" Margin="0,8,0,0"
+                   FontFamily="{DynamicResource FontMono}" FontSize="9" Foreground="{DynamicResource FgMutedBrush}" />
+        <TextBlock Grid.Row="3" Text="Classic body. R15 and Rthro avatars stretch the texture." TextWrapping="Wrap"
+                   FontFamily="{DynamicResource FontBody}" FontSize="11" Foreground="{DynamicResource Fg3Brush}" Margin="0,4,0,0" />
     </Grid>
 </UserControl>

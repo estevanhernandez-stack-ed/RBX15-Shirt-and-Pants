@@ -1,4 +1,6 @@
 using System.Windows;
+using System.Windows.Automation.Peers;
+using System.Windows.Automation.Provider;
 using System.Windows.Controls;
 using System.Windows.Media;
 using RBX15.App.Services;
@@ -134,4 +136,35 @@ public class ShellPreviewTests
         main.Home.Settings.ShowPreview = false;
         Assert.False(main.AvatarPreview.IsVisible);
     }
+    static void Press(Button b) => ((IInvokeProvider)new ButtonAutomationPeer(b).GetPattern(PatternInterface.Invoke)).Invoke();
+
+    [Fact] // Este 2026-10-18: the panel's close button hides it; the "3D" edge tab shows only while it is hidden and brings it back
+    public void The_close_button_hides_the_panel_and_the_edge_tab_brings_it_back() => StaThread.Run(() =>
+    {
+        var session = new EditorSession();
+        var w = Shell(session, 1184);
+        var tab = (Button)w.FindName("PreviewEdgeTab");
+        var close = Descendants<Button>((DependencyObject)w.Content)
+            .Single(b => System.Windows.Automation.AutomationProperties.GetName(b) == "Close 3D preview");
+        Assert.Equal(Visibility.Collapsed, tab.Visibility);
+
+        Press(close);
+        StaThread.Pump();
+        Lay(w, 1184);
+        Assert.False(w.ViewModel.AvatarPreview.IsVisible);
+        Assert.Equal(0, PreviewColumn(w).Width.Value);
+        Assert.False(PreviewBox(w).IsChecked);
+        Assert.Equal(Visibility.Visible, tab.Visibility);
+        Assert.Equal("Show 3D preview", System.Windows.Automation.AutomationProperties.GetName(tab));
+
+        Press(tab);
+        StaThread.Pump();
+        Lay(w, 1184);
+        Assert.True(w.ViewModel.AvatarPreview.IsVisible);
+        Assert.Equal(ShellLayout.PreviewWidth, PreviewColumn(w).Width.Value);
+        Assert.True(PreviewBox(w).IsChecked);
+        Assert.Equal(Visibility.Collapsed, tab.Visibility);
+        Assert.Equal(0, session.UndoCount);
+        Assert.False(session.IsDirty);
+    });
 }

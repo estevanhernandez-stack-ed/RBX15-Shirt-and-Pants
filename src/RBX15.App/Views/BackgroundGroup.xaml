@@ -1,0 +1,59 @@
+<UserControl x:Class="RBX15.App.Views.BackgroundGroup"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- The Layout tab's Background group (editor.html:125-130; ledger bg-palette, bg-swatches, layout-background-swatches).
+         DataContext: BackgroundViewModel. 12 swatches on one row, gap 3 (editor.html:127). Always shown: it edits the
+         document, not a layer. -->
+    <UserControl.Resources>
+        <!-- .swatch (styles.css:424-436): 24x24 with a 2px transparent border, radius r-xs; hover (and the never-assigned
+             .active) = fg-1 border and scale(1.15). A button in v5, so it takes focus: the cyan focus ring shows on keyboard
+             focus and the hover look applies to it as well. The 150 ms transition is not ported (provisional; M4b look sign-off). -->
+        <Style x:Key="BgSwatchButton" TargetType="Button">
+            <Setter Property="Width" Value="24" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="Margin" Value="0,0,3,0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{DynamicResource FocusRing}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Face" Background="{TemplateBinding Background}" BorderBrush="Transparent" BorderThickness="2"
+                                CornerRadius="{DynamicResource RXsRadius}" RenderTransformOrigin="0.5,0.5" />
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Face" Property="BorderBrush" Value="{DynamicResource Fg1Brush}" />
+                                <Setter TargetName="Face" Property="RenderTransform">
+                                    <Setter.Value>
+                                        <ScaleTransform ScaleX="1.15" ScaleY="1.15" />
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Border Style="{DynamicResource RibbonGroup}">
+        <DockPanel>
+            <TextBlock Style="{DynamicResource RibbonGroupLabel}" Text="BACKGROUND" />
+            <ItemsControl x:Name="Swatches" ItemsSource="{Binding Swatches}" VerticalAlignment="Center" Focusable="False" IsTabStop="False"
+                          AutomationProperties.Name="Background colors">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Style="{StaticResource BgSwatchButton}" Background="{Binding Hex}"
+                                Command="{Binding DataContext.SetSwatchCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                CommandParameter="{Binding Hex}" ToolTip="{Binding Name}"
+                                AutomationProperties.Name="{Binding AutomationName}" AutomationProperties.HelpText="{Binding Hex}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </DockPanel>
+    </Border>
+</UserControl>

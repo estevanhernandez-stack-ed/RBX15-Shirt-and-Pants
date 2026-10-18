@@ -59,7 +59,12 @@ internal static class Composition
         // M4b item 5: Placement (Home) and Presets (Layout) share the app's random source; tests pass a seeded one through <paramref name="random"/>.
         Func<Random> placementRng = random ?? (() => Random.Shared);
         var placement = new PlacementViewModel(session, placementRng);
-        var layout = new LayoutViewModel { Presets = new PresetsViewModel(session, placementRng) };
+        // M4b item 6: the Background and BG Settings groups edit the document's background through the shared picker, dialogs and status strip.
+        var layout = new LayoutViewModel
+        {
+            Presets = new PresetsViewModel(session, placementRng),
+            Background = new BackgroundViewModel(session, colorPicker, fileDialogs, status),
+        };
         var home = new HomeViewModel(session, colorPicker)
         {
             Placement = placement,

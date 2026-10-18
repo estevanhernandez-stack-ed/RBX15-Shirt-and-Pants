@@ -27,6 +27,12 @@ public sealed class Win32FileDialogs(Func<Window?> owner) : IFileDialogs
         return Show(dialog) ? dialog.FileNames : [];
     }
 
+    public string? OpenImage()
+    {
+        var dialog = new OpenFileDialog { Filter = ImageImporter.OpenFilter, Multiselect = false };
+        return Show(dialog) ? dialog.FileName : null;
+    }
+
     public string? SavePng(string suggestedFileName)
     {
         var dialog = new SaveFileDialog

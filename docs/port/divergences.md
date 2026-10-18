@@ -210,7 +210,7 @@ Every deliberate behavior change in v5, generated from `parity-ledger.json` rows
 | `ci-windows-ci` | Package | 4.1: path filter omits lib/**, tests/** and packs/**, so lint and test gates can be bypassed. v5: CI builds and runs dotnet tests on every PR with no path-filter hole. |
 | `ci-windows-release` | Package | 4.1: tag release reuses a single RELEASE_NOTES.md, never checks tag against version and runs no tests. v5: release builds MSIX and zip, verifies tag against version and runs tests first. |
 | `msix-capabilities` | Package | 4.1: runFullTrust justification cites Electron child processes and the folder picker. v5: justification rewritten for the .NET self-contained runtime. |
-| `msix-make-script` | Package | 4.1: make-msix.ps1 packs the Electron win-unpacked output with /nv and SIGNING.md references an undefined -PublisherCN parameter. v5: pipeline rebuilt around dotnet publish output and the doc bug corrected. |
+| `msix-make-script` | Package | 4.1: make-msix.ps1 packs the Electron win-unpacked output with /nv and SIGNING.md references an undefined -PublisherCN parameter. v5: pipeline rebuilt as scripts/build-msix.ps1 around dotnet publish output with validation on, a bridge-exclusion scan of the packaged dll, and the doc bug corrected. |
 | `msix-signing-policy` | Package | 4.1: Store MSIX unsigned plus an unsigned NSIS installer on GitHub. v5: Store MSIX unsigned plus an unsigned portable zip, NSIS retired. |
 | `shell-window-no-icon` | Package | 4.1: NSIS exe and window use the default Electron icon (no icon configured). v5: brand app icon on the exe, window and MSIX tiles. |
 

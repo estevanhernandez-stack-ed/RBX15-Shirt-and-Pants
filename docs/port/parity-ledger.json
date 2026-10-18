@@ -6141,12 +6141,12 @@
    "quirks": "Electron-default icon on non-Store builds is probably an unnoticed defect; fix, do not copy.",
    "portTarget": "Add a multi-size app.ico (16-256) as <ApplicationIcon> in the csproj and set Window.Icon. MSIX tiles come from the manifest. This is a free upgrade over parity; generate the .ico from the same brand mark as make-msix-images.py.",
    "risk": "low",
-   "parityCheck": "Inspect built exe icon resource, taskbar icon, Alt-Tab icon; compare MSIX Start tile to Images/Square44x44Logo.png.",
+   "parityCheck": "M6a: the published exe's icon resource is the brand mark (System.Drawing ExtractAssociatedIcon on RBX15.App.exe, read back as the template-cross tile); the running main window answers WM_GETICON (small and big) with a non-null icon, which is what the title bar, taskbar and Alt-Tab draw; the MSIX Start tile is Images/Square44x44Logo.png by the manifest. Taskbar and Alt-Tab were not eyeballed.",
    "owner": "Package",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: NSIS exe and window use the default Electron icon (no icon configured). v5: brand app icon on the exe, window and MSIX tiles.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "shell-webprefs-node-integration",
@@ -6603,7 +6603,7 @@
     "windows/msix/Package.appxmanifest.template:33-55"
    ],
    "quirks": "4.0.0 was REJECTED by Partner Center for a tile filename mismatch (SmallTile.png/LargeTile.png vs Square71x71Logo.png/Square310x310Logo.png), fixed in 4.0.1; the make-msix flow uses /nv which skips semantic validation, so image-name errors are only caught at upload. Add a validation step that checks every manifest-referenced file exists.",
-   "portTarget": "Keep Application Id 'RBXMaker' (changing Id breaks pinned-tile / jump-list continuity), set Executable to the WPF exe name (rename AssemblyName or keep the same file name with spaces), same visual elements. Add scale variants (scale-125/150/200/400) for crisp tiles since Images only has base sizes.",
+   "portTarget": "Keep Application Id 'RBXMaker' (changing Id breaks pinned-tile / jump-list continuity), set Executable to the WPF exe name (rename AssemblyName or keep the same file name with spaces), same visual elements. Add scale variants (scale-125/150/200/400) for crisp tiles since Images only has base sizes. M6a: Application Id RBXMaker kept; Executable is RBX15.App.exe (AssemblyName unchanged, the PE name is the only visible effect); visual elements unchanged; tile scale variants not added.",
    "risk": "med",
    "parityCheck": "Install the native package: Start tile label 'RBX15', tile and splash match images; pinned tile from the Electron install keeps working after upgrade.",
    "owner": "Package",
@@ -6624,7 +6624,7 @@
     "README.md:181-184"
    ],
    "quirks": "The old justification point (1) 'Electron spawns renderer child process' no longer exists and point (2) 'folder picker every load' is weak: with a user picker the sandbox also allows access via the file picker broker. runFullTrust remains for the .NET runtime.",
-   "portTarget": "Native WPF (.NET) still requires runFullTrust (Windows.FullTrustApplication; WPF cannot run as UWP). The Electron-specific justification is invalid, rewrite it: 'WPF desktop application (Win32/.NET) cannot run in the AppContainer; reads and writes only user-chosen files'. With fonts bundled there is zero network use, so internetClient is correctly not needed. Re-answer the Store submission's capability justification and reviewer letter.",
+   "portTarget": "Native WPF (.NET) still requires runFullTrust (Windows.FullTrustApplication; WPF cannot run as UWP). The Electron-specific justification is invalid, rewrite it: 'WPF desktop application (Win32/.NET) cannot run in the AppContainer; reads and writes only user-chosen files'. With fonts bundled there is zero network use, so internetClient is correctly not needed. Re-answer the Store submission's capability justification and reviewer letter. M6a: the manifest declares runFullTrust only (build-msix.ps1 asserts it on every build) and a source scan finds no HttpClient, WebClient or socket use in src/. The reviewer letter rewrite and the App Certification Kit run remain.",
    "risk": "med",
    "parityCheck": "Manifest declares exactly one capability; static scan shows no network calls; reviewer letter text updated to WPF wording; App Certification Kit passes.",
    "owner": "Package",
@@ -6644,7 +6644,7 @@
     "docs/store/reviewer-letter-4.1.0.0.md:119"
    ],
    "quirks": "Verify .NET 10 actually runs on 1809 (support matrix: Windows 10 1607+ for .NET 8; check .NET 10 notes) before promising the same floor.",
-   "portTarget": ".NET 10 supports Windows 10 1607+ / 11; keep 10.0.17763.0 to avoid dropping users on the Store listing (raising it hides the app from those devices). Update MaxVersionTested to the current tested build (this dev machine is 10.0.26220). Update the comment.",
+   "portTarget": ".NET 10 supports Windows 10 1607+ / 11; keep 10.0.17763.0 to avoid dropping users on the Store listing (raising it hides the app from those devices). Update MaxVersionTested to the current tested build (this dev machine is 10.0.26220). Update the comment. M6a: MinVersion 10.0.17763.0 kept, MaxVersionTested 10.0.26100.0 (the newest Windows SDK installed; 10.0.26220 has no SDK bin). The .NET 10 supported-OS table lists Windows 10 1607 and 1809 as Enterprise/LTSC only, so the 1809 floor holds for those SKUs; the VM launch test is not run.",
    "risk": "low",
    "parityCheck": "Package Viewer / Store submission shows same minimum; install and launch on an 1809 or 1903 VM if still supported by .NET 10.",
    "owner": "Package",
@@ -6682,14 +6682,14 @@
     "windows/msix/make-msix.ps1:1-138"
    ],
    "quirks": "File starts with a BOM; script Set-Locations to repo root; /nv skips validation (cause of the 4.0.0 rejection). SIGNING.md Path 4 invokes `-PublisherCN` which the script does NOT define (script hardcodes $PublisherCN); doc bug.",
-   "portTarget": "Rewrite as make-msix.ps1 around `dotnet publish` output (no npm). Derive version from the csproj <Version> or a single version file with the same 3-part -> 4-part rule, keep output name RBX15-Maker-v{ver}.msix because release workflow references it, keep -SelfSign flow, keep Windows SDK discovery. Drop /nv if feasible (validation catches name mismatches) or add explicit file-exists check.",
+   "portTarget": "Rebuilt as scripts/build-msix.ps1 (PowerShell 7 and Windows PowerShell 5.1) around `dotnet publish` of src/RBX15.App (no npm): version defaults to the csproj <Version> plus .0 and must equal it; output RBX15-Maker-v<ver>.msix plus RBX15-Maker-v<ver>-portable-win-x64.zip; -SelfSign, -SkipPublish, -OutDir; Windows SDK discovery kept; /nv dropped and every manifest-referenced file checked; SIGNING.md Path 4 corrected.",
    "risk": "med",
-   "parityCheck": "Run script clean -> msix exists with name pattern; MakeAppx unpack shows AppxManifest.xml with injected version and all referenced images; self-signed package installs after trusting the cert.",
+   "parityCheck": "M6a: `pwsh -File scripts/build-msix.ps1 -Version 5.0.0.0` (and the same under powershell.exe) ends with the MSIX and the zip; `makeappx unpack` shows AppxManifest.xml with Version 5.0.0.0 and every referenced image; the manifest identity and capability asserts, the pack with validation and the bridge-exclusion scan of the packaged RBX15.App.dll all run inside the script; -SelfSign signs with a cert whose subject equals the Publisher. Narrowed in M6a: installing the self-signed package is exercised by parity-store-update-path, which cannot run without trusting a cert as admin.",
    "owner": "Package",
    "check": "manual",
    "disposition": "fix",
-   "divergence": "4.1: make-msix.ps1 packs the Electron win-unpacked output with /nv and SIGNING.md references an undefined -PublisherCN parameter. v5: pipeline rebuilt around dotnet publish output and the doc bug corrected.",
-   "status": "open"
+   "divergence": "4.1: make-msix.ps1 packs the Electron win-unpacked output with /nv and SIGNING.md references an undefined -PublisherCN parameter. v5: pipeline rebuilt as scripts/build-msix.ps1 around dotnet publish output with validation on, a bridge-exclusion scan of the packaged dll, and the doc bug corrected.",
+   "status": "done"
   },
   {
    "id": "msix-images",
@@ -6704,12 +6704,12 @@
    "quirks": "Output depends on the machine's fonts (falls back to Pillow default font if none found); re-running on another box can change tile art. Treat committed PNGs as the source of truth.",
    "portTarget": "Dev tooling, not shipped. Keep script and committed PNGs as-is and reuse them for the native package (the tiles are product-agnostic). Optionally add scale-200 etc. and a targetsize unplated altform set for the taskbar icon.",
    "risk": "low",
-   "parityCheck": "Manifest-referenced image files exist with correct pixel sizes (50,44,71,150,310,310x150,620x300).",
+   "parityCheck": "Manifest-referenced image files exist with correct pixel sizes (50,44,71,150,310,310x150,620x300). M6a: scripts/build-msix.ps1 asserts this on every build (it reads each PNG's IHDR) and makeappx validation runs without /nv.",
    "owner": "Package",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "msix-signing-policy",
@@ -6725,12 +6725,12 @@
    "quirks": "Docs contradict: README says winget manifest is blocked on the Store certificate, SIGNING.md plan evaluates Trusted Signing in 4.1.0 (not done).",
    "portTarget": "Store path unchanged. For any direct-download .msix or setup, use `trusted-signing`/SignTool in the new pipeline (the sign.js hook is electron-builder specific and dies with it). The native exe itself should be Authenticode-signed inside the package only if the Store path requires it (it does not).",
    "risk": "med",
-   "parityCheck": "Store build is unsigned and passes ingestion; signed direct-download artifact shows Verified publisher in SmartScreen; `signtool verify /pa`.",
+   "parityCheck": "M6a (doc check): SIGNING.md and windows/msix/README.md state the v5 policy: Store MSIX unsigned and re-signed by the Store, portable zip unsigned, NSIS retired; scripts/build-msix.ps1 without -SelfSign emits an unsigned MSIX (Get-AuthenticodeSignature: NotSigned) and an unsigned zip. Whether the Store accepts the unsigned package is exercised at submission (Store 5.0 steps), not here.",
    "owner": "Package",
    "check": "doc",
    "disposition": "fix",
    "divergence": "4.1: Store MSIX unsigned plus an unsigned NSIS installer on GitHub. v5: Store MSIX unsigned plus an unsigned portable zip, NSIS retired.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "ci-windows-ci",
@@ -6784,12 +6784,12 @@
    "quirks": "Its push trigger watches docs-check.yml but the PR trigger does not; harmless.",
    "portTarget": "Keep unchanged; independent of the app runtime.",
    "risk": "low",
-   "parityCheck": "Workflow still runs on a doc-only PR and reports without failing.",
+   "parityCheck": "Workflow still runs on a doc-only PR and reports without failing. M6a: docs-check.yml and .markdownlint.json are unchanged on this branch; `gh run list --workflow docs-check.yml` shows pull_request and push runs concluding success, the latest on 2026-10-18.",
    "owner": "Package",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "ci-funding",
@@ -6803,12 +6803,12 @@
    "quirks": "None.",
    "portTarget": "Keep as is.",
    "risk": "low",
-   "parityCheck": "Sponsor button still shows on the repo.",
+   "parityCheck": "Sponsor button still shows on the repo. M6a: .github/FUNDING.yml is unchanged on this branch (git diff against origin/main is empty) and the GitHub GraphQL API returns fundingLinks [GITHUB estevanhernandez-stack-ed] for the repository.",
    "owner": "Package",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "tests-lib-fills",

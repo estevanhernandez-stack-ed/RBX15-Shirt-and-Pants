@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - "src/**"
+      - "packs/**"
+      - "assets/**"
       - "tools/**"
       - "tests/goldens/**"
       - "docs/port/**"
@@ -14,6 +16,8 @@ on:
   pull_request:
     paths:
       - "src/**"
+      - "packs/**"
+      - "assets/**"
       - "tools/**"
       - "tests/goldens/**"
       - "docs/port/**"

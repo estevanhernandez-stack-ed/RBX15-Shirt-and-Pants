@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap rescap">
+
+  <!-- v5 (native WPF / .NET 10) manifest. Rendered by scripts/build-msix.ps1; {{VERSION}} and {{EXECUTABLE}} are
+       the only placeholders. The 4.1 Electron template (Package.appxmanifest.template) stays for the legacy channel.
+
+       Identity is kept EXACTLY as 4.1 so the Store treats v5 as an update to the live package (same Package Family
+       Name 626LabsLLC.RBX15ClassicShirtandPantsMaker_wz1chhb2h2v4a). Do not re-case, do not edit:
+         Name                   = 626LabsLLC.RBX15ClassicShirtandPantsMaker
+         Publisher              = CN=177BCE59-0966-4975-9962-10E36652141F  (626 Labs LLC account CN, shared with Sanduhr)
+         PublisherDisplayName   = 626Labs LLC
+         Application Id         = RBXMaker  (changing it breaks pinned tiles and jump lists)
+       build-msix.ps1 asserts all four against this file's rendered output before packing. -->
+  <Identity
+    Name="626LabsLLC.RBX15ClassicShirtandPantsMaker"
+    Publisher="CN=177BCE59-0966-4975-9962-10E36652141F"
+    Version="{{VERSION}}"
+    ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>RBX15 Classic Shirt and Pants Maker</DisplayName>
+    <PublisherDisplayName>626Labs LLC</PublisherDisplayName>
+    <Logo>Images\StoreLogo.png</Logo>
+    <Description>Native Windows desktop editor for Roblox Classic (R15) shirt and pants templates. Layer-based compositing, non-destructive image adjustments, word art, drawing tools, built for the exact 585x559 template grid.</Description>
+  </Properties>
+
+  <Dependencies>
+    <!-- Kept at Windows 10 1809 (17763), the 4.1 floor, so the Store listing does not drop devices. .NET 10 itself
+         supports Windows 10 1607+ (1607 and 1809 are Enterprise/LTSC servicing only per the .NET 10 supported-OS
+         table), Windows 11 and Server 2012+. MaxVersionTested is the newest Windows SDK installed on the build box. -->
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-US" />
+  </Resources>
+
+  <Applications>
+    <Application Id="RBXMaker"
+                 Executable="{{EXECUTABLE}}"
+                 EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="RBX15 Classic Shirt and Pants Maker"
+        Description="Roblox Classic R15 shirt and pants template editor"
+        BackgroundColor="#0f1f31"
+        Square150x150Logo="Images\Square150x150Logo.png"
+        Square44x44Logo="Images\Square44x44Logo.png">
+        <uap:DefaultTile
+          Wide310x150Logo="Images\Wide310x150Logo.png"
+          Square310x310Logo="Images\Square310x310Logo.png"
+          Square71x71Logo="Images\Square71x71Logo.png"
+          ShortName="RBX15" />
+        <uap:SplashScreen Image="Images\SplashScreen.png" BackgroundColor="#0f1f31" />
+      </uap:VisualElements>
+      <Extensions>
+        <!-- .r15proj opens in this app (file association is declared here; the app's handling of a launch path is M5). -->
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap:FileTypeAssociation Name="r15proj">
+            <uap:DisplayName>RBX15 project</uap:DisplayName>
+            <uap:Logo>Images\Square44x44Logo.png</uap:Logo>
+            <uap:SupportedFileTypes>
+              <uap:FileType>.r15proj</uap:FileType>
+            </uap:SupportedFileTypes>
+          </uap:FileTypeAssociation>
+        </uap:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <!-- runFullTrust is the only capability. The WPF/.NET desktop app cannot run in the AppContainer; it reads and
+         writes only files the user chooses. No internetClient: v5 bundles its fonts and makes no network calls.
+         runFullTrust is a rescap capability and needs a justification on Store submission (reviewer letter). -->
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>

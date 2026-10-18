@@ -14,6 +14,7 @@
         xmlns:app="clr-namespace:RBX15.App"
         x:Name="Root"
         Title="{Binding Title}"
+        Icon="pack://application:,,,/RBX15.App;component/app.ico"
         Width="{x:Static app:ShellLayout.DefaultWidth}" Height="{x:Static app:ShellLayout.DefaultHeight}"
         MinWidth="{x:Static app:ShellLayout.MinWidth}" MinHeight="{x:Static app:ShellLayout.MinHeight}"
         Background="{StaticResource Bg0Brush}"

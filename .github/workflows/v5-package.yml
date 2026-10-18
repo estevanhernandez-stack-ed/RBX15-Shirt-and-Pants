@@ -1,0 +1,56 @@
+name: v5 Package
+
+# Builds the v5 MSIX and portable zip on every PR and main push that could change what ships, and uploads both as
+# workflow artifacts. scripts/build-msix.ps1 also asserts the Store identity and runs the bridge-exclusion scan
+# against the RBX15.App.dll inside the finished package, so a package carrying the test input bridge fails here.
+# Tests are not repeated here; dotnet-ci.yml owns build + test + ledger.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "packs/**"
+      - "assets/**"
+      - "scripts/**"
+      - "windows/msix/**"
+      - "!windows/msix/README.md"
+      - "global.json"
+      - ".github/workflows/v5-package.yml"
+  pull_request:
+    paths:
+      - "src/**"
+      - "packs/**"
+      - "assets/**"
+      - "scripts/**"
+      - "windows/msix/**"
+      - "!windows/msix/README.md"
+      - "global.json"
+      - ".github/workflows/v5-package.yml"
+
+jobs:
+  package:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Build MSIX and portable zip (unsigned; Store ingestion signs the MSIX)
+        shell: pwsh
+        run: ./scripts/build-msix.ps1
+
+      - name: List package outputs
+        shell: pwsh
+        run: Get-ChildItem dist -File | Select-Object Name, @{n='MB';e={[math]::Round($_.Length / 1MB, 2)}}
+
+      - name: Upload MSIX and portable zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: rbx15-v5-package
+          path: |
+            dist/RBX15-Maker-v*.msix
+            dist/RBX15-Maker-v*-portable-win-x64.zip
+          if-no-files-found: error

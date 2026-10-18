@@ -1,0 +1,67 @@
+name: v5 Release
+
+# v5.*.* tags build the native WPF app: tests first, then the MSIX and the portable zip, attached to a GitHub release
+# whose notes come from windows/RELEASE_NOTES_v5.md. The 4.x Electron tags (v4.*) are handled by windows-release.yml.
+# Cut the tag with /cut-release so the notes file holds real commit bullets before the tag is pushed.
+
+on:
+  push:
+    tags:
+      - "v5.*.*"
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write  # required to create the release and upload assets
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Read version from the tag
+        id: ver
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          if ($tag -notmatch '^v(5\.[0-9]+\.[0-9]+)$') { throw "Tag '$tag' is not v5.MINOR.PATCH (no pre-release suffixes)." }
+          "version=$($Matches[1])" >> $env:GITHUB_OUTPUT
+          "msix_version=$($Matches[1]).0" >> $env:GITHUB_OUTPUT
+
+      - name: Release notes are filled in
+        shell: pwsh
+        run: |
+          $notes = Get-Content windows/RELEASE_NOTES_v5.md -Raw
+          if ($notes -match 'RELEASE-NOTES-PLACEHOLDER') { throw "windows/RELEASE_NOTES_v5.md is still the placeholder. Fill it with real notes (/cut-release) and re-tag." }
+          if ($notes.Trim().Length -lt 80) { throw "windows/RELEASE_NOTES_v5.md is empty or link-only." }
+
+      - name: Ledger check, and no open rows (v5 ships only when no row is open)
+        shell: pwsh
+        run: |
+          python tools/ledger/ledger.py check
+          if ($LASTEXITCODE -ne 0) { throw "ledger check failed" }
+          $rows = (Get-Content docs/port/parity-ledger.json -Raw | ConvertFrom-Json).rows
+          $open = @($rows | Where-Object { $_.status -eq 'open' })
+          if ($open.Count -gt 0) { throw "$($open.Count) ledger row(s) still open: $(($open | Select-Object -First 10 | ForEach-Object { $_.id }) -join ', ')" }
+
+      - name: Build (warnings are errors)
+        run: dotnet build src/RBX15.slnx -c Release -warnaserror
+
+      - name: Test
+        run: dotnet test src/RBX15.slnx -c Release --no-build
+
+      - name: Build MSIX and portable zip (unsigned; version must equal the csproj Version)
+        shell: pwsh
+        run: ./scripts/build-msix.ps1 -Version "${{ steps.ver.outputs.msix_version }}"
+
+      - name: Create the release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/RBX15-Maker-v${{ steps.ver.outputs.msix_version }}.msix
+            dist/RBX15-Maker-v${{ steps.ver.outputs.msix_version }}-portable-win-x64.zip
+          body_path: windows/RELEASE_NOTES_v5.md
+          fail_on_unmatched_files: true
+          prerelease: false

@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**429 rows.** Status: done 263, open 166. Disposition: fix 207, keep 188, drop 26, new 8. Checks: ui-auto 125, unit 124, manual 67, golden 66, none-retired 25, doc 22.
+**429 rows.** Status: done 269, open 160. Disposition: fix 207, keep 188, drop 26, new 8. Checks: ui-auto 125, unit 124, manual 67, golden 66, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -516,20 +516,20 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 |---|---|---|---|---|---|
 | done | `packs-inventory-drips` | packs/drips contents (156 PNGs) | manual | keep | low |
 | done | `packs-inventory-wordart` | packs/word_art contents (25 PNGs) and packs/README.md | manual | keep | low |
-| open | `shell-window-no-icon` | No window or exe icon configured | manual | fix | low |
+| done | `shell-window-no-icon` | No window or exe icon configured | manual | fix | low |
 | done | `pack-contents` | Pack inventory that must ship byte-identical | unit | keep | low |
 | open | `msix-identity` | MSIX Identity must be preserved exactly (same Store identity) | manual | keep | high |
 | open | `msix-application-entry` | Application element: Id, Executable, EntryPoint, tiles | manual | keep | med |
 | open | `msix-capabilities` | Capabilities: only runFullTrust; justification text; network capability gap | doc | fix | med |
 | open | `msix-target-os` | TargetDeviceFamily min/max | manual | keep | low |
 | open | `msix-arch-self-contained` | x64 only; self-contained publish layout | manual | keep | med |
-| open | `msix-make-script` | make-msix.ps1 pipeline: stage, inject version, pack, optional self-sign | manual | fix | med |
-| open | `msix-images` | Generated tile images (Pillow) and their required set | manual | keep | low |
-| open | `msix-signing-policy` | Signing policy per channel | doc | fix | med |
+| done | `msix-make-script` | make-msix.ps1 pipeline: stage, inject version, pack, optional self-sign | manual | fix | med |
+| done | `msix-images` | Generated tile images (Pillow) and their required set | manual | keep | low |
+| done | `msix-signing-policy` | Signing policy per channel | doc | fix | med |
 | open | `ci-windows-ci` | windows-ci.yml: lint, unit tests, NSIS build, MSIX build, artifact existence | manual | fix | med |
 | open | `ci-windows-release` | windows-release.yml: tag-triggered release with NSIS + MSIX assets | manual | fix | med |
-| open | `ci-docs-check` | docs-check.yml: informational markdownlint | manual | keep | low |
-| open | `ci-funding` | FUNDING.yml sponsor link | manual | keep | low |
+| done | `ci-docs-check` | docs-check.yml: informational markdownlint | manual | keep | low |
+| done | `ci-funding` | FUNDING.yml sponsor link | manual | keep | low |
 | open | `parity-store-update-path` | Upgrade path from the live Electron package to the native build | manual | keep | med |
 
 ## Parity

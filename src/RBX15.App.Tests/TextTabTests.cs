@@ -112,6 +112,34 @@ public class TextTabTests
         Assert.Equal("Rubik Mono One", t.Fonts.Single(f => f.Label == "Rubik Mono").Family);
     });
 
+    [Fact] // P-1 (smoke): the closed box and the open list draw each font's label, not the record's ToString
+    public void The_font_select_draws_labels_in_the_closed_box_and_the_open_list() => StaThread.Run(() =>
+    {
+        var t = Make(new EditorSession());
+        var view = Load(t);
+        var box = Part<ComboBox>(view, "FontBox");
+
+        string ClosedText() => string.Concat(Descendants<TextBlock>(box).Where(b => b.Name != "PART_Popup").Select(b => b.Text));
+        Assert.Equal("Anton (Block)", ClosedText());
+
+        t.Font = "Poppins";
+        StaThread.Pump();
+        view.UpdateLayout();
+        Assert.Equal("Poppins (Bold)", ClosedText());
+
+        // The list lives in the popup, which has no window here: lay its child out by hand so the item containers realize.
+        var popup = (System.Windows.Controls.Primitives.Popup)box.Template.FindName("PART_Popup", box);
+        var list = (FrameworkElement)popup.Child;
+        list.Measure(new Size(400, 1000));
+        list.Arrange(new Rect(0, 0, 400, 1000));
+        list.UpdateLayout();
+        var shown = Enumerable.Range(0, box.Items.Count)
+            .Select(i => (ComboBoxItem)box.ItemContainerGenerator.ContainerFromIndex(i))
+            .Select(c => { c.ApplyTemplate(); c.UpdateLayout(); return string.Concat(Descendants<TextBlock>(c).Select(b => b.Text)); })
+            .ToList();
+        Assert.Equal(t.Fonts.Select(f => f.Label), shown);
+    });
+
     [Fact]
     public void A_font_that_is_not_one_of_the_15_is_refused() => StaThread.Run(() =>
     {

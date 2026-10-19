@@ -222,6 +222,52 @@ public static class LayerOps
         return Edit(doc, id, l => l with { Rotation = SelectionGeometry.NormalizeRotation(degrees) });
     }
 
+    /// <summary>
+    /// The arrow keys (editor.js:1810-1813; ledger keys-arrow-nudge): x and y move by <paramref name="dx"/> and
+    /// <paramref name="dy"/> template pixels, with no clamp to the template. A step that is not finite changes nothing.
+    /// </summary>
+    public static Document Nudge(Document doc, int id, double dx, double dy)
+    {
+        ArgumentNullException.ThrowIfNull(doc);
+        if (!double.IsFinite(dx) || !double.IsFinite(dy)) return doc;
+        return Edit(doc, id, l => l with { X = l.X + dx, Y = l.Y + dy });
+    }
+
+    /// <summary>
+    /// The bracket keys (editor.js:1814-1821; ledger keys-rotate-brackets, kbd-bracket-rotate-negative-drift): the rotation plus
+    /// <paramref name="degrees"/>, wrapped into [-180, 180) with a true modulo. 4.1's JS <c>%</c> kept the dividend's sign, so
+    /// stepping down from -180 gave -185 and drifted on; C#'s <c>%</c> does the same, so the wrap adds 360 back. A result already in
+    /// range is plain addition (no float noise from adding and taking away 180). A step that is not finite or zero changes nothing.
+    /// </summary>
+    public static Document RotateStep(Document doc, int id, double degrees)
+    {
+        ArgumentNullException.ThrowIfNull(doc);
+        if (!double.IsFinite(degrees) || degrees == 0) return doc;
+        return Edit(doc, id, l =>
+        {
+            double r = l.Rotation + degrees;
+            if (!(r >= -180 && r < 180))
+            {
+                r = (r + 180) % 360;
+                if (r < 0) r += 360;
+                r -= 180;
+            }
+            return l with { Rotation = r };
+        });
+    }
+
+    /// <summary>
+    /// The + and - keys (editor.js:1822-1825; ledger keys-scale-plus-minus): the scale times <paramref name="factor"/> under the one
+    /// clamp, anchored at the top-left as 4.1's (x and y kept), so the layer grows toward the bottom right. At the cap or the floor a
+    /// press changes nothing. A factor that is not finite changes nothing.
+    /// </summary>
+    public static Document ScaleStep(Document doc, int id, double factor)
+    {
+        ArgumentNullException.ThrowIfNull(doc);
+        if (!double.IsFinite(factor)) return doc;
+        return Edit(doc, id, l => l with { Scale = SelectionGeometry.ClampScale(l.Scale * factor) });
+    }
+
     /// <summary>Flip H and Flip V (editor.js:843-844): toggles <c>FlipH</c> when <paramref name="horizontal"/>, else <c>FlipV</c>.</summary>
     public static Document Flip(Document doc, int id, bool horizontal)
     {

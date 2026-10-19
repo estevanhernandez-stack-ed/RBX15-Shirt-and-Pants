@@ -222,19 +222,17 @@ public class CanvasLayerAutomationTests
             var shown = (TemplateCanvasHost)((CanvasView)window.Content).FindName("Host");
             var shownPeer = (TemplateCanvasHostAutomationPeer)UIElementAutomationPeer.CreatePeerForElement(shown);
             var layer = Child(shownPeer, 1);
-            var origin = shown.PointToScreen(new Point(0, 0));
-            double scale = shown.DeviceScale;
-            AssertRect(new Rect(origin.X + 10 * scale, origin.Y + 20 * scale, 200 * scale, 100 * scale), layer.GetBoundingRectangle());
+            // Expected edges are the exact device position of the template box's corners through the real transform;
+            // PointToScreen snaps each corner to a whole device pixel, so each edge is within half a pixel of the exact one.
+            AssertScreenBox(shown, 1, new Rect(10, 20, 200, 100), layer.GetBoundingRectangle());
             Assert.False(layer.IsOffscreen());
             vm.Zoom = 2;
             StaThread.Pump();
-            origin = shown.PointToScreen(new Point(0, 0));
-            AssertRect(new Rect(origin.X + 20 * scale, origin.Y + 40 * scale, 400 * scale, 200 * scale), layer.GetBoundingRectangle());
+            AssertScreenBox(shown, 2, new Rect(10, 20, 200, 100), layer.GetBoundingRectangle());
             vm.Zoom = 1;
             session.Apply(d => LayerOps.SetRotation(d, 1, 90));   // about the center (110, 70): 100 wide, 200 tall
             StaThread.Pump();
-            origin = shown.PointToScreen(new Point(0, 0));
-            AssertRect(new Rect(origin.X + 60 * scale, origin.Y - 30 * scale, 100 * scale, 200 * scale), layer.GetBoundingRectangle());
+            AssertScreenBox(shown, 1, new Rect(60, -30, 100, 200), layer.GetBoundingRectangle());
         }
         finally
         {
@@ -284,11 +282,18 @@ public class CanvasLayerAutomationTests
         }
     }
 
-    static void AssertRect(Rect expected, Rect actual)
+    /// <summary>
+    /// The screen box of a template-space rectangle at a zoom: each edge is the exact device position (DeviceRounding.ToDevice,
+    /// through the host's real transform) and the peer's edge must be within half a device pixel of it, because
+    /// PointToScreen rounds each corner to a whole pixel (so 12.5 comes back as 13 at 125%). Nothing looser is allowed.
+    /// </summary>
+    static void AssertScreenBox(TemplateCanvasHost host, double zoom, Rect template, Rect actual)
     {
-        Assert.Equal(expected.X, actual.X, 6);
-        Assert.Equal(expected.Y, actual.Y, 6);
-        Assert.Equal(expected.Width, actual.Width, 6);
-        Assert.Equal(expected.Height, actual.Height, 6);
+        var topLeft = DeviceRounding.ToDevice(host, CanvasCoordinates.ToFrame(template.TopLeft, zoom));
+        var bottomRight = DeviceRounding.ToDevice(host, CanvasCoordinates.ToFrame(template.BottomRight, zoom));
+        Assert.InRange(actual.Left - topLeft.X, -DeviceRounding.HalfDevicePixel, DeviceRounding.HalfDevicePixel);
+        Assert.InRange(actual.Top - topLeft.Y, -DeviceRounding.HalfDevicePixel, DeviceRounding.HalfDevicePixel);
+        Assert.InRange(actual.Right - bottomRight.X, -DeviceRounding.HalfDevicePixel, DeviceRounding.HalfDevicePixel);
+        Assert.InRange(actual.Bottom - bottomRight.Y, -DeviceRounding.HalfDevicePixel, DeviceRounding.HalfDevicePixel);
     }
 }

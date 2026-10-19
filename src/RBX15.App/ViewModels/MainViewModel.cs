@@ -28,6 +28,18 @@ public sealed partial class MainViewModel : ObservableObject
 
     public EditorSession Session { get; }
 
+    RibbonTab _activeTab = RibbonTab.Home;
+
+    /// <summary>
+    /// The ribbon tab showing (ledger ribbon-tab-switch). Window state only: it starts on Home, is not in the document,
+    /// is not an undo step and is not saved, and each window has its own.
+    /// </summary>
+    public RibbonTab ActiveTab
+    {
+        get => _activeTab;
+        set => SetProperty(ref _activeTab, value);
+    }
+
     /// <summary>
     /// The window title (interfaces R3): 4.1's product name while the document is untitled and clean (main.js:8,
     /// editor.html:6; ledger shell-window-title, keep), otherwise the Windows convention
@@ -75,6 +87,15 @@ public sealed partial class MainViewModel : ObservableObject
 
     /// <summary>The Home tab (Task 3).</summary>
     public required HomeViewModel Home { get; init; }
+
+    /// <summary>The Layout tab (M4b item 5: Presets; item 6 adds Background and BG Settings).</summary>
+    public required LayoutViewModel Layout { get; init; }
+
+    /// <summary>The Details tab (M4b item 7): stroke settings and the 16 detail buttons.</summary>
+    public required DetailsViewModel Details { get; init; }
+
+    /// <summary>The Text tab (M4b item 9): the Word Art controls, the live preview and Add to canvas.</summary>
+    public required TextViewModel Text { get; init; }
 
     /// <summary>The drop zone and layers panel (Task 4).</summary>
     public required LayersViewModel Layers { get; init; }

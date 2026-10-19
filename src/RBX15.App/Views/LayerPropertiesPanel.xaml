@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!-- "Selected layer" (editor.html:320-323; updateUI's controls, editor.js:746-912; ledger layers-selected-panel).
          DataContext: LayerPropertiesViewModel. Built once and bound, never rebuilt (props-panel-rebuild-resets).
-         "Center on front torso" (editor.js:776-778, props-center-front) is M4's Layout tab and is absent.
+         "Center on front torso" (editor.js:776-778, props-center-front) is the full-width button under Up and Down (M4b item 5).
          The sliders keep WPF's own chrome, as the Fill Style sliders do: 4.1's accent-color (styles.css:333,
          editor.js:795-799) is part of the M3b look sign-off. -->
     <UserControl.Resources>
@@ -142,6 +142,10 @@
                 <Button x:Name="DownButton" Grid.Column="2" Style="{DynamicResource SecondaryButtonSm}" Command="{Binding MoveDownCommand}"
                         Content="Down" ToolTip="Move layer down." AutomationProperties.Name="Move layer down" />
             </Grid>
+
+            <!-- Center on front torso (editor.js:776-778): margin-top 6, btn-sm btn-secondary, width 100%. The label stays in Pants. -->
+            <Button x:Name="CenterFrontButton" Margin="0,6,0,0" Style="{DynamicResource SecondaryButtonSm}" Command="{Binding CenterFrontCommand}"
+                    Content="Center on front torso" AutomationProperties.Name="Center on front torso" />
 
             <!-- Image adjustments (editor.js:779-803, :861-872): margin-top 8; the header row is padding 4px 0,
                  "Image adjustments" mono 11px 600 cyan uppercase with a cyan 10px arrow, ▶ closed and ▼ open.

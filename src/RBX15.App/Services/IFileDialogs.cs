@@ -9,6 +9,13 @@ public interface IFileDialogs
     /// </summary>
     IReadOnlyList<string> OpenImages();
 
+    /// <summary>
+    /// Single-select image picker (the Layout tab's Background button, editor.html:135-137, #bgFileInput: one file, same
+    /// filter as <see cref="OpenImages"/>). Null on cancel. A native dialog returns on every pick, so choosing the same
+    /// file again acts again (file-input-same-file-reselect). The default asks <see cref="OpenImages"/> and takes the first.
+    /// </summary>
+    string? OpenImage() => OpenImages() is { Count: > 0 } picked ? picked[0] : null;
+
     /// <summary>Save dialog for the exported PNG, starting at <paramref name="suggestedFileName"/>. Null on cancel.</summary>
     string? SavePng(string suggestedFileName);
 

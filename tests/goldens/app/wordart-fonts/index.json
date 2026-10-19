@@ -1,0 +1,70 @@
+{
+  "tool": "tools/parity-ref/wordart-ref.js",
+  "scenesFile": "tools/parity-ref/wordart-fonts-scenes.json",
+  "electron": "41.1.0",
+  "editorJsBlob": "2790c41e418cd5bfea82cf1ae4d71626a7b54e61",
+  "editorHtmlBlob": "401a5d5f33c4accbb452cb080c9c544a0f79a6ce",
+  "fontsManifestSha256": "ba0dafad93f0830be40f41301e1169c94730ccb8814d7dd0e9f21040f8813c9a",
+  "scenes": [
+    {
+      "name": "wordart-font-anton",
+      "sha256": "87905056d516fc504bf1687b87172710d1181510e353cdcec6187b55c93eee02"
+    },
+    {
+      "name": "wordart-font-bangers",
+      "sha256": "713a9f647f7add4d3663dccf5bba09b568059f920488dc5b1d88f7e7b0c7280b"
+    },
+    {
+      "name": "wordart-font-bebas-neue",
+      "sha256": "814c9cadbb7ded2b062faeda46e231965db2bb1f0bf837e36522b06b090c7997"
+    },
+    {
+      "name": "wordart-font-bungee-shade",
+      "sha256": "5cbd401306a6989ba29843ed4bbe659ae2dedc178f7038cc9dd1dd23c428b6bf"
+    },
+    {
+      "name": "wordart-font-creepster",
+      "sha256": "f0ea336a9e4a386443101868dbbca3d2e5376ef2ea33f4e362f76ecf892e61ad"
+    },
+    {
+      "name": "wordart-font-dancing-script",
+      "sha256": "4ebb5ed34e037c90c829a5782c12c60863d4554b44342ba65fa5f37c82f34e08"
+    },
+    {
+      "name": "wordart-font-great-vibes",
+      "sha256": "04b08afd418a22901cef3bdd87fccf3a87861455173f1e1a4a2542488f23a0ff"
+    },
+    {
+      "name": "wordart-font-lato",
+      "sha256": "21e730418b4cfd018712fbddc3751ca00ab6ef69f5aa362757561ebfdb90b6a4"
+    },
+    {
+      "name": "wordart-font-orbitron",
+      "sha256": "a0849f256369d75fff75c6ecf86b35fd4379191023dfe906f6ad13f28ad08c9a"
+    },
+    {
+      "name": "wordart-font-pacifico",
+      "sha256": "0981319a98cb05625dcb52651427d8f2af3187820efc2306b9c5fefd407b88d6"
+    },
+    {
+      "name": "wordart-font-permanent-marker",
+      "sha256": "3bd106d3a1660245b880f876f0e7d527f49b5ea8f9e73b533e98a35e98f26d64"
+    },
+    {
+      "name": "wordart-font-poppins",
+      "sha256": "e4c1cef3d27758e1522d8b59c5ed1931ec063b37bc08e3ae21e981e51ca19ee1"
+    },
+    {
+      "name": "wordart-font-press-start-2p",
+      "sha256": "6e0c30755aad3bfd3cc41438481f9c0baa8ad8673e1eca739051e6f09c490b04"
+    },
+    {
+      "name": "wordart-font-righteous",
+      "sha256": "ee414418580427a6b32e7cd9f8787af52274857fc8d70dd6869a4c2e99ee1789"
+    },
+    {
+      "name": "wordart-font-rubik-mono-one",
+      "sha256": "57f1f18816af78d8afbf2e29e6a9148ed70c1fd84f9f964acd6ad1050d77e809"
+    }
+  ]
+}

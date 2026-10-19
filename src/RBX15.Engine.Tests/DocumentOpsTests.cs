@@ -211,4 +211,62 @@ public class DocumentOpsTests
 
     [Fact]
     public void RegionFitFraction_is_4_1s_constant() => Assert.Equal(0.85, DocumentOps.RegionFitFraction);
+
+    // ---- background (bg-swatches, bg-color-pick-clears-image, bg-color-opacity, bg-image) ----
+
+    [Fact] // editor.js:922, :930: the color is set and the image is dropped; opacity is not touched
+    public void SetBackgroundColor_sets_the_color_clears_the_image_and_leaves_opacity()
+    {
+        var doc = new Document { BgColor = "#192e44", BgOpacity = 0.4, BgImage = Px.Solid(4, 4, SKColors.Red) };
+        var next = DocumentOps.SetBackgroundColor(doc, "#B71C1C");
+
+        Assert.Equal("#b71c1c", next.BgColor);
+        Assert.Null(next.BgImage);
+        Assert.Equal(0.4, next.BgOpacity);
+        Assert.NotNull(doc.BgImage);   // the input is untouched
+    }
+
+    [Fact] // no empty undo steps: the same color with no image is the same instance
+    public void SetBackgroundColor_to_the_same_color_changes_nothing_but_still_drops_an_image()
+    {
+        var doc = new Document { BgColor = "#f22f89" };
+        Assert.Same(doc, DocumentOps.SetBackgroundColor(doc, "#f22f89"));
+        Assert.Same(doc, DocumentOps.SetBackgroundColor(doc, "#F22F89"));
+
+        var withImage = doc with { BgImage = Px.Solid(2, 2, SKColors.Blue) };
+        Assert.Null(DocumentOps.SetBackgroundColor(withImage, "#f22f89").BgImage);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("#fff")]
+    [InlineData("red")]
+    [InlineData("#12345g")]
+    [InlineData("f22f89")]
+    public void SetBackgroundColor_refuses_what_is_not_rrggbb(string hex) =>
+        Assert.Throws<ArgumentException>(() => DocumentOps.SetBackgroundColor(new Document(), hex));
+
+    [Fact] // editor.js:942: the image is set, the color stays
+    public void SetBackgroundImage_sets_the_image_and_keeps_the_color()
+    {
+        var doc = new Document { BgColor = "#0f1f31", BgOpacity = 0.7 };
+        var image = Px.Solid(8, 8, SKColors.Green);
+        var next = DocumentOps.SetBackgroundImage(doc, image);
+
+        Assert.Same(image, next.BgImage);
+        Assert.Equal(("#0f1f31", 0.7), (next.BgColor, next.BgOpacity));
+        Assert.Same(next, DocumentOps.SetBackgroundImage(next, image));
+        Assert.NotSame(next, DocumentOps.SetBackgroundImage(next, Px.Solid(8, 8, SKColors.Green)));   // the same file twice is a new image: it acts twice
+    }
+
+    [Fact] // editor.js:932: opacity is value / 100, clamped to 0..1
+    public void SetBackgroundOpacity_sets_clamps_and_changes_nothing_when_equal()
+    {
+        var doc = new Document { BgOpacity = 1 };
+        Assert.Equal(0.4, DocumentOps.SetBackgroundOpacity(doc, 0.4).BgOpacity);
+        Assert.Equal(1, DocumentOps.SetBackgroundOpacity(doc with { BgOpacity = 0.2 }, 3).BgOpacity);
+        Assert.Equal(0, DocumentOps.SetBackgroundOpacity(doc, -1).BgOpacity);
+        Assert.Same(doc, DocumentOps.SetBackgroundOpacity(doc, 1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => DocumentOps.SetBackgroundOpacity(doc, double.NaN));
+    }
 }

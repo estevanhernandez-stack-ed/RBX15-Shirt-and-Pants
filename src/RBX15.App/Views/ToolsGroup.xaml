@@ -2,11 +2,12 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:RBX15.App.Controls">
-    <!-- The Home tab's Tools group (editor.html:41-52; ledger home-tool-buttons). DataContext: ToolsViewModel.
-         Six .btn.btn-sm.btn-secondary buttons in one row, gap 4 (.ribbon-group-items, styles.css:208). The active one
-         is .btn-active (styles.css:408-412): cyan border, rgba(23,212,250,.1) background, cyan text. Each is a
+    <!-- The Home tab's Tools group (editor.html:41-52; ledger home-tool-buttons, home-keys-toggle). DataContext: HomeViewModel (the
+         Tools buttons and the Keys toggle). Six .btn.btn-sm.btn-secondary buttons in one row, gap 4 (.ribbon-group-items, styles.css:208).
+         The active one is .btn-active (styles.css:408-412): cyan border, rgba(23,212,250,.1) background, cyan text. Each is a
          ToolToggleButton whose IsChecked follows IsActive one way, so screen readers hear the active tool as a toggle
-         that is on (final fix wave 14; Narrator does not reliably announce ItemStatus). 4.1's "Keys: ON" button (editor.html:49) is M4's keyboard and stays absent. -->
+         that is on (final fix wave 14; Narrator does not reliably announce ItemStatus). The Keys toggle (editor.html:49, inline
+         #2d4a2d on #7fff7f at 10px, OFF #4a2d2d on #ff7f7f) is the last button; it is a plain Button, its label states its state. -->
     <UserControl.Resources>
         <Style x:Key="ToolButton" TargetType="controls:ToolToggleButton" BasedOn="{StaticResource SecondaryButtonSm}">
             <Setter Property="Content" Value="{Binding Label}" />
@@ -24,24 +25,59 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+
+        <!-- #btnToggleKeys (editor.html:49): .btn.btn-sm with no border, the inline colors and font-size 10px, radius r-sm. -->
+        <Style x:Key="KeysButton" TargetType="Button">
+            <Setter Property="Content" Value="{Binding Keys.Label}" />
+            <Setter Property="ToolTip" Value="{Binding Keys.ToolTip}" />
+            <Setter Property="Command" Value="{Binding Keys.ToggleCommand}" />
+            <Setter Property="FontFamily" Value="{DynamicResource FontBody}" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="FocusVisualStyle" Value="{DynamicResource FocusRing}" />
+            <Setter Property="Background" Value="#2D4A2D" />
+            <Setter Property="Foreground" Value="#7FFF7F" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="{DynamicResource RSmRadius}"
+                                Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="False" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Keys.Enabled}" Value="False">
+                    <Setter Property="Background" Value="#4A2D2D" />
+                    <Setter Property="Foreground" Value="#FF7F7F" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </UserControl.Resources>
 
     <Border Style="{DynamicResource RibbonGroup}">
         <DockPanel>
             <TextBlock Style="{DynamicResource RibbonGroupLabel}" Text="TOOLS" />
-            <ItemsControl x:Name="Buttons" ItemsSource="{Binding Buttons}" VerticalAlignment="Center" Focusable="False"
-                          AutomationProperties.Name="Tools">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <controls:ToolToggleButton Style="{StaticResource ToolButton}" />
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <ItemsControl x:Name="Buttons" ItemsSource="{Binding Tools.Buttons}" VerticalAlignment="Center" Focusable="False"
+                              AutomationProperties.Name="Tools">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <controls:ToolToggleButton Style="{StaticResource ToolButton}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Button x:Name="KeysButton" Style="{StaticResource KeysButton}" />
+            </StackPanel>
         </DockPanel>
     </Border>
 </UserControl>

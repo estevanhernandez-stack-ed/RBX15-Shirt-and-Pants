@@ -10,6 +10,7 @@ using RBX15.App.Services;
 using RBX15.App.Tests.Fakes;
 using RBX15.App.ViewModels;
 using RBX15.App.Views;
+using RBX15.Engine;
 using static RBX15.App.Tests.HomeTestKit;
 
 namespace RBX15.App.Tests;
@@ -115,7 +116,102 @@ public class HomeRibbonViewTests
         Assert.Equal(5, list.SelectedIndex);
     });
 
-    [Fact] // the mode button, settings and edit bindings; M3b shows Tools and Brush; Placement and Keys stay hidden (M4b); Save work and Open show (M4a)
+    [Fact] // fillstyle-type-buttons parityCheck: click each of the seven types; the type follows, exactly one is active, painted regions of the old key adopt it
+    public void Each_fill_type_button_sets_the_type_and_is_the_only_active_one() => StaThread.Run(() =>
+    {
+        var session = new EditorSession();
+        var home = Home(session);
+        var view = Load(home);
+        var list = Descendants<ListBox>(view).Single(l => AutomationProperties.GetName(l) == "Fill type");
+        Tile(home.Regions, "torso_front").PaintCommand.Execute(null);
+        string[] types = ["solid", "linear", "radial", "stripes", "checker", "dots", "camo"];
+        Assert.Equal(types, home.FillStyle.Types.Select(t => t.Type));
+        Assert.Equal(7, list.Items.Count);
+
+        foreach (int i in new[] { 1, 2, 3, 4, 5, 6, 0 })
+        {
+            var item = (ListBoxItem)list.ItemContainerGenerator.ContainerFromIndex(i);
+            item.IsSelected = true;                                           // the click's effect on a single-selection list
+            StaThread.Pump();
+
+            Assert.Equal(types[i], home.FillStyle.Type);
+            Assert.Equal(types[i], home.FillStyle.Current.Type);
+            Assert.Single(list.SelectedItems);                                // exclusive: one active button
+            Assert.Equal(new[] { i }, Enumerable.Range(0, 7).Where(k => ((ListBoxItem)list.ItemContainerGenerator.ContainerFromIndex(k)).IsSelected));
+            Assert.Equal(types[i], RBX15.Engine.DocumentOps.RegionFill(session.Document, "torso_front")!.Type);   // the painted region adopts the new type
+        }
+    });
+
+    [Fact] // fillstyle-angle-scale parityCheck: bounds and defaults through the sliders' automation names
+    public void The_angle_and_scale_sliders_have_4_1s_bounds_defaults_and_whole_steps() => StaThread.Run(() =>
+    {
+        var home = Home(new EditorSession());
+        var view = Load(home);
+        var angle = Descendants<Slider>(view).Single(l => AutomationProperties.GetName(l) == "Angle");
+        var scale = Descendants<Slider>(view).Single(l => AutomationProperties.GetName(l) == "Pattern scale");
+
+        Assert.Equal((0.0, 360.0, 45.0, 44.0), (angle.Minimum, angle.Maximum, angle.Value, angle.Width));
+        Assert.Equal((4.0, 48.0, 16.0, 44.0), (scale.Minimum, scale.Maximum, scale.Value, scale.Width));
+        Assert.Equal(("Angle", "Pattern scale"), (angle.ToolTip, scale.ToolTip));
+        Assert.All(new[] { angle, scale }, sl => Assert.True(sl.IsSnapToTickEnabled && sl.TickFrequency == 1));
+
+        angle.Value = 360;
+        scale.Value = 4;
+        Assert.Equal((360.0, 4.0), (home.FillStyle.Angle, home.FillStyle.Scale));
+        angle.Value = 400;                                                    // past the range: the slider clamps
+        scale.Value = 99;
+        Assert.Equal((360.0, 48.0), (home.FillStyle.Angle, home.FillStyle.Scale));
+    });
+
+    [Fact] // home-mode-toggle parityCheck: the click flips the label SHIRT <-> PANTS and the gradient direction cyan->magenta <-> magenta->cyan
+    public void The_mode_button_flips_its_label_and_gradient_direction() => StaThread.Run(() =>
+    {
+        var session = new EditorSession();
+        var view = Load(Home(session));
+        var button = (Button)view.FindName("ModeToggle");
+        (string, System.Windows.Media.Color, System.Windows.Media.Color) Look()
+        {
+            var b = (LinearGradientBrush)button.Background;
+            return (Convert.ToString(button.Content)!, b.GradientStops[0].Color, b.GradientStops[^1].Color);
+        }
+        var cyan = System.Windows.Media.Color.FromRgb(0x17, 0xD4, 0xFA);
+        var magenta = System.Windows.Media.Color.FromRgb(0xF2, 0x2F, 0x89);
+        Assert.Equal(("SHIRT", cyan, magenta), Look());
+
+        ((System.Windows.Automation.Provider.IInvokeProvider)new System.Windows.Automation.Peers.ButtonAutomationPeer(button)
+            .GetPattern(System.Windows.Automation.Peers.PatternInterface.Invoke)).Invoke();
+        StaThread.Pump();
+        Assert.Equal(TemplateMode.Pants, session.Document.Mode);
+        Assert.Equal(("PANTS", magenta, cyan), Look());
+
+        Assert.True(session.Undo());                                          // Undo after switching returns to the prior mode
+        StaThread.Pump();
+        Assert.Equal(("SHIRT", cyan, magenta), Look());
+    });
+
+    [Fact] // home-mode-toggle's region-label half, on the ribbon: the visible limb headings follow the mode (F1: the grid stays on Home)
+    public void The_limb_headings_on_the_ribbon_follow_the_mode() => StaThread.Run(() =>
+    {
+        var session = new EditorSession();
+        var home = Home(session);
+        var view = Load(home);
+        string[] Headings() => Descendants<TextBlock>(view)
+            .Where(t => t.Text is "Right Arm" or "Left Arm" or "Right Leg" or "Left Leg")
+            .Select(t => t.Text).Order().ToArray();
+
+        Assert.Equal(new[] { "Left Arm", "Right Arm" }, Headings());
+        new ModeGroupViewModel(session).ToggleCommand.Execute(null);
+        StaThread.Pump();
+        Assert.Equal(new[] { "Left Leg", "Right Leg" }, Headings());
+        Assert.Equal("Waist Front", Tiles(view).Select(AutomationProperties.GetName).Single(n => n.StartsWith("Waist F")));
+        Assert.DoesNotContain(Tiles(view).Select(AutomationProperties.GetName), n => n.StartsWith("Torso") || n.Contains("Arm"));
+
+        Assert.True(session.Undo());
+        StaThread.Pump();
+        Assert.Equal(new[] { "Left Arm", "Right Arm" }, Headings());
+    });
+
+    [Fact] // the mode button, settings and edit bindings; M3b shows Tools and Brush; Placement is collapsed until a layer is selected (M4b item 5) and Keys: ON shows in the Tools group (M4b item 10); Save work and Open show (M4a)
     public void Mode_settings_and_edit_bind_and_hidden_groups_are_absent() => StaThread.Run(() =>
     {
         var session = new EditorSession();
@@ -142,7 +238,9 @@ public class HomeRibbonViewTests
         Assert.Equal(new[] { "MODE", "TOOLS", "BRUSH", "EDIT", "SETTINGS", "FILL STYLE", "CLICK REGIONS TO FILL" },
             texts.Where(t => t is "MODE" or "TOOLS" or "BRUSH" or "PLACEMENT" or "EDIT" or "SETTINGS" or "FILL STYLE" or "CLICK REGIONS TO FILL"));
         Assert.Contains(buttons, b => b.Content is "Draw");
-        Assert.DoesNotContain(buttons, b => b.Content is "Fit Front" or "Keys: ON");
+        Assert.Equal(Visibility.Collapsed, ((UserControl)view.FindName("Placement")).Visibility);   // nothing selected
+        Assert.DoesNotContain(buttons, b => b.Content is "Fit Front");
+        Assert.Contains(buttons, b => b.Content is "Keys: ON");
         Assert.Contains(buttons, b => b.Content is "Save work");
         Assert.Contains(buttons, b => b.Content is "Open");
         Assert.Contains("Set a style, then click a region to paint it. Right-click clears.", texts);
@@ -253,7 +351,7 @@ public class HomeRibbonViewTests
         var view = Load(home);
         var tools = Descendants<ToolToggleButton>(view).ToArray();
         Assert.Equal(new[] { "Select", "Draw", "Line", "Rect", "Ellipse", "Eraser" }, tools.Select(b => (string)b.Content));
-        Assert.Equal(new[] { "Select/Move", "Freehand draw", "Line tool", "Rectangle", "Ellipse", "Eraser" }, tools.Select(b => (string)b.ToolTip)); // R14
+        Assert.Equal(new[] { "Select/Move (V)", "Freehand draw (B)", "Line tool (L)", "Rectangle (U)", "Ellipse (O)", "Eraser (E)" }, tools.Select(b => (string)b.ToolTip)); // home-tool-buttons: the letters are back with the keyboard (M4b item 10)
         Assert.All(tools, b => Assert.True(b.Focusable && b.IsTabStop));
         ToggleState[] States() => tools.Select(b => Toggle(b).ToggleState).ToArray();
         Assert.Equal(new[] { ToggleState.On, ToggleState.Off, ToggleState.Off, ToggleState.Off, ToggleState.Off, ToggleState.Off }, States());
@@ -322,13 +420,13 @@ public class HomeRibbonViewTests
         Assert.True(home.Brush.Fill);
     });
 
-    [Fact] // fix round 1: hide-until-it-works, no shortcut text before M4 ships the keyboard
-    public void Undo_and_redo_tooltips_name_no_shortcut_yet() => StaThread.Run(() =>
+    [Fact] // undo-buttons-shortcuts: the tooltips name the chords now that the keyboard works (editor.html:79-80)
+    public void Undo_and_redo_tooltips_name_their_chords() => StaThread.Run(() =>
     {
         var view = Load(Home(new EditorSession()));
         var buttons = Descendants<Button>(view);
-        Assert.Equal("Undo", buttons.Single(b => (string)b.Content == "Undo").ToolTip);
-        Assert.Equal("Redo", buttons.Single(b => (string)b.Content == "Redo").ToolTip);
+        Assert.Equal("Undo (Ctrl+Z)", buttons.Single(b => (string)b.Content == "Undo").ToolTip);
+        Assert.Equal("Redo (Ctrl+Y / Ctrl+Shift+Z)", buttons.Single(b => (string)b.Content == "Redo").ToolTip);
     });
     [Fact] // regions-fill-all: the All tile sits in the cross, named, focusable, and fills every region; right-click clears
     public void The_all_tile_fills_and_right_click_clears_every_region() => StaThread.Run(() =>

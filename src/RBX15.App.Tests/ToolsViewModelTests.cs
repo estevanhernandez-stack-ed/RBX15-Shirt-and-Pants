@@ -6,14 +6,14 @@ namespace RBX15.App.Tests;
 /// <summary>The Tools group's model: setTool and toggleTool (editor.js:464-490; tools-set-tool, tools-toggle-off, home-tool-buttons).</summary>
 public class ToolsViewModelTests
 {
-    [Fact] // editor.html:43-48 order and labels; R14: titles without the shortcut text; editor.js:479 starts on Select
-    public void Starts_on_select_with_six_buttons_in_4_1_order_and_no_shortcut_text()
+    [Fact] // editor.html:43-48 order and labels; titles carry the shortcut letter (M4b item 10); editor.js:479 starts on Select
+    public void Starts_on_select_with_six_buttons_in_4_1_order_with_their_shortcut_letters()
     {
         var vm = new ToolsViewModel();
         Assert.Equal(Tool.Select, vm.Current);
         Assert.Equal(new[] { Tool.Select, Tool.Pen, Tool.Line, Tool.Rect, Tool.Ellipse, Tool.Eraser }, vm.Buttons.Select(b => b.Tool));
         Assert.Equal(new[] { "Select", "Draw", "Line", "Rect", "Ellipse", "Eraser" }, vm.Buttons.Select(b => b.Label));
-        Assert.Equal(new[] { "Select/Move", "Freehand draw", "Line tool", "Rectangle", "Ellipse", "Eraser" }, vm.Buttons.Select(b => b.ToolTip));
+        Assert.Equal(new[] { "Select/Move (V)", "Freehand draw (B)", "Line tool (L)", "Rectangle (U)", "Ellipse (O)", "Eraser (E)" }, vm.Buttons.Select(b => b.ToolTip));
         Assert.Equal(new[] { true, false, false, false, false, false }, vm.Buttons.Select(b => b.IsActive));
     }
 

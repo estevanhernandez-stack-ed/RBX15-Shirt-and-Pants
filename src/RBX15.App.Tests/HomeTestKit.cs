@@ -29,7 +29,9 @@ internal static class HomeTestKit
         var status = new FakeStatus();
         return new(session, picker ?? new FakeColorPicker())
         {
+            Placement = new PlacementViewModel(session, () => new Random(1)),
             Tools = new ToolsViewModel(),
+            Keys = new KeysViewModel(),
             Brush = new BrushViewModel(picker ?? new FakeColorPicker()),
             File = FileGroup(session, new FakeFileDialogs(), new FakeDialogService(), status),
         };

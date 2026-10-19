@@ -107,13 +107,13 @@ public sealed class AssetThumbnailLoader : IDisposable
         return ToBitmapSource(image);
     }
 
-    /// <summary>A frozen Pbgra32 copy of <paramref name="image"/> at 96 DPI. Safe on any thread.</summary>
-    internal static BitmapSource ToBitmapSource(SKImage image)
+    /// <summary>A frozen Pbgra32 copy of <paramref name="image"/> at <paramref name="dpi"/> (96 by default). Safe on any thread.</summary>
+    internal static BitmapSource ToBitmapSource(SKImage image, double dpi = 96)
     {
         var info = new SKImageInfo(image.Width, image.Height, SKColorType.Bgra8888, SKAlphaType.Premul);
         using var bmp = new SKBitmap(info);
         if (!image.ReadPixels(info, bmp.GetPixels(), bmp.RowBytes, 0, 0)) throw new InvalidOperationException("cannot read thumbnail pixels");
-        var bitmap = BitmapSource.Create(info.Width, info.Height, 96, 96, PixelFormats.Pbgra32, null, bmp.GetPixels(), bmp.RowBytes * info.Height, bmp.RowBytes);
+        var bitmap = BitmapSource.Create(info.Width, info.Height, dpi, dpi, PixelFormats.Pbgra32, null, bmp.GetPixels(), bmp.RowBytes * info.Height, bmp.RowBytes);
         bitmap.Freeze();
         return bitmap;
     }

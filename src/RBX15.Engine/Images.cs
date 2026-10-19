@@ -23,7 +23,8 @@ public static class Images
         using var bmp = new SKBitmap(info);
         if (!premul.ReadPixels(info, bmp.GetPixels(), bmp.RowBytes, 0, 0))
             throw new InvalidOperationException("cannot read layer pixels");
-        return SKImage.FromPixelCopy(bmp.PeekPixels());
+        using var pixels = bmp.PeekPixels();
+        return SKImage.FromPixelCopy(pixels);
     }
 
     /// <summary>Largest encoded file or payload <see cref="Decode"/> accepts: 100 MiB. Checked before any copy or parse.</summary>

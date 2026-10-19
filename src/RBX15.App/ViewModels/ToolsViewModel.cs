@@ -17,13 +17,13 @@ public sealed partial class ToolsViewModel : ObservableObject
         ToggleCommand = new RelayCommand<Tool>(Toggle);
         Buttons =
         [
-            // editor.html:43-48: label and title, minus the shortcut text until M4 ships the keyboard (R14)
-            new(Tool.Select, "Select", "Select/Move", ToggleCommand),
-            new(Tool.Pen, "Draw", "Freehand draw", ToggleCommand),
-            new(Tool.Line, "Line", "Line tool", ToggleCommand),
-            new(Tool.Rect, "Rect", "Rectangle", ToggleCommand),
-            new(Tool.Ellipse, "Ellipse", "Ellipse", ToggleCommand),
-            new(Tool.Eraser, "Eraser", "Eraser", ToggleCommand),
+            // editor.html:43-48: label and title, with the shortcut letter the keyboard router (M4b item 10) answers to
+            new(Tool.Select, "Select", "Select/Move (V)", ToggleCommand),
+            new(Tool.Pen, "Draw", "Freehand draw (B)", ToggleCommand),
+            new(Tool.Line, "Line", "Line tool (L)", ToggleCommand),
+            new(Tool.Rect, "Rect", "Rectangle (U)", ToggleCommand),
+            new(Tool.Ellipse, "Ellipse", "Ellipse (O)", ToggleCommand),
+            new(Tool.Eraser, "Eraser", "Eraser (E)", ToggleCommand),
         ];
         Buttons[0].IsActive = true;
     }
@@ -54,7 +54,7 @@ public sealed partial class ToolsViewModel : ObservableObject
     void Toggle(Tool tool) => Set(Current == tool && tool != Tool.Select ? Tool.Select : tool);
 }
 
-/// <summary>One tool button: 4.1's label and title (R14: no shortcut text before M4), and whether it is .btn-active.</summary>
+/// <summary>One tool button: 4.1's label and title (with its shortcut letter), and whether it is .btn-active.</summary>
 public sealed partial class ToolButtonViewModel : ObservableObject
 {
     [ObservableProperty]

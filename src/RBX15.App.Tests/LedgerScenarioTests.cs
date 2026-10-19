@@ -25,7 +25,7 @@ namespace RBX15.App.Tests;
 /// comment) across the pieces Tasks 1-4 built, through their public surface only. A failure is a
 /// defect in the owning task's code, never a reason to edit the scenario.
 /// </summary>
-public sealed class LedgerScenarioTests : IDisposable
+public sealed partial class LedgerScenarioTests : IDisposable
 {
     static readonly SKColor Red = new(255, 0, 0);
     static readonly SKColor Blue = new(0, 0, 255);

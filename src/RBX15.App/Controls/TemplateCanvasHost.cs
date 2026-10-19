@@ -24,7 +24,9 @@ namespace RBX15.App.Controls;
 ///   not its cost). 4.1 re-rendered on every mouse event (editor.js:1191, :1235). Here a change to Document, Zoom,
 ///   Overlay or the DPI only marks the frame dirty and hooks one CompositionTarget.Rendering tick, so any number of
 ///   changes in one frame render once, through one persistent ViewRenderer (4.1's persistent offscreen,
-///   editor.js:295-298). Reading Frame or measuring flushes a pending frame at once.</item>
+///   editor.js:295-298). Reading Frame or measuring flushes a pending frame at once. M4b item 13: the Skia surface
+///   over the bitmap's back buffer persists too; only a size or DPI change (a new bitmap) makes another, counted by
+///   <see cref="SurfaceAllocations"/>.</item>
 /// <item>Bitmap scaling is nearest-neighbor, so a fractional layout offset never blurs the frame.</item>
 /// <item>Files dropped on it run DropCommand with a <see cref="CanvasDrop"/> (drop-canvas). Every drop is handled, so
 ///   none falls through to the window (shell-external-drop-guard).</item>
@@ -79,6 +81,8 @@ public sealed class TemplateCanvasHost : FrameworkElement
     WriteableBitmap? _frame;
     double _deviceScale;
     ViewRenderer? _renderer;
+    SKSurface? _frameSurface;
+    (IntPtr Pixels, int Stride, int Width, int Height) _frameSurfaceKey;
     bool _framePending;
     bool _renderingHooked;
 
@@ -105,6 +109,7 @@ public sealed class TemplateCanvasHost : FrameworkElement
             FlushWheelBurst();
             _renderer?.Dispose();
             _renderer = null;
+            ReleaseFrameSurface();
         };
     }
 
@@ -188,6 +193,9 @@ public sealed class TemplateCanvasHost : FrameworkElement
 
     /// <summary>True while the control keeps a persistent <see cref="ViewRenderer"/>. Read by tests.</summary>
     internal bool HasRenderer => _renderer is not null;
+
+    /// <summary>How many times the control has created the Skia surface that wraps the frame bitmap. Read by tests (frame budget).</summary>
+    internal int SurfaceAllocations { get; private set; }
 
     static void OnFrameInputChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) => ((TemplateCanvasHost)d).RequestFrame();
 
@@ -294,6 +302,7 @@ public sealed class TemplateCanvasHost : FrameworkElement
         {
             if (_frame is null) return;
             _frame = null;
+            ReleaseFrameSurface();
             InvalidateMeasure();
             InvalidateVisual();
             return;
@@ -309,6 +318,7 @@ public sealed class TemplateCanvasHost : FrameworkElement
         double dpi = 96 * _deviceScale;
         if (_frame is null || _frame.PixelWidth != size.Width || _frame.PixelHeight != size.Height || _frame.DpiX != dpi)
         {
+            ReleaseFrameSurface();   // it wraps the old bitmap's memory
             _frame = new WriteableBitmap(size.Width, size.Height, dpi, dpi, PixelFormats.Pbgra32, null);
             InvalidateMeasure();
         }
@@ -317,16 +327,14 @@ public sealed class TemplateCanvasHost : FrameworkElement
         try
         {
             // Pbgra32 is premultiplied BGRA, which is Skia's kN32 on Windows: the Renderer's precondition.
-            var info = new SKImageInfo(size.Width, size.Height, SKColorType.Bgra8888, SKAlphaType.Premul);
-            using (var surface = SKSurface.Create(info, _frame.BackBuffer, _frame.BackBufferStride)
-                ?? throw new InvalidOperationException("cannot wrap the frame bitmap"))
-            {
-                // Unloaded, a lazy read renders through a renderer it does not keep: the persistent one's native
-                // surfaces went with Unloaded and come back only with the next loaded frame (final fix wave 2).
-                if (IsLoaded) (_renderer ??= new ViewRenderer()).Render(surface.Canvas, doc, options);
-                else using (var once = new ViewRenderer()) once.Render(surface.Canvas, doc, options);
-                surface.Canvas.Flush();
-            }
+            var canvas = FrameSurface(_frame, size).Canvas;
+            canvas.RestoreToCount(1);   // the surface lives across frames: no transform or clip from the last one carries over
+            canvas.ResetMatrix();
+            // Unloaded, a lazy read renders through a renderer it does not keep: the persistent one's native
+            // surfaces went with Unloaded and come back only with the next loaded frame (final fix wave 2).
+            if (IsLoaded) (_renderer ??= new ViewRenderer()).Render(canvas, doc, options);
+            else using (var once = new ViewRenderer()) once.Render(canvas, doc, options);
+            canvas.Flush();
             _frame.AddDirtyRect(new Int32Rect(0, 0, size.Width, size.Height));
         }
         finally
@@ -335,6 +343,30 @@ public sealed class TemplateCanvasHost : FrameworkElement
         }
         RenderCount++;
         InvalidateVisual();
+    }
+
+    /// <summary>
+    /// The Skia surface over the frame bitmap's back buffer, kept across frames (frame budget, ledger
+    /// render-pipeline-canvas-reset): it is made again only when the bitmap's memory, stride or pixel size is not the
+    /// one it wraps, which is a zoom, a DPI change or a replaced bitmap. Called with the bitmap locked.
+    /// </summary>
+    SKSurface FrameSurface(WriteableBitmap frame, SKSizeI size)
+    {
+        var key = (frame.BackBuffer, frame.BackBufferStride, size.Width, size.Height);
+        if (_frameSurface is not null && _frameSurfaceKey == key) return _frameSurface;
+        ReleaseFrameSurface();
+        var info = new SKImageInfo(size.Width, size.Height, SKColorType.Bgra8888, SKAlphaType.Premul);
+        SurfaceAllocations++;
+        _frameSurface = SKSurface.Create(info, key.BackBuffer, key.BackBufferStride)
+            ?? throw new InvalidOperationException("cannot wrap the frame bitmap");
+        _frameSurfaceKey = key;
+        return _frameSurface;
+    }
+
+    void ReleaseFrameSurface()
+    {
+        _frameSurface?.Dispose();
+        _frameSurface = null;
     }
 
     (int Width, int Height) TargetPixelSize()

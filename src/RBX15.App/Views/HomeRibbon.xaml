@@ -35,9 +35,9 @@
                 <DockPanel>
                     <TextBlock Style="{StaticResource RibbonGroupLabel}" Text="EDIT" />
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button x:Name="UndoButton" Content="Undo" ToolTip="Undo" Command="{Binding UndoCommand}"
+                        <Button x:Name="UndoButton" Content="Undo" ToolTip="Undo (Ctrl+Z)" Command="{Binding UndoCommand}"
                                 Style="{DynamicResource SecondaryButton}" Padding="10,5" FontSize="11" Margin="0,0,4,0" />
-                        <Button x:Name="RedoButton" Content="Redo" ToolTip="Redo" Command="{Binding RedoCommand}"
+                        <Button x:Name="RedoButton" Content="Redo" ToolTip="Redo (Ctrl+Y / Ctrl+Shift+Z)" Command="{Binding RedoCommand}"
                                 Style="{DynamicResource SecondaryButton}" Padding="10,5" FontSize="11" Margin="0,0,4,0" />
                         <Button x:Name="ClearButton" Content="Clear" Command="{Binding ClearCommand}"
                                 Style="{DynamicResource SecondaryButton}" Padding="10,5" FontSize="11" />

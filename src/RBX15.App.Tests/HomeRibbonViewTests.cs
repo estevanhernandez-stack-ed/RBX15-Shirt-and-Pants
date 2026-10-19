@@ -420,13 +420,13 @@ public class HomeRibbonViewTests
         Assert.True(home.Brush.Fill);
     });
 
-    [Fact] // fix round 1: hide-until-it-works, no shortcut text before M4 ships the keyboard
-    public void Undo_and_redo_tooltips_name_no_shortcut_yet() => StaThread.Run(() =>
+    [Fact] // undo-buttons-shortcuts: the tooltips name the chords now that the keyboard works (editor.html:79-80)
+    public void Undo_and_redo_tooltips_name_their_chords() => StaThread.Run(() =>
     {
         var view = Load(Home(new EditorSession()));
         var buttons = Descendants<Button>(view);
-        Assert.Equal("Undo", buttons.Single(b => (string)b.Content == "Undo").ToolTip);
-        Assert.Equal("Redo", buttons.Single(b => (string)b.Content == "Redo").ToolTip);
+        Assert.Equal("Undo (Ctrl+Z)", buttons.Single(b => (string)b.Content == "Undo").ToolTip);
+        Assert.Equal("Redo (Ctrl+Y / Ctrl+Shift+Z)", buttons.Single(b => (string)b.Content == "Redo").ToolTip);
     });
     [Fact] // regions-fill-all: the All tile sits in the cross, named, focusable, and fills every region; right-click clears
     public void The_all_tile_fills_and_right_click_clears_every_region() => StaThread.Run(() =>

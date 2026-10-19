@@ -31,11 +31,10 @@ public class ShellLookTests
     const double Layout41Ribbon = 155;
 
     /// <summary>
-    /// R1 (M4b): the ribbon keeps one height, the tallest pane's, where 4.1's changed per tab. Item 9's Text pane (the 80 DIP preview box
-    /// over Add to canvas, 4.1's own sizes) is the tallest, 17 DIP above Home. Item 12 re-measures and re-pins the height; until then
-    /// the bound moves by up to R1's hold threshold (24 DIP) and no further.
+    /// R1 (M4b item 12): the ribbon keeps one height, the tallest pane's, where 4.1's changed per tab. The Text pane (138 DIP) is the tallest,
+    /// so the ribbon is 12 DIP above 4.1's Layout ribbon (155) and the canvas area 12 DIP below its 531. RibbonMeasureTests pins the same height.
     /// </summary>
-    const double RibbonGrowthBudget = 24;
+    const double RibbonGrowth = RibbonMeasureTests.RibbonHeight - Layout41Ribbon;
 
     static IEnumerable<T> Descendants<T>(DependencyObject root) where T : DependencyObject
     {
@@ -75,14 +74,14 @@ public class ShellLookTests
         Assert.All(groups.Children.OfType<FrameworkElement>(), g => Assert.Equal(g.DesiredSize.Width - g.Margin.Left - g.Margin.Right, g.ActualWidth, 1));
     });
 
-    [Fact] // look note 2: v5's Home carries Fill Style and Template Regions (4.1's Layout tab) until M4, so the area is held to that tab's
-    public void At_the_default_size_the_canvas_area_is_no_shorter_than_4_1s_with_the_same_groups() => StaThread.Run(() =>
+    [Fact] // look note 2 + R1: the ribbon is the tallest pane's (167), so the canvas area is 4.1's Layout-tab area less exactly that growth
+    public void At_the_default_size_the_canvas_area_is_4_1s_less_the_fixed_ribbons_growth() => StaThread.Run(() =>
     {
         var w = Shell(ClientWidth, ClientHeight);
         double ribbon = ((FrameworkElement)w.FindName("Ribbon")).ActualHeight;
         double area = ((FrameworkElement)w.FindName("CanvasArea")).ActualHeight;
-        Assert.InRange(ribbon, 0, Layout41Ribbon + RibbonGrowthBudget);
-        Assert.InRange(area, Layout41CanvasArea - RibbonGrowthBudget, ClientHeight);
+        Assert.Equal(Layout41Ribbon + RibbonGrowth, ribbon);
+        Assert.Equal(Layout41CanvasArea - RibbonGrowth, area);
     });
 
     [Theory] // look note 4: 4.1's div wraps its text; measured 251x84 in the 280 panel and 161x100 (three lines) in the 200 panel

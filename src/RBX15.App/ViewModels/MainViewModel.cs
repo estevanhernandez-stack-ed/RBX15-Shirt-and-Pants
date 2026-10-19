@@ -94,6 +94,9 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>The Details tab (M4b item 7): stroke settings and the 16 detail buttons.</summary>
     public required DetailsViewModel Details { get; init; }
 
+    /// <summary>The Text tab (M4b item 9): the Word Art controls, the live preview and Add to canvas.</summary>
+    public required TextViewModel Text { get; init; }
+
     /// <summary>The drop zone and layers panel (Task 4).</summary>
     public required LayersViewModel Layers { get; init; }
 

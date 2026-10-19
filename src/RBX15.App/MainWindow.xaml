@@ -135,7 +135,7 @@
                             Style="{StaticResource RibbonPaneHost}" Tag="{x:Static vm:RibbonTab.Home}" />
           <views:LayoutRibbon x:Name="LayoutPane" DataContext="{Binding Layout}" Style="{StaticResource RibbonPaneHost}" Tag="{x:Static vm:RibbonTab.Layout}" />
           <views:DetailsRibbon x:Name="DetailsPane" DataContext="{Binding Details}" Style="{StaticResource RibbonPaneHost}" Tag="{x:Static vm:RibbonTab.Details}" />
-          <views:TextRibbon x:Name="TextPane" Style="{StaticResource RibbonPaneHost}" Tag="{x:Static vm:RibbonTab.Text}" />
+          <views:TextRibbon x:Name="TextPane" DataContext="{Binding Text}" Style="{StaticResource RibbonPaneHost}" Tag="{x:Static vm:RibbonTab.Text}" />
         </Grid>
       </DockPanel>
     </Border>

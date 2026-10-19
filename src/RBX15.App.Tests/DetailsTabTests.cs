@@ -379,13 +379,13 @@ public class DetailsTabTests
 
     // ---- the window
 
-    [Fact] // the Details tab shows because the pane has groups (item 2's rule), and Text still does not
+    [Fact] // the Details tab shows because the pane has groups (item 2's rule); the Text tab does too since item 9
     public void The_Details_tab_shows_in_the_window() => StaThread.Run(() =>
     {
         var w = new MainWindow(TestShell.Main(new EditorSession()), new FakeSettingsStore(), [Primary]);
         StaThread.Pump();
         Assert.Equal(Visibility.Visible, ((RadioButton)w.FindName("DetailsTab")).Visibility);
-        Assert.Equal(Visibility.Collapsed, ((RadioButton)w.FindName("TextTab")).Visibility);
+        Assert.Equal(Visibility.Visible, ((RadioButton)w.FindName("TextTab")).Visibility);
         Assert.True(((IRibbonPane)w.FindName("DetailsPane")).HasGroups);
     });
 

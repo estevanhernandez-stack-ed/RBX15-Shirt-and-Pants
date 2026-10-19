@@ -30,6 +30,13 @@ public class ShellLookTests
     /// <summary>4.1's .ribbon height on that tab.</summary>
     const double Layout41Ribbon = 155;
 
+    /// <summary>
+    /// R1 (M4b): the ribbon keeps one height, the tallest pane's, where 4.1's changed per tab. Item 9's Text pane (the 80 DIP preview box
+    /// over Add to canvas, 4.1's own sizes) is the tallest, 17 DIP above Home. Item 12 re-measures and re-pins the height; until then
+    /// the bound moves by up to R1's hold threshold (24 DIP) and no further.
+    /// </summary>
+    const double RibbonGrowthBudget = 24;
+
     static IEnumerable<T> Descendants<T>(DependencyObject root) where T : DependencyObject
     {
         for (int i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
@@ -74,8 +81,8 @@ public class ShellLookTests
         var w = Shell(ClientWidth, ClientHeight);
         double ribbon = ((FrameworkElement)w.FindName("Ribbon")).ActualHeight;
         double area = ((FrameworkElement)w.FindName("CanvasArea")).ActualHeight;
-        Assert.InRange(ribbon, 0, Layout41Ribbon);
-        Assert.InRange(area, Layout41CanvasArea, ClientHeight);
+        Assert.InRange(ribbon, 0, Layout41Ribbon + RibbonGrowthBudget);
+        Assert.InRange(area, Layout41CanvasArea - RibbonGrowthBudget, ClientHeight);
     });
 
     [Theory] // look note 4: 4.1's div wraps its text; measured 251x84 in the 280 panel and 161x100 (three lines) in the 200 panel

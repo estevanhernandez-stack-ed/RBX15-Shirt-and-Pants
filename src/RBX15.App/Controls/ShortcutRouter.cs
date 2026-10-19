@@ -75,7 +75,7 @@ public enum ShortcutFocus
     TextField,
     /// <summary>Inside the color picker popup: it keeps every key.</summary>
     ColorPicker,
-    /// <summary>The layer list or one of its rows: it keeps Up, Down, Alt+Up, Alt+Down and Delete.</summary>
+    /// <summary>The layer list or one of its rows: it keeps Up, Down, Alt+Up and Alt+Down. Delete is not its: it removes the selected layer, as 4.1.</summary>
     LayerList,
     /// <summary>A region tile: it keeps Delete, Shift+F10 and Menu (the tile's own bindings).</summary>
     RegionTile,
@@ -97,8 +97,8 @@ public enum ShortcutFocus
 /// like its bare form. A real Ctrl chord (Ctrl without Alt) and a lone Alt never route (D9).</item>
 /// <item>Ctrl chords (Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z, Ctrl+D, the file chords) are the window's KeyBindings behind
 /// <see cref="TextFieldShortcutCommand"/>, never routed here, so Keys OFF cannot reach them (the fix on keys-toggle-button).</item>
-/// <item>K1's trap table: a text field and an open color picker keep every key. The layer list keeps Up, Down, Alt+Up, Alt+Down and
-/// Delete; a region tile keeps Delete, Shift+F10 and Menu; the 3D viewport keeps the arrows and Home. Everything else (sliders, checkboxes,
+/// <item>K1's trap table: a text field and an open color picker keep every key. The layer list keeps Up, Down, Alt+Up and Alt+Down
+/// (Delete reaches the selected layer); a region tile keeps Delete, Shift+F10 and Menu; the 3D viewport keeps the arrows and Home. Everything else (sliders, checkboxes,
 /// swatches, buttons, tabs) traps nothing (kbd-input-focus-trap). Space and Enter are never answered here, so a focused button's own
 /// activation stays WPF's (kbd-focused-button-enter-space).</item>
 /// <item>The layer keys need a selection; the tool keys do not. Ctrl or the Windows key held never routes a layer key (4.1 returned on
@@ -232,13 +232,13 @@ public sealed class ShortcutRouter
 
     /// <summary>
     /// K1's per-key trap table: whether <paramref name="focus"/> keeps <paramref name="key"/> for its own use. A text field and the color
-    /// picker keep all; the layer list keeps Up and Down (plain, or with Alt, which reorders) and Delete; a region tile keeps Delete,
+    /// picker keep all; the layer list keeps Up and Down (plain, or with Alt, which reorders; Delete reaches the layer, as 4.1); a region tile keeps Delete,
     /// Shift+F10 and Menu; the 3D viewport keeps the arrows and Home. Nothing else traps (kbd-input-focus-trap).
     /// </summary>
     public static bool Keeps(ShortcutFocus focus, Key key, ModifierKeys modifiers) => focus switch
     {
         ShortcutFocus.TextField or ShortcutFocus.ColorPicker => true,
-        ShortcutFocus.LayerList => key == Key.Delete || (key is Key.Up or Key.Down && (modifiers & ~ModifierKeys.Alt) == ModifierKeys.None),
+        ShortcutFocus.LayerList => key is Key.Up or Key.Down && (modifiers & ~ModifierKeys.Alt) == ModifierKeys.None,
         ShortcutFocus.RegionTile => key is Key.Delete or Key.Apps || (key == Key.F10 && (modifiers & ModifierKeys.Shift) != 0),
         ShortcutFocus.Viewport => key is Key.Left or Key.Right or Key.Up or Key.Down or Key.Home,
         _ => false,

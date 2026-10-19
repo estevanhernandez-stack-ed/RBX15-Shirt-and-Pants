@@ -542,7 +542,7 @@ public class ShortcutRouterTests
 
     static Layer Top(EditorSession s) => s.Document.Layers[^1];
 
-    [Fact] // K1: the layer list keeps Up, Down, Alt+Up, Alt+Down and Delete; every other key still reaches the layer
+    [Fact] // K1: the layer list keeps Up, Down, Alt+Up and Alt+Down; every other key, Delete and Backspace included, still reaches the layer
     public void The_layer_list_keeps_its_own_keys() => StaThread.Run(() =>
     {
         var list = Foci().Single(f => f.Expected == ShortcutFocus.LayerList && f.Name == "layer list").Element;
@@ -550,11 +550,36 @@ public class ShortcutRouterTests
         foreach (var element in new[] { list, row })
         {
             foreach (var (key, mods) in new[] { (Key.Up, ModifierKeys.None), (Key.Down, ModifierKeys.None), (Key.Up, ModifierKeys.Alt),
-                                                 (Key.Down, ModifierKeys.Alt), (Key.Delete, ModifierKeys.None) })
+                                                 (Key.Down, ModifierKeys.Alt) })
                 Assert.Null(ShortcutRouter.Route(key, mods, element, true, true));
             Assert.Equal(ShortcutAction.NudgeLeft, ShortcutRouter.Route(Key.Left, ModifierKeys.None, element, true, true));
             Assert.Equal(ShortcutAction.NudgeRight, ShortcutRouter.Route(Key.Right, ModifierKeys.None, element, true, true));
             Assert.Equal(ShortcutAction.DeleteLayer, ShortcutRouter.Route(Key.Back, ModifierKeys.None, element, true, true));
+            Assert.Equal(ShortcutAction.DeleteLayer, ShortcutRouter.Route(Key.Delete, ModifierKeys.None, element, true, true));
+        }
+    });
+
+    [Fact] // keys-delete, 4.1: click a layer, press Delete. The real row, focused, in the window: the layer goes in one undo step, the selection to the new top
+    public void Delete_on_a_focused_layer_row_removes_the_layer() => StaThread.Run(() =>
+    {
+        foreach (var key in new[] { Key.Delete, Key.Back })
+        {
+            using var rig = new Rig(Selected(Pose(1), Pose(2), Pose(3)));
+            var panel = new LayersPanel { DataContext = rig.Main.Layers };
+            StaThread.Pump();
+            Arrange(panel, 300, 300);
+            var list = (ListBox)panel.FindName("LayerList");
+            rig.Session.Select(3);
+            StaThread.Pump();
+            var row = (ListBoxItem)list.ItemContainerGenerator.ContainerFromIndex(0);   // rows are top first: layer 3
+            Assert.Equal(ShortcutFocus.LayerList, ShortcutRouter.Classify(row));
+
+            Assert.True(rig.Down(key, row));
+            Assert.Equal(new[] { 1, 2 }, rig.Session.Document.Layers.Select(l => l.Id));
+            Assert.Equal(2, rig.Session.SelectedLayerId);
+            Assert.Equal(1, rig.Session.UndoCount);
+            rig.Session.Undo();
+            Assert.Equal(new[] { 1, 2, 3 }, rig.Session.Document.Layers.Select(l => l.Id));
         }
     });
 
@@ -829,14 +854,13 @@ public class ShortcutRouterTests
         Assert.Single(rig.Session.Document.Layers);
     });
 
-    [Fact] // the focus rules through the window: the layer list keeps Up, a viewport its arrows, a region tile Delete; a slider traps nothing
+    [Fact] // the focus rules through the window: the layer list keeps Up and Down, a viewport its arrows, a region tile Delete; a slider traps nothing
     public void The_window_leaves_the_keys_a_focused_control_keeps() => StaThread.Run(() =>
     {
         using var rig = new Rig(Selected(Pose(), Pose(2)));
         var foci = Foci().ToDictionary(f => f.Name, f => f.Element);
         Assert.False(rig.Down(Key.Up, foci["layer list"]));
         Assert.False(rig.Down(Key.Down, foci["layer row"], ModifierKeys.None));
-        Assert.False(rig.Down(Key.Delete, foci["layer row"]));
         Assert.False(rig.Down(Key.Left, foci["3D viewport"]));
         Assert.False(rig.Down(Key.Delete, foci["region tile"]));
         Assert.Equal(0, rig.Session.UndoCount);

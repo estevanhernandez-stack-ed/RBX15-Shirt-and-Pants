@@ -16,7 +16,7 @@ namespace RBX15.App.Tests;
 
 /// <summary>
 /// The four ribbon tabs and tab switching (ledger ribbon-tab-switch, ribbon-tabs-switching). The Text tab
-/// has no group yet, so the tests that exercise all four turn <see cref="MainWindow.ShowAllTabsForTest"/> on.
+/// has its groups since M4b item 9; the tests that exercise all four still turn <see cref="MainWindow.ShowAllTabsForTest"/> on.
 /// </summary>
 [Collection("MainWindow")] // see ShellLookTests
 public class RibbonTabsTests
@@ -163,31 +163,41 @@ public class RibbonTabsTests
         Assert.Equal([RibbonTab.Text], Visible(second));
     });
 
-    [Fact] // the hide rule: a tab shows once its pane has a group. Layout has one since item 5 (Presets) and Details since item 7; Text does not yet
+    [Fact] // the hide rule: a tab shows once its pane has a group. Every pane has groups now (Layout item 5, Details item 7, Text item 9), so the rule is shown by emptying one
     public void A_tab_is_collapsed_until_its_pane_has_a_group() => StaThread.Run(() =>
     {
         var w = Built(showAll: false);
-        Assert.Equal([Visibility.Visible, Visibility.Visible, Visibility.Visible, Visibility.Collapsed],
-                     Order.Select(t => Tab(w, t).Visibility));
-        Assert.Equal([true, true, true, false], Order.Select(w.IsTabShown));
-        Assert.True(((IRibbonPane)Pane(w, RibbonTab.Layout)).HasGroups);
-        Assert.True(((IRibbonPane)Pane(w, RibbonTab.Details)).HasGroups);
+        Assert.Equal([Visibility.Visible, Visibility.Visible, Visibility.Visible, Visibility.Visible], Order.Select(t => Tab(w, t).Visibility));
+        Assert.Equal([true, true, true, true], Order.Select(w.IsTabShown));
+        Assert.All(new[] { RibbonTab.Layout, RibbonTab.Details, RibbonTab.Text }, t => Assert.True(((IRibbonPane)Pane(w, t)).HasGroups));
+
+        var groups = (StackPanel)Pane(w, RibbonTab.Text).FindName("Groups");
+        var held = groups.Children.Cast<UIElement>().ToArray();
+        groups.Children.Clear();   // a pane with no group
+        w.ShowAllTabsForTest = false;
         Assert.False(((IRibbonPane)Pane(w, RibbonTab.Text)).HasGroups);
+        Assert.Equal(Visibility.Collapsed, Tab(w, RibbonTab.Text).Visibility);
+        Assert.False(w.IsTabShown(RibbonTab.Text));
         w.ShowAllTabsForTest = true;
         Assert.All(Order, t => Assert.Equal(Visibility.Visible, Tab(w, t).Visibility));
         w.ShowAllTabsForTest = false;
         Assert.Equal(Visibility.Collapsed, Tab(w, RibbonTab.Text).Visibility);
+
+        foreach (var g in held) groups.Children.Add(g);   // groups back: the tab shows again
+        w.ShowAllTabsForTest = false;
+        Assert.Equal(Visibility.Visible, Tab(w, RibbonTab.Text).Visibility);
     });
 
-    [Fact] // the rule later items flip: adding one group to a pane's Groups panel is all it takes to make HasGroups true
+    [Fact] // the rule: adding one group to a pane's Groups panel is all it takes to make HasGroups true
     public void A_pane_reports_content_as_soon_as_it_has_a_group() => StaThread.Run(() =>
     {
-        foreach (var pane in new IRibbonPane[] { new TextRibbon() })   // Layout (Presets) and Details (Settings) have groups, so they are not empty any more
-        {
-            Assert.False(pane.HasGroups);
-            ((StackPanel)((UserControl)pane).FindName("Groups")).Children.Add(new Border());
-            Assert.True(pane.HasGroups);
-        }
+        var text = new TextRibbon();
+        var groups = (StackPanel)text.FindName("Groups");
+        Assert.True(((IRibbonPane)text).HasGroups);   // four groups since item 9
+        groups.Children.Clear();
+        Assert.False(((IRibbonPane)text).HasGroups);
+        groups.Children.Add(new Border());
+        Assert.True(((IRibbonPane)text).HasGroups);
         Assert.True(((IRibbonPane)new HomeRibbon()).HasGroups);
         Assert.True(((IRibbonPane)new LayoutRibbon()).HasGroups);
         Assert.True(((IRibbonPane)new DetailsRibbon()).HasGroups);

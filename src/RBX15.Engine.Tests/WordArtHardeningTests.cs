@@ -382,4 +382,44 @@ public partial class WordArtHardeningTests(ITestOutputHelper output)
         using (image)
             Assert.Equal(Math.Min(200.0 / cw, 80.0 / ch), contentScale, 12);
     }
+
+    // ---- ruling T2: the preview renders at device pixels --------------------------------------------------------------
+
+    [Theory]
+    [InlineData(1.0)]
+    [InlineData(1.25)]
+    [InlineData(1.5)]
+    [InlineData(2.0)]
+    public void A_device_scale_draws_the_preview_that_many_times_larger_inside_the_scaled_maxima(double scale)
+    {
+        var (one, cw1, ch1, sc1) = WordArt.Render(S(), 200, 80);
+        var (device, cw, ch, sc) = WordArt.Render(S(), (int)Math.Round(200 * scale), (int)Math.Round(80 * scale), scale);
+        using (one)
+        using (device)
+        {
+            Assert.Equal((cw1, ch1), (cw, ch));   // the requested size is the 1x content size either way
+            Assert.True(device.Width <= Math.Round(200 * scale) && device.Height <= Math.Round(80 * scale));
+            Assert.Equal(sc1 * scale, sc, 2);      // the same fit, drawn scale times larger
+            // Content size in device pixels: the 1x preview's content times the scale, to within a pixel of rounding.
+            Assert.Equal(Math.Ceiling(cw * sc1) * scale, Math.Ceiling(cw * sc), scale + 1);
+            Assert.Equal(Math.Ceiling(ch * sc1) * scale, Math.Ceiling(ch * sc), scale + 1);
+        }
+    }
+
+    [Fact]
+    public void A_device_scale_of_1_is_the_same_render_byte_for_byte()
+    {
+        Assert.Equal(RenderPixels(S(style: WordArtStyle.Shadow)), Pixels(WordArt.Render(S(style: WordArtStyle.Shadow), deviceScale: 1).Image));
+        var (a, _, _, _) = WordArt.Render(S(), 200, 80);
+        var (b, _, _, _) = WordArt.Render(S(), 200, 80, 1);
+        using (a) using (b) Assert.Equal(Pixels(a), Pixels(b));
+    }
+
+    [Theory]
+    [InlineData(0.0)]
+    [InlineData(-1.0)]
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    public void A_device_scale_that_is_not_a_positive_number_is_refused(double scale) =>
+        Assert.Throws<ArgumentOutOfRangeException>(() => WordArt.Render(S(), 200, 80, scale));
 }

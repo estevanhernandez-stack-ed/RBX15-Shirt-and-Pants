@@ -80,6 +80,9 @@ internal static class Composition
         // M4b item 7: the Details tab; a created detail layer sets the Select tool (editor.js:1860-1861), as an import does.
         var details = new DetailsViewModel(session, colorPicker);
         details.LayersAdded += (_, _) => tools.Set(Tool.Select);
+        // M4b item 9: the Text tab; an added Word Art layer sets the Select tool (editor.js:2287), as an import does.
+        var text = new TextViewModel(session, colorPicker, status);
+        text.LayersAdded += (_, _) => tools.Set(Tool.Select);
         // M3a: construction lines above this line.
         return new MainViewModel(session)
         {
@@ -87,6 +90,7 @@ internal static class Composition
             Home = home,
             Layout = layout,
             Details = details,
+            Text = text,
             Layers = layers,
             Status = status,
             LayerProperties = layerProperties,

@@ -248,15 +248,15 @@ public class PresetsGroupTests
 
     // ---- the window: the Layout tab shows because its pane has a group
 
-    [Fact] // item 2's rule: a tab shows when its pane has a group. Layout does now, Details does since item 7; Text does not yet.
-    public void The_Layout_tab_shows_with_the_Presets_group_and_Text_stays_collapsed() => StaThread.Run(() =>
+    [Fact] // item 2's rule: a tab shows when its pane has a group. Layout does now, Details does since item 7, Text since item 9.
+    public void The_Layout_tab_shows_with_the_Presets_group() => StaThread.Run(() =>
     {
         var w = new MainWindow(TestShell.Main(new EditorSession()), new FakeSettingsStore(), [Primary]);
         StaThread.Pump();
 
         Assert.Equal(Visibility.Visible, ((RadioButton)w.FindName("LayoutTab")).Visibility);
         Assert.Equal(Visibility.Visible, ((RadioButton)w.FindName("DetailsTab")).Visibility);   // item 7 gave it Settings and four button groups
-        Assert.Equal(Visibility.Collapsed, ((RadioButton)w.FindName("TextTab")).Visibility);
+        Assert.Equal(Visibility.Visible, ((RadioButton)w.FindName("TextTab")).Visibility);   // item 9 gave it four groups
         Assert.True(((IRibbonPane)w.FindName("LayoutPane")).HasGroups);
         var groups = (StackPanel)((LayoutRibbon)w.FindName("LayoutPane")).FindName("Groups");
         Assert.IsType<PresetsGroup>(groups.Children[0]);

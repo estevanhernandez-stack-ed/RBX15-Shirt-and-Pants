@@ -302,10 +302,17 @@ public static class WordArt
     /// never throws: it renders at the largest size inside the caps, and <see cref="WordArtRender.ContentScale"/>
     /// says how far it shrank. Returns the image (caller owns it), the content size cw, ch (the image size only
     /// when no maximum or cap clamps it) and that scale.
+    /// <para>
+    /// <paramref name="deviceScale"/> (ruling T2) is for the preview: the pixels per logical pixel of the display. The maxima
+    /// are then device pixels, the content is drawn <paramref name="deviceScale"/> times larger (so it is sharp, and a shadow,
+    /// glow or retro offset keeps its place relative to the glyphs), and <see cref="WordArtRender.ContentScale"/> is relative to
+    /// the 1x content cw x ch, so it can exceed 1. The default 1 is 4.1's render, byte for byte.
+    /// </para>
     /// </summary>
-    public static WordArtRender Render(WordArtSettings s, int? maxWidth = null, int? maxHeight = null)
+    public static WordArtRender Render(WordArtSettings s, int? maxWidth = null, int? maxHeight = null, double deviceScale = 1)
     {
         if (maxWidth < 0 || maxHeight < 0) throw new ArgumentOutOfRangeException(nameof(maxWidth), "maxima are positive, or null or 0 for none");
+        if (!(deviceScale > 0) || double.IsInfinity(deviceScale)) throw new ArgumentOutOfRangeException(nameof(deviceScale), "the device scale is a positive number");
         s = s with { StrokeWidth = EffectiveStrokeWidth(s.StrokeWidth) };
         string text = EffectiveText(s.Text);
         float size = EffectiveSize(s.Size);
@@ -319,8 +326,10 @@ public static class WordArt
         double pad = Pad(s.Style, s.StrokeWidth);
         int cw = CeilingInt(totalW + pad * 2);
         int ch = CeilingInt(totalH + pad * 2);
-        int width = maxWidth is > 0 ? Math.Min(cw, maxWidth.Value) : cw;
-        int height = maxHeight is > 0 ? Math.Min(ch, maxHeight.Value) : ch;
+        int deviceW = deviceScale == 1 ? cw : (int)Math.Min(Math.Ceiling(cw * deviceScale), int.MaxValue);
+        int deviceH = deviceScale == 1 ? ch : (int)Math.Min(Math.Ceiling(ch * deviceScale), int.MaxValue);
+        int width = maxWidth is > 0 ? Math.Min(deviceW, maxWidth.Value) : deviceW;
+        int height = maxHeight is > 0 ? Math.Min(deviceH, maxHeight.Value) : deviceH;
         double sc = Math.Min((double)width / cw, (double)height / ch);
         var (fitWidth, fitHeight, capFactor) = FitToCaps(width, height);
         (width, height, sc) = (fitWidth, fitHeight, sc * capFactor);

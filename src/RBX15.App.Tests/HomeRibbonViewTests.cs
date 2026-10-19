@@ -211,7 +211,7 @@ public class HomeRibbonViewTests
         Assert.Equal(new[] { "Left Arm", "Right Arm" }, Headings());
     });
 
-    [Fact] // the mode button, settings and edit bindings; M3b shows Tools and Brush; Placement is collapsed until a layer is selected (M4b item 5) and Keys stays hidden until item 10; Save work and Open show (M4a)
+    [Fact] // the mode button, settings and edit bindings; M3b shows Tools and Brush; Placement is collapsed until a layer is selected (M4b item 5) and Keys: ON shows in the Tools group (M4b item 10); Save work and Open show (M4a)
     public void Mode_settings_and_edit_bind_and_hidden_groups_are_absent() => StaThread.Run(() =>
     {
         var session = new EditorSession();
@@ -239,7 +239,8 @@ public class HomeRibbonViewTests
             texts.Where(t => t is "MODE" or "TOOLS" or "BRUSH" or "PLACEMENT" or "EDIT" or "SETTINGS" or "FILL STYLE" or "CLICK REGIONS TO FILL"));
         Assert.Contains(buttons, b => b.Content is "Draw");
         Assert.Equal(Visibility.Collapsed, ((UserControl)view.FindName("Placement")).Visibility);   // nothing selected
-        Assert.DoesNotContain(buttons, b => b.Content is "Fit Front" or "Keys: ON");
+        Assert.DoesNotContain(buttons, b => b.Content is "Fit Front");
+        Assert.Contains(buttons, b => b.Content is "Keys: ON");
         Assert.Contains(buttons, b => b.Content is "Save work");
         Assert.Contains(buttons, b => b.Content is "Open");
         Assert.Contains("Set a style, then click a region to paint it. Right-click clears.", texts);
@@ -350,7 +351,7 @@ public class HomeRibbonViewTests
         var view = Load(home);
         var tools = Descendants<ToolToggleButton>(view).ToArray();
         Assert.Equal(new[] { "Select", "Draw", "Line", "Rect", "Ellipse", "Eraser" }, tools.Select(b => (string)b.Content));
-        Assert.Equal(new[] { "Select/Move", "Freehand draw", "Line tool", "Rectangle", "Ellipse", "Eraser" }, tools.Select(b => (string)b.ToolTip)); // R14
+        Assert.Equal(new[] { "Select/Move (V)", "Freehand draw (B)", "Line tool (L)", "Rectangle (U)", "Ellipse (O)", "Eraser (E)" }, tools.Select(b => (string)b.ToolTip)); // home-tool-buttons: the letters are back with the keyboard (M4b item 10)
         Assert.All(tools, b => Assert.True(b.Focusable && b.IsTabStop));
         ToggleState[] States() => tools.Select(b => Toggle(b).ToggleState).ToArray();
         Assert.Equal(new[] { ToggleState.On, ToggleState.Off, ToggleState.Off, ToggleState.Off, ToggleState.Off, ToggleState.Off }, States());

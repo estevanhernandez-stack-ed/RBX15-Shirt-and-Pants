@@ -17,6 +17,7 @@ namespace RBX15.App;
 public partial class MainWindow : Window
 {
     readonly ISettingsStore _settings;
+    readonly ShortcutRouter _shortcuts;
     bool _maximizedBeforeMinimize;
 
     /// <param name="workAreas">The monitors' work areas, primary first; null reads them from Windows.</param>
@@ -25,6 +26,7 @@ public partial class MainWindow : Window
         ArgumentNullException.ThrowIfNull(viewModel);
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         DataContext = viewModel;
+        _shortcuts = new ShortcutRouter(viewModel.Home.Tools);
         InitializeComponent();
         CaptionTheme.Apply(this);
         RefreshTabs();
@@ -44,6 +46,9 @@ public partial class MainWindow : Window
         AddShortcut(viewModel.Home.File.SaveCommand, Key.S, ModifierKeys.Control);
         AddShortcut(viewModel.Home.File.SaveAsCommand, Key.S, ModifierKeys.Control | ModifierKeys.Shift);
         AddShortcut(viewModel.Home.File.OpenCommand, Key.O, ModifierKeys.Control);
+        // The bare-key shortcuts (M4b item 10; K1, K2): characters from text input, keys from key downs, both through the router.
+        PreviewTextInput += OnPreviewTextInput;
+        PreviewKeyDown += OnPreviewKeyDown;
         StateChanged += (_, _) => { if (WindowState != WindowState.Minimized) _maximizedBeforeMinimize = WindowState == WindowState.Maximized; };
         // R4: a wait cursor while an Open reads; the Viewport's IsEnabled binding blocks the input.
         viewModel.PropertyChanged += (_, e) =>
@@ -109,6 +114,26 @@ public partial class MainWindow : Window
 
     /// <summary>The element with keyboard focus, as the window's shortcuts see it. Tests replace it; nothing else does.</summary>
     internal Func<IInputElement?> FocusedElement { get; set; } = () => Keyboard.FocusedElement;
+
+    /// <summary>The modifier keys held, as the window's shortcuts see them. Tests replace it; nothing else does.</summary>
+    internal Func<ModifierKeys> Modifiers { get; set; } = () => Keyboard.Modifiers;
+
+    /// <summary>A typed character is a shortcut (a tool letter) unless a text field or the color picker has focus or Keys is OFF; a handled one is 4.1's preventDefault.</summary>
+    void OnPreviewTextInput(object sender, TextCompositionEventArgs e)
+    {
+        if (ShortcutRouter.RouteText(e.Text, Modifiers(), FocusedElement(), ViewModel.Home.Keys.Enabled) is not { } action) return;
+        _shortcuts.Execute(action);
+        e.Handled = true;
+    }
+
+    /// <summary>A key down is a shortcut only for the keys that are not characters (item 11); Ctrl chords are KeyBindings and Space and Enter stay a focused button's.</summary>
+    void OnPreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        var key = e.Key switch { Key.System => e.SystemKey, Key.ImeProcessed => e.ImeProcessedKey, Key.DeadCharProcessed => e.DeadCharProcessedKey, _ => e.Key };
+        if (ShortcutRouter.Route(key, Modifiers(), FocusedElement(), ViewModel.Home.Keys.Enabled) is not { } action) return;
+        _shortcuts.Execute(action);
+        e.Handled = true;
+    }
 
     /// <summary>
     /// Binds <paramref name="key"/> with <paramref name="modifiers"/> on the window to <paramref name="command"/> behind

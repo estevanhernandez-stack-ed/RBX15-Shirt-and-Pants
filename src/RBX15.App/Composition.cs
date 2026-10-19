@@ -37,6 +37,8 @@ internal static class Composition
         // M3b: the status strip, the tool and the brush come first; the canvas, the Home tab and the eraser share them.
         var status = new StatusViewModel();
         var tools = new ToolsViewModel();
+        // M4b item 10: the Keys toggle; the window's ShortcutRouter reads it, the Tools group shows it (Home carries it).
+        var keys = new KeysViewModel();
         // Art palette: the colors of the visible layers, for the Brush group's Palette button and (through the app's picker) every pick.
         var palette = new ArtPalette(session);
         var brush = new BrushViewModel(colorPicker) { Palette = palette };
@@ -70,6 +72,7 @@ internal static class Composition
             Placement = placement,
             AvatarPreview = avatarPreview,
             Tools = tools,
+            Keys = keys,
             Brush = brush,
             File = fileGroup,
         };

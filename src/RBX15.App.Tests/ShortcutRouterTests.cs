@@ -12,6 +12,7 @@ using RBX15.App.Controls;
 using RBX15.App.Tests.Fakes;
 using RBX15.App.ViewModels;
 using RBX15.App.Views;
+using RBX15.Engine;
 using static RBX15.App.Tests.HomeTestKit;
 
 namespace RBX15.App.Tests;
@@ -28,7 +29,7 @@ public class ShortcutRouterTests
 {
     static readonly Rect Primary = new(0, 0, 1920, 1040);
 
-    static readonly ModifierKeys[] Modifiers = [ModifierKeys.None, ModifierKeys.Shift, ModifierKeys.Control, ModifierKeys.Alt];
+    static readonly ModifierKeys[] Modifiers = [ModifierKeys.None, ModifierKeys.Shift, ModifierKeys.Control, ModifierKeys.Alt, ModifierKeys.Control | ModifierKeys.Alt];
 
     static readonly (string Text, ShortcutAction Action)[] ToolKeys =
     [
@@ -97,16 +98,16 @@ public class ShortcutRouterTests
             Assert.True(expected == ShortcutRouter.Classify(element), $"{name}: expected {expected}, got {ShortcutRouter.Classify(element)}");
     });
 
-    [Fact] // K2: tool keys are characters, so Route (key down) fires no action for any key in this item, whatever the focus, modifiers or
-           // Keys state; Ctrl chords are KeyBindings (behind TextFieldShortcutCommand), and item 11's layer keys are added to Route
-    public void Route_fires_no_action_for_any_key_yet() => StaThread.Run(() =>
+    [Fact] // K2: the tool keys are characters, so Route (key down) answers none of them, nor Space, Enter, Tab or a chord's letter, whatever the focus,
+           // modifiers or Keys state: Ctrl chords are KeyBindings (behind TextFieldShortcutCommand)
+    public void Route_answers_only_the_arrows_delete_and_backspace() => StaThread.Run(() =>
     {
-        var keys = new[] { Key.V, Key.B, Key.L, Key.U, Key.O, Key.E, Key.Z, Key.D, Key.Space, Key.Enter, Key.Tab, Key.Escape };
+        var keys = new[] { Key.V, Key.B, Key.L, Key.U, Key.O, Key.E, Key.Z, Key.D, Key.Y, Key.R, Key.OemOpenBrackets, Key.Space, Key.Enter, Key.Tab, Key.Escape, Key.Home, Key.F10, Key.Apps };
         foreach (var (name, _, element) in Foci())
             foreach (var mods in Modifiers)
                 foreach (bool on in new[] { true, false })
                     foreach (var key in keys)
-                        Assert.True(ShortcutRouter.Route(key, mods, element, on) is null, $"{key} with {mods} on {name}, Keys {(on ? "ON" : "OFF")}");
+                        Assert.True(ShortcutRouter.Route(key, mods, element, on, true) is null, $"{key} with {mods} on {name}, Keys {(on ? "ON" : "OFF")}");
     });
 
     [Fact] // the table: focus x modifiers x Keys x character. A text field and the color picker keep every key (K1); the layer list, a region
@@ -121,19 +122,23 @@ public class ShortcutRouterTests
                         foreach (var typed in new[] { text, text.ToUpperInvariant() })
                         {
                             bool trapped = expectedFocus is ShortcutFocus.TextField or ShortcutFocus.ColorPicker;
-                            bool bare = (mods & (ModifierKeys.Control | ModifierKeys.Alt)) == 0;
+                            bool bare = ((mods & ModifierKeys.Control) != 0) == ((mods & ModifierKeys.Alt) != 0);   // none, or Ctrl+Alt together (AltGr, D9)
                             ShortcutAction? expected = on && !trapped && bare ? action : null;
-                            Assert.True(expected == ShortcutRouter.RouteText(typed, mods, element, on),
+                            Assert.True(expected == ShortcutRouter.RouteText(typed, mods, element, on, false),
                                 $"'{typed}' with {mods} on {name}, Keys {(on ? "ON" : "OFF")}: expected {expected}");
                         }
     });
 
-    [Fact] // text that is not exactly one tool letter is nothing: other letters, the control characters Ctrl+V and Ctrl+E type, empty, longer
-    public void RouteText_ignores_everything_but_the_six_tool_letters()
+    [Fact] // text that is not exactly one shortcut character is nothing: other letters, the control characters Ctrl+V, Ctrl+E and Ctrl+R type,
+           // Escape, empty, longer; and with nothing selected the layer keys are nothing too (the tool letters do not need a selection)
+    public void RouteText_ignores_everything_but_the_shortcut_characters()
     {
-        foreach (var text in new[] { "x", "d", "r", "[", "+", " ", "", "vv", "ve", "\u0016", "\u0005", "\u0002", "1" })
-            Assert.Null(ShortcutRouter.RouteText(text, ModifierKeys.None, null, true));
-        Assert.Null(ShortcutRouter.RouteText(null!, ModifierKeys.None, null, true));
+        foreach (var text in new[] { "x", "d", " ", "", "vv", "ve", "[]", "\u0016", "\u0005", "\u0002", "\u0012", "\u001b", "1" })
+            foreach (bool selected in new[] { true, false })
+                Assert.Null(ShortcutRouter.RouteText(text, ModifierKeys.None, null, true, selected));
+        foreach (var text in new[] { "r", "R", "[", "]", "{", "}", "+", "=", "-", "_" })
+            Assert.Null(ShortcutRouter.RouteText(text, ModifierKeys.None, null, true, hasSelection: false));
+        Assert.Null(ShortcutRouter.RouteText(null!, ModifierKeys.None, null, true, true));
     }
 
     [Fact] // keys-tool-shortcuts: v b l u o e, either case (Shift+B == b, Caps Lock too), match the characters the layout types (K2)
@@ -141,8 +146,8 @@ public class ShortcutRouterTests
     {
         foreach (var (text, action) in ToolKeys)
         {
-            Assert.Equal(action, ShortcutRouter.RouteText(text, ModifierKeys.None, null, true));
-            Assert.Equal(action, ShortcutRouter.RouteText(text.ToUpperInvariant(), ModifierKeys.Shift, null, true));
+            Assert.Equal(action, ShortcutRouter.RouteText(text, ModifierKeys.None, null, true, false));
+            Assert.Equal(action, ShortcutRouter.RouteText(text.ToUpperInvariant(), ModifierKeys.Shift, null, true, false));
         }
         Assert.Equal(new[] { Tool.Select, Tool.Pen, Tool.Line, Tool.Rect, Tool.Ellipse, Tool.Eraser },
             ToolKeys.Select(k => ShortcutRouter.ToolOf(k.Action)));
@@ -154,10 +159,10 @@ public class ShortcutRouterTests
     public void Tool_keys_run_toggleTool()
     {
         var tools = new ToolsViewModel();
-        var router = new ShortcutRouter(tools);
+        var router = new ShortcutRouter(tools, new LayerKeys(new EditorSession()));
         void Press(string text, ModifierKeys mods = ModifierKeys.None)
         {
-            if (ShortcutRouter.RouteText(text, mods, null, true) is { } action) router.Execute(action);
+            if (ShortcutRouter.RouteText(text, mods, null, true, false) is { } action) router.Execute(action);
         }
 
         Press("b");
@@ -521,4 +526,482 @@ public class ShortcutRouterTests
         ((IInvokeProvider)UIElementAutomationPeer.CreatePeerForElement(b).GetPattern(PatternInterface.Invoke)).Invoke();
         StaThread.Pump();
     }
+
+    // ---- item 11: the layer keys (keys-arrow-nudge, keys-rotate-brackets, kbd-bracket-rotate-negative-drift, keys-scale-plus-minus,
+    //      keys-delete, keys-selection-gate-and-modifiers), K1's per-key trap table, and D9 (AltGr)
+
+    static Layer Pose(int id = 1, double x = 100, double y = 100, double scale = 1, double rotation = 0) =>
+        LayerOf(id) with { X = x, Y = y, Scale = scale, Rotation = rotation };
+
+    static EditorSession Selected(params Layer[] layers)
+    {
+        var session = SessionWith(layers);
+        session.Select(layers[^1].Id);
+        return session;
+    }
+
+    static Layer Top(EditorSession s) => s.Document.Layers[^1];
+
+    [Fact] // K1: the layer list keeps Up, Down, Alt+Up, Alt+Down and Delete; every other key still reaches the layer
+    public void The_layer_list_keeps_its_own_keys() => StaThread.Run(() =>
+    {
+        var list = Foci().Single(f => f.Expected == ShortcutFocus.LayerList && f.Name == "layer list").Element;
+        var row = Foci().Single(f => f.Name == "layer row").Element;
+        foreach (var element in new[] { list, row })
+        {
+            foreach (var (key, mods) in new[] { (Key.Up, ModifierKeys.None), (Key.Down, ModifierKeys.None), (Key.Up, ModifierKeys.Alt),
+                                                 (Key.Down, ModifierKeys.Alt), (Key.Delete, ModifierKeys.None) })
+                Assert.Null(ShortcutRouter.Route(key, mods, element, true, true));
+            Assert.Equal(ShortcutAction.NudgeLeft, ShortcutRouter.Route(Key.Left, ModifierKeys.None, element, true, true));
+            Assert.Equal(ShortcutAction.NudgeRight, ShortcutRouter.Route(Key.Right, ModifierKeys.None, element, true, true));
+            Assert.Equal(ShortcutAction.DeleteLayer, ShortcutRouter.Route(Key.Back, ModifierKeys.None, element, true, true));
+        }
+    });
+
+    [Fact] // K1: a focused region tile keeps Delete, Shift+F10 and Menu (its clear gestures); the arrows and Backspace still reach the layer
+    public void A_region_tile_keeps_delete_shift_f10_and_menu() => StaThread.Run(() =>
+    {
+        var tile = Foci().Single(f => f.Expected == ShortcutFocus.RegionTile).Element;
+        Assert.Null(ShortcutRouter.Route(Key.Delete, ModifierKeys.None, tile, true, true));
+        Assert.Null(ShortcutRouter.Route(Key.F10, ModifierKeys.Shift, tile, true, true));
+        Assert.Null(ShortcutRouter.Route(Key.Apps, ModifierKeys.None, tile, true, true));
+        Assert.Equal(ShortcutAction.NudgeUp, ShortcutRouter.Route(Key.Up, ModifierKeys.None, tile, true, true));
+        Assert.Equal(ShortcutAction.DeleteLayer, ShortcutRouter.Route(Key.Back, ModifierKeys.None, tile, true, true));
+        Assert.True(ShortcutRouter.Keeps(ShortcutFocus.RegionTile, Key.F10, ModifierKeys.Shift));
+        Assert.False(ShortcutRouter.Keeps(ShortcutFocus.RegionTile, Key.F10, ModifierKeys.None));
+    });
+
+    [Fact] // K1: the 3D viewport keeps the arrows (any modifier) and Home; Delete and Backspace still reach the layer
+    public void The_viewport_keeps_the_arrows_and_home() => StaThread.Run(() =>
+    {
+        var viewport = Foci().Single(f => f.Expected == ShortcutFocus.Viewport).Element;
+        foreach (var key in new[] { Key.Left, Key.Right, Key.Up, Key.Down, Key.Home })
+            foreach (var mods in new[] { ModifierKeys.None, ModifierKeys.Shift, ModifierKeys.Alt })
+                Assert.Null(ShortcutRouter.Route(key, mods, viewport, true, true));
+        Assert.Equal(ShortcutAction.DeleteLayer, ShortcutRouter.Route(Key.Delete, ModifierKeys.None, viewport, true, true));
+        Assert.Equal(ShortcutAction.DeleteLayer, ShortcutRouter.Route(Key.Back, ModifierKeys.None, viewport, true, true));
+    });
+
+    [Fact] // K1: a text field and an open color picker keep every key; a slider, checkbox, button, tab or combo traps none; the three
+           // exemption foci have their own rows above
+    public void Text_fields_and_the_picker_keep_every_key_and_the_rest_keep_none() => StaThread.Run(() =>
+    {
+        var keys = new[] { Key.Left, Key.Right, Key.Up, Key.Down, Key.Delete, Key.Back };
+        foreach (var (name, expected, element) in Foci())
+        {
+            if (expected is ShortcutFocus.TextField or ShortcutFocus.ColorPicker)
+            {
+                foreach (var key in keys) Assert.True(ShortcutRouter.Route(key, ModifierKeys.None, element, true, true) is null, $"{key} on {name}");
+                foreach (var text in new[] { "[", "]", "{", "}", "r", "+", "-", "v" })
+                    Assert.True(ShortcutRouter.RouteText(text, ModifierKeys.None, element, true, true) is null, $"'{text}' on {name}");
+            }
+            else
+            {
+                if (expected is ShortcutFocus.None or ShortcutFocus.Other)
+                    foreach (var key in keys) Assert.True(ShortcutRouter.Route(key, ModifierKeys.None, element, true, true) is not null, $"{key} on {name}");
+                foreach (var text in new[] { "[", "]", "{", "}", "r", "+", "-", "v" })
+                    Assert.True(ShortcutRouter.RouteText(text, ModifierKeys.None, element, true, true) is not null, $"'{text}' on {name}");
+            }
+        }
+    });
+
+    [Fact] // the arrows: 1 template pixel, 10 with Shift, Alt does not stop them (4.1 did not exclude it); Delete and Backspace remove
+    public void Route_maps_the_arrows_and_delete()
+    {
+        foreach (var (key, small, big) in new[]
+        {
+            (Key.Left, ShortcutAction.NudgeLeft, ShortcutAction.NudgeLeftBig), (Key.Right, ShortcutAction.NudgeRight, ShortcutAction.NudgeRightBig),
+            (Key.Up, ShortcutAction.NudgeUp, ShortcutAction.NudgeUpBig), (Key.Down, ShortcutAction.NudgeDown, ShortcutAction.NudgeDownBig),
+        })
+        {
+            Assert.Equal(small, ShortcutRouter.Route(key, ModifierKeys.None, null, true, true));
+            Assert.Equal(big, ShortcutRouter.Route(key, ModifierKeys.Shift, null, true, true));
+            Assert.Equal(small, ShortcutRouter.Route(key, ModifierKeys.Alt, null, true, true));
+            Assert.Equal(big, ShortcutRouter.Route(key, ModifierKeys.Alt | ModifierKeys.Shift, null, true, true));
+        }
+        Assert.Equal(ShortcutAction.DeleteLayer, ShortcutRouter.Route(Key.Delete, ModifierKeys.None, null, true, true));
+        Assert.Equal(ShortcutAction.DeleteLayer, ShortcutRouter.Route(Key.Back, ModifierKeys.None, null, true, true));
+    }
+
+    [Fact] // keys-selection-gate-and-modifiers: no selection, or Keys OFF, or Ctrl or the Windows key held: no layer key routes
+    public void Layer_keys_need_a_selection_keys_on_and_no_ctrl_or_windows_key()
+    {
+        foreach (var key in new[] { Key.Left, Key.Right, Key.Up, Key.Down, Key.Delete, Key.Back })
+        {
+            Assert.Null(ShortcutRouter.Route(key, ModifierKeys.None, null, true, hasSelection: false));
+            Assert.Null(ShortcutRouter.Route(key, ModifierKeys.None, null, false, true));
+            foreach (var mods in new[] { ModifierKeys.Control, ModifierKeys.Control | ModifierKeys.Shift, ModifierKeys.Windows, ModifierKeys.Control | ModifierKeys.Alt })
+                Assert.Null(ShortcutRouter.Route(key, mods, null, true, true));
+        }
+        foreach (var text in new[] { "[", "]", "{", "}", "r", "R", "+", "=", "-", "_" })
+        {
+            Assert.Null(ShortcutRouter.RouteText(text, ModifierKeys.None, null, true, hasSelection: false));
+            Assert.Null(ShortcutRouter.RouteText(text, ModifierKeys.None, null, false, true));
+            Assert.Null(ShortcutRouter.RouteText(text, ModifierKeys.Control, null, true, true));
+            Assert.Null(ShortcutRouter.RouteText(text, ModifierKeys.Alt, null, true, true));
+            Assert.Null(ShortcutRouter.RouteText(text, ModifierKeys.Windows, null, true, true));
+        }
+    }
+
+    [Fact] // K2: the characters map as 4.1's switch: [ ] 5 degrees, 15 with Shift; { } 15; r R reset; + = grow; - _ shrink
+    public void RouteText_maps_the_layer_characters()
+    {
+        ShortcutAction? Text(string t, ModifierKeys m = ModifierKeys.None) => ShortcutRouter.RouteText(t, m, null, true, true);
+        Assert.Equal(ShortcutAction.RotateBack, Text("["));
+        Assert.Equal(ShortcutAction.RotateForward, Text("]"));
+        Assert.Equal(ShortcutAction.RotateBackBig, Text("{", ModifierKeys.Shift));
+        Assert.Equal(ShortcutAction.RotateForwardBig, Text("}", ModifierKeys.Shift));
+        Assert.Equal(ShortcutAction.RotateBackBig, Text("["  , ModifierKeys.Shift));
+        Assert.Equal(ShortcutAction.RotateForwardBig, Text("]", ModifierKeys.Shift));
+        Assert.Equal(ShortcutAction.RotateBackBig, Text("{"));         // typed with AltGr elsewhere: no Shift held, still the big step
+        Assert.Equal(ShortcutAction.RotateForwardBig, Text("}"));
+        Assert.Equal(ShortcutAction.ResetRotation, Text("r"));
+        Assert.Equal(ShortcutAction.ResetRotation, Text("R", ModifierKeys.Shift));
+        Assert.Equal(ShortcutAction.ScaleUp, Text("+", ModifierKeys.Shift));
+        Assert.Equal(ShortcutAction.ScaleUp, Text("="));
+        Assert.Equal(ShortcutAction.ScaleDown, Text("-"));
+        Assert.Equal(ShortcutAction.ScaleDown, Text("_", ModifierKeys.Shift));
+    }
+
+    [Fact] // D9: AltGr arrives as Ctrl+Alt; a character typed with both held routes like its bare form (K2), so [ ] { } work on a German layout
+    public void AltGr_characters_route_like_their_bare_form() => StaThread.Run(() =>
+    {
+        const ModifierKeys altGr = ModifierKeys.Control | ModifierKeys.Alt;
+        foreach (var text in new[] { "[", "]", "{", "}", "+", "-", "=", "_", "r", "v", "b", "e" })
+        {
+            var bare = ShortcutRouter.RouteText(text, ModifierKeys.None, null, true, true);
+            Assert.NotNull(bare);
+            Assert.Equal(bare, ShortcutRouter.RouteText(text, altGr, null, true, true));
+            Assert.Equal(ShortcutRouter.RouteText(text, ModifierKeys.Shift, null, true, true), ShortcutRouter.RouteText(text, altGr | ModifierKeys.Shift, null, true, true));
+            // a real Ctrl chord (Ctrl without Alt) and a lone Alt still block
+            Assert.Null(ShortcutRouter.RouteText(text, ModifierKeys.Control, null, true, true));
+            Assert.Null(ShortcutRouter.RouteText(text, ModifierKeys.Control | ModifierKeys.Shift, null, true, true));
+            Assert.Null(ShortcutRouter.RouteText(text, ModifierKeys.Alt, null, true, true));
+        }
+        // AltGr does not get past a text field, Keys OFF or an empty selection either
+        Assert.Null(ShortcutRouter.RouteText("[", altGr, new TextBox(), true, true));
+        Assert.Null(ShortcutRouter.RouteText("[", altGr, null, false, true));
+        Assert.Null(ShortcutRouter.RouteText("[", altGr, null, true, false));
+    });
+
+    [Fact] // D9 through the window: the German [ (AltGr+8) rotates the layer; Ctrl+[ does not
+    public void An_altgr_bracket_rotates_the_selected_layer_in_the_window() => StaThread.Run(() =>
+    {
+        using var rig = new Rig(Selected(Pose(rotation: 0)));
+        Assert.True(rig.Type("]", null, ModifierKeys.Control | ModifierKeys.Alt));
+        Assert.Equal(5, Top(rig.Session).Rotation);
+        Assert.True(rig.Type("}", null, ModifierKeys.Control | ModifierKeys.Alt));
+        Assert.Equal(20, Top(rig.Session).Rotation);
+        Assert.False(rig.Type("]", null, ModifierKeys.Control));
+        Assert.False(rig.Type("\u001d", null, ModifierKeys.Control));   // Ctrl+] types U+001D
+        Assert.Equal(20, Top(rig.Session).Rotation);
+        Assert.Equal(2, rig.Session.UndoCount);
+    });
+
+    // ---- the window: each key does its work as one undo step
+
+    [Theory] // done-when 1: 3 + ] = 8; 178 + ] = -177; -180 + [ = 175 (not -185); Shift variants { } step 15
+    [InlineData(3, "]", ModifierKeys.None, 8)]
+    [InlineData(178, "]", ModifierKeys.None, -177)]
+    [InlineData(-180, "[", ModifierKeys.None, 175)]
+    [InlineData(0, "{", ModifierKeys.Shift, -15)]
+    [InlineData(0, "}", ModifierKeys.Shift, 15)]
+    [InlineData(170, "}", ModifierKeys.Shift, -175)]
+    [InlineData(-180, "{", ModifierKeys.Shift, 165)]
+    [InlineData(10, "[", ModifierKeys.None, 5)]
+    public void The_brackets_rotate_with_a_true_modulo(double from, string typed, ModifierKeys mods, double expected) => StaThread.Run(() =>
+    {
+        using var rig = new Rig(Selected(Pose(rotation: from)));
+        Assert.True(rig.Type(typed, null, mods));
+        Assert.Equal(expected, Top(rig.Session).Rotation);
+        Assert.Equal(1, rig.Session.UndoCount);
+        rig.Session.Undo();
+        Assert.Equal(from, Top(rig.Session).Rotation);
+    });
+
+    [Fact] // done-when 1 (drift): from -180, [ three times is 175, 170, 165, never -185 and on
+    public void Repeated_left_brackets_never_drift_below_minus_180() => StaThread.Run(() =>
+    {
+        using var rig = new Rig(Selected(Pose(rotation: -180)));
+        var seen = new List<double>();
+        for (int i = 0; i < 80; i++)
+        {
+            rig.Type("[");
+            seen.Add(Top(rig.Session).Rotation);
+        }
+        Assert.Equal(new double[] { 175, 170, 165 }, seen.Take(3));
+        Assert.All(seen, r => Assert.InRange(r, -180, 179.999));
+    });
+
+    [Theory] // done-when 2: R and r reset rotation; already 0 records nothing
+    [InlineData("r")]
+    [InlineData("R")]
+    public void R_resets_the_rotation(string typed) => StaThread.Run(() =>
+    {
+        using var rig = new Rig(Selected(Pose(rotation: 37)));
+        Assert.True(rig.Type(typed, null, typed == "R" ? ModifierKeys.Shift : ModifierKeys.None));
+        Assert.Equal(0, Top(rig.Session).Rotation);
+        Assert.Equal(1, rig.Session.UndoCount);
+        Assert.True(rig.Type(typed));                    // handled (4.1's preventDefault), a no-op
+        Assert.Equal(1, rig.Session.UndoCount);
+    });
+
+    [Fact] // done-when 3: scale 1, 1.1, 1.21 about the top-left (x and y kept); + = grow, - _ shrink
+    public void Plus_and_minus_scale_about_the_top_left() => StaThread.Run(() =>
+    {
+        using var rig = new Rig(Selected(Pose(x: 40, y: 60, scale: 1)));
+        rig.Type("+", null, ModifierKeys.Shift);
+        Assert.Equal(1.1, Top(rig.Session).Scale, 12);
+        rig.Type("=");
+        var l = Top(rig.Session);
+        Assert.Equal(1.21, l.Scale, 12);
+        Assert.Equal((40.0, 60.0), (l.X, l.Y));
+        rig.Type("-");
+        Assert.Equal(1.089, Top(rig.Session).Scale, 12);
+        rig.Type("_", null, ModifierKeys.Shift);
+        Assert.Equal(0.9801, Top(rig.Session).Scale, 12);
+        Assert.Equal(4, rig.Session.UndoCount);
+    });
+
+    [Theory] // done-when 3: 4.8 gives 5 (the cap); 0.0105 gives 0.01 (the floor)
+    [InlineData(4.8, "+", 5.0)]
+    [InlineData(0.0105, "-", 0.01)]
+    public void Scale_keys_clamp(double from, string typed, double expected) => StaThread.Run(() =>
+    {
+        using var rig = new Rig(Selected(Pose(scale: from)));
+        Assert.True(rig.Type(typed, null, typed == "+" ? ModifierKeys.Shift : ModifierKeys.None));
+        Assert.Equal(expected, Top(rig.Session).Scale);
+        Assert.True(rig.Type(typed, null, typed == "+" ? ModifierKeys.Shift : ModifierKeys.None));   // at the limit: handled, records nothing
+        Assert.Equal(1, rig.Session.UndoCount);
+    });
+
+    [Fact] // done-when 4 and 5: ArrowRight x5 adds 5 to x, one undo step per press; Shift+Down adds 10 to y
+    public void Arrow_keys_nudge_one_step_per_press() => StaThread.Run(() =>
+    {
+        using var rig = new Rig(Selected(Pose(x: 100, y: 100)));
+        for (int i = 1; i <= 5; i++)
+        {
+            Assert.True(rig.Down(Key.Right));
+            Assert.Equal(100 + i, Top(rig.Session).X);
+            Assert.Equal(i, rig.Session.UndoCount);
+        }
+        Assert.True(rig.Down(Key.Down, null, ModifierKeys.Shift));
+        Assert.Equal((105.0, 110.0), (Top(rig.Session).X, Top(rig.Session).Y));
+        Assert.True(rig.Down(Key.Left));
+        Assert.True(rig.Down(Key.Up));
+        Assert.Equal((104.0, 109.0), (Top(rig.Session).X, Top(rig.Session).Y));
+        Assert.Equal(8, rig.Session.UndoCount);
+        rig.Session.Undo();
+        rig.Session.Undo();
+        Assert.Equal((105.0, 110.0), (Top(rig.Session).X, Top(rig.Session).Y));
+    });
+
+    [Fact] // done-when 6: with nothing selected the arrows do nothing and are not handled; Ctrl+ArrowLeft does nothing either way
+    public void Arrows_do_nothing_without_a_selection_or_with_ctrl() => StaThread.Run(() =>
+    {
+        using var none = new Rig(SessionWith(Pose()));
+        var before = none.Session.Document;
+        foreach (var key in new[] { Key.Left, Key.Right, Key.Up, Key.Down, Key.Delete, Key.Back })
+            Assert.False(none.Down(key));
+        foreach (var text in new[] { "[", "]", "r", "+", "-" })
+            Assert.False(none.Type(text));
+        Assert.Same(before, none.Session.Document);
+        Assert.Equal(0, none.Session.UndoCount);
+
+        using var selected = new Rig(Selected(Pose()));
+        Assert.False(selected.Down(Key.Left, null, ModifierKeys.Control));
+        Assert.False(selected.Down(Key.Delete, null, ModifierKeys.Control));
+        Assert.Equal((100.0, 0), (Top(selected.Session).X, selected.Session.UndoCount));
+    });
+
+    [Fact] // Keys OFF blocks the bare layer keys, and the text field keeps its own
+    public void Keys_off_and_text_fields_block_the_layer_keys() => StaThread.Run(() =>
+    {
+        using var rig = new Rig(Selected(Pose()));
+        Assert.False(rig.Down(Key.Right, new TextBox()));
+        Assert.False(rig.Type("]", new TextBox()));
+        Assert.False(rig.Down(Key.Delete, new TextBox()));
+        rig.Main.Home.Keys.ToggleCommand.Execute(null);
+        Assert.False(rig.Down(Key.Right));
+        Assert.False(rig.Type("]"));
+        Assert.False(rig.Down(Key.Delete));
+        Assert.Equal((100.0, 0.0, 0), (Top(rig.Session).X, Top(rig.Session).Rotation, rig.Session.UndoCount));
+        Assert.Single(rig.Session.Document.Layers);
+    });
+
+    [Fact] // the focus rules through the window: the layer list keeps Up, a viewport its arrows, a region tile Delete; a slider traps nothing
+    public void The_window_leaves_the_keys_a_focused_control_keeps() => StaThread.Run(() =>
+    {
+        using var rig = new Rig(Selected(Pose(), Pose(2)));
+        var foci = Foci().ToDictionary(f => f.Name, f => f.Element);
+        Assert.False(rig.Down(Key.Up, foci["layer list"]));
+        Assert.False(rig.Down(Key.Down, foci["layer row"], ModifierKeys.None));
+        Assert.False(rig.Down(Key.Delete, foci["layer row"]));
+        Assert.False(rig.Down(Key.Left, foci["3D viewport"]));
+        Assert.False(rig.Down(Key.Delete, foci["region tile"]));
+        Assert.Equal(0, rig.Session.UndoCount);
+        Assert.True(rig.Down(Key.Left, foci["Slider"]));     // a slider never traps (kbd-input-focus-trap)
+        Assert.Equal(1, rig.Session.UndoCount);
+        Assert.Equal(99, Top(rig.Session).X);
+    });
+
+    [Fact] // done-when 12: the inspector shows the nudged position, rotation and scale
+    public void The_inspector_refreshes_after_a_key() => StaThread.Run(() =>
+    {
+        using var rig = new Rig(Selected(Pose(x: 100, y: 100)));
+        var panel = rig.Main.LayerProperties;
+        Assert.Equal("100", panel.XText);
+        rig.Down(Key.Right, null, ModifierKeys.Shift);
+        rig.Down(Key.Down);
+        Assert.Equal(("110", "101"), (panel.XText, panel.YText));
+        rig.Type("]");
+        Assert.Equal(5, panel.Rotation);
+        rig.Type("+", null, ModifierKeys.Shift);
+        Assert.Equal(110, panel.ScalePercent, 9);
+    });
+
+    [Fact] // done-when 7: Ctrl+D adds one layer at (+10, +10) above the original, selects it, in one step; with nothing selected it is handled and does nothing
+    public void Ctrl_d_duplicates_the_selection() => StaThread.Run(() =>
+    {
+        using var rig = new Rig(Selected(Pose(1, x: 30, y: 40), Pose(2, x: 100, y: 120)));
+        rig.Session.Select(1);
+        var duplicate = rig.Window.InputBindings.OfType<KeyBinding>().Single(b => b.Key == Key.D && b.Modifiers == ModifierKeys.Control);
+        rig.Window.FocusedElement = () => null;
+        Assert.True(duplicate.Command.CanExecute(null));
+        duplicate.Command.Execute(null);
+
+        Assert.Equal(new[] { 1, 3, 2 }, rig.Session.Document.Layers.Select(l => l.Id));
+        var copy = rig.Session.Document.Layers[1];
+        Assert.Equal((40.0, 50.0, "Image 1 copy"), (copy.X, copy.Y, copy.Name));
+        Assert.Equal(3, rig.Session.SelectedLayerId);
+        Assert.Equal(1, rig.Session.UndoCount);
+        rig.Session.Undo();
+        Assert.Equal(2, rig.Session.Document.Layers.Count);
+    });
+
+    [Fact]
+    public void Ctrl_d_with_nothing_selected_is_handled_and_does_nothing() => StaThread.Run(() =>
+    {
+        using var rig = new Rig(SessionWith(Pose()));
+        var before = rig.Session.Document;
+        int nextId = rig.Session.NextId;
+        var duplicate = rig.Window.InputBindings.OfType<KeyBinding>().Single(b => b.Key == Key.D && b.Modifiers == ModifierKeys.Control);
+        rig.Window.FocusedElement = () => null;
+        Assert.True(duplicate.Command.CanExecute(null));   // enabled, so the key is handled (4.1 blocked the browser's bookmark)
+        duplicate.Command.Execute(null);
+        Assert.Same(before, rig.Session.Document);
+        Assert.Equal((0, nextId), (rig.Session.UndoCount, rig.Session.NextId));
+        rig.Window.FocusedElement = () => new TextBox();    // a focused text field keeps Ctrl+D
+        Assert.False(duplicate.Command.CanExecute(null));
+    });
+
+    [Fact] // done-when 8: Delete on the top layer moves the selection to the new top, and one undo restores it; Backspace does the same
+    public void Delete_and_backspace_remove_the_selection_and_select_the_new_top() => StaThread.Run(() =>
+    {
+        foreach (var key in new[] { Key.Delete, Key.Back })
+        {
+            using var rig = new Rig(Selected(Pose(1), Pose(2), Pose(3)));
+            Assert.True(rig.Down(key));
+            Assert.Equal(new[] { 1, 2 }, rig.Session.Document.Layers.Select(l => l.Id));
+            Assert.Equal(2, rig.Session.SelectedLayerId);
+            Assert.Equal(1, rig.Session.UndoCount);
+            rig.Session.Undo();
+            Assert.Equal(new[] { 1, 2, 3 }, rig.Session.Document.Layers.Select(l => l.Id));
+            Assert.Equal(2, rig.Session.SelectedLayerId);   // undo keeps a selection whose layer still exists (undo-restore-ui-side-effects)
+
+            rig.Session.Select(1);                       // deleting a lower layer keeps the layers above
+            Assert.True(rig.Down(key));
+            Assert.Equal(new[] { 2, 3 }, rig.Session.Document.Layers.Select(l => l.Id));
+            Assert.Equal(3, rig.Session.SelectedLayerId);
+        }
+    });
+
+    [Fact] // deleting the only layer leaves nothing selected; the keys then do nothing
+    public void Deleting_the_last_layer_selects_nothing() => StaThread.Run(() =>
+    {
+        using var rig = new Rig(Selected(Pose()));
+        Assert.True(rig.Down(Key.Delete));
+        Assert.Empty(rig.Session.Document.Layers);
+        Assert.Null(rig.Session.SelectedLayerId);
+        Assert.False(rig.Down(Key.Delete));
+        Assert.Equal(1, rig.Session.UndoCount);
+    });
+
+    // ---- Undo and Redo: the buttons, the matrix and the chords (keys-undo-redo, undo-buttons-shortcuts)
+
+    static KeyBinding Chord(MainWindow window, Key key, ModifierKeys mods) =>
+        window.InputBindings.OfType<KeyBinding>().Single(b => b.Key == key && b.Modifiers == mods);
+
+    static void Press(Rig rig, Key key, ModifierKeys mods)
+    {
+        var binding = Chord(rig.Window, key, mods);
+        rig.Window.FocusedElement = () => null;
+        if (binding.Command.CanExecute(null)) binding.Command.Execute(null);
+    }
+
+    [Fact] // done-when 9: launch both off; an edit turns Undo on; an undo turns Redo on; a new edit turns Redo off
+    public void The_undo_redo_disabled_state_matrix_holds() => StaThread.Run(() =>
+    {
+        using var rig = new Rig(Selected(Pose()));
+        var edit = rig.Main.Home.Edit;
+        Assert.Equal((false, false), (edit.UndoCommand.CanExecute(null), edit.RedoCommand.CanExecute(null)));
+        rig.Down(Key.Right);
+        Assert.Equal((true, false), (edit.UndoCommand.CanExecute(null), edit.RedoCommand.CanExecute(null)));
+        Press(rig, Key.Z, ModifierKeys.Control);
+        Assert.Equal((false, true), (edit.UndoCommand.CanExecute(null), edit.RedoCommand.CanExecute(null)));
+        rig.Down(Key.Left);
+        Assert.Equal((true, false), (edit.UndoCommand.CanExecute(null), edit.RedoCommand.CanExecute(null)));
+    });
+
+    [Fact] // done-when 9: 31 edits followed by 31 undos apply 30 (the history holds 30); done-when 10 follows
+    public void Thirty_one_edits_then_thirty_one_undos_apply_thirty() => StaThread.Run(() =>
+    {
+        using var rig = new Rig(Selected(Pose(x: 100)));
+        for (int i = 0; i < 31; i++) rig.Down(Key.Right);
+        Assert.Equal(131, Top(rig.Session).X);
+        int applied = 0;
+        for (int i = 0; i < 31; i++)
+        {
+            int before = rig.Session.UndoCount;
+            Press(rig, Key.Z, ModifierKeys.Control);
+            if (rig.Session.UndoCount < before) applied++;
+        }
+        Assert.Equal(30, applied);
+        Assert.Equal(101, Top(rig.Session).X);   // the first edit's result is as far back as the history goes
+    });
+
+    [Fact] // done-when 10: Ctrl+Y and Ctrl+Shift+Z redo, with the redo stack as the gate; Keys OFF does not reach them
+    public void Ctrl_y_and_ctrl_shift_z_redo() => StaThread.Run(() =>
+    {
+        using var rig = new Rig(Selected(Pose(x: 100)));
+        foreach (var (key, mods) in new[] { (Key.Y, ModifierKeys.Control), (Key.Z, ModifierKeys.Control | ModifierKeys.Shift) })
+        {
+            rig.Down(Key.Right);
+            rig.Down(Key.Right);
+            double x = Top(rig.Session).X;
+            Press(rig, Key.Z, ModifierKeys.Control);
+            Press(rig, Key.Z, ModifierKeys.Control);
+            Assert.Equal(x - 2, Top(rig.Session).X);
+            Press(rig, key, mods);
+            Assert.Equal(x - 1, Top(rig.Session).X);
+            rig.Main.Home.Keys.ToggleCommand.Execute(null);   // the chords ignore Keys OFF (the fix on keys-undo-redo)
+            Press(rig, key, mods);
+            rig.Main.Home.Keys.ToggleCommand.Execute(null);
+            Assert.Equal(x, Top(rig.Session).X);
+            Press(rig, key, mods);                            // nothing left to redo: no-op
+            Assert.Equal(x, Top(rig.Session).X);
+        }
+    });
+
+    [Fact] // a focused text field keeps Ctrl+Y and Ctrl+Shift+Z, as it does Ctrl+Z
+    public void A_text_field_keeps_the_redo_chords() => StaThread.Run(() =>
+    {
+        using var rig = new Rig(Selected(Pose(x: 100)));
+        rig.Down(Key.Right);
+        rig.Session.Undo();
+        rig.Window.FocusedElement = () => new TextBox();
+        foreach (var (key, mods) in new[] { (Key.Y, ModifierKeys.Control), (Key.Z, ModifierKeys.Control | ModifierKeys.Shift), (Key.D, ModifierKeys.Control) })
+            Assert.False(Chord(rig.Window, key, mods).Command.CanExecute(null));
+        Assert.Equal(100, Top(rig.Session).X);
+    });
 }

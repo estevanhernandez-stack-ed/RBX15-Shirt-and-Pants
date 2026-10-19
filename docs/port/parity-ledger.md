@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**429 rows.** Status: done 269, open 160. Disposition: fix 207, keep 188, drop 26, new 8. Checks: ui-auto 125, unit 124, manual 67, golden 66, none-retired 25, doc 22.
+**429 rows.** Status: done 351, open 78. Disposition: fix 211, keep 184, drop 26, new 8. Checks: ui-auto 125, unit 124, manual 67, golden 66, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -18,12 +18,12 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `asset-count-label` | Asset count label text | ui-auto | fix | low |
 | open | `asset-grid-thumbnails` | Asset grid thumbnails rendering | ui-auto | fix | med |
 | done | `asset-drag-to-canvas` | Drag a thumbnail onto the canvas | ui-auto | fix | med |
-| open | `asset-resizable-browser` | Resizable asset browser (drag handle) | ui-auto | keep | low |
+| done | `asset-resizable-browser` | Resizable asset browser (drag handle) | ui-auto | keep | low |
 | done | `panel-asset-library` | Asset library: packs, folder, browser | manual | fix | high |
 | done | `panel-asset-resize-handle` | Asset browser vertical resize handle | ui-auto | keep | low |
 | open | `panel-drop-zone` | Drop art here zone | ui-auto | fix | low |
 | done | `io-folder-picker` | Asset library folder picker semantics | unit | fix | med |
-| open | `io-image-formats` | Accepted image inputs (drop, Add image, Background, folder) | manual | fix | med |
+| done | `io-image-formats` | Accepted image inputs (drop, Add image, Background, folder) | manual | fix | med |
 | done | `pack-builtin-load` | Built-in Drips and Word art pack loading | manual | keep | low |
 | done | `asset-drag-stale-reference` | Stale asset-drag file hijacks the next OS file drop | ui-auto | fix | low |
 | done | `asset-thumb-uuid-label` | Thumbnail caption substitutes parent folder name for UUID filenames | manual | keep | low |
@@ -46,7 +46,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `cursor-default` | Default tool cursor | manual | fix | low |
 | done | `cursor-eraser` | Eraser brush ring cursor | manual | fix | med |
 | done | `tools-set-tool` | setTool: active tool, button highlight, cursor refresh | ui-auto | keep | low |
-| open | `tools-toggle-off` | Re-click or re-press active tool returns to Select | ui-auto | keep | low |
+| done | `tools-toggle-off` | Re-click or re-press active tool returns to Select | ui-auto | keep | low |
 | done | `tools-auto-select-switch` | Tool auto-reverts to Select on layer add and layer select | ui-auto | keep | low |
 | done | `tools-cursor` | Canvas cursor per tool, eraser ring cursor | manual | fix | med |
 | done | `drop-canvas` | Drop on canvas places layer at drop point | ui-auto | fix | med |
@@ -59,7 +59,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `select-hover-and-end` | Select tool mousemove idle, mouseup and mouseleave | ui-auto | fix | low |
 | done | `select-handle-render` | Selection box and handle rendering (editor overlay) | manual | keep | low |
 | done | `draw-release-outside-canvas` | Mouse released or left outside canvas while drawing | ui-auto | fix | med |
-| open | `draw-tool-switch-midstroke` | Tool switch during a stroke | ui-auto | fix | low |
+| done | `draw-tool-switch-midstroke` | Tool switch during a stroke | ui-auto | fix | low |
 | done | `wheel-scale-layer` | Wheel in Select tool scales selected layer | ui-auto | fix | med |
 | done | `wheel-brush-size` | Wheel with draw tools changes brush size | ui-auto | keep | low |
 | done | `eraser-cursor` | Eraser ring cursor | manual | fix | low |
@@ -95,24 +95,24 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
-| open | `undo-buttons-shortcuts` | Undo/Redo buttons and shortcuts | ui-auto | fix | med |
-| open | `keyboard-tool-toggle-interplay` | Tool shortcuts that gate canvas behavior | ui-auto | fix | med |
-| open | `keys-toggle-button` | Keys ON/OFF toggle button | ui-auto | fix | low |
-| open | `keys-text-input-guard` | Shortcut suppression while an input has focus | ui-auto | fix | med |
-| open | `keys-tool-shortcuts` | Tool shortcuts V B L U O E | ui-auto | fix | low |
-| open | `keys-duplicate-ctrl-d` | Ctrl+D duplicate layer | ui-auto | keep | low |
-| open | `keys-undo-redo` | Undo/Redo shortcuts | ui-auto | keep | low |
-| open | `keys-selection-gate-and-modifiers` | Selection gate and Ctrl/Meta exclusion for nudge keys | ui-auto | fix | low |
-| open | `keys-arrow-nudge` | Arrow keys nudge layer | ui-auto | fix | low |
-| open | `keys-rotate-brackets` | [ ] rotate and R reset | unit | fix | med |
-| open | `keys-scale-plus-minus` | + / - scale keys | unit | keep | low |
-| open | `keys-delete` | Delete and Backspace remove selected layer | ui-auto | keep | low |
-| open | `home-keys-toggle` | Keys: ON/OFF shortcut toggle | ui-auto | fix | low |
-| open | `kbd-shortcuts` | Global keyboard shortcuts | ui-auto | fix | med |
-| open | `kbd-ctrl-combo-tool-toggles` | Ctrl+letter combos still toggle tools (V B L U O); Ctrl+E does not | ui-auto | fix | med |
-| open | `kbd-bracket-rotate-negative-drift` | [ rotate wrap formula breaks below -180 | ui-auto | fix | low |
-| open | `kbd-input-focus-trap` | Shortcuts die after clicking any slider, checkbox or color input | ui-auto | fix | med |
-| open | `kbd-focused-button-enter-space` | Enter/Space re-fire the last clicked button | manual | keep | low |
+| done | `undo-buttons-shortcuts` | Undo/Redo buttons and shortcuts | ui-auto | fix | med |
+| done | `keyboard-tool-toggle-interplay` | Tool shortcuts that gate canvas behavior | ui-auto | fix | med |
+| done | `keys-toggle-button` | Keys ON/OFF toggle button | ui-auto | fix | low |
+| done | `keys-text-input-guard` | Shortcut suppression while an input has focus | ui-auto | fix | med |
+| done | `keys-tool-shortcuts` | Tool shortcuts V B L U O E | ui-auto | fix | low |
+| done | `keys-duplicate-ctrl-d` | Ctrl+D duplicate layer | ui-auto | keep | low |
+| done | `keys-undo-redo` | Undo/Redo shortcuts | ui-auto | keep | low |
+| done | `keys-selection-gate-and-modifiers` | Selection gate and Ctrl/Meta exclusion for nudge keys | ui-auto | fix | low |
+| done | `keys-arrow-nudge` | Arrow keys nudge layer | ui-auto | fix | low |
+| done | `keys-rotate-brackets` | [ ] rotate and R reset | unit | fix | med |
+| done | `keys-scale-plus-minus` | + / - scale keys | unit | keep | low |
+| done | `keys-delete` | Delete and Backspace remove selected layer | ui-auto | keep | low |
+| done | `home-keys-toggle` | Keys: ON/OFF shortcut toggle | ui-auto | fix | low |
+| done | `kbd-shortcuts` | Global keyboard shortcuts | ui-auto | fix | med |
+| done | `kbd-ctrl-combo-tool-toggles` | Ctrl+letter combos still toggle tools (V B L U O); Ctrl+E does not | ui-auto | fix | med |
+| done | `kbd-bracket-rotate-negative-drift` | [ rotate wrap formula breaks below -180 | ui-auto | fix | low |
+| done | `kbd-input-focus-trap` | Shortcuts die after clicking any slider, checkbox or color input | ui-auto | fix | med |
+| done | `kbd-focused-button-enter-space` | Enter/Space re-fire the last clicked button | manual | keep | low |
 
 ## App.LayerProperties
 
@@ -124,10 +124,10 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `props-rotation` | Rotation slider | ui-auto | fix | low |
 | done | `props-opacity` | Layer opacity slider | ui-auto | fix | low |
 | done | `props-adjust-panel` | Image adjustments collapsible panel | ui-auto | fix | low |
-| open | `props-adjust-sliders` | Brightness/Contrast/Saturation/Hue/RGB shift sliders | ui-auto | fix | high |
+| done | `props-adjust-sliders` | Brightness/Contrast/Saturation/Hue/RGB shift sliders | ui-auto | fix | high |
 | done | `props-adjust-reset` | Reset adjustments | ui-auto | fix | low |
 | done | `props-live-refresh` | Property panel refresh behavior while dragging | ui-auto | fix | low |
-| open | `layers-selected-panel` | Selected layer controls | ui-auto | fix | high |
+| done | `layers-selected-panel` | Selected layer controls | ui-auto | fix | high |
 | done | `props-falsy-zero-adjust-display` | Brightness/Contrast/Saturation of 0 display as 100 after reselect | ui-auto | fix | low |
 | done | `props-rotation-label-unrounded` | Rotation label shows raw float after handle drag | ui-auto | fix | low |
 | done | `props-panel-rebuild-resets` | Every updateUI rebuilds the property panel and collapses Image adjustments | ui-auto | fix | low |
@@ -147,9 +147,9 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
-| open | `details-settings-controls` | Detail settings (color, width, Stitch) | ui-auto | keep | low |
-| open | `details-buttons-inventory` | Detail button inventory and grouping | ui-auto | keep | low |
-| open | `details-settings` | Details tab: stroke settings | ui-auto | keep | low |
+| done | `details-settings-controls` | Detail settings (color, width, Stitch) | ui-auto | keep | low |
+| done | `details-buttons-inventory` | Detail button inventory and grouping | ui-auto | keep | low |
+| done | `details-settings` | Details tab: stroke settings | ui-auto | keep | low |
 
 ## App.Ribbon.Home
 
@@ -160,43 +160,43 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `overlay-mask-checkbox` | Mask checkbox (default on) | ui-auto | fix | low |
 | done | `regions-grid-layout-shirt` | Template Regions grid layout (Shirt) | ui-auto | keep | low |
 | done | `regions-grid-layout-pants` | Template Regions grid in Pants mode (labels and keys) | ui-auto | keep | low |
-| open | `regions-button-swatch-paint` | Region button swatch preview (paintRegionButton) | manual | fix | med |
+| done | `regions-button-swatch-paint` | Region button swatch preview (paintRegionButton) | manual | fix | med |
 | done | `regions-click-fit-layer` | Click region button with a layer selected: fit layer into region | unit | fix | low |
 | done | `regions-right-click-clear` | Right-click region button clears its fill | ui-auto | keep | low |
 | done | `regions-hint-text` | Fill Style hint line | manual | keep | low |
-| open | `fillstyle-type-buttons` | Fill type button strip (7 types) | ui-auto | fix | low |
+| done | `fillstyle-type-buttons` | Fill type button strip (7 types) | ui-auto | fix | low |
 | done | `fillstyle-color-pickers` | Color 1 and Color 2 pickers | manual | fix | med |
-| open | `fillstyle-angle-scale` | Angle and Scale sliders | ui-auto | keep | low |
+| done | `fillstyle-angle-scale` | Angle and Scale sliders | ui-auto | keep | low |
 | done | `project-load-image-layer` | Add image (load image as layer) | ui-auto | fix | med |
-| open | `home-mode-toggle` | Shirt/Pants mode toggle button | ui-auto | fix | low |
-| open | `home-tool-buttons` | Tool buttons: Select, Draw, Line, Rect, Ellipse, Eraser | ui-auto | keep | low |
+| done | `home-mode-toggle` | Shirt/Pants mode toggle button | ui-auto | fix | low |
+| done | `home-tool-buttons` | Tool buttons: Select, Draw, Line, Rect, Ellipse, Eraser | ui-auto | keep | low |
 | done | `home-brush-group` | Brush group: color, size, fill | ui-auto | keep | med |
-| open | `home-placement-group` | Placement buttons: Fit Front, F+B, Stretch, Allover, Scatter | ui-auto | fix | low |
+| done | `home-placement-group` | Placement buttons: Fit Front, F+B, Stretch, Allover, Scatter | ui-auto | fix | low |
 | done | `home-edit-group` | Edit group: Undo, Redo, Clear | ui-auto | keep | med |
 | done | `home-file-group` | File group: Save work, Open, Add image, Download template | manual | fix | med |
 | done | `home-settings-group` | Settings group: Template name, Mask, Grid | ui-auto | keep | low |
 | done | `region-front-highlight-lost` | Front region button loses its purple base highlight once cleared | ui-auto | fix | low |
-| open | `fillstyle-ui-not-synced-from-region` | Fill Style controls are one-way (never read back from regions) | manual | keep | low |
+| done | `fillstyle-ui-not-synced-from-region` | Fill Style controls are one-way (never read back from regions) | manual | keep | low |
 | done | `art-palette` | Palette from the user's art (new in v5.1) | unit | new | low |
 
 ## App.Ribbon.Layout
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
-| open | `bg-palette` | Background color swatch palette | ui-auto | keep | low |
-| open | `fills-to-css` | fillToCSS swatch approximation | manual | fix | low |
-| open | `props-center-front` | Center on front torso | ui-auto | fix | low |
-| open | `bg-swatches` | Background color swatches | ui-auto | keep | low |
-| open | `bg-color-opacity` | Background color picker and opacity slider | ui-auto | keep | med |
-| open | `bg-image` | Background image picker | ui-auto | fix | med |
-| open | `placement-selection-guard` | Placement actions with no selection | ui-auto | fix | low |
+| done | `bg-palette` | Background color swatch palette | ui-auto | keep | low |
+| done | `fills-to-css` | fillToCSS swatch approximation | manual | fix | low |
+| done | `props-center-front` | Center on front torso | ui-auto | fix | low |
+| done | `bg-swatches` | Background color swatches | ui-auto | keep | low |
+| done | `bg-color-opacity` | Background color picker and opacity slider | ui-auto | fix | med |
+| done | `bg-image` | Background image picker | ui-auto | fix | med |
+| done | `placement-selection-guard` | Placement actions with no selection | ui-auto | fix | low |
 | done | `regions-limb-caps` | Limb top and bottom tiles in the region grid | ui-auto | fix | low |
 | done | `regions-fill-all` | Fill all regions at once (All tile) | ui-auto | new | low |
-| open | `presets-six-buttons` | Layout presets row (6 buttons) | ui-auto | fix | low |
-| open | `layout-presets` | Layout tab: Presets (6 buttons) | ui-auto | fix | low |
-| open | `layout-background-swatches` | Background swatches (12) | ui-auto | fix | low |
-| open | `layout-bg-settings` | BG Settings: color, image, opacity | ui-auto | fix | low |
-| open | `layout-fill-style` | Fill Style: type, colors, angle, scale | ui-auto | keep | med |
+| done | `presets-six-buttons` | Layout presets row (6 buttons) | ui-auto | fix | low |
+| done | `layout-presets` | Layout tab: Presets (6 buttons) | ui-auto | fix | low |
+| done | `layout-background-swatches` | Background swatches (12) | ui-auto | fix | low |
+| done | `layout-bg-settings` | BG Settings: color, image, opacity | ui-auto | fix | low |
+| done | `layout-fill-style` | Fill Style: type, colors, angle, scale | ui-auto | fix | med |
 | open | `layout-template-regions` | Template Regions grid (dynamic) | ui-auto | fix | med |
 | done | `ribbon-fill-regions-joined` | Fill Style and the region grid read as one fill tool | ui-auto | fix | low |
 
@@ -204,17 +204,17 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
-| open | `wordart-state-defaults` | Word Art control set and default values | ui-auto | fix | low |
-| open | `wordart-preview-live` | Live preview wiring | ui-auto | keep | low |
+| done | `wordart-state-defaults` | Word Art control set and default values | ui-auto | fix | low |
+| done | `wordart-preview-live` | Live preview wiring | ui-auto | fix | low |
 | open | `text-inputs` | Text tab: text, font, colors, size | ui-auto | keep | med |
 | open | `text-preview` | Word Art live preview canvas | ui-auto | fix | low |
-| open | `text-add-to-canvas` | Add to canvas (Word Art layer) | unit | fix | med |
+| done | `text-add-to-canvas` | Add to canvas (Word Art layer) | unit | fix | med |
 
 ## App.Shell
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
-| open | `ribbon-tab-switch` | Ribbon tab switching | ui-auto | keep | low |
+| done | `ribbon-tab-switch` | Ribbon tab switching | ui-auto | keep | low |
 | done | `mode-toggle-button` | Shirt/Pants toggle button | ui-auto | keep | low |
 | open | `project-startup` | Initial render and startup order | manual | fix | low |
 | open | `shell-window-frame` | Window frame, title, menu, default size | manual | fix | low |
@@ -227,7 +227,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `font-ui-runtime-google` | UI fonts loaded at runtime from Google Fonts | manual | fix | med |
 | done | `theme-scrollbars` | Scrollbar styling (effective result) | manual | keep | low |
 | open | `a11y-focus-rings` | Keyboard focus ring | ui-auto | fix | med |
-| open | `ribbon-tabs-switching` | Ribbon tab strip and switching | ui-auto | keep | low |
+| done | `ribbon-tabs-switching` | Ribbon tab strip and switching | ui-auto | keep | low |
 | open | `ribbon-group-structure` | Ribbon group chrome | manual | keep | low |
 | done | `ribbon-overflow-hscroll` | Ribbon horizontal overflow | manual | keep | low |
 | open | `cross-undo-disabled-style` | Button visual states (base, hover, active, disabled) | manual | keep | med |
@@ -237,9 +237,9 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `shell-window-size` | Initial window 1200x800, centered, resizable | ui-auto | fix | low |
 | done | `shell-window-title` | Window title is a static product name | ui-auto | keep | low |
 | open | `shell-lifecycle-quit` | Quit on last window closed; macOS activate branch is dead code | ui-auto | fix | low |
-| open | `shell-single-instance` | No single-instance lock | manual | keep | low |
+| done | `shell-single-instance` | No single-instance lock | manual | keep | low |
 | done | `shell-external-drop-guard` | Dropping files outside the drop zone/canvas is swallowed, not navigated | ui-auto | keep | low |
-| open | `shell-header-version-hardcoded` | Header version string is hand-typed and drifts from docs | manual | fix | low |
+| done | `shell-header-version-hardcoded` | Header version string is hand-typed and drifts from docs | manual | fix | low |
 | done | `avatar-preview-3d` | 3D avatar preview (new in v5.1) | ui-auto | new | low |
 | done | `avatar-preview-r15` | R15 body in the 3D preview (new in v5.1) | ui-auto | new | low |
 | done | `font-ui-weight-600` | UI labels at CSS weight 600 in the vendored variable fonts | manual | fix | low |
@@ -298,7 +298,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
-| open | `details-layer-creation-pipeline` | Detail layer creation pipeline (canvas, style, autocrop, insertion) | golden | keep | med |
+| done | `details-layer-creation-pipeline` | Detail layer creation pipeline (canvas, style, autocrop, insertion) | golden | keep | med |
 | done | `details-mode-independence-and-selection` | Detail layers ignore selection and ride on the layer stack | unit | keep | low |
 | done | `detail-collar-v` | V-Neck collar geometry | golden | keep | low |
 | done | `detail-collar-crew` | Crew neck geometry (front and back) | golden | keep | low |
@@ -314,7 +314,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `detail-yoke` | Back yoke | golden | keep | low |
 | done | `detail-full-set` | Full Detail Set composite | golden | keep | low |
 | done | `details-pants-mode-behavior` | Details behavior in Pants mode | unit | fix | high |
-| open | `details-buttons` | Details tab: 16 detail generators | golden | fix | med |
+| done | `details-buttons` | Details tab: 16 detail generators | golden | fix | med |
 
 ## Engine.Document
 
@@ -331,29 +331,29 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `layers-visibility` | Toggle layer visibility | unit | fix | low |
 | done | `layers-move-updown` | Up/Down buttons | unit | fix | low |
 | done | `props-flip` | Flip H / Flip V | unit | fix | low |
-| open | `btn-fit-front` | Fit Front | unit | fix | med |
-| open | `btn-fit-fb` | F+B (front and back) | unit | fix | med |
-| open | `btn-stretch` | Stretch (across torso) | unit | fix | low |
-| open | `btn-allover` | Allover (tile on every region) | unit | keep | low |
-| open | `btn-scatter` | Scatter (randomized placement) | unit | keep | low |
+| done | `btn-fit-front` | Fit Front | unit | fix | med |
+| done | `btn-fit-fb` | F+B (front and back) | unit | fix | med |
+| done | `btn-stretch` | Stretch (across torso) | unit | fix | low |
+| done | `btn-allover` | Allover (tile on every region) | unit | keep | low |
+| done | `btn-scatter` | Scatter (randomized placement) | unit | keep | low |
 | done | `btn-clear` | Clear (remove all layers) | unit | keep | low |
 | done | `layer-sharing-img` | Cloned layers share the Image object | unit | keep | med |
 | done | `regions-state-model` | Region fill state model (regionColors map and currentFill) | unit | keep | low |
 | done | `regions-click-paint` | Click region button with no layer selected: paint with current fill | unit | fix | low |
 | done | `mode-switch-effects` | What switchMode changes and resets | unit | keep | med |
-| open | `preset-meme` | Meme Tee preset | unit | fix | low |
-| open | `preset-allover` | Allover preset | unit | fix | low |
-| open | `preset-sleeve-pop` | Sleeve Pop preset | unit | fix | low |
-| open | `preset-mirror` | Mirror F+B preset | unit | fix | low |
-| open | `preset-scattered` | Scatter preset (randomized) | unit | keep | low |
-| open | `preset-fullbleed` | Fullbleed preset | unit | keep | low |
+| done | `preset-meme` | Meme Tee preset | unit | fix | low |
+| done | `preset-allover` | Allover preset | unit | fix | low |
+| done | `preset-sleeve-pop` | Sleeve Pop preset | unit | fix | low |
+| done | `preset-mirror` | Mirror F+B preset | unit | fix | low |
+| done | `preset-scattered` | Scatter preset (randomized) | unit | keep | low |
+| done | `preset-fullbleed` | Fullbleed preset | unit | keep | low |
 | done | `asset-click-add` | Click thumbnail: add as layer (fit 85% in front region) | unit | keep | low |
 | done | `asset-rightclick-full` | Right-click thumbnail: add at full template size | unit | keep | low |
 | done | `claim-mode-per-mode-region-data` | CHANGELOG 3.0 'per-mode region data' is false: a mode switch wipes fills | unit | keep | low |
 | done | `props-scale-clamp-inconsistency` | Scale bounds differ by input path | unit | fix | low |
 | done | `layers-default-name-offbyone` | Default layer names are off by one from the id | unit | fix | low |
-| open | `bg-color-pick-clears-image` | Picking a background color or swatch silently discards the background image | unit | keep | low |
-| open | `image-decode-format-matrix` | Decoder matrix: SVG, BMP, GIF, WebP accepted by extension or MIME | unit | drop | med |
+| done | `bg-color-pick-clears-image` | Picking a background color or swatch silently discards the background image | unit | keep | low |
+| done | `image-decode-format-matrix` | Decoder matrix: SVG, BMP, GIF, WebP accepted by extension or MIME | unit | drop | med |
 | done | `image-decode-caps` | Imported image size caps (file bytes, side length, pixel count) | unit | fix | med |
 | done | `image-decode-exif-orientation` | EXIF orientation applied when an image is decoded | unit | keep | med |
 
@@ -400,14 +400,14 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `undo-model` | Undo/redo snapshot model and stack discipline | unit | keep | low |
 | done | `undo-snapshot-contents` | What a snapshot captures (and what it does not) | unit | keep | high |
 | done | `undo-restore` | restoreState: order of operations, async image loading | unit | fix | high |
-| open | `undo-coverage-gaps` | Which actions create undo steps | unit | fix | med |
+| done | `undo-coverage-gaps` | Which actions create undo steps | unit | fix | med |
 | done | `history-snapshot-memory` | Snapshot size and 30-step cap behavior | unit | fix | low |
 | done | `restore-mode-switch-side-effects` | Mode switch interplay with undo | unit | keep | med |
 | done | `fillstyle-undo-snapshot-timing` | Undo snapshot timing for fill edits | unit | fix | med |
 | done | `mode-switch-undo-and-callers` | Mode switch undo semantics and other callers | unit | keep | med |
-| open | `file-undo-snapshot-scope` | What undo/redo snapshots and which actions push | unit | fix | med |
+| done | `file-undo-snapshot-scope` | What undo/redo snapshots and which actions push | unit | fix | med |
 | done | `tests-lib-history` | history.test.js: 7 tests for undo/redo stack semantics | unit | keep | low |
-| open | `undo-empty-steps` | Actions that push an undo step but change nothing | unit | fix | med |
+| done | `undo-empty-steps` | Actions that push an undo step but change nothing | unit | fix | med |
 | done | `undo-rapid-restore-race` | Rapid undo/redo during async restore corrupts history | unit | fix | med |
 | done | `undo-restore-ui-side-effects` | Undo/redo drops selection and doesn't touch Fill Style UI | unit | fix | low |
 | done | `history-redo-stack-uncapped` | Redo stack unbounded; redo can push undo past 30 | unit | fix | low |
@@ -445,7 +445,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `render-mask-step` | Mask application (destination-in) | golden | keep | med |
 | done | `render-order-summary` | Full render order (contract) | golden | keep | high |
 | done | `draw-preview-composite` | Live preview compositing | golden | keep | low |
-| open | `fillstyle-live-render-hook` | Region fills rendered in canvas with connected-component gradient extent | golden | keep | med |
+| done | `fillstyle-live-render-hook` | Region fills rendered in canvas with connected-component gradient extent | golden | keep | med |
 | done | `canvas-element-render` | Main canvas, zoom and compositing order | golden | keep | high |
 | done | `overlay-knob-glyph-rasterization` | The rotate knob's glyph antialiasing differs at some offsets | golden | fix | low |
 
@@ -456,8 +456,8 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `tpl-canvas-size` | Template canvas size 585x559 | unit | keep | low |
 | done | `tpl-shirt-regions` | Shirt region table (18 regions) | unit | keep | low |
 | done | `tpl-pants-regions` | Pants region table (18 regions) | unit | keep | low |
-| open | `mode-pants-crash-hardcoded-keys` | BUG: Pants mode breaks code that hardcodes torso/arm keys | unit | fix | high |
-| open | `bug-pants-mode-region-keys` | Pants mode breaks layer-adding actions (static finding) | unit | fix | high |
+| done | `mode-pants-crash-hardcoded-keys` | BUG: Pants mode breaks code that hardcodes torso/arm keys | unit | fix | high |
+| done | `bug-pants-mode-region-keys` | Pants mode breaks layer-adding actions (static finding) | unit | fix | high |
 
 ## Engine.Tools
 
@@ -474,7 +474,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `select-rotate-drag-2` | Rotate drag with 45-degree snap | unit | fix | med |
 | done | `select-move-hit-and-drag` | Layer pick (topmost) and move drag | unit | fix | low |
 | done | `draw-tool-start` | Drawing tools mousedown: snapshot, offscreen canvas, stroke style | unit | fix | med |
-| open | `draw-pen-incremental-stroke` | Pen and eraser incremental stroking | golden | fix | high |
+| done | `draw-pen-incremental-stroke` | Pen and eraser incremental stroking | golden | fix | high |
 | done | `draw-pen-single-click` | Single click / zero-length stroke handling | unit | fix | med |
 | done | `draw-shape-line` | Line tool geometry | golden | keep | low |
 | done | `draw-shape-rect` | Rectangle tool geometry | golden | keep | low |
@@ -493,9 +493,9 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
-| open | `wordart-font-list` | Word Art font list (15 fonts) and display labels | golden | keep | med |
-| open | `wordart-font-loading-race` | Font load timing and initial preview | unit | fix | low |
-| open | `wordart-render-measure` | renderWordArt layout: measure, line height, padding, canvas size | golden | keep | high |
+| done | `wordart-font-list` | Word Art font list (15 fonts) and display labels | golden | keep | med |
+| done | `wordart-font-loading-race` | Font load timing and initial preview | unit | fix | low |
+| done | `wordart-render-measure` | renderWordArt layout: measure, line height, padding, canvas size | golden | keep | high |
 | done | `wordart-style-solid` | Style: Solid (fill then optional stroke then refill) | golden | keep | med |
 | done | `wordart-style-gradient` | Style: Gradient (per-line linear gradient fill + angle slider) | golden | keep | med |
 | done | `wordart-style-neon` | Style: Neon glow | golden | keep | high |
@@ -503,12 +503,12 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `wordart-style-outline` | Style: Outline (hollow, stroked in the Fill color) | golden | keep | low |
 | done | `wordart-style-retro` | Style: Retro stacked 3D | golden | keep | low |
 | done | `wordart-glyph-rasterization` | Word Art glyph rasterization (antialiased glyph edges) | golden | fix | low |
-| open | `wordart-add-to-canvas` | Add to canvas: full-resolution render and new layer | unit | keep | med |
-| open | `wordart-edge-cases` | Word Art edge cases and invalid input | unit | keep | low |
+| done | `wordart-add-to-canvas` | Add to canvas: full-resolution render and new layer | unit | keep | med |
+| done | `wordart-edge-cases` | Word Art edge cases and invalid input | unit | fix | low |
 | done | `font-wordart-runtime-google` | 15 Word Art fonts loaded from Google Fonts | golden | fix | med |
-| open | `text-styles` | Word Art styles (6) and render pipeline | golden | keep | high |
+| done | `text-styles` | Word Art styles (6) and render pipeline | golden | keep | high |
 | open | `fonts-google-runtime` | 15 Word Art fonts load from Google Fonts at runtime (offline users get fallbacks) | golden | fix | med |
-| open | `wordart-layer-name-emoji` | Word Art layer name has a sparkle emoji prefix | unit | keep | low |
+| done | `wordart-layer-name-emoji` | Word Art layer name has a sparkle emoji prefix | unit | keep | low |
 
 ## Package
 

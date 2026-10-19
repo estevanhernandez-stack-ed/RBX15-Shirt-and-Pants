@@ -105,7 +105,7 @@
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "tpl-canvas-size",
@@ -224,7 +224,7 @@
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "mask-build",
@@ -662,12 +662,12 @@
    "quirks": "Swatches deliberately differ from canvas (e.g. CSS angle convention differs: CSS 0deg is bottom-to-top, canvas 0 is left-to-right), so the swatch can show a gradient direction inconsistent with the render. Decide to fix by rendering thumbnails from the real painter.",
    "portTarget": "Region button swatch: render a small SKBitmap thumbnail via the real paintRegionFill (better and simpler than CSS) or WPF Brush equivalents (LinearGradientBrush, RadialGradientBrush, DrawingBrush tile).",
    "risk": "low",
-   "parityCheck": "Visual: swatch reads like the canvas fill at thumbnail size for each of 7 types.",
+   "parityCheck": "Reworded in M4b to the fixed behavior: the swatch is the canvas painter's pixels for the region at thumbnail size for each of the 7 types (RegionsGroupTests.Swatch_is_the_canvas_painter_cropped_to_the_region), and gradients and stripes follow the canvas angle convention (A_zero_degree_gradient_swatch_runs_left_to_right, A_zero_degree_stripes_swatch_runs_left_to_right, A_ninety_degree_stripes_swatch_runs_top_to_bottom).",
    "owner": "App.Ribbon.Layout",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: swatch gradients use the CSS angle convention (0deg is bottom-to-top) so direction can contradict the canvas render (0 is left-to-right). v5: swatches are drawn with the canvas angle convention so they match the render (clearly unintended inconsistency). Each swatch is the region painted by the canvas painter with the region as its own gradient extent, so a tile shows the full gradient even where the canvas spans a group.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "fills-key",
@@ -1190,7 +1190,7 @@
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "tools-auto-select-switch",
@@ -1597,7 +1597,7 @@
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: Center on front torso is not undoable and the Placement group is always shown. v5: it is one undo step and the Placement group is hidden until a layer is selected.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "props-adjust-panel",
@@ -1633,12 +1633,12 @@
    "quirks": "`|| 100` falsy bug: stored 0 for brightness/contrast/saturate displays as 100 and the slider reinstates 100 on next rebuild (but the layer still renders at 0 until the user touches). CSS filter hue-rotate and saturate use specific matrices (not HSL); must match exactly. No undo.",
    "portTarget": "Slider x7; Skia SKColorFilter (SKColorFilter.CreateColorMatrix composing brightness/contrast/saturate/hue matrices per CSS filter spec) and per-channel add matrix. Build a matrix that reproduces CSS filter order and clamping.",
    "risk": "high",
-   "parityCheck": "Pixel-diff each slider at extremes (0,100,200; hue 90/180/270; R shift +/-100) against Electron render, tolerance +-1.",
+   "parityCheck": "Narrowed in M4b: the frozen 4.1 goldens adjust-brightness-150, adjust-contrast-40, adjust-saturate-0, adjust-hue-90, adjust-extremes, adjust-combo, gap-opacity-with-adjust, rgb-shift and rgb-shift-with-adjust-rotated under the golden rule (GoldenRenderTests.Engine_export_matches_the_frozen_4_1_golden), AdjustTests (the brightness, contrast, saturate and hue-rotate tables and matrices; Rgb_shift_is_exact_clamped_and_skips_transparent_pixels), LayerPropertiesPanelTests.The_ten_sliders_have_4_1s_ranges and LayerPropertiesViewModelTests (Each_adjustment_is_one_clamped_step_that_keeps_the_others, Zero_adjustments_show_as_zero_after_reselect), in place of a 4.1 render at every slider extreme.",
    "owner": "App.LayerProperties",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: the '|| 100' falsy bug shows a stored 0 as 100 for brightness, contrast and saturation. v5: 0 adjustments display as 0.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "props-adjust-reset",
@@ -1717,7 +1717,7 @@
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "bg-color-opacity",
@@ -1732,12 +1732,12 @@
    "quirks": "Keyboard/arrow or touch-less changes to color/opacity skip undo. Setting bg color also drops the background image (destructive but undoable). Opacity applies to both color and image presumably in renderer.",
    "portTarget": "Color picker open/close transaction: snapshot on picker open or first change; slider Thumb.DragStarted -> push undo.",
    "risk": "med",
-   "parityCheck": "Drag color 30 ticks then undo once: returns to color before drag. Keyboard-arrow adjusting the slider produces no undo snapshot (no pointerdown) - parity or fix.",
+   "parityCheck": "BackgroundGroupTests.A_thirty_tick_color_drag_is_one_undo_step and A_thirty_tick_opacity_drag_is_one_undo_step (one undo returns to the value before the drag), A_slider_press_and_release_around_thirty_ticks_is_one_step. Reworded in M4b: the keyboard arrow on the slider records one step, the fix (BackgroundGroupTests.The_keyboard_arrow_on_the_slider_records_a_step).",
    "owner": "App.Ribbon.Layout",
    "check": "ui-auto",
-   "disposition": "keep",
-   "divergence": "",
-   "status": "open"
+   "disposition": "fix",
+   "divergence": "4.1: a background color or opacity change made without a pointer press (a keyboard arrow on the slider) records no undo step. v5: it records one, and a drag or a picker session stays one step (M4b, plan item 6).",
+   "status": "done"
   },
   {
    "id": "bg-image",
@@ -1751,12 +1751,12 @@
    "quirks": "saveUndo happens before load success, so a corrupt file leaves a no-op undo entry. The same file chosen twice does not retrigger onchange (input value not reset). Check accept attribute in index.html. Large images embed as data URL in every undo snapshot (memory up to 30 snapshots).",
    "portTarget": "OpenFileDialog (png/jpg/jpeg/gif/webp/bmp/svg filter), decode via SKBitmap/SKCodec; Svg via Svg.Skia if kept.",
    "risk": "med",
-   "parityCheck": "Pick PNG/JPG: background drawn as renderer specifies; undo restores prior bg.",
+   "parityCheck": "BackgroundGroupTests.Each_accepted_format_decodes_through_the_background_route, A_corrupt_image_gives_no_step_and_a_status_line, Picking_the_same_file_twice_acts_twice, A_cancelled_image_dialog_changes_nothing; the bg-image-opacity and bg-image-stretched goldens; through the bridge (M4b smoke G1) a picked PNG paints the background as one undo step and Undo restores the prior background. Narrowed in M4b: the dialog is the bridge's file-dialog queue; the native single-select dialog (Win32FileDialogs.OpenImage) is not opened by any test.",
    "owner": "App.Ribbon.Layout",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: undo is saved before the image loads, so a corrupt file leaves a no-op undo entry and failures are silent. v5: undo step only on successful load, with a status message on failure.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "drop-panel",
@@ -2242,12 +2242,12 @@
    "quirks": "The whole path is re-stroked on every mouse event, so antialiased edge pixels get composited onto themselves repeatedly and darken toward opaque; result depends on mouse event frequency (O(n^2) work too). Final edge alpha is therefore not a single-stroke AA. To be pixel-compatible replicate incremental re-stroking; to be deterministic, stroke once at mouseup (a deliberate fix, changes edges).",
    "portTarget": "Keep a single SKPath; on each move call path.LineTo then DrawPath(stroke paint) onto the persistent stroke bitmap. This replays the whole path each move exactly like Canvas2D, reproducing the same AA accumulation.",
    "risk": "high",
-   "parityCheck": "Pixel-diff a scripted polyline stroke (same mouse event sequence) between Electron (CPU canvas) and Skia: interior identical, edge difference within the 3/255 tolerance the spike measured. Also test a slow stroke (many points) vs fast (few points) since result depends on the event count.",
+   "parityCheck": "Narrowed in M4b: stroke-once is proven, not pixel-diffed against 4.1's re-stroked edges, which the fix changes on purpose; the pen has no frozen golden. ToolsTests.Pen_strokes_the_whole_path_once; CanvasInteractionTests.A_pen_drag_previews_the_whole_path_and_commits_one_selected_layer_named_Pen_drawing (the committed layer equals Tools.CommitDrawing of the whole path, so the event rate does not change it); LivePreviewTests pin the preview stroke; the eraser's two-point scenes match 4.1's goldens stroked once (GoldenAppTests.Production_stroke_once_matches_the_golden_on_two_point_erase_scenes, EraserTests.A_two_point_drag_strokes_identically_once_and_replayed). The bridge's pen strokes pass end to end (M4b smoke, M4a H4).",
    "owner": "Engine.Tools",
    "check": "golden",
    "disposition": "fix",
    "divergence": "4.1: Pen and eraser re-stroke the whole path on every mouse event, so edges depend on event frequency. v5: Strokes are drawn once at mouseup for deterministic edges.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "draw-pen-single-click",
@@ -2430,7 +2430,7 @@
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: Switching tools mid-stroke orphans the live preview. v5: The in-progress stroke is cancelled cleanly when the tool changes.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "draw-brush-controls",
@@ -2719,7 +2719,7 @@
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: Undo/redo shortcuts are blocked by focused sliders or color inputs and by Keys OFF. v5: Shortcuts are trapped only by text fields and Ctrl combos always work.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "undo-coverage-gaps",
@@ -2750,7 +2750,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: Move, resize, opacity, flip, visibility and reorder are not undoable and presets push double snapshots. v5: Every document mutation is exactly one undo step, no empty or double steps.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "btn-fit-front",
@@ -2769,7 +2769,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: Fit Front throws a TypeError in Pants mode after pushing a snapshot and does not refresh the properties panel. v5: Pants mode works via semantic slots and the panel refreshes.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "btn-fit-fb",
@@ -2788,7 +2788,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: F+B throws a TypeError in Pants mode after pushing a snapshot. v5: Pants mode works via semantic front/back slots, keeping the 'Mirror F+B' label and unmirrored clone.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "btn-stretch",
@@ -2807,7 +2807,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: Stretch throws a TypeError at the torso_back lookup in Pants mode. v5: Pants mode works via semantic slots with the same geometry.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "btn-allover",
@@ -2826,7 +2826,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "btn-scatter",
@@ -2845,7 +2845,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "btn-clear",
@@ -2888,7 +2888,7 @@
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: Placement buttons are always enabled and silently do nothing without a selection. v5: The Placement and Presets groups are hidden until a layer is selected.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "export-png-guard",
@@ -3057,7 +3057,7 @@
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: Ctrl+letter can toggle tools, sliders and checkboxes trap shortcuts, and '[' rotation wrap is wrong below -180. v5: Ctrl+letter no longer toggles tools, only text fields trap shortcuts, and rotation wrap is fixed to -180..180.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "render-pipeline-canvas-reset",
@@ -3073,7 +3073,7 @@
    "quirks": "Heavy for many layers with CSS filters; native can improve without behavior change.",
    "portTarget": "Invalidate and render on the UI thread (CompositionTarget/InvalidateVisual) with coalescing; cache the composite of static layers during a stroke or drag for performance, but output must remain identical.",
    "risk": "low",
-   "parityCheck": "Performance budget: stroke on a 20-layer document stays at 60 fps; correctness unchanged.",
+   "parityCheck": "Performance budget: stroke on a 20-layer document stays at 60 fps; correctness unchanged. Open after M4b, not proven (run 2 D12). Measured baseline (FrameBudgetTests.A_pen_stroke_over_twenty_layers_reports_its_frame_times, a 120-point pen stroke on 20 layers): p95 12.6-13.3 ms with rotated, translucent layers, under 16.7 ms; 31.7-32.5 ms with color filters too, over it. The canvas host keeps one frame surface per size or DPI (FrameBudgetTests.Frames_at_a_fixed_size_allocate_one_surface_and_a_size_change_one_more), and reuse draws what a fresh host draws. Closes when the static-layer composite is cached during a stroke, or Este narrows the budget to the lighter document.",
    "owner": "App.Canvas",
    "check": "manual",
    "disposition": "keep",
@@ -3218,12 +3218,12 @@
    "quirks": "Swatch is a CSS approximation, not the true render: camo swatch is a smooth gradient, checker/dots are tiled at screen px not template px. The inline #2a1040 tint on the Front button is wiped permanently (style.background='') after the first clear or restore of that region in the same grid build, so Front loses its purple hint. Decide: keep a consistent resting state (recommended: always show tint when unfilled).",
    "portTarget": "Swatch = small SKXamlCanvas/Image control that renders the SAME SkiaSharp fill code (paintRegionFill) into a tiny bitmap at the button size, or a WPF Brush mapped from FillSpec (LinearGradientBrush, RadialGradientBrush, DrawingBrush tiles). Preferred: reuse Skia painter so swatch equals canvas; accept that this will differ slightly from the CSS approximations.",
    "risk": "med",
-   "parityCheck": "Visual review of 7 fill types in swatches versus Electron; swatches may not be pixel-identical (CSS preview is itself approximate, e.g. camo preview is a plain gradient while canvas camo has random blobs). Test that clear removes 'filled' look.",
+   "parityCheck": "Reworded in M4b to the fixed behavior: each swatch is the Skia fill painter's own render of the region (RegionsGroupTests.Swatch_is_the_canvas_painter_cropped_to_the_region, all 7 types), so it is not compared with 4.1's CSS approximation; a clear removes the filled look and an unfilled Front keeps its resting tint (RegionsGroupTests.Right_click_clears_a_painted_tile_in_one_step_and_ignores_an_empty_one, Undo_and_redo_repaint_tiles; HomeRibbonViewTests.The_front_tile_keeps_its_tint_after_paint_and_clear).",
    "owner": "App.Ribbon.Home",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: The Front button's purple tint is permanently wiped after the first clear or restore of that region. v5: Unfilled buttons always show the resting tint, with swatches drawn by the Skia fill painter.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "regions-click-paint",
@@ -3320,7 +3320,7 @@
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: the active type button and controls can disagree with currentFill after undo or project load. v5: controls are re-synced to the current fill whenever state is restored (unintended).",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "fillstyle-live-edit-rule",
@@ -3399,7 +3399,7 @@
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "fillstyle-live-render-hook",
@@ -3414,12 +3414,12 @@
    "quirks": "Slice overlap: owned by the render slice; listed here because live edit depends on it.",
    "portTarget": "Port connectedRegionGroups/unionRect and paintRegionFill to SkiaSharp (spike already pixel-exact). Painted below layers, above background (confirm order in render slice).",
    "risk": "med",
-   "parityCheck": "Pixel-diff harness: for each fill type at slider extremes and multi-region groups, native vs Electron-with-GPU-off; allow antialias edge tolerance only.",
+   "parityCheck": "Narrowed in M4b: the frozen 4.1 fill goldens under the golden rule, fill-solid-all, fill-linear-0-torso, fill-linear-135-arms, fill-radial-torso, fill-stripes-30, fill-stripes-48-neg, fill-checker-12, fill-dots-16, fill-camo-16, fill-camo-48, fill-mixed-groups, fill-legacy-strings and pants-fills (GoldenRenderTests.Engine_export_matches_the_frozen_4_1_golden), plus FillsTests (Patterns_are_continuous_across_adjacent_regions, Linear_gradient_spans_a_shared_extent, Without_an_extent_each_region_restarts) and the live-edit facts (FillStyleTests.An_edit_retargets_regions_with_the_current_key_only, A_slider_drag_is_one_step_and_undo_restores_the_starting_fills), in place of a fresh native-against-Electron run at every slider extreme.",
    "owner": "Engine.Render",
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "mode-toggle-button",
@@ -3507,7 +3507,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: Pants mode throws on code that hardcodes torso/arm keys after an undo snapshot is pushed. v5: semantic slots (front/back/rarm/larm/up/down per mode) make Pants work everywhere.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "presets-six-buttons",
@@ -3527,7 +3527,7 @@
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: Meme, Allover, Mirror and Scatter push two identical undo entries per click. v5: every action is exactly one undo step; the Presets group is hidden until a layer is selected.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "preset-meme",
@@ -3547,7 +3547,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: Meme Tee pushes a double undo entry and throws in Pants mode. v5: one undo step and it works in Pants via semantic slots.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "preset-allover",
@@ -3562,12 +3562,12 @@
    "quirks": "Source layer remains on top-left of nothing and is not removed; the copies are appended above it; nothing selects the new layers; spreads {...sel} so a layer with rotation reset only on copies. Uses Object.values order, which is JS insertion order: keep order.",
    "portTarget": "Loop over active region list in declared order (insertion order of the dictionary: torso_up, torso_right, torso_front, ... larm_down) so z-order matches. Share SKBitmap across layers.",
    "risk": "low",
-   "parityCheck": "Layer count +18, names, z-order, per-layer x/y/scale numerically; flatten render pixel diff.",
+   "parityCheck": "PlacementTests.Allover_adds_one_tile_per_region_in_table_order (+18, names, z-order above the original, per-tile x, y and scale in Shirt and Pants) and Allover_first_tile_matches_4_1s_doubles; PresetsGroupTests.Allover_adds_eighteen_tiles_in_one_step. Narrowed in M4b: no preset golden exists (plan risk 7); the composite of layers at the checked geometry is held by the render goldens.",
    "owner": "Engine.Document",
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: Allover pushes a double undo entry per click. v5: exactly one undo step; tile math, order and 0.8 factor kept.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "preset-sleeve-pop",
@@ -3586,7 +3586,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: Sleeve Pop throws on the first iteration in Pants mode. v5: applies to the sleeve/leg arm slots via semantic slots.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "preset-mirror",
@@ -3606,7 +3606,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: Mirror F+B pushes a double undo entry and fails in Pants. v5: one undo step and works in Pants; label 'Mirror F+B' and no-flip behavior kept.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "preset-scattered",
@@ -3626,7 +3626,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "preset-fullbleed",
@@ -3646,7 +3646,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "keys-toggle-button",
@@ -3666,7 +3666,7 @@
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: Keys OFF also disables Undo/Redo and other Ctrl shortcuts. v5: Keys OFF disables only bare-key shortcuts, Ctrl combos always work.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "keys-text-input-guard",
@@ -3680,12 +3680,12 @@
    "quirks": "Important user-visible quirk: after touching ANY range/color/checkbox control, focus remains on that INPUT so tool and nudge shortcuts are dead until the user clicks elsewhere (buttons are not in the list, so button focus is fine). BUTTON focus and Space/Enter not intercepted. Ctrl+Z is also blocked while a slider has focus. Decide to keep or fix by returning focus to the canvas after slider release.",
    "portTarget": "PreviewKeyDown handler on the main window; skip when Keyboard.FocusedElement is TextBox, ComboBox, or other text-edit controls. Decide for sliders/checkbox/colorpicker: parity says also skip (they swallow arrows natively), recommended to skip only text-entry controls plus ComboBox.",
    "risk": "med",
-   "parityCheck": "Type in the export title box: V and Delete do not switch tool or delete a layer. After dragging a slider (focus stays), arrow keys do not nudge the layer in Electron.",
+   "parityCheck": "Reworded in M4b to the fixed behavior: in a text box V, the tool letters, Delete, Backspace, the arrows and the brackets change neither the tool nor the layers (ShortcutRouterTests.In_a_text_box_nothing_fires, The_text_tab_boxes_keep_the_tool_letters; ShellTests.Ctrl_Z_in_a_focused_text_box_never_falls_through_to_the_document; M4b smoke K1 on the template name box); a focused slider no longer traps the arrows (kbd-input-focus-trap).",
    "owner": "App.Keyboard",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: focus on any slider, color input or checkbox traps all shortcuts. v5: shortcuts are suppressed only in text fields.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "keys-tool-shortcuts",
@@ -3700,12 +3700,12 @@
    "quirks": "Ctrl+V/B/L/U/O are NOT excluded: they switch tools and preventDefault, which blocks native paste (Ctrl+V), Ctrl+O open, Ctrl+U etc. (Ctrl+E is explicitly excluded.) Check whether image paste relies on a 'paste' event (none found in editor.js grep). Port decision: ignore tool keys when Ctrl/Alt held (recommended) and define Ctrl+V paste separately.",
    "portTarget": "InputBindings or a central KeyRouter; ToolService.Toggle(tool). Match case-insensitively on key, not scan code (layout-dependent).",
    "risk": "low",
-   "parityCheck": "Send each key; assert currentTool and toolbar active state; repeat key returns to select; V twice stays select.",
+   "parityCheck": "ShortcutRouterTests.The_six_letters_map_to_the_six_tools_in_either_case and Tool_keys_run_toggleTool (repeat returns to Select, V twice stays Select), through ToolsViewModel, which the toolbar's active state binds to. Narrowed in M4b: Ctrl+V's paste moves to M5's paste row; M4b proves Ctrl+V and the other Ctrl or Alt letters toggle no tool (ShortcutRouterTests.Ctrl_and_alt_letters_leave_the_tool_alone; K3).",
    "owner": "App.Keyboard",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: Ctrl+V/B/L/U/O switch tools and block native paste and open. v5: Ctrl+letter no longer toggles tools, freeing Ctrl+V paste and Ctrl+O open.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "keys-duplicate-ctrl-d",
@@ -3725,7 +3725,7 @@
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "keys-undo-redo",
@@ -3745,7 +3745,7 @@
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "keys-selection-gate-and-modifiers",
@@ -3764,7 +3764,7 @@
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: keyboard nudge, rotate, reset and scale are not undoable. v5: every document mutation is exactly one undo step (move, resize and rotate via keys now undoable).",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "keys-arrow-nudge",
@@ -3783,7 +3783,7 @@
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: arrow nudges are not undoable and leave the inspector stale. v5: each nudge is one undo step and the inspector refreshes; 1 px / 10 px steps kept.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "keys-rotate-brackets",
@@ -3802,7 +3802,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: '[' from -180 goes to -185 and keeps drifting negative. v5: '[' rotation wrap fixed and rotation normalized to -180..180; loader still accepts any double.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "keys-scale-plus-minus",
@@ -3821,7 +3821,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "keys-delete",
@@ -3841,7 +3841,7 @@
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "keys-single-handler",
@@ -3880,7 +3880,7 @@
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "details-buttons-inventory",
@@ -3900,7 +3900,7 @@
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "details-layer-creation-pipeline",
@@ -3916,12 +3916,12 @@
    "quirks": "The generator draws in absolute template coordinates; autocrop then makes x,y reflect this so the layer sits on the template exactly where drawn. Crop uses alpha>0 so faint AA pixels widen the bounds. Zero-alpha result (not possible with current generators) would leave a dangling undo entry. Skia dash phase/cap compatibility with canvas must be verified (round caps extend each dash by w/2 on both ends so a gap of 2w becomes visually w).",
    "portTarget": "Render each generator into an SKBitmap/SKSurface 585x559 with SKPaint (Style=Stroke, StrokeCap=Round, StrokeJoin=Round, StrokeWidth, PathEffect=SKPathEffect.CreateDash([2w,2w],0), IsAntialias=true) ; scan alpha for bounds; crop with 10px pad; store the bitmap as a new Layer at (cropX, cropY), scale 1, select it, set tool Select.",
    "risk": "med",
-   "parityCheck": "Pixel diff each of 16 details x {solid, stitch} x widths {1,2,8} against the Electron canvas rendering (GPU off): identical layer x,y,width,height and pixels within AA tolerance; alpha bounds exactly match.",
+   "parityCheck": "The 37 frozen detail goldens (16 types solid and stitch at width 2, five at width 1 or 8) match 4.1's layer pixels and offsets (GoldenAppTests.Engine_export_matches_the_frozen_4_1_app_golden); DetailsTabTests.A_click_adds_one_selected_layer_in_one_step_at_the_engine_crop and the composed-shell facts pin the insertion. Narrowed in M4b, as M2b's detail rows: 16 x 2 x 3 combinations are not all captured.",
    "owner": "Engine.Details",
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "details-mode-independence-and-selection",
@@ -4229,7 +4229,7 @@
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: Word Art size is not clamped, so 0 falls back to 64 and 5000 makes a giant canvas. v5: size clamped to 8-300 (unintended, named divergence).",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "wordart-font-list",
@@ -4251,7 +4251,7 @@
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "wordart-font-loading-race",
@@ -4271,7 +4271,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: first preview or Add can render in a fallback font because canvas-only fonts are fetched lazily and never re-rendered. v5: bundled fonts render synchronously with no readiness gate.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "wordart-render-measure",
@@ -4286,12 +4286,12 @@
    "quirks": "Preview: when only one dimension is clamped (e.g., cw<200 but ch>80) canvas width stays cw while content is scaled by height only, so the content is left-aligned inside a wider canvas (it only looks centered because the flex wrapper centers the canvas). Whitespace-only text is truthy and renders blank. Widths from measureText ignore stroke/shadow/glow; pad covers them only approximately (heavy neon blur can clip at 40px blur on pad 30). Trailing newline produces an empty last line that still adds lineHeight.",
    "portTarget": "Port as a pure function WordArtRenderer.Render(settings, maxW?, maxH?) -> SKBitmap + (cw,ch). Use SKFont.MeasureText for widths. 'middle' baseline in Chromium = em-box middle ((ascent-descent)/2 offset using font metrics); replicate with y_baseline = ty + (font.Metrics.Ascent... ) so glyphs sit at the same vertical position (compute from font metrics: baseline = ty - (ascent+descent)/2 where ascent negative in Skia convention, verify empirically against Electron reference).",
    "risk": "high",
-   "parityCheck": "Pixel-diff renders for each style x 3 fonts x single/multi-line vs Electron golden PNGs captured at 'Add to canvas' resolution; assert identical (cw,ch) and glyph bounding box within 1px.",
+   "parityCheck": "WordArtTests.Canvas_size_is_4_1s_cw_by_ch, Lines_are_shaped_to_chromiums_measureText_width, Middle_baseline_is_the_normalized_typo_metrics_in_layout_units, The_preview_clamps_the_canvas_and_scales_the_content; the frozen Word Art goldens, 6 styles in Anton, Poppins and Dancing Script, multi-line in Orbitron (wordart-multiline-orbitron), under GoldenRule.AssertWordArtMatches (WordArtSwapTests, WordArtRatchetTests). Narrowed in M4b, as M2b's Word Art rows: multi-line is captured in one font and style only.",
    "owner": "Engine.WordArt",
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "wordart-style-solid",
@@ -4446,9 +4446,9 @@
    "parityCheck": "Change each control; preview updates immediately (<100ms) and matches full render downscaled.",
    "owner": "App.Ribbon.Text",
    "check": "ui-auto",
-   "disposition": "keep",
-   "divergence": "",
-   "status": "open"
+   "disposition": "fix",
+   "divergence": "4.1: the preview renders into a 200x80 canvas with no devicePixelRatio handling, so it is soft above 100% display scale. v5: it renders at device pixels and shows at the same size in DIPs, sharp at 125% and above; parity applies to the full-resolution output only (M4b, T2, run 2 D5).",
+   "status": "done"
   },
   {
    "id": "wordart-add-to-canvas",
@@ -4469,7 +4469,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "wordart-edge-cases",
@@ -4489,9 +4489,9 @@
    "parityCheck": "Table-driven tests of the above input matrix producing same layer name/size as Electron.",
    "owner": "Engine.WordArt",
    "check": "unit",
-   "disposition": "keep",
-   "divergence": "",
-   "status": "open"
+   "disposition": "fix",
+   "divergence": "4.1: Word Art text too large for the browser's canvas limits renders blank or fails silently (an empty toDataURL, wordart-add-to-canvas). v5: the render is capped at the image limits (16384 px per side, 50 MP) and the layer's scale makes up the difference, so the layer lands at the requested size with no error and no message (M4b, T1).",
+   "status": "done"
   },
   {
    "id": "packs-inventory-drips",
@@ -4673,7 +4673,7 @@
    "quirks": "No virtualization/lazy decode in Electron: 156 full-size images decode eagerly. Browser scroll area persists max-height only (see resizable). Grid order = array order (not sorted by name except what the OS returned).",
    "portTarget": "ListBox with UniformGrid(Columns=3) or VirtualizingWrapPanel; ItemTemplate Border 1px #333 radius 4 bg #111 with Image Stretch=Uniform and bottom TextBlock overlay (7pt ~ 9.3px => use FontSize 7 DIP-equivalent 7px, CharacterEllipsis). Decode thumbnails at reduced size (DecodePixelWidth) off-thread; dispose bitmaps on folder change. Keep ListBox virtualization on to handle thousands.",
    "risk": "med",
-   "parityCheck": "Screenshot diff of grid at 3 columns for Drips pack; verify UUID-named file shows parent folder name; tooltip equals file name.",
+   "parityCheck": "Screenshot diff of grid at 3 columns for Drips pack; verify UUID-named file shows parent folder name; tooltip equals file name. Open after M4b: MAN-7 (docs/port/m4b-manual.md), the asset grid at three columns on the look page; the virtualized grid, captions and order are proven (M4a A1).",
    "owner": "App.AssetLibrary",
    "check": "ui-auto",
    "disposition": "fix",
@@ -4756,12 +4756,12 @@
    "quirks": "Resizes max-height only: if the grid content is shorter than newH nothing visibly grows. mouseup outside the Electron window is lost (resize can get stuck until the next mouseup); WPF CaptureMouse fixes this. Handle is visible even while the browser is hidden.",
    "portTarget": "A GridSplitter or custom Thumb in the left panel: on DragDelta change MaxHeight of the ScrollViewer with the same clamp (min 80 DIP, max 70% of the window client height), CaptureMouse for drags that leave the window, Cursor=SizeNS, hover brush uses brand gradient (#17d4fa->#f22f89).",
    "risk": "low",
-   "parityCheck": "Drag handle +/-: height tracks mouse 1:1 until clamps at 80 and 0.7*height; cursor shows ns-resize; after release no stuck cursor.",
+   "parityCheck": "AssetLibraryPanelTests.The_handle_resizes_the_browser_from_its_rendered_height_within_the_clamps and In_the_window_the_resize_clamps_at_70_percent_of_the_client (DPI rows at 96, 120 and 144), The_handle_shows_the_ns_resize_cursor_and_restores_it_after_release; through the bridge (M4a A1) a 50 and a 100 DIP handle drag grow the browser by the same amount, it clamps at 80 DIPs and at 70% of the client height, and no cursor stays overridden. Narrowed in M4b: the cursor is the WPF SizeNS cursor the handle sets; the OS cursor image is not observable.",
    "owner": "App.AssetLibrary",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "project-save-format",
@@ -4900,7 +4900,7 @@
    "quirks": "Electron window state (size/position) is not persisted; keep or add (additive). Missing: single-instance lock, app.on activate only for macOS.",
    "portTarget": "MainWindow 1200x800 (default; set MinWidth/MinHeight to taste), Title identical, no menu. Constructor order: load fonts -> init VM -> first SKElement paint. Startup perf budget: first frame <= 0.96 s per spike numbers.",
    "risk": "low",
-   "parityCheck": "Cold start: window title, size, default visuals equal the 4.1.0 screenshot set in docs/store; first frame time recorded.",
+   "parityCheck": "Cold start: window title, size, default visuals equal the 4.1.0 screenshot set in docs/store; first frame time recorded. Open after M4b: MAN-7 (docs/port/m4b-manual.md), the default-visuals clause. Proven by the M4b smoke cold start: zero sockets over 6 launches, the title 'RBX15 Classic Shirt and Pants Maker', window 1200x800 (client 1184x761), first frame 1.11-1.18 s recorded (over the 0.96 s port-target spike budget). The divergence's remembered window size and position is M5's (shell-no-persistence).",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "fix",
@@ -4969,7 +4969,7 @@
    "quirks": "Ribbon height is NOT constant: each pane has different content height (Home panes have 2-row vertical groups, Details is single row), so switching ribbon tabs changes the ribbon height and resizes/shifts the canvas area vertically (canvas is vertically centered so it jumps). Decide: keep (parity) or fix to a fixed ribbon height (recommended, tiny deviation).",
    "portTarget": "Grid with rows Auto (header), Auto (ribbon), * (app), Auto (footer); app row = columns 280 (panel, ScrollViewer vertical auto) and * (canvas area). Drop the dead .rpanel and btnExport2.",
    "risk": "low",
-   "parityCheck": "Overlay native screenshot against docs/screenshots/4.1/*.png at 1920x1080 window content; region boundaries (header bottom, ribbon bottom, panel right edge x=280, footer top) match within 1 px.",
+   "parityCheck": "Overlay native screenshot against docs/screenshots/4.1/*.png at 1920x1080 window content; region boundaries (header bottom, ribbon bottom, panel right edge x=280, footer top) match within 1 px. Open after M4b: held with plan item 12 (run 2 D11, branch cart/m4b-items-9-16--03-ribbon-remeasure at c4bd30d): Home is 2184 DIP wide against a 1184 pane and fitting it needs Este's call, MAN-7 Calls (a) and (b). The fixed height holds: 138 DIP panes on every tab (M4b smoke T1).",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "fix",
@@ -4988,7 +4988,7 @@
    "quirks": "",
    "portTarget": "Window SizeChanged handler (or VisualStateManager style trigger) setting panel column Width 200 when content width <= 900 DIPs, else 280.",
    "risk": "low",
-   "parityCheck": "Resize window content width to 900 and 901: panel is 200 then 280 wide; asset grid stays 3 columns and thumbnails shrink.",
+   "parityCheck": "Resize window content width to 900 and 901: panel is 200 then 280 wide; asset grid stays 3 columns and thumbnails shrink. Open after M4b: held with plan item 12 (run 2 D11), waiting on Este's ribbon-width call (MAN-7 Calls (a) and (b)).",
    "owner": "App.Shell",
    "check": "ui-auto",
    "disposition": "keep",
@@ -5008,7 +5008,7 @@
    "quirks": "Gradient text is clipped to the h1 box only (not the whole header). Letter-spacing in WPF needs a workaround; budget for it for all mono uppercase labels (tabs, group labels, h3, .info, footer).",
    "portTarget": "Border with LinearGradientBrush background; TextBlock for title using a gradient foreground (LinearGradientBrush Foreground with StartPoint/EndPoint 0,0->1,1 in bounding box) and FontFamily Space Grotesk; subtitle TextBlock with CharacterSpacing equivalent (WPF has no letter-spacing: use Typography or per-glyph Run spacing / a custom TextBlock with TextOptions; or use FormattedText + DrawingContext). Bind version text to assembly/MSIX version formatted 'v{Major}.{Minor}'.",
    "risk": "med",
-   "parityCheck": "Pixel-compare header strip against 4.1 screenshots; text bounds within 1 px; gradient endpoints cyan at left, magenta at right of the h1 box. Version string equals MSIX identity version major.minor. ShellTests: the byline is 'v<major.minor>' (shown 'V5.0') and the HeaderMark image shows the LabsMarkDuo resource at 18 DIP, named '626Labs' for UI Automation.",
+   "parityCheck": "Pixel-compare header strip against 4.1 screenshots; text bounds within 1 px; gradient endpoints cyan at left, magenta at right of the h1 box. Version string equals MSIX identity version major.minor. ShellTests: the byline is 'v<major.minor>' (shown 'V5.0') and the HeaderMark image shows the LabsMarkDuo resource at 18 DIP, named '626Labs' for UI Automation. Open after M4b: MAN-7 (docs/port/m4b-manual.md), the header pair on the look page; the byline and mark facts are in ShellTests.",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "fix",
@@ -5068,7 +5068,7 @@
    "quirks": "box-shadow glow blur radius semantics differ from WPF DropShadowEffect; tune visually, not numerically.",
    "portTarget": "DropShadowEffect (BlurRadius ~ 2x CSS blur, Opacity from alpha) for glows; Storyboard ColorAnimation/DoubleAnimation with CubicEase approximating the bezier (use KeySpline 0.2,0.7,0.2,1 via SplineDoubleKeyFrame) at 120/220 ms. ClearType vs grayscale: WPF TextOptions.TextRenderingMode=Grayscale to mimic -webkit-font-smoothing:antialiased.",
    "risk": "med",
-   "parityCheck": "Manual visual check of hover transitions (duration within 30 ms); screenshot of selected layer glow versus 02-layers.png.",
+   "parityCheck": "Manual visual check of hover transitions (duration within 30 ms); screenshot of selected layer glow versus 02-layers.png. Open after M4b: MAN-7 (docs/port/m4b-manual.md), hover transitions and the selected-layer glow by eye.",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "keep",
@@ -5180,7 +5180,7 @@
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "ribbon-group-structure",
@@ -5195,7 +5195,7 @@
    "quirks": "Group labels are displayed uppercase by CSS (e.g. 'BG SETTINGS', 'COLORS & SIZE').",
    "portTarget": "A RibbonGroup UserControl: Grid rows (Content *, Label Auto), right border 1px, Padding 0,0 10,0; WrapPanel (Horizontal) or StackPanel for items. Set Margin so label sits 5 px below items.",
    "risk": "low",
-   "parityCheck": "Group dividers and labels line up with 4.1 screenshot; labels: Mode, Tools, Brush, Placement, Edit, File, Settings (Home); Presets, Background, BG Settings, Fill Style, Template Regions (Layout); Settings, Neckline, Edges, Seams, Accents (Details); Text, Colors & Size, Style, Preview (Text).",
+   "parityCheck": "Group dividers and labels line up with 4.1 screenshot; labels: Mode, Tools, Brush, Placement, Edit, File, Settings (Home); Presets, Background, BG Settings, Fill Style, Template Regions (Layout); Settings, Neckline, Edges, Seams, Accents (Details); Text, Colors & Size, Style, Preview (Text). Open after M4b: held with plan item 12 (run 2 D11), waiting on Este's ribbon-width call (MAN-7 Calls (a) and (b)).",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "keep",
@@ -5240,7 +5240,7 @@
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: in Pants mode most layer-adding actions throw because they read the shirt torso_front region. v5: Pants mode works everywhere via semantic slots per mode.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "home-tool-buttons",
@@ -5262,7 +5262,7 @@
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "home-keys-toggle",
@@ -5278,12 +5278,12 @@
    "quirks": "Turning shortcuts off also disables undo shortcut (probably unintended; decide keep or exempt Ctrl+Z/Y).",
    "portTarget": "ToggleButton with two visual states and same colors; gate all window-level KeyDown handling on the flag (including undo/redo).",
    "risk": "low",
-   "parityCheck": "Toggle OFF then press Ctrl+Z, V, Delete: nothing happens; toggle ON: they work.",
+   "parityCheck": "Reworded in M4b to the fixed behavior: with Keys OFF, V and Delete do nothing and Ctrl+Z still undoes (ShortcutRouterTests.Keys_off_blocks_v_but_not_ctrl_z; M4b smoke K1: arrows and Delete do nothing, Ctrl+Z undoes); toggled back ON they work.",
    "owner": "App.Keyboard",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: Keys OFF disables every shortcut including Ctrl+Z and Ctrl+Y. v5: Keys OFF disables only bare-key shortcuts and Ctrl combos always work.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "home-brush-group",
@@ -5320,12 +5320,12 @@
    "quirks": "Scatter is unseeded. Stretch's back clone keeps the pre-Stretch flips/adjustments. In Pants mode F+B and Stretch throw (see bug-pants-mode-region-keys). Allover/Scatter iterate all current-mode regions so they work in Pants.",
    "portTarget": "VM commands operating on the selected Layer record; use the same constants (0.9, 0.8, 260x128 at 165,74, 0.85 etc.). Scatter uses System.Random; allow a test seed injection.",
    "risk": "low",
-   "parityCheck": "Unit-test layer transforms (x,y,scale,rotation) for each command against values computed from the JS formulas for a 100x50 and 300x300 image; Scatter: assert counts (26 clones in Shirt mode) and ranges, not exact positions.",
+   "parityCheck": "Reworded in M4b to the evidence: PlacementTests check each command's x, y, scale and rotation against 4.1's formulas for 200x100, 300x200, 512x512, 33x77, 40x30, 40x90 and 300x100 layers in Shirt and Pants, and Scatter's counts (26 in Shirt mode) and ranges with a seeded rng in 4.1's draw order; PlacementGroupTests run every command as one undo step through the view model and the composed shell, with the group collapsed until a layer is selected (M4b smoke P1).",
    "owner": "App.Ribbon.Home",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: F+B and Stretch throw in Pants mode and the Placement group shows with no layer selected. v5: Pants works via semantic slots and the Placement group is hidden until a layer is selected.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "home-edit-group",
@@ -5413,7 +5413,7 @@
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: Meme/Allover/Mirror/Scatter push two undo entries and Sleeve Pop throws in Pants mode. v5: exactly one undo step per preset and semantic slots make every preset work in both modes, with the Presets group hidden until a layer is selected.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "layout-background-swatches",
@@ -5434,8 +5434,8 @@
    "owner": "App.Ribbon.Layout",
    "check": "ui-auto",
    "disposition": "fix",
-   "divergence": "4.1: swatches are plain divs, not keyboard reachable. v5: focusable buttons with automation names and a cyan focus ring.",
-   "status": "open"
+   "divergence": "4.1: swatches are plain divs, not keyboard reachable. v5: focusable buttons with automation names and a cyan focus ring. When the background opacity is 0 (the transparent new-document default), a swatch click, a color pick or a Background image also sets it to 100% in the same single undo step, because 4.1 never touched opacity and the pick would show nothing; export is unchanged (M4b, B1).",
+   "status": "done"
   },
   {
    "id": "layout-bg-settings",
@@ -5455,8 +5455,8 @@
    "owner": "App.Ribbon.Layout",
    "check": "ui-auto",
    "disposition": "fix",
-   "divergence": "4.1: undo snapshot on pointerdown even when nothing changes (empty undo entry). v5: no empty undo steps, exactly one step per real background change.",
-   "status": "open"
+   "divergence": "4.1: undo snapshot on pointerdown even when nothing changes (empty undo entry). v5: no empty undo steps, exactly one step per real background change. When the background opacity is 0 (the transparent new-document default), a swatch click, a color pick or a Background image also sets it to 100% in the same single undo step, because 4.1 never touched opacity and the pick would show nothing; export is unchanged (M4b, B1).",
+   "status": "done"
   },
   {
    "id": "layout-fill-style",
@@ -5472,12 +5472,12 @@
    "quirks": "Live-edit couples to equal fills: two regions painted with identical fills move together, but a region painted earlier with a slightly different fill never updates. Scale slider max 48 vs lib clamps; fillToCSS clamps scale min 2.",
    "portTarget": "Same controls bound to CurrentFill record {Type,C1,C2,Angle,Scale}; fill descriptor compare via FillKey string 'type|c1|c2|angle|scale' (editor.js uses lib/fills.js fillKey). Spike already proves paintRegions pixel-exact.",
    "risk": "med",
-   "parityCheck": "Paint 3 regions, drag angle: all 3 update live and undo reverts one gesture; pixel-diff each fill type at scale min/max (spike harness).",
+   "parityCheck": "FillStyleTests.The_row_scenario_runs_to_the_end_with_exact_region_fills and A_slider_drag_is_one_step_and_undo_restores_the_starting_fills (painted regions follow a drag live; one undo reverts the gesture). Narrowed in M4b: the per-type extremes are checked against 4.1's band and cell rules (FillStyleTests.Stripes_at_the_slider_extremes_follow_the_band_rule at scale 4 and 48, Checker_and_dots_at_the_scale_extremes_follow_the_cell_rule) and the frozen fill goldens (fill-stripes-30, fill-stripes-48-neg, fill-checker-12, fill-dots-16, fill-camo-16, fill-camo-48 and the rest, GoldenRenderTests); camo at scale 4 has no 4.1 capture (run 1 D5, D10).",
    "owner": "App.Ribbon.Layout",
    "check": "ui-auto",
-   "disposition": "keep",
-   "divergence": "",
-   "status": "open"
+   "disposition": "fix",
+   "divergence": "4.1: Fill Style is a group on the Layout tab. v5: it sits on Home, next to the tools, joined with the region grid as one fill tool (M4b, F1; ribbon-fill-regions-joined).",
+   "status": "done"
   },
   {
    "id": "layout-template-regions",
@@ -5494,11 +5494,11 @@
    "quirks": "A selected layer silently converts 'paint' into 'fit layer', and the hint text never says so (user must click empty canvas to deselect). The Front tile's built-in purple tint (inline #2a1040) is lost permanently once any paint/clear sets style.background (paintRegionButton clears it to ''), so after painting then clearing, Front looks like other tiles. Region tiles are not keyboard accessible.",
    "portTarget": "Custom Control with Grid layout and tiles (Button) using GradientBrush previews derived from the fill (replicate fillToCSS: linear/radial/repeating stripes/conic checker/dots/camo gradient -> render each tile preview via the same Skia fill code into a small WriteableBitmap rather than approximating with XAML brushes).",
    "risk": "med",
-   "parityCheck": "Click Front with no layer selected: region paints with current fill and the Front tile shows preview; right-click clears; with a layer selected the same click re-fits the layer instead; compare tile layout against 4.1 screenshots.",
+   "parityCheck": "Click Front with no layer selected: region paints with current fill and the Front tile shows preview; right-click clears; with a layer selected the same click re-fits the layer instead; compare tile layout against 4.1 screenshots. Open after M4b: MAN-7 (docs/port/m4b-manual.md), the tile layout against 4.1's capture on the look page; the paint, fit, clear and keyboard clauses are proven (RegionsGroupTests, HomeRibbonViewTests).",
    "owner": "App.Ribbon.Layout",
    "check": "ui-auto",
    "disposition": "fix",
-   "divergence": "4.1: region tiles are mouse-only divs and the Front tile permanently loses its built-in tint after any paint or clear. v5: keyboard-reachable tiles with automation names and a consistent Front tile style, with region keys resolved through semantic slots per mode. Delete, Shift+F10 and the Menu key clear a focused tile, as right-click does.",
+   "divergence": "4.1: region tiles are mouse-only divs and the Front tile permanently loses its built-in tint after any paint or clear. v5: keyboard-reachable tiles with automation names and a consistent Front tile style, with region keys resolved through semantic slots per mode. Delete, Shift+F10 and the Menu key clear a focused tile, as right-click does. The grid sits on Home, next to the tools, where 4.1 had it on the Layout tab (M4b, F1).",
    "status": "open"
   },
   {
@@ -5534,12 +5534,12 @@
    "quirks": "Default color #333333 on a default navy background is nearly invisible; keep (parity).",
    "portTarget": "Color button, Slider 1..8, CheckBox. SKPaint StrokeWidth=w, StrokeCap=Round, StrokeJoin=Round, PathEffect=SKPathEffect.CreateDash([2w,2w],0) when Stitch.",
    "risk": "low",
-   "parityCheck": "Pixel-diff each detail with Stitch on/off at widths 1, 2, 8 against Electron output.",
+   "parityCheck": "Goldens detail-<16 types> and detail-<16 types>-stitch at width 2, plus detail-placket-w1, detail-seam-sides-w1-stitch, detail-collar-henley-w8, detail-placket-w8-stitch and detail-full-detail-w8-stitch (GoldenAppTests.Engine_export_matches_the_frozen_4_1_app_golden); DetailsTabTests.The_color_width_and_stitch_are_read_at_click_time. Narrowed in M4b, as M2b's detail rows: widths 1 and 8 are captured for five scenes, not every detail.",
    "owner": "App.Ribbon.Details",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "details-buttons",
@@ -5559,7 +5559,7 @@
    "check": "golden",
    "disposition": "fix",
    "divergence": "4.1: generators throw in Pants mode and push an undo entry even when nothing is drawn. v5: generators resolve regions through semantic slots (pants-specific details deferred to 5.1) and every action is exactly one real undo step with no empty entries.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "text-inputs",
@@ -5574,7 +5574,7 @@
    "quirks": "Number input allows values outside 8..300 when typed (e.g. 1000 would render huge). Multi-line text supported: lines split by \\n, line height 1.15*size.",
    "portTarget": "Multi-line TextBox (AcceptsReturn, resizable vertically via GridSplitter/Thumb or fixed), ComboBox with the same 15 display strings mapping to family names (value differs from label: value 'Poppins' label 'Poppins (Bold)'), color buttons, NumericUpDown-like TextBox (Min 8 Max 300 enforce on commit, parity keeps typed overshoot), Sliders.",
    "risk": "med",
-   "parityCheck": "Defaults: text RIZZ, font Anton, colors/size as listed; changing each control updates preview immediately.",
+   "parityCheck": "Defaults: text RIZZ, font Anton, colors/size as listed; changing each control updates preview immediately. Open after M4b: MAN-7 (docs/port/m4b-manual.md), the Text tab's look sign-off; the closed font list's label (P-1) is fixed and pinned by TextTabTests.The_font_select_draws_labels_in_the_closed_box_and_the_open_list, and the defaults and live preview are in TextTabTests.",
    "owner": "App.Ribbon.Text",
    "check": "ui-auto",
    "disposition": "keep",
@@ -5594,12 +5594,12 @@
    "quirks": "Neon glow blur in Canvas is not Gaussian-sigma-equal to Skia blur; exact match may require sigma=blur/2 and a tuned test. Gradient uses cw/ch based extents but per line y; with multi-line text gradient restarts per line vertically. Stroke on outline style ignores strokeW=0 via ||3. Shadow/Retro still pad but ignore stroke color for shadow.",
    "portTarget": "SkiaSharp SKCanvas.DrawText with SKFont (Embolden per font-lacks-bold rule), SKPaint with SKShader.CreateLinearGradient, SKImageFilter.CreateDropShadow / blur for neon (canvas shadowBlur=20 means sigma=blur/2=10, verify), SKPaint.Style Stroke with StrokeJoin Round. Text metrics: use font.MeasureText and baseline 'middle' = centered on (ascent+descent)/2 equivalent.",
    "risk": "high",
-   "parityCheck": "Render each of 6 styles x several fonts at default sizes and diff to Electron output; tolerance for glyph AA edges and shadow blur (neon glow) must be agreed up front. Multi-line, angle 0/90/180/270, strokeW 0/20.",
+   "parityCheck": "The frozen Word Art goldens: 6 styles in Anton, Poppins and Dancing Script, multi-line Orbitron, gradient at 0 and 135, stroke 0 (outline) and 12, under the Word Art rule (WordArtSwapTests, WordArtRatchetTests, GoldenAppTests); WordArtTests pin the gradient endpoint math at 0, 45, 90, 180 and 270 and stroke 0; WordArtHardeningTests.Every_style_renders_over_the_cap_without_throwing. Narrowed in M4b, as M2b's style rows: no pixel golden at 90, 180 or 270 or at stroke 20.",
    "owner": "Engine.WordArt",
    "check": "golden",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "text-preview",
@@ -5615,7 +5615,7 @@
    "quirks": "Wide text is top-aligned in the preview box rather than centered.",
    "portTarget": "A small Skia surface control (SKElement) 200x80 max with same fit logic; decide whether to center (quirk) or top-left align (parity).",
    "risk": "low",
-   "parityCheck": "Screenshot compare of the preview region for 'RIZZ' defaults vs 04-word-art.png.",
+   "parityCheck": "Screenshot compare of the preview region for 'RIZZ' defaults vs 04-word-art.png. Open after M4b: MAN-7 (docs/port/m4b-manual.md), the Text pair on the look page against 4.1's capture; the preview is the engine render, centered (TextTabTests.The_Preview_group_has_4_1s_pixel_values, The_default_preview_is_the_engine_render_of_RIZZ_in_Anton_cropped_to_its_content).",
    "owner": "App.Ribbon.Text",
    "check": "ui-auto",
    "disposition": "fix",
@@ -5640,7 +5640,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: Add to canvas fails in Pants mode because it reads torso_front directly. v5: the front slot resolves per mode so it works in both, with the same layer name and full-resolution bitmap.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "panel-asset-library",
@@ -5700,7 +5700,7 @@
    "quirks": "Async FileReader completion order can reorder multiple dropped files; no error UI when an image fails to decode (console.error only). Zone is not keyboard focusable.",
    "portTarget": "Border with AllowDrop=True handling DragEnter/DragLeave/Drop (DataFormats.FileDrop), plus Click -> OpenFileDialog Multiselect. Window-level: ignore drops outside valid targets. Load files sequentially in file order (original is racy).",
    "risk": "low",
-   "parityCheck": "Drop 3 PNGs: three layers named by filename (extension stripped) centered in front torso at 0.85 fit; dragover state visible; non-image file ignored with no dialog.",
+   "parityCheck": "Drop 3 PNGs: three layers named by filename (extension stripped) centered in front torso at 0.85 fit; dragover state visible; non-image file ignored with no dialog. Open after M4b: MAN-4 (docs/port/m4b-manual.md), an Explorer drop of three PNGs and a .txt with the dragover look; the in-app import order and one-step drop are unit-tested.",
    "owner": "App.AssetLibrary",
    "check": "ui-auto",
    "disposition": "fix",
@@ -5763,12 +5763,12 @@
    "quirks": "(1) brightness/contrast/saturation slider reload uses `value || 100`, so a legitimate 0 is shown as 100 after any panel rebuild even though the layer is really at 0 (display mismatch). (2) Scale label shows rounded percent but slider can't exceed 500 while wheel/handle resize allows >500% (and as low as 1%); the keyboard +/- clamps 0.01..5. (3) Rotation label prints unrounded float (e.g. 12.3456789°) after handle rotation. (4) The adjustments panel collapses on every updateUI rebuild (e.g. after wheel scale, reset, rotate via handle). (5) X/Y inputs and X:/Y: label do not refresh while dragging a layer with the mouse (only on next rebuild). (6) None of the slider/number/name/flip/move/center/adjust changes push undo. (7) Slider events fire at 'input' rate; each rebuild loses focus.",
    "portTarget": "A Selected Layer inspector (StackPanel) bound to the selected Layer VM (two-way). Adjustments applied via the render pipeline: brightness/contrast/saturate/hue-rotate follow the CSS filter definitions (feColorMatrix-equivalent) and must be re-implemented with SKColorFilter matrices matching CSS Filter Effects spec (brightness = linear multiply, contrast = slope with 0.5 offset, saturate matrix per spec with luma 0.2126/0.7152/0.0722, hue-rotate matrix per spec).",
    "risk": "high",
-   "parityCheck": "Per adjustment sample images at (0,100,200 etc.) pixel-diff vs Electron ctx.filter output; RGB shift clamps per channel only for alpha>0 pixels.",
+   "parityCheck": "Narrowed in M4b: the frozen 4.1 goldens adjust-brightness-150, adjust-contrast-40, adjust-saturate-0, adjust-hue-90, adjust-extremes, adjust-combo, gap-opacity-with-adjust, rgb-shift and rgb-shift-with-adjust-rotated under the golden rule (GoldenRenderTests.Engine_export_matches_the_frozen_4_1_golden), AdjustTests (the brightness, contrast, saturate and hue-rotate tables and matrices; Rgb_shift_is_exact_clamped_and_skips_transparent_pixels), LayerPropertiesPanelTests.The_ten_sliders_have_4_1s_ranges and LayerPropertiesViewModelTests (Each_adjustment_is_one_clamped_step_that_keeps_the_others, Zero_adjustments_show_as_zero_after_reselect), in place of 4.1 renders at every sample value; LayerPropertiesViewModelTests pin the fixed displays (an adjustment of 0 shows 0, The_adjustments_stay_open_across_selection_edits_and_undo, The_rotation_slider_is_whole_degrees_in_range); LayerPropertiesPanelTests pin Center on front torso (Center_on_front_torso_is_one_undo_step_that_leaves_scale_and_rotation_alone, The_center_button_is_full_width_between_Up_Down_and_the_adjustments).",
    "owner": "App.LayerProperties",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: adjustment 0 shows as 100 after rebuild, adjustments panel collapses on every rebuild, rotation label unrounded, X/Y stale while dragging, and move/resize/opacity/flip/reorder push no undo. v5: 0 displays as 0, panel stays open, rotation label rounded, every document mutation is exactly one undo step, and one scale clamp 1%-500% applies to slider, keys, wheel and handles.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "layers-adjust-pipeline",
@@ -5929,7 +5929,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: undo snapshots are re-encoded JSON, restore reloads images asynchronously and deselects, many mutations push no undo, and some push twice. v5: layers share immutable bitmaps, synchronous restore, selection survives undo, every document mutation is exactly one undo step (depth 30 kept), redo capped.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "kbd-shortcuts",
@@ -5943,12 +5943,12 @@
    "quirks": "Ctrl+B/L/U/O/V also trigger tools because only E and D check ctrl (Ctrl+V therefore selects Select; Ctrl+O would collide with a native Open shortcut if added). Backspace with a focused button still deletes a layer. After touching a slider or checkbox, shortcuts stay disabled until focus moves away (clicking the canvas moves focus to body). Slider arrow keys therefore never conflict. Shortcuts are not discoverable except via tooltips on the tool buttons and undo/redo.",
    "portTarget": "Window.PreviewKeyDown handler with the same focus guard (TextBox/ComboBox/Slider/CheckBox focus suppresses, also ToggleButton? original suppresses only input/select/textarea so focused buttons still allow shortcuts). Map Key + Modifiers; note WPF Key.OemPlus for '+/=', Oem4/Oem6 for [ ].",
    "risk": "med",
-   "parityCheck": "Table-driven key test: each key with/without Shift/Ctrl and focus states, assert layer deltas and tool state.",
+   "parityCheck": "ShortcutRouterTests.RouteText_table_over_focus_modifiers_and_keys and the Route tables (every key over no focus, a TextBox, a Slider, a CheckBox, a Button, a layer row, a region tile and the 3D viewport, with no modifier, Shift, Ctrl and Alt, Keys on and off), plus the item 11 window facts (layer deltas, one undo step each) and ShellTests.The_window_binds_exactly_the_seven_chords_and_not_ctrl_v. Narrowed in M4b: Ctrl+V's paste moves to M5's paste row; M4b proves Ctrl+V toggles no tool and does nothing (K3; M4b smoke K2).",
    "owner": "App.Keyboard",
    "check": "ui-auto",
    "disposition": "fix",
-   "divergence": "4.1: shortcuts are trapped by sliders and checkboxes, Ctrl+letter toggles tools, '[' rotation wraps incorrectly, and Keys OFF disables everything. v5: only text fields suppress shortcuts, Ctrl+letter no longer toggles tools, Ctrl+O/S/Shift+S/V added, Keys OFF disables only bare-key shortcuts, and '[' rotation wrap fixed.",
-   "status": "open"
+   "divergence": "4.1: shortcuts are trapped by sliders and checkboxes, Ctrl+letter toggles tools, '[' rotation wraps incorrectly, and Keys OFF disables everything. v5: only text fields suppress shortcuts, Ctrl+letter no longer toggles tools, Ctrl+O/S/Shift+S/V added, Keys OFF disables only bare-key shortcuts, and '[' rotation wrap fixed. Character shortcuts ([ ] { } + = - _ r and the tool letters) match the typed character, so they follow the keyboard layout as 4.1's e.key did; an AltGr (Ctrl+Alt) character routes like the bare character while a lone Ctrl or Alt still blocks, and { and } always step 15, Shift or not (M4b, K2, D9, D15). Ctrl+V paste arrives with M5's paste row; in M4b Ctrl+V does nothing and toggles no tool (M4b, K3).",
+   "status": "done"
   },
   {
    "id": "dialogs-inventory",
@@ -6000,7 +6000,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: Pants mode swaps region tables so add image, Fit Front, Center, Word Art, Sleeve Pop and detail generators throw. v5: Pants mode works everywhere via semantic slots (front/back/rarm/larm/up/down per mode).",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "cross-undo-disabled-style",
@@ -6018,7 +6018,7 @@
    "quirks": "No :active (pressed) style exists except layer-item cursor and resize handle; keep pressed state neutral.",
    "portTarget": "A shared Styles.xaml: ButtonBase templates PrimaryButton, SecondaryButton, ToggleActiveButton, PresetButton, FillTypeButton (ToggleButton), with Trigger/VisualState for hover/pressed/disabled and DropShadowEffect glows. Do not port dead classes.",
    "risk": "med",
-   "parityCheck": "State matrix screenshot (normal/hover/pressed/disabled/focus) per button family compared with the web build; disabled opacity exactly 0.4.",
+   "parityCheck": "State matrix screenshot (normal/hover/pressed/disabled/focus) per button family compared with the web build; disabled opacity exactly 0.4. Open after M4b: MAN-7 (docs/port/m4b-manual.md), the button state matrix on the look page.",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "keep",
@@ -6037,7 +6037,7 @@
    "quirks": "Mixed token/hard-coded colors; keep for visual parity.",
    "portTarget": "Port from the inline values, not from the unused CSS rules; build a one-line table per control in XAML (sizes: drawColor 26x24, drawSize 60w, fillColor1/2 26x22, fillAngle 44w, fillScale 44w, bgColor 30x24, bgOpacity 80w, detailColor 26x22, detailWidth 50w, wa colors 28x20, waSize 44w, waStrokeW 60w, waAngle 50w, waText 150w min 36h, waFont 150w, exportTitle 140w).",
    "risk": "low",
-   "parityCheck": "Measure each control's bounding box from a 1920x1080 screenshot and compare with XAML (within 1 px).",
+   "parityCheck": "Measure each control's bounding box from a 1920x1080 screenshot and compare with XAML (within 1 px). Open after M4b: MAN-7 (docs/port/m4b-manual.md), the control boxes on the look page.",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "keep",
@@ -6059,7 +6059,7 @@
    "quirks": "Selectable chrome text is accidental.",
    "portTarget": "ToolTip on every control that has a title (strings listed in each item). Set TextBlock.IsHitTestVisible/Selectable false everywhere (WPF TextBlock is not selectable by default; accept deviation). No ContextMenu except where noted.",
    "risk": "low",
-   "parityCheck": "Hover audit: every tooltip string matches the title attributes; no tooltip where none existed (unless added by decision).",
+   "parityCheck": "Hover audit: every tooltip string matches the title attributes; no tooltip where none existed (unless added by decision). Open after M4b: MAN-7 (docs/port/m4b-manual.md), the hover and tooltip audit.",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "fix",
@@ -6249,7 +6249,7 @@
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "shell-no-persistence",
@@ -6434,12 +6434,12 @@
    "quirks": "accept=image/* silently allows SVG/AVIF in Electron; the port may drop them. Animated GIF/WEBP: Chromium draws first frame only to canvas; keep first-frame behavior.",
    "portTarget": "Decide the supported set: SkiaSharp decodes png/jpg/gif/webp/bmp/ico natively; svg and avif need extra libs. Match the list in README (PNG/JPG/GIF/WEBP) and make the picker filter explicit.",
    "risk": "med",
-   "parityCheck": "Open one of each type via Add image, drop, and background; table of supported/unsupported with graceful message for unsupported.",
+   "parityCheck": "Reworded in M4b to the evidence: Add image, the drop zone and Background share one decoder, ImageImporter.Load (ImportService and BackgroundViewModel). ImageImporterTests: PNG, JPG, WebP, BMP and GIF decode to their pixel size, an animated GIF takes its first frame, SVG is refused with 'SVG images can't be added. Use PNG, JPEG, WebP, BMP or GIF.' and other extensions are named as unsupported; BackgroundGroupTests run the same matrix and the SVG message through the Background route; DialogInventoryTests and the M4a bridge (F4) show a failed Add image naming the file in the status strip with no dialog.",
    "owner": "App.AssetLibrary",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: accept=image/* silently lets SVG/AVIF through the picker. v5: explicit PNG/JPG/GIF/WEBP/BMP filter, SVG import dropped with a message, first frame only for animated files. The folder picker lists the import formats, .bmp included, while its no-images alert keeps 4.1's text naming PNG, JPG, GIF and WEBP, and a .bmp keeps its extension in the thumbnail caption, whose regex is 4.1's (M4a, interfaces R14, T2-R6).",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "pack-builtin-load",
@@ -6501,7 +6501,7 @@
    "quirks": "Skia text vs Chromium text shaping/hinting will not be pixel-exact; the parity check for word art must be tolerance or perceptual, unlike fills. The family 'Poppins 700;900' etc. means weight naming must map to the right TTF files. Updating PRIVACY/SECURITY/TEST_PLAN/reviewer letter is part of the port.",
    "portTarget": "Bundle all 15 families as .ttf (OFL-licensed; keep licenses) as Resource/Content fonts and reference via FontFamily('pack://application:,,,/Fonts/#Anton') or load SKTypeface.FromFile for rendering to SkiaSharp. Include the exact weights (Dancing Script 700, Poppins 700+900, Lato 900, Orbitron 700+900). Zero network access afterwards.",
    "risk": "med",
-   "parityCheck": "Render the string 'RIZZ' in each of the 15 fonts x 6 styles with the native renderer and diff against a reference rendered by Electron with fonts installed locally; allow font-rasterizer tolerance. Network monitor: zero outbound connections.",
+   "parityCheck": "Render the string 'RIZZ' in each of the 15 fonts x 6 styles with the native renderer and diff against a reference rendered by Electron with fonts installed locally; allow font-rasterizer tolerance. Network monitor: zero outbound connections. Open after M4b, not proven: the 15 fonts are frozen in Solid only (GoldenWordArtFontTests, W1), and the five other styles have goldens in Anton, Poppins and Dancing Script only, so 15 fonts x 6 styles is not shown. Zero outbound connections is proven by the M4b smoke cold start (no socket owned by the process over 6 launches), and the faces are vendored (WordArtHardeningTests.Every_font_renders_RIZZ_in_its_vendored_face_with_no_fallback).",
    "owner": "Engine.WordArt",
    "check": "golden",
    "disposition": "fix",
@@ -7679,12 +7679,12 @@
    "quirks": "Doc drift. Fix the TEST_PLAN expectation when porting.",
    "portTarget": "Bind the header text to the assembly version (major.minor), or to Package.Current.Id.Version under MSIX, so it cannot drift.",
    "risk": "low",
-   "parityCheck": "The header byline reads 'v<major.minor>' (the name became the 626Labs mark, shell-header) matching the MSIX Identity Version's first two components.",
+   "parityCheck": "ShellTests.The_app_version_is_5_0_0 and the byline facts ('v5.0', shown 'V5.0'), LedgerScenarioTests.The_product_name_and_version_come_from_one_place; the M4b smoke's look capture shows V5.0 from assembly 5.0.0. Narrowed in M4b: no packaged build was launched; the MSIX Identity Version equals the csproj <Version> plus '.0' by construction, because scripts/build-msix.ps1 derives it from the csproj, refuses a mismatch and asserts the packaged manifest's Identity Version (M6a).",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: header version is hand-typed markup that drifts from docs and package version. v5: header text bound to the assembly/package version.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "dist-github-nsis-channel",
@@ -7745,12 +7745,12 @@
    "quirks": "Ctrl+O is the Windows convention for Open, but here it switches to Ellipse. The port should probably fix this; it's a deliberate decision either way.",
    "portTarget": "Window PreviewKeyDown with Keyboard.Modifiers. Decide whether Ctrl+O should become Open project and Ctrl+S Save work (standard Windows), or keep the current mapping.",
    "risk": "med",
-   "parityCheck": "Press each of Ctrl+V/B/L/U/O/E/D with and without a selection and record the active tool and side effects. Compare against Electron.",
+   "parityCheck": "ShortcutRouterTests.Ctrl_and_alt_letters_leave_the_tool_alone (Ctrl+V/B/L/U/O/E, with and without Shift, and Alt, leave the tool alone), Ctrl_d_duplicates_the_selection and Ctrl_d_with_nothing_selected_is_handled_and_does_nothing; ShellTests.The_window_binds_exactly_the_seven_chords_and_not_ctrl_v (Ctrl+O opens, Ctrl+S saves, Ctrl+Shift+S saves as). Narrowed in M4b: Ctrl+V's paste moves to M5's paste row; M4b proves Ctrl+V does nothing (K3; M4b smoke K2).",
    "owner": "App.Keyboard",
    "check": "ui-auto",
    "disposition": "fix",
-   "divergence": "4.1: Ctrl+V/B/L/U/O toggle tools and swallow standard shortcuts. v5: Ctrl+letter no longer toggles tools; Ctrl+O opens, Ctrl+S saves, Ctrl+Shift+S saves as, Ctrl+V pastes.",
-   "status": "open"
+   "divergence": "4.1: Ctrl+V/B/L/U/O toggle tools and swallow standard shortcuts. v5: Ctrl+letter no longer toggles tools; Ctrl+O opens, Ctrl+S saves, Ctrl+Shift+S saves as, Ctrl+V pastes. Ctrl+V paste arrives with M5's paste row; in M4b Ctrl+V does nothing and toggles no tool (M4b, K3).",
+   "status": "done"
   },
   {
    "id": "kbd-bracket-rotate-negative-drift",
@@ -7765,12 +7765,12 @@
    "quirks": "Bug. Recommend fixing with a true modulo and logging that as a decision.",
    "portTarget": "C# % has the same sign behavior. Port the formula verbatim to keep parity, or use a proper modulo to normalize into (-180,180].",
    "risk": "low",
-   "parityCheck": "Set rotation to -180, press '[' 3 times, and read back sel.rotation (expected -195 in Electron).",
+   "parityCheck": "Reworded in M4b to the fixed behavior: from -180, '[' three times reads 175, 170, 165, and 80 presses stay in [-180, 180) (ShortcutRouterTests.Repeated_left_brackets_never_drift_below_minus_180, LayerKeyOpsTests.RotateStep_wraps_with_a_true_modulo); 4.1 reads -195.",
    "owner": "App.Keyboard",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: '[' rotation wrap uses JS % and drifts below -180 without bound. v5: rotation wrap fixed with a true modulo, normalized to -180..180.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "kbd-input-focus-trap",
@@ -7788,8 +7788,8 @@
    "owner": "App.Keyboard",
    "check": "ui-auto",
    "disposition": "fix",
-   "divergence": "4.1: shortcuts die whenever focus is on any input including sliders, checkboxes and color inputs. v5: shortcuts are suppressed only in text fields.",
-   "status": "open"
+   "divergence": "4.1: shortcuts die whenever focus is on any input including sliders, checkboxes and color inputs. v5: shortcuts are suppressed only in text fields. Only text fields (every TextBoxBase), an open color picker, the layer list (Up, Down, Alt+Up and Alt+Down; Delete and Backspace on a focused row delete the layer, as in 4.1), a focused region tile (Delete, Shift+F10, Menu) and the 3D viewport (arrows, Home) keep a key that is also a shortcut; a focused slider's arrows nudge the selected layer instead of stepping the slider, and a closed ComboBox does not trap the tool letters (M4b, K1, D8, D13, D14).",
+   "status": "done"
   },
   {
    "id": "kbd-focused-button-enter-space",
@@ -7804,12 +7804,12 @@
    "quirks": "Accidental repeat of destructive actions (Clear) is possible.",
    "portTarget": "WPF Buttons also activate on Space/Enter when focused. Set Focusable=false on ribbon buttons or accept the parity.",
    "risk": "low",
-   "parityCheck": "Click Scatter with a layer selected, press Space twice, and count the layers added.",
+   "parityCheck": "Reworded in M4b: ShortcutRouterTests.Space_on_a_focused_scatter_button_repeats_the_click raises Space through the window's preview handlers on a focused Scatter button, on Home and on Layout, after a click: the click repeats and adds Scatter's layers as one more undo step (WPF's own ButtonBase handling); each further press takes the same path.",
    "owner": "App.Keyboard",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "props-falsy-zero-adjust-display",
@@ -8010,7 +8010,7 @@
    "check": "unit",
    "disposition": "fix",
    "divergence": "4.1: no-op actions and presets push empty or double undo steps. v5: every document mutation is exactly one undo step, with no empty or double steps.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "undo-rapid-restore-race",
@@ -8113,7 +8113,7 @@
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "layers-default-name-offbyone",
@@ -8197,7 +8197,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "asset-drag-stale-reference",
@@ -8475,12 +8475,12 @@
    "quirks": "SVG support is a hidden dependency on Chromium.",
    "portTarget": "SKCodec for raster. SVG needs Svg.Skia or must be dropped from accepted types (decision).",
    "risk": "med",
-   "parityCheck": "Matrix test: one file per format through drop, Add image and Background, comparing the layer pixel size and first-frame pixels.",
+   "parityCheck": "Reworded in M4b to the evidence: the three routes share ImageImporter.Load; ImageImporterTests.Each_accepted_format_decodes, An_animated_gif_takes_its_first_frame, A_bmp_decodes_its_pixels and Svg_is_refused_by_extension compare pixel size and first-frame pixels, and BackgroundGroupTests.Each_accepted_format_decodes_through_the_background_route and An_svg_gives_the_message_and_no_step run the matrix through the Background route.",
    "owner": "Engine.Document",
    "check": "unit",
    "disposition": "drop",
    "divergence": "4.1: SVG imports via Chromium alongside raster formats. v5: SVG import dropped with a message; raster formats still decode.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "wordart-layer-name-emoji",
@@ -8499,7 +8499,7 @@
    "check": "unit",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "vestigial-hidden-controls",

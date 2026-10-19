@@ -210,8 +210,16 @@
                     <StackPanel VerticalAlignment="Center">
                         <TextBox x:Name="WordArtText" Style="{StaticResource WordArtTextBox}" Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}"
                                  Tag="Type text..." Margin="0,0,0,4" AutomationProperties.Name="Word Art text" />
-                        <ComboBox x:Name="FontBox" Style="{StaticResource WordArtComboBox}" ItemsSource="{Binding Fonts}" DisplayMemberPath="Label"
-                                  SelectedValuePath="Family" SelectedValue="{Binding Font}" AutomationProperties.Name="Word Art font" />
+                        <ComboBox x:Name="FontBox" Style="{StaticResource WordArtComboBox}" ItemsSource="{Binding Fonts}"
+                                  SelectedValuePath="Family" SelectedValue="{Binding Font}" AutomationProperties.Name="Word Art font">
+                            <!-- An explicit template, not DisplayMemberPath: this style's hand-built template wires SelectionBoxItemTemplate only,
+                                 so the closed box (and the list's bare ContentPresenters) fell back to the record's ToString (smoke P-1). -->
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Label}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
                     </StackPanel>
                 </DockPanel>
             </Border>

@@ -4969,11 +4969,11 @@
    "quirks": "Ribbon height is NOT constant: each pane has different content height (Home panes have 2-row vertical groups, Details is single row), so switching ribbon tabs changes the ribbon height and resizes/shifts the canvas area vertically (canvas is vertically centered so it jumps). Decide: keep (parity) or fix to a fixed ribbon height (recommended, tiny deviation).",
    "portTarget": "Grid with rows Auto (header), Auto (ribbon), * (app), Auto (footer); app row = columns 280 (panel, ScrollViewer vertical auto) and * (canvas area). Drop the dead .rpanel and btnExport2.",
    "risk": "low",
-   "parityCheck": "Overlay native screenshot against docs/screenshots/4.1/*.png at 1920x1080 window content; region boundaries (header bottom, ribbon bottom, panel right edge x=280, footer top) match within 1 px. Open after M4b: held with plan item 12 (run 2 D11, branch cart/m4b-items-9-16--03-ribbon-remeasure at c4bd30d): Home is 2184 DIP wide against a 1184 pane and fitting it needs Este's call, MAN-7 Calls (a) and (b). The fixed height holds: 138 DIP panes on every tab (M4b smoke T1).",
+   "parityCheck": "Overlay native screenshot against docs/screenshots/4.1/*.png at 1920x1080 window content; region boundaries (header bottom, ribbon bottom, panel right edge x=280, footer top) match within 1 px. RibbonMeasureTests (M4b item 12): at 1184x761 with a layer selected, the ribbon is 167 DIP (138 DIP panes) on every tab, and Layout, Details and Text fit without a horizontal scroll; ShellLookTests pins the ribbon at 167 and the canvas area at 519. Narrowed in M4b: Home scrolls horizontally at this width, as 4.1's did (ribbon-overflow-hscroll), accepted by Este on 2026-10-18. Open after M4b: the boundary overlay against 4.1 is the look sign-off, MAN-7 Call (a).",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "fix",
-   "divergence": "4.1: ribbon height changes per tab, shifting the canvas vertically on tab switch. v5: fixed ribbon height.",
+   "divergence": "4.1: ribbon height changes per tab, shifting the canvas vertically on tab switch. v5: fixed ribbon height. The fixed height is the tallest pane's, the Text tab's 138 DIP, so Home is 17 DIP taller than its content; with Fill Style and the region grid on Home (F1), Home scrolls sideways at 1200 DIP as 4.1's Home did (M4b, R1; Este, 2026-10-18).",
    "status": "open"
   },
   {
@@ -4988,12 +4988,12 @@
    "quirks": "",
    "portTarget": "Window SizeChanged handler (or VisualStateManager style trigger) setting panel column Width 200 when content width <= 900 DIPs, else 280.",
    "risk": "low",
-   "parityCheck": "Resize window content width to 900 and 901: panel is 200 then 280 wide; asset grid stays 3 columns and thumbnails shrink. Open after M4b: held with plan item 12 (run 2 D11), waiting on Este's ribbon-width call (MAN-7 Calls (a) and (b)).",
+   "parityCheck": "Resize window content width to 900 and 901: panel is 200 then 280 wide; asset grid stays 3 columns and thumbnails shrink. RibbonMeasureTests.The_900_901_breakpoint_keeps_the_panel_width_and_three_asset_columns and ShellTests.The_left_panel_narrows_at_900 (M4b item 12).",
    "owner": "App.Shell",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "shell-header",
@@ -5195,7 +5195,7 @@
    "quirks": "Group labels are displayed uppercase by CSS (e.g. 'BG SETTINGS', 'COLORS & SIZE').",
    "portTarget": "A RibbonGroup UserControl: Grid rows (Content *, Label Auto), right border 1px, Padding 0,0 10,0; WrapPanel (Horizontal) or StackPanel for items. Set Margin so label sits 5 px below items.",
    "risk": "low",
-   "parityCheck": "Group dividers and labels line up with 4.1 screenshot; labels: Mode, Tools, Brush, Placement, Edit, File, Settings (Home); Presets, Background, BG Settings, Fill Style, Template Regions (Layout); Settings, Neckline, Edges, Seams, Accents (Details); Text, Colors & Size, Style, Preview (Text). Open after M4b: held with plan item 12 (run 2 D11), waiting on Este's ribbon-width call (MAN-7 Calls (a) and (b)).",
+   "parityCheck": "Group dividers and labels line up with 4.1 screenshot; labels: Mode, Tools, Brush, Placement, Edit, File, Settings (Home); Presets, Background, BG Settings, Fill Style, Template Regions (Layout); Settings, Neckline, Edges, Seams, Accents (Details); Text, Colors & Size, Style, Preview (Text). RibbonMeasureTests.Each_tab_carries_its_groups_labels (M4b item 12) asserts v5's labels per tab; under F1 Fill Style and the region grid (labelled CLICK REGIONS TO FILL, ribbon-fill-regions-joined) are on Home, not Layout. Open after M4b: the divider and label alignment against 4.1 is the look sign-off, MAN-7.",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "keep",

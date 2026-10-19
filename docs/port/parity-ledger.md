@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**429 rows.** Status: done 351, open 78. Disposition: fix 211, keep 184, drop 26, new 8. Checks: ui-auto 125, unit 124, manual 67, golden 66, none-retired 25, doc 22.
+**429 rows.** Status: done 352, open 77. Disposition: fix 211, keep 184, drop 26, new 8. Checks: ui-auto 125, unit 124, manual 67, golden 66, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -219,7 +219,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | open | `project-startup` | Initial render and startup order | manual | fix | low |
 | open | `shell-window-frame` | Window frame, title, menu, default size | manual | fix | low |
 | open | `shell-layout-skeleton` | Page skeleton and flex layout | manual | fix | low |
-| open | `shell-responsive-breakpoint` | Narrow-window breakpoint | ui-auto | keep | low |
+| done | `shell-responsive-breakpoint` | Narrow-window breakpoint | ui-auto | keep | low |
 | open | `shell-header` | Header bar content and styling | manual | fix | med |
 | done | `shell-footer` | Footer line | unit | fix | low |
 | done | `theme-tokens-colors` | Color token set (:root) | manual | keep | low |

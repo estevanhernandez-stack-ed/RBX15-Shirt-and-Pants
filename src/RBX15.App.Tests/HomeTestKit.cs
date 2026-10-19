@@ -31,6 +31,7 @@ internal static class HomeTestKit
         {
             Placement = new PlacementViewModel(session, () => new Random(1)),
             Tools = new ToolsViewModel(),
+            Keys = new KeysViewModel(),
             Brush = new BrushViewModel(picker ?? new FakeColorPicker()),
             File = FileGroup(session, new FakeFileDialogs(), new FakeDialogService(), status),
         };

@@ -115,7 +115,10 @@ public class RibbonMeasureTests
         Assert.Equal(1184, paneHost.ActualWidth);
         Assert.Equal(tallest, fixedHeight, 1);                 // the fixed height is the tallest pane's, nothing taller
         Assert.Equal(RibbonTab.Text, paneHeights.MaxBy(kv => kv.Value).Key);
-        Assert.Equal((FixedPaneHeight, RibbonHeight), (fixedHeight, ribbon.ActualHeight));
+        // The pinned numbers are 100%'s. Above it text measures in device-pixel steps (at 125%: 137.6 and 165.6), so the pin holds
+        // only at 96 DPI; one height on every tab, the tallest pane's, is checked at every scale (MAN-8, 2026-10-25).
+        if (VisualTreeHelper.GetDpi(ribbon).PixelsPerInchX == 96)
+            Assert.Equal((FixedPaneHeight, RibbonHeight), (fixedHeight, ribbon.ActualHeight));
         foreach (var tab in new[] { RibbonTab.Details, RibbonTab.Text })
             Assert.True(measured[tab].Width <= paneHost.ActualWidth, $"{tab} needs {measured[tab].Width} DIP; the ribbon is {paneHost.ActualWidth}");
 

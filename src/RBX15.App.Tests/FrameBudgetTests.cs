@@ -54,9 +54,15 @@ public class FrameBudgetTests(ITestOutputHelper output)
         return new Document { Layers = layers.ToImmutable() };
     }
 
-    /// <summary>A shown canvas view (so its host is Loaded and keeps its persistent renderer) over a pen-tool session.</summary>
-    sealed record Rig(Window Window, EditorSession Session, CanvasViewModel Vm, TemplateCanvasHost Host, BrushViewModel Brush) : IDisposable
+    /// <summary>
+    /// A shown canvas view (so its host is Loaded and keeps its persistent renderer) over a pen-tool session. <see cref="Surfaces"/>
+    /// counts from the surface made at the pinned 1.0 scale: on a display above 100% the window first renders at its real DPI, and
+    /// that surface belongs to the rig, not to the frames under test (MAN-8, 2026-10-25).
+    /// </summary>
+    sealed record Rig(Window Window, EditorSession Session, CanvasViewModel Vm, TemplateCanvasHost Host, BrushViewModel Brush, int Before) : IDisposable
     {
+        public int Surfaces => Host.SurfaceAllocations - Before;
+
         public void Dispose() => Window.Close();
 
         // The pointer goes to CanvasInteraction's seams, as the host's own handlers forward it. The host's HandlePointerDown
@@ -88,7 +94,7 @@ public class FrameBudgetTests(ITestOutputHelper output)
         host.ApplyDpi(1);
         _ = host.Frame;
         Assert.True(host.IsLoaded);
-        return new Rig(window, session, vm, host, brush);
+        return new Rig(window, session, vm, host, brush, host.SurfaceAllocations - 1);
     }
 
     /// <summary>A wavy pen path across the template: point i of <see cref="Points"/>, in host DIPs at zoom 1 (= template px).</summary>
@@ -100,8 +106,7 @@ public class FrameBudgetTests(ITestOutputHelper output)
         using var rig = Show(TwentyLayers());
         var host = rig.Host;
         Assert.True(host.HasRenderer);
-        int baseline = host.SurfaceAllocations;
-        Assert.Equal(1, baseline);
+        Assert.Equal(1, rig.Surfaces);
 
         Assert.True(rig.Down(PathPoint(0)));
         for (int i = 1; i <= 30; i++)
@@ -109,24 +114,24 @@ public class FrameBudgetTests(ITestOutputHelper output)
             rig.Move(PathPoint(i));
             _ = host.Frame;                                   // render now, as the Rendering tick would
         }
-        Assert.Equal(1, host.SurfaceAllocations);             // 30 more frames at the same size: no new surface
+        Assert.Equal(1, rig.Surfaces);             // 30 more frames at the same size: no new surface
         rig.Up(PathPoint(30));
         _ = host.Frame;
-        Assert.Equal(1, host.SurfaceAllocations);
+        Assert.Equal(1, rig.Surfaces);
 
         host.Zoom = 2;                                        // a size change reallocates, once
         _ = host.Frame;
-        Assert.Equal(2, host.SurfaceAllocations);
+        Assert.Equal(2, rig.Surfaces);
         for (int i = 0; i < 10; i++)
         {
             host.Document = host.Document! with { BgOpacity = 0.5 + i / 40.0 };
             _ = host.Frame;
         }
-        Assert.Equal(2, host.SurfaceAllocations);
+        Assert.Equal(2, rig.Surfaces);
 
         host.ApplyDpi(1.5);                                   // a DPI change is a size and dpi change: a third
         _ = host.Frame;
-        Assert.Equal(3, host.SurfaceAllocations);
+        Assert.Equal(3, rig.Surfaces);
     });
 
     [Fact] // the reused surface must not carry a transform or clip from one frame to the next: the output is the fresh render's
@@ -145,7 +150,7 @@ public class FrameBudgetTests(ITestOutputHelper output)
 
         using var fresh = Show(TwentyLayers());
         Assert.Equal(Bytes(fresh.Host), reused);
-        Assert.Equal(1, host.SurfaceAllocations);
+        Assert.Equal(1, rig.Surfaces);
     });
 
     static byte[] Bytes(TemplateCanvasHost host)
@@ -222,7 +227,7 @@ public class FrameBudgetTests(ITestOutputHelper output)
             string line = $"FRAME-BUDGET {Points}-point pen stroke, {LayerCount} layers ({name}): mean {mean:F2} ms, p95 {p95:F2} ms, max {max:F2} ms";
             output.WriteLine(line);
             Console.WriteLine(line);
-            Assert.Equal(1, rig.Host.SurfaceAllocations);
+            Assert.Equal(1, rig.Surfaces);
             if (assertCeilings) Assert.True(p95 < ceilingMs, $"{line}; over the {ceilingMs} ms ceiling");
         }
     });

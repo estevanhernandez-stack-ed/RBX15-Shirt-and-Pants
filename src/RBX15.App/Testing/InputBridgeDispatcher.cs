@@ -233,10 +233,13 @@ public sealed class InputBridgeDispatcher : IInputBridge, IDisposable
         var source = PresentationSource.FromVisual(anchor) ?? throw new BridgeException("the target is not shown");
         var root = source.RootVisual ?? throw new BridgeException("the target's window has no root");
         Point rootDip = ReferenceEquals(anchor, root) ? dip : anchor.TransformToAncestor(root).Transform(dip);
-        Point device = source.CompositionTarget.TransformToDevice.Transform(rootDip);
+        // One whole device pixel, the one RawMouse reports, and the pin derived from it: deriving the pin from the DIP point instead
+        // rounds a second time, and at 125% an exact .5 (canvas 50 is 62.5 px) lands one pixel off, a 0.8 DIP nudge on the next move.
+        var toDevice = source.CompositionTarget.TransformToDevice.Transform(rootDip);
+        Point device = new(Math.Round(toDevice.X), Math.Round(toDevice.Y));
         var window = (anchor as DependencyObject is { } d ? Window.GetWindow(d) : null) ?? _main;
         bool disabled = !IsWindowEnabled(new WindowInteropHelper(window).Handle);
-        return new Target(source, device, anchor.PointToScreen(dip), window, disabled);
+        return new Target(source, device, root.PointToScreen(source.CompositionTarget.TransformFromDevice.Transform(device)), window, disabled);
     }
 
     /// <summary>Sends the owner its WM_SETCURSOR + HTERROR; true when a hook handled it (nonzero result, so Windows does not beep).</summary>

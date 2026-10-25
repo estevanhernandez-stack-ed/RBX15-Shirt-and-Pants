@@ -28,7 +28,7 @@
                             ToolTip="Background color" AutomationProperties.Name="Background color"
                             AutomationProperties.HelpText="{Binding Color}" Margin="0,0,4,0" />
                     <Button x:Name="BgImage" Content="Background" Style="{DynamicResource SecondaryButtonSm}" FontSize="10" Padding="8,3"
-                            Command="{Binding PickImageCommand}" ToolTip="Use an image as the background"
+                            Command="{Binding PickImageCommand}" ToolTip="Stretch an image across the whole template. To place it at its own size, drop it on the canvas."
                             AutomationProperties.Name="Background image" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">

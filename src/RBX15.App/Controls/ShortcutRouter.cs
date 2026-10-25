@@ -81,7 +81,11 @@ public enum ShortcutFocus
     RegionTile,
     /// <summary>The 3D preview viewport: it keeps the arrows and Home.</summary>
     Viewport,
-    /// <summary>Anything else: sliders, checkboxes, swatches, buttons, tabs. They never trap a shortcut (kbd-input-focus-trap).</summary>
+    /// <summary>A slider: it keeps the four arrows, so it steps as 4.1's range inputs did (look call (d)). The tool letters, the bracket keys and Delete still reach the shortcuts.</summary>
+    Slider,
+    /// <summary>A non-editable ComboBox (the Text tab's font list) or one of its items: it keeps every typed character, for type-ahead, and the four arrows (look call (e)). Delete still removes the selected layer.</summary>
+    ComboBox,
+    /// <summary>Anything else: checkboxes, swatches, buttons, tabs. They never trap a shortcut (kbd-input-focus-trap).</summary>
     Other,
 }
 
@@ -98,8 +102,8 @@ public enum ShortcutFocus
 /// <item>Ctrl chords (Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z, Ctrl+D, the file chords) are the window's KeyBindings behind
 /// <see cref="TextFieldShortcutCommand"/>, never routed here, so Keys OFF cannot reach them (the fix on keys-toggle-button).</item>
 /// <item>K1's trap table: a text field and an open color picker keep every key. The layer list keeps Up, Down, Alt+Up and Alt+Down
-/// (Delete reaches the selected layer); a region tile keeps Delete, Shift+F10 and Menu; the 3D viewport keeps the arrows and Home. Everything else (sliders, checkboxes,
-/// swatches, buttons, tabs) traps nothing (kbd-input-focus-trap). Space and Enter are never answered here, so a focused button's own
+/// (Delete reaches the selected layer); a region tile keeps Delete, Shift+F10 and Menu; the 3D viewport and a slider keep the arrows (the viewport Home too);
+/// a font list keeps the arrows and every typed character. Everything else (checkboxes, swatches, buttons, tabs) traps nothing (kbd-input-focus-trap). Space and Enter are never answered here, so a focused button's own
 /// activation stays WPF's (kbd-focused-button-enter-space).</item>
 /// <item>The layer keys need a selection; the tool keys do not. Ctrl or the Windows key held never routes a layer key (4.1 returned on
 /// ctrlKey or metaKey); Alt does not stop an arrow or Delete, as 4.1.</item>
@@ -227,13 +231,13 @@ public sealed class ShortcutRouter
         _ => throw new ArgumentOutOfRangeException(nameof(action), action, "not a tool toggle"),
     };
 
-    /// <summary>Whether the focused element keeps every typed character (K1): a text field and the color picker. The rest keep only keys that are not characters.</summary>
-    static bool Traps(ShortcutFocus focus) => focus is ShortcutFocus.TextField or ShortcutFocus.ColorPicker;
+    /// <summary>Whether the focused element keeps every typed character (K1): a text field, the color picker and a font list (its type-ahead). The rest keep only keys that are not characters.</summary>
+    static bool Traps(ShortcutFocus focus) => focus is ShortcutFocus.TextField or ShortcutFocus.ColorPicker or ShortcutFocus.ComboBox;
 
     /// <summary>
     /// K1's per-key trap table: whether <paramref name="focus"/> keeps <paramref name="key"/> for its own use. A text field and the color
     /// picker keep all; the layer list keeps Up and Down (plain, or with Alt, which reorders; Delete reaches the layer, as 4.1); a region tile keeps Delete,
-    /// Shift+F10 and Menu; the 3D viewport keeps the arrows and Home. Nothing else traps (kbd-input-focus-trap).
+    /// Shift+F10 and Menu; the 3D viewport keeps the arrows and Home; a slider and a font list keep the arrows. Nothing else traps (kbd-input-focus-trap).
     /// </summary>
     public static bool Keeps(ShortcutFocus focus, Key key, ModifierKeys modifiers) => focus switch
     {
@@ -241,6 +245,7 @@ public sealed class ShortcutRouter
         ShortcutFocus.LayerList => key is Key.Up or Key.Down && (modifiers & ~ModifierKeys.Alt) == ModifierKeys.None,
         ShortcutFocus.RegionTile => key is Key.Delete or Key.Apps || (key == Key.F10 && (modifiers & ModifierKeys.Shift) != 0),
         ShortcutFocus.Viewport => key is Key.Left or Key.Right or Key.Up or Key.Down or Key.Home,
+        ShortcutFocus.Slider or ShortcutFocus.ComboBox => key is Key.Left or Key.Right or Key.Up or Key.Down,
         _ => false,
     };
 
@@ -249,21 +254,29 @@ public sealed class ShortcutRouter
     {
         if (focused is not DependencyObject element) return ShortcutFocus.None;
         if (TextFieldShortcutCommand.TextFieldHasFocus(focused)) return ShortcutFocus.TextField;
+        // A slider or a font list is remembered, not returned, so one inside the color picker still counts as the picker.
+        ShortcutFocus? control = null;
         for (DependencyObject? at = element; at is not null; at = Parent(at))
         {
             switch (at)
             {
                 case ColorPickerPopup:
                     return ShortcutFocus.ColorPicker;
+                case Slider:
+                    control ??= ShortcutFocus.Slider;
+                    break;
+                case ComboBox or ComboBoxItem:
+                    control ??= ShortcutFocus.ComboBox;
+                    break;
                 case ListBox { Name: "LayerList" }:
-                    return ShortcutFocus.LayerList;
+                    return control ?? ShortcutFocus.LayerList;
                 case Viewport3D:
-                    return ShortcutFocus.Viewport;
+                    return control ?? ShortcutFocus.Viewport;
                 case Button { DataContext: RegionTileViewModel } or Button { Name: "FillAllTile" }:
-                    return ShortcutFocus.RegionTile;
+                    return control ?? ShortcutFocus.RegionTile;
             }
         }
-        return ShortcutFocus.Other;
+        return control ?? ShortcutFocus.Other;
     }
 
     /// <summary>The visual parent, or the logical one where the visual tree ends (a Window's content, a popup's child).</summary>

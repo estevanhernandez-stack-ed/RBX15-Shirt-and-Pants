@@ -508,7 +508,7 @@ public class TextTabTests
         var layer = Assert.Single(session.Document.Layers);
         Assert.InRange(layer.Image.Width, 1, Images.MaxDimension);
         Assert.InRange(layer.Image.Height, 1, Images.MaxDimension);
-        Assert.True((long)layer.Image.Width * layer.Image.Height <= Images.MaxPixels);
+        Assert.True((long)layer.Image.Width * layer.Image.Height <= WordArt.MaxPixels);
         // On-canvas size = image size x layer scale = the uncapped size, to within the one image pixel the render rounds up by.
         Assert.Equal(cw * uncappedScale, layer.Image.Width * layer.Scale, layer.Scale + 1e-9);
         Assert.Equal(ch * uncappedScale, layer.Image.Height * layer.Scale, layer.Scale + 1e-9);

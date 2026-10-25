@@ -36,6 +36,13 @@ public static class WordArt
     public const float MinStrokeWidth = 0, MaxStrokeWidth = 20;
 
     /// <summary>
+    /// Largest pixel count a Word Art render is drawn at: 15 million (Este's ruling on run 1 D9, 2026-10-25). Lower than the
+    /// decode cap (<see cref="Images.MaxPixels"/>, 50 million), which peaked near 600 MB while a Word Art layer was created, far more
+    /// pixels than a 585 px template slot can show. Layer scale makes up the rest (T1), so the layer's size on the canvas is unchanged.
+    /// </summary>
+    public const long MaxPixels = 15_000_000;
+
+    /// <summary>
     /// The waFont options in order: the CSS family and the label the select shows (editor.html:230-246).
     /// The families are <see cref="Fonts.WordArtFamilies"/>. The select does not draw an option in its own face.
     /// </summary>
@@ -275,16 +282,16 @@ public static class WordArt
 
     /// <summary>
     /// The size to draw a width x height render at so it stays inside the image caps
-    /// (<see cref="Images.MaxDimension"/> a side, <see cref="Images.MaxPixels"/> in all), and the factor the content
+    /// (<see cref="Images.MaxDimension"/> a side, <see cref="MaxPixels"/> in all), and the factor the content
     /// shrinks by. A render that fits comes back unchanged with factor 1. Otherwise the pixels are the largest inside
     /// the caps to within a row and column, rounded up so the scaled content is never clipped.
     /// </summary>
     internal static (int Width, int Height, double Factor) FitToCaps(int width, int height)
     {
-        static bool Fits(long w, long h) => w <= Images.MaxDimension && h <= Images.MaxDimension && w * h <= Images.MaxPixels;
+        static bool Fits(long w, long h) => w <= Images.MaxDimension && h <= Images.MaxDimension && w * h <= MaxPixels;
         if (Fits(width, height)) return (width, height, 1.0);
         double factor = Math.Min(Math.Min((double)Images.MaxDimension / width, (double)Images.MaxDimension / height),
-                                 Math.Sqrt((double)Images.MaxPixels / ((double)width * height)));
+                                 Math.Sqrt((double)MaxPixels / ((double)width * height)));
         while (true)
         {
             int w = Math.Clamp((int)Math.Ceiling(width * factor), 1, Images.MaxDimension);
@@ -298,7 +305,7 @@ public static class WordArt
     /// renderWordArt (editor.js:2120-2240) on a new surface. With no maxima (null or 0, as 4.1's falsy
     /// check) the surface is the content size cw x ch, as Add to canvas renders it; with maxima it is
     /// min(cw, max) x min(ch, max) and the content is scaled by the smaller ratio, as the preview
-    /// renders it. Text too big for the image caps (16384 a side, 50 megapixels; 4.1 failed or froze on it)
+    /// renders it. Text too big for the image caps (16384 a side, 15 megapixels; 4.1 failed or froze on it)
     /// never throws: it renders at the largest size inside the caps, and <see cref="WordArtRender.ContentScale"/>
     /// says how far it shrank. Returns the image (caller owns it), the content size cw, ch (the image size only
     /// when no maximum or cap clamps it) and that scale.

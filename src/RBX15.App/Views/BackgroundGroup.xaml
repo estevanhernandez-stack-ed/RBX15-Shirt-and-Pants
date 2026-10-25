@@ -7,7 +7,8 @@
     <UserControl.Resources>
         <!-- .swatch (styles.css:424-436): 24x24 with a 2px transparent border, radius r-xs; hover (and the never-assigned
              .active) = fg-1 border and scale(1.15). A button in v5, so it takes focus: the cyan focus ring shows on keyboard
-             focus and the hover look applies to it as well. The 150 ms transition is not ported (provisional; M4b look sign-off). -->
+             focus and the hover look applies to it as well. The scale eases over dur-fast with ease-out (styles.css:431, the Motion tokens),
+             as 4.1's `transition: all`; the border color switches at once. -->
         <Style x:Key="BgSwatchButton" TargetType="Button">
             <Setter Property="Width" Value="24" />
             <Setter Property="Height" Value="24" />
@@ -18,15 +19,38 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="Face" Background="{TemplateBinding Background}" BorderBrush="Transparent" BorderThickness="2"
-                                CornerRadius="{DynamicResource RXsRadius}" RenderTransformOrigin="0.5,0.5" />
+                                CornerRadius="{DynamicResource RXsRadius}" RenderTransformOrigin="0.5,0.5">
+                            <Border.RenderTransform>
+                                <ScaleTransform x:Name="FaceScale" ScaleX="1" ScaleY="1" />
+                            </Border.RenderTransform>
+                        </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Face" Property="BorderBrush" Value="{DynamicResource Fg1Brush}" />
-                                <Setter TargetName="Face" Property="RenderTransform">
-                                    <Setter.Value>
-                                        <ScaleTransform ScaleX="1.15" ScaleY="1.15" />
-                                    </Setter.Value>
-                                </Setter>
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="FaceScale" Storyboard.TargetProperty="ScaleX">
+                                                <SplineDoubleKeyFrame KeyTime="{StaticResource DurFastKeyTime}" KeySpline="{StaticResource EaseOutSpline}" Value="1.15" />
+                                            </DoubleAnimationUsingKeyFrames>
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="FaceScale" Storyboard.TargetProperty="ScaleY">
+                                                <SplineDoubleKeyFrame KeyTime="{StaticResource DurFastKeyTime}" KeySpline="{StaticResource EaseOutSpline}" Value="1.15" />
+                                            </DoubleAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="FaceScale" Storyboard.TargetProperty="ScaleX">
+                                                <SplineDoubleKeyFrame KeyTime="{StaticResource DurFastKeyTime}" KeySpline="{StaticResource EaseOutSpline}" Value="1" />
+                                            </DoubleAnimationUsingKeyFrames>
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="FaceScale" Storyboard.TargetProperty="ScaleY">
+                                                <SplineDoubleKeyFrame KeyTime="{StaticResource DurFastKeyTime}" KeySpline="{StaticResource EaseOutSpline}" Value="1" />
+                                            </DoubleAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

@@ -58,12 +58,13 @@ public class ShortcutRouterTests
             ("none", ShortcutFocus.None, null),
             ("TextBox", ShortcutFocus.TextField, new TextBox()),
             ("RichTextBox", ShortcutFocus.TextField, new RichTextBox()),
-            ("Slider", ShortcutFocus.Other, new Slider()),
+            ("Slider", ShortcutFocus.Slider, new Slider()),
             ("CheckBox", ShortcutFocus.Other, new CheckBox()),
             ("Button", ShortcutFocus.Other, new Button()),
             ("ToggleButton", ShortcutFocus.Other, new ToggleButton()),
             ("RadioButton (a ribbon tab)", ShortcutFocus.Other, new RadioButton()),
-            ("ComboBox", ShortcutFocus.Other, new ComboBox()),
+            ("ComboBox", ShortcutFocus.ComboBox, new ComboBox()),
+            ("ComboBoxItem (an open font list)", ShortcutFocus.ComboBox, new ComboBoxItem()),
             ("layer list", ShortcutFocus.LayerList, list),
             ("layer row", ShortcutFocus.LayerList, row),
             ("region tile", ShortcutFocus.RegionTile, tile),
@@ -110,7 +111,7 @@ public class ShortcutRouterTests
                         Assert.True(ShortcutRouter.Route(key, mods, element, on, true) is null, $"{key} with {mods} on {name}, Keys {(on ? "ON" : "OFF")}");
     });
 
-    [Fact] // the table: focus x modifiers x Keys x character. A text field and the color picker keep every key (K1); the layer list, a region
+    [Fact] // the table: focus x modifiers x Keys x character. A text field, the color picker and a font list keep every key (K1, look call (e)); the layer list, a region
            // tile and the 3D viewport keep only their own keys, which are item 11's, not the tool letters; Ctrl or Alt held never toggles
            // a tool (K3); Shift does not matter; Keys OFF blocks every bare key
     public void RouteText_table_over_focus_modifiers_and_keys() => StaThread.Run(() =>
@@ -121,7 +122,7 @@ public class ShortcutRouterTests
                     foreach (var (text, action) in ToolKeys)
                         foreach (var typed in new[] { text, text.ToUpperInvariant() })
                         {
-                            bool trapped = expectedFocus is ShortcutFocus.TextField or ShortcutFocus.ColorPicker;
+                            bool trapped = expectedFocus is ShortcutFocus.TextField or ShortcutFocus.ColorPicker or ShortcutFocus.ComboBox;
                             bool bare = ((mods & ModifierKeys.Control) != 0) == ((mods & ModifierKeys.Alt) != 0);   // none, or Ctrl+Alt together (AltGr, D9)
                             ShortcutAction? expected = on && !trapped && bare ? action : null;
                             Assert.True(expected == ShortcutRouter.RouteText(typed, mods, element, on, false),
@@ -607,14 +608,21 @@ public class ShortcutRouterTests
         Assert.Equal(ShortcutAction.DeleteLayer, ShortcutRouter.Route(Key.Back, ModifierKeys.None, viewport, true, true));
     });
 
-    [Fact] // K1: a text field and an open color picker keep every key; a slider, checkbox, button, tab or combo traps none; the three
-           // exemption foci have their own rows above
+    [Fact] // K1: a text field and an open color picker keep every key; a font list keeps every character and the arrows; a slider keeps
+           // the arrows; a checkbox, button or tab traps none; the three exemption foci have their own rows above
     public void Text_fields_and_the_picker_keep_every_key_and_the_rest_keep_none() => StaThread.Run(() =>
     {
         var keys = new[] { Key.Left, Key.Right, Key.Up, Key.Down, Key.Delete, Key.Back };
         foreach (var (name, expected, element) in Foci())
         {
-            if (expected is ShortcutFocus.TextField or ShortcutFocus.ColorPicker)
+            if (expected is ShortcutFocus.Slider or ShortcutFocus.ComboBox)
+            {
+                foreach (var key in keys)
+                    Assert.True((ShortcutRouter.Route(key, ModifierKeys.None, element, true, true) is null) == key is not (Key.Delete or Key.Back), $"{key} on {name}");
+                foreach (var text in new[] { "[", "]", "{", "}", "r", "+", "-", "v" })
+                    Assert.True((ShortcutRouter.RouteText(text, ModifierKeys.None, element, true, true) is null) == (expected == ShortcutFocus.ComboBox), $"'{text}' on {name}");
+            }
+            else if (expected is ShortcutFocus.TextField or ShortcutFocus.ColorPicker)
             {
                 foreach (var key in keys) Assert.True(ShortcutRouter.Route(key, ModifierKeys.None, element, true, true) is null, $"{key} on {name}");
                 foreach (var text in new[] { "[", "]", "{", "}", "r", "+", "-", "v" })
@@ -864,9 +872,45 @@ public class ShortcutRouterTests
         Assert.False(rig.Down(Key.Left, foci["3D viewport"]));
         Assert.False(rig.Down(Key.Delete, foci["region tile"]));
         Assert.Equal(0, rig.Session.UndoCount);
-        Assert.True(rig.Down(Key.Left, foci["Slider"]));     // a slider never traps (kbd-input-focus-trap)
+        Assert.False(rig.Down(Key.Left, foci["Slider"]));    // a slider steps with its arrows (look call (d))
+        Assert.False(rig.Down(Key.Right, foci["ComboBox"])); // so does the font list (look call (e))
+        Assert.Equal(0, rig.Session.UndoCount);
+        Assert.True(rig.Down(Key.Left, foci["CheckBox"]));   // a checkbox never traps (kbd-input-focus-trap)
         Assert.Equal(1, rig.Session.UndoCount);
         Assert.Equal(99, Top(rig.Session).X);
+    });
+
+    [Fact] // look call (d): a focused slider keeps the four arrows, with or without Shift; Delete and the bracket keys still reach the layer
+    public void A_focused_slider_keeps_its_arrows_and_nothing_else() => StaThread.Run(() =>
+    {
+        using var rig = new Rig(Selected(Pose(), Pose(2)));
+        var slider = new Slider();
+        foreach (var key in new[] { Key.Left, Key.Right, Key.Up, Key.Down })
+        {
+            Assert.False(rig.Down(key, slider));
+            Assert.False(rig.Down(key, slider, ModifierKeys.Shift));
+        }
+        Assert.Equal(0, rig.Session.UndoCount);
+        Assert.True(rig.Type("]", slider));
+        Assert.Equal(1, rig.Session.UndoCount);
+        Assert.True(rig.Down(Key.Delete, slider));
+        Assert.Equal(2, rig.Session.UndoCount);
+    });
+
+    [Fact] // look call (e): a focused font list keeps typed characters (type-ahead) and the arrows; Delete still removes the selected layer
+    public void A_focused_font_list_keeps_letters_and_arrows() => StaThread.Run(() =>
+    {
+        using var rig = new Rig(Selected(Pose(), Pose(2)));
+        rig.Main.Home.Tools.Set(Tool.Select);
+        var list = new ComboBox();
+        foreach (var text in new[] { "b", "B", "v", "l", "u", "o", "e", "[", "]", "+", "-", "r" })
+            Assert.False(rig.Type(text, list));
+        foreach (var key in new[] { Key.Left, Key.Right, Key.Up, Key.Down })
+            Assert.False(rig.Down(key, list));
+        Assert.Equal(Tool.Select, rig.Tool);
+        Assert.Equal(0, rig.Session.UndoCount);
+        Assert.True(rig.Down(Key.Delete, list));
+        Assert.Equal(1, rig.Session.UndoCount);
     });
 
     [Fact] // done-when 12: the inspector shows the nudged position, rotation and scale

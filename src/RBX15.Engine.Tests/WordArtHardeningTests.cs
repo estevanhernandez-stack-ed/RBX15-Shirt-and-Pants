@@ -201,14 +201,14 @@ public partial class WordArtHardeningTests(ITestOutputHelper output)
     {
         Assert.InRange(image.Width, 1, Images.MaxDimension);
         Assert.InRange(image.Height, 1, Images.MaxDimension);
-        Assert.True((long)image.Width * image.Height <= Images.MaxPixels, $"{image.Width} x {image.Height}");
+        Assert.True((long)image.Width * image.Height <= WordArt.MaxPixels, $"{image.Width} x {image.Height}");
     }
 
     [Theory]
     [InlineData(585, 585)]                       // the template
     [InlineData(16384, 16384 * 3 + 1)]           // already over, height only
-    [InlineData(16384, 3051)]                    // 49.99 MP, fits
-    [InlineData(16384, 3052)]                    // just over 50 MP
+    [InlineData(16384, 915)]                     // 14.99 MP, fits
+    [InlineData(16384, 916)]                     // just over 15 MP
     [InlineData(20000, 100)]                     // width over
     [InlineData(100, 20000)]                     // height over
     [InlineData(12000, 6000)]                    // 72 MP, each side fine
@@ -219,8 +219,8 @@ public partial class WordArtHardeningTests(ITestOutputHelper output)
         var (w, h, factor) = WordArt.FitToCaps(width, height);
         Assert.InRange(w, 1, Images.MaxDimension);
         Assert.InRange(h, 1, Images.MaxDimension);
-        Assert.True((long)w * h <= Images.MaxPixels);
-        if (width <= Images.MaxDimension && height <= Images.MaxDimension && (long)width * height <= Images.MaxPixels)
+        Assert.True((long)w * h <= WordArt.MaxPixels);
+        if (width <= Images.MaxDimension && height <= Images.MaxDimension && (long)width * height <= WordArt.MaxPixels)
         {
             Assert.Equal((width, height, 1.0), (w, h, factor)); // a render that fits is untouched
             return;
@@ -232,7 +232,7 @@ public partial class WordArtHardeningTests(ITestOutputHelper output)
         // Largest: one more percent of scale would break a cap.
         double more = factor * 1.01;
         Assert.False(Math.Ceiling(width * more) <= Images.MaxDimension && Math.Ceiling(height * more) <= Images.MaxDimension
-                     && Math.Ceiling(width * more) * Math.Ceiling(height * more) <= Images.MaxPixels,
+                     && Math.Ceiling(width * more) * Math.Ceiling(height * more) <= WordArt.MaxPixels,
                      $"{width} x {height} at {factor} could have been bigger");
     }
 
@@ -310,10 +310,10 @@ public partial class WordArtHardeningTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public void A_2000_character_block_over_the_50_megapixel_cap_adds_one_layer_at_the_requested_size()
+    public void A_2000_character_block_over_the_15_megapixel_cap_adds_one_layer_at_the_requested_size()
     {
         // 40 lines of 50 characters at size 300: each side is under 16384 but the area is about 77 MP, so the
-        // pixel cap binds and the bitmap is the largest inside 50 MP.
+        // pixel cap binds and the bitmap is the largest inside 15 MP.
         var settings = S(string.Join('\n', Enumerable.Repeat(string.Concat(Enumerable.Repeat("RIZZ ", 10)), 40)), size: 300);
         Assert.Equal(2000 + 39, settings.Text.Length);
         var front = Template.Slot(TemplateMode.Shirt, BodyPart.Body, Face.Front);
@@ -322,10 +322,10 @@ public partial class WordArtHardeningTests(ITestOutputHelper output)
         using var image = layer.Image;
         var (rendered, cw, ch, contentScale) = WordArt.Render(settings);
         rendered.Dispose();
-        Assert.True((long)cw * ch > Images.MaxPixels, $"{cw} x {ch} must be over the pixel cap for this test to mean anything");
+        Assert.True((long)cw * ch > WordArt.MaxPixels, $"{cw} x {ch} must be over the pixel cap for this test to mean anything");
         Assert.True(cw <= Images.MaxDimension && ch <= Images.MaxDimension);
         AssertInsideTheCaps(image);
-        Assert.True((long)image.Width * image.Height > Images.MaxPixels * 0.99, "the cap should be used, not undershot");
+        Assert.True((long)image.Width * image.Height > WordArt.MaxPixels * 0.99, "the cap should be used, not undershot");
         double uncappedScale = Math.Min((double)front.W / cw, (double)front.H / ch) * 0.85;
         Assert.Equal(cw * uncappedScale, image.Width * layer.Scale, layer.Scale + 1e-9);
         Assert.Equal(ch * uncappedScale, image.Height * layer.Scale, layer.Scale + 1e-9);

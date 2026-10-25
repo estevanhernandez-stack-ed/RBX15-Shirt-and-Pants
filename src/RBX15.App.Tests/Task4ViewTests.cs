@@ -111,7 +111,7 @@ public class Task4ViewTests
     });
 
     [Fact] // home-file-group (M4a): 4.1's four buttons in its order, with its title= tooltips (editor.html:88-90, :93); M5 item 5 adds Recent beside Open (decision H1)
-    public void The_file_group_shows_4_1s_four_buttons_in_order() => StaThread.Run(() =>
+    public void The_file_group_shows_4_1s_four_buttons_then_Recent() => StaThread.Run(() =>
     {
         var session = new EditorSession();
         var status = new FakeStatus();

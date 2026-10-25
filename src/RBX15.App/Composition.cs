@@ -27,7 +27,7 @@ internal static class Composition
     /// The wiring, once: the native services come in, so the app passes the real ones and the tests'
     /// TestShell passes fakes. Every line that connects view-models lives here and nowhere else.
     /// </summary>
-    public static MainViewModel Build(EditorSession session, IFileDialogs fileDialogs, IDialogService dialogs, IColorPicker colorPicker, ISettingsStore settings)
+    public static MainViewModel Build(EditorSession session, IFileDialogs fileDialogs, IDialogService dialogs, IColorPicker colorPicker, ISettingsStore settings, Func<Random>? random = null)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(fileDialogs);
@@ -37,6 +37,8 @@ internal static class Composition
         // M3b: the status strip, the tool and the brush come first; the canvas, the Home tab and the eraser share them.
         var status = new StatusViewModel();
         var tools = new ToolsViewModel();
+        // M4b item 10: the Keys toggle; the window's ShortcutRouter reads it, the Tools group shows it (Home carries it).
+        var keys = new KeysViewModel();
         // Art palette: the colors of the visible layers, for the Brush group's Palette button and (through the app's picker) every pick.
         var palette = new ArtPalette(session);
         var brush = new BrushViewModel(colorPicker) { Palette = palette };
@@ -56,10 +58,25 @@ internal static class Composition
         var layerProperties = new LayerPropertiesViewModel(session);
         // v5.1: the 3D avatar preview over the session; the Settings group's "3D preview" box toggles it.
         var avatarPreview = new AvatarPreviewViewModel(session);
+        // M4b item 5: Placement (Home) and Presets (Layout) share the app's random source; tests pass a seeded one through <paramref name="random"/>.
+        Func<Random> placementRng = random ?? (() => Random.Shared);
+        var placement = new PlacementViewModel(session, placementRng);
+        // M4b item 6: the Background and BG Settings groups edit the document's background through the shared picker, dialogs and status strip.
+        // Fill Style and Template Regions follow them, as on 4.1's Layout tab (Este, 2026-10-25, reversing F1).
+        var fillStyle = new FillStyleViewModel(session, colorPicker);
+        var layout = new LayoutViewModel
+        {
+            Presets = new PresetsViewModel(session, placementRng),
+            Background = new BackgroundViewModel(session, colorPicker, fileDialogs, status),
+            FillStyle = fillStyle,
+            Regions = new RegionsGroupViewModel(session, fillStyle),
+        };
         var home = new HomeViewModel(session, colorPicker)
         {
+            Placement = placement,
             AvatarPreview = avatarPreview,
             Tools = tools,
+            Keys = keys,
             Brush = brush,
             File = fileGroup,
         };
@@ -67,11 +84,20 @@ internal static class Composition
         var assets = new AssetLibraryViewModel(import, fileDialogs, dialogs, status, settings, new PackSource(PackSource.DefaultDirectory), new AssetThumbnailLoader());
         // M4a Task 3: one status line per asset set whose previews fail (diag-console-only-errors; editor.js:2473-2475).
         ThumbnailFailureReport.Attach(assets, status);
+        // M4b item 7: the Details tab; a created detail layer sets the Select tool (editor.js:1860-1861), as an import does.
+        var details = new DetailsViewModel(session, colorPicker);
+        details.LayersAdded += (_, _) => tools.Set(Tool.Select);
+        // M4b item 9: the Text tab; an added Word Art layer sets the Select tool (editor.js:2287), as an import does.
+        var text = new TextViewModel(session, colorPicker, status);
+        text.LayersAdded += (_, _) => tools.Set(Tool.Select);
         // M3a: construction lines above this line.
         return new MainViewModel(session)
         {
             Canvas = canvas,
             Home = home,
+            Layout = layout,
+            Details = details,
+            Text = text,
             Layers = layers,
             Status = status,
             LayerProperties = layerProperties,

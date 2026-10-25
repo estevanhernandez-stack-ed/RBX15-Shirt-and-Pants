@@ -25,18 +25,19 @@
                 </DockPanel>
             </Border>
 
-            <!-- Tools (editor.html:41-52) and Brush (editor.html:53-62); Placement (editor.html:63-76) is M4 -->
-            <views:ToolsGroup x:Name="Tools" DataContext="{Binding Tools}" />
+            <!-- Tools (editor.html:41-52), Brush (editor.html:53-62) and Placement (editor.html:63-76; M4b item 5, shown with a selected layer) -->
+            <views:ToolsGroup x:Name="Tools" />
             <views:BrushGroup x:Name="Brush" DataContext="{Binding Brush}" />
+            <views:PlacementGroup x:Name="Placement" DataContext="{Binding Placement}" />
 
             <!-- Edit (editor.html:77-84): .btn .btn-sm .btn-secondary, a centered row with a 4px gap -->
             <Border Style="{StaticResource RibbonGroup}" DataContext="{Binding Edit}">
                 <DockPanel>
                     <TextBlock Style="{StaticResource RibbonGroupLabel}" Text="EDIT" />
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button x:Name="UndoButton" Content="Undo" ToolTip="Undo" Command="{Binding UndoCommand}"
+                        <Button x:Name="UndoButton" Content="Undo" ToolTip="Undo (Ctrl+Z)" Command="{Binding UndoCommand}"
                                 Style="{DynamicResource SecondaryButton}" Padding="10,5" FontSize="11" Margin="0,0,4,0" />
-                        <Button x:Name="RedoButton" Content="Redo" ToolTip="Redo" Command="{Binding RedoCommand}"
+                        <Button x:Name="RedoButton" Content="Redo" ToolTip="Redo (Ctrl+Y / Ctrl+Shift+Z)" Command="{Binding RedoCommand}"
                                 Style="{DynamicResource SecondaryButton}" Padding="10,5" FontSize="11" Margin="0,0,4,0" />
                         <Button x:Name="ClearButton" Content="Clear" Command="{Binding ClearCommand}"
                                 Style="{DynamicResource SecondaryButton}" Padding="10,5" FontSize="11" />
@@ -67,9 +68,6 @@
                 </DockPanel>
             </Border>
 
-            <!-- Fill Style and Template Regions: 4.1's Layout tab groups (editor.html:145-171), on Home until M4 -->
-            <views:FillStyleGroup x:Name="FillStyle" DataContext="{Binding FillStyle}" />
-            <views:RegionsGrid x:Name="Regions" DataContext="{Binding Regions}" />
         </StackPanel>
     </ScrollViewer>
 </UserControl>

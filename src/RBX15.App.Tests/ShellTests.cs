@@ -72,7 +72,7 @@ public class ShellTests
         Assert.Equal(panel, ShellLayout.PanelWidthFor(viewport));
     }
 
-    [Fact] // the window: title, theme, 4.1's size default, the skeleton's regions, one Home tab
+    [Fact] // the window: title, theme, 4.1's size default, the skeleton's regions, four tabs
     public void The_main_window_builds_the_skeleton()
     {
         var store = new FakeSettingsStore();
@@ -97,6 +97,7 @@ public class ShellTests
                     ? (f.FontSize, ((System.Windows.Media.SolidColorBrush)f.Foreground).Color.ToString(), f.HorizontalAlignment)
                     : default,
                 Tabs = tabs.Children.OfType<RadioButton>().Select(r => ((string)r.Content, r.IsChecked)).ToArray(),
+                TabVisibility = tabs.Children.OfType<RadioButton>().Select(r => r.Visibility).ToArray(),
                 Panel = ((ColumnDefinition)w.FindName("PanelColumn")).Width.Value,
                 Regions = new[] { "RibbonPane", "LeftPanelContent", "CanvasArea" }.All(n => w.FindName(n) is not null),
                 RightPanel = w.FindName("RightPanel"),
@@ -111,7 +112,8 @@ public class ShellTests
         Assert.Equal((true, 18.0, "626Labs"), facts.Mark);
         Assert.Equal("DEVELOPED AT 626LABS", facts.Footer);
         Assert.Equal((10.0, "#FF5E6B7F", HorizontalAlignment.Center), facts.FooterLook);   // styles.css:678-689: 10px fg-muted, centered
-        Assert.Equal([("Home", (bool?)true)], facts.Tabs);
+        Assert.Equal([("Home", (bool?)true), ("Background", (bool?)false), ("Details", (bool?)false), ("Text", (bool?)false)], facts.Tabs);   // four tabs; a tab is Collapsed until its pane has a group, so Layout (Presets, M4b item 5), Details (M4b item 7) and Text (M4b item 9) all show (RibbonTabsTests)
+        Assert.Equal([Visibility.Visible, Visibility.Visible, Visibility.Visible, Visibility.Visible], facts.TabVisibility);
         Assert.Equal(280, facts.Panel);
         Assert.True(facts.Regions);
         Assert.Null(facts.RightPanel);
@@ -236,8 +238,9 @@ public class ShellTests
         Assert.True(guard.CanExecute(null));
     });
 
-    [Fact] // the window has exactly the four chords: Ctrl+Z (M3b) and the three file chords; the rest of the keyboard is M4b
-    public void The_window_binds_only_ctrl_z_and_the_three_file_chords() => StaThread.Run(() =>
+    [Fact] // the window binds exactly seven chords, in this order, each behind TextFieldShortcutCommand: Ctrl+Z, Ctrl+Y and Ctrl+Shift+Z (M4b item 11),
+           // Ctrl+D (Duplicate), and the three file chords (M4a). Ctrl+V stays unbound: paste is M5's, and Ctrl+V must not toggle a tool (K3)
+    public void The_window_binds_exactly_the_seven_chords_and_not_ctrl_v() => StaThread.Run(() =>
     {
         var window = new MainWindow(TestShell.Main(new EditorSession()), new FakeSettingsStore(), [Primary]);
         StaThread.Pump();
@@ -245,11 +248,15 @@ public class ShellTests
         Assert.Equal(new[]
         {
             (Key.Z, ModifierKeys.Control),
+            (Key.Y, ModifierKeys.Control),
+            (Key.Z, ModifierKeys.Control | ModifierKeys.Shift),
+            (Key.D, ModifierKeys.Control),
             (Key.S, ModifierKeys.Control),
             (Key.S, ModifierKeys.Control | ModifierKeys.Shift),
             (Key.O, ModifierKeys.Control),
         }, gestures);
-        Assert.Equal(4, window.InputBindings.Count);
+        Assert.Equal(7, window.InputBindings.Count);
+        Assert.DoesNotContain(gestures, g => g.Key == Key.V);
         Assert.All(window.InputBindings.OfType<KeyBinding>(), b => Assert.IsType<TextFieldShortcutCommand>(b.Command));
     });
 

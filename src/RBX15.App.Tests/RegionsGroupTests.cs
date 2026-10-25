@@ -69,6 +69,64 @@ public class RegionsGroupTests
         Assert.Null(DocumentOps.RegionFill(session.Document, "rarm_up"));
     }
 
+    [Fact] // home-mode-toggle's region-label half (F1: the grid stays on Home): Torso/Right Arm/Left Arm <-> Waist/Right Leg/Left Leg through the Mode button
+    public void Region_labels_follow_the_mode_and_switching_back_then_undoing_restores_the_fills()
+    {
+        var session = new EditorSession();
+        var mode = new ModeGroupViewModel(session);
+        var (_, regions, _) = Make(session);
+        Tile(regions, "torso_front").PaintCommand.Execute(null);
+        regions.Limb1Top.PaintCommand.Execute(null);
+        var shirtFills = session.Document.RegionFills.ToArray();
+        Assert.Equal(2, shirtFills.Length);
+
+        mode.ToggleCommand.Execute(null);                                   // Shirt -> Pants
+
+        Assert.Equal(("Waist", "Right Leg", "Left Leg"), (regions.BodyLabel, regions.LimbLabel1, regions.LimbLabel2));
+        Assert.Equal(new[] { "Top", "R", "Front", "L", "Back", "Bot" }, Labels(regions.Body));    // the face captions do not change
+        Assert.All(regions.AllTiles, t => Assert.Null(t.Fill));             // the toggle wipes the fills
+        // the limb Top/Bot caps follow: they are the legs' own openings, and paint and clear there
+        Assert.Equal(new[] { "rleg_up", "rleg_down", "lleg_up", "lleg_down" },
+            new[] { regions.Limb1Top, regions.Limb1Bot, regions.Limb2Top, regions.Limb2Bot }.Select(t => t.Region));
+        Assert.Equal(new[] { "Top", "Bot", "Top", "Bot" },
+            new[] { regions.Limb1Top, regions.Limb1Bot, regions.Limb2Top, regions.Limb2Bot }.Select(t => t.Label));
+        Assert.Equal("Right Leg Top", regions.Limb1Top.AutomationName);
+        Assert.Equal("Left Leg Bot (Bottom)", regions.Limb2Bot.AutomationName);
+        regions.Limb2Bot.PaintCommand.Execute(null);
+        Assert.Equal("lleg_down", Assert.Single(session.Document.RegionFills).Region);
+        Assert.NotNull(regions.Limb2Bot.Fill);
+        regions.Limb2Bot.ClearCommand.Execute(null);
+        Assert.Empty(session.Document.RegionFills);
+        // the ALL tile fills every pants region (18), and its right-click clears them
+        regions.FillAllCommand.Execute(null);
+        Assert.Equal(Template.Regions(TemplateMode.Pants).Select(r => r.Name).Order(), session.Document.RegionFills.Select(f => f.Item1).Order());
+        Assert.All(regions.AllTiles, t => Assert.NotNull(t.Fill));
+        Assert.All(session.Document.RegionFills, f => Assert.Matches("^(waist|rleg|lleg)_", f.Item1));
+        regions.ClearAllCommand.Execute(null);
+        Assert.Empty(session.Document.RegionFills);
+        regions.FillAllCommand.Execute(null);
+
+        mode.ToggleCommand.Execute(null);                                   // Pants -> Shirt: labels return, the fills are wiped
+
+        Assert.Equal(("Torso", "Right Arm", "Left Arm"), (regions.BodyLabel, regions.LimbLabel1, regions.LimbLabel2));
+        Assert.Equal(new[] { "rarm_up", "rarm_down", "larm_up", "larm_down" },
+            new[] { regions.Limb1Top, regions.Limb1Bot, regions.Limb2Top, regions.Limb2Bot }.Select(t => t.Region));
+        Assert.Empty(session.Document.RegionFills);
+        Assert.All(regions.AllTiles, t => Assert.Null(t.Fill));
+
+        Assert.True(session.Undo());                                        // back to Pants with its 18 fills
+        Assert.Equal(("Waist", "Right Leg", "Left Leg"), (regions.BodyLabel, regions.LimbLabel1, regions.LimbLabel2));
+        Assert.All(regions.AllTiles, t => Assert.NotNull(t.Fill));
+        while (session.Document.Mode == TemplateMode.Pants) Assert.True(session.Undo());   // peel the Pants edits down to the first toggle
+
+        Assert.Equal(TemplateMode.Shirt, session.Document.Mode);
+        Assert.Equal(("Torso", "Right Arm", "Left Arm"), (regions.BodyLabel, regions.LimbLabel1, regions.LimbLabel2));
+        Assert.Equal(shirtFills, session.Document.RegionFills.ToArray());   // the Shirt fills are back
+        Assert.NotNull(Tile(regions, "torso_front").Fill);
+        Assert.NotNull(regions.Limb1Top.Fill);
+        Assert.Null(Tile(regions, "torso_back").Fill);
+    }
+
     [Fact] // regions-grid-layout-pants: same structure, waist/rleg/lleg keys, Leg headings, rebuilt on toggle
     public void Pants_grid_rebuilds_with_pants_keys_and_headings()
     {
@@ -253,6 +311,51 @@ public class RegionsGroupTests
         Assert.True(At(127, 64).B > 240 && At(127, 64).R < 15, $"right {At(127, 64)}");
         Assert.Equal(At(64, 0), At(64, 127));
     });
+    [Theory] // fills-to-css divergence, stripes half: at canvas angle 0 the bands run along x, so a row alternates and a column does not
+    [InlineData(0)]
+    [InlineData(360)]
+    public void A_zero_degree_stripes_swatch_runs_left_to_right(int angle) => StaThread.Run(() =>
+    {
+        var fill = new Fill("stripes", "#ff0000", "#0000ff", angle, 16);       // c2 (blue) covers absolute x in [32k, 32k+16)
+        var session = new EditorSession();
+        session.Apply(d => DocumentOps.PaintRegion(d, "torso_front", fill));
+        var (_, regions, _) = Make(session);
+        var px = Bgra((BitmapSource)Tile(regions, "torso_front").Swatch!);
+        Template.TryFind(TemplateMode.Shirt, "torso_front", out var r);
+        Assert.Equal((128, 128), (r.W, r.H));
+
+        (byte B, byte G, byte R) At(int x, int y) { int i = (y * 128 + x) * 4; return (px[i], px[i + 1], px[i + 2]); }
+        bool IsBlue((byte B, byte G, byte R) c) => c.B > 240 && c.R < 15;
+        bool IsRed((byte B, byte G, byte R) c) => c.R > 240 && c.B < 15;
+
+        for (int x = 0; x < 128; x += 8)
+        {
+            int abs = r.X + x;
+            if (abs % 16 == 0 || abs % 16 == 15) continue;                       // skip the band edges (antialiasing)
+            bool blue = abs % 32 < 16;
+            Assert.True(blue ? IsBlue(At(x, 64)) : IsRed(At(x, 64)), $"x={x} (abs {abs}) {At(x, 64)}");
+            Assert.Equal(At(x, 64), At(x, 2));                                   // a column is one color: nothing varies top to bottom
+            Assert.Equal(At(x, 64), At(x, 125));
+        }
+        Assert.NotEqual(At(4, 64), At(20, 64));                                  // and a row does change: left to right
+    });
+
+    [Fact] // the same swatch at 90 degrees turns the bands top to bottom, so the 0 degree case is a direction and not an accident
+    public void A_ninety_degree_stripes_swatch_runs_top_to_bottom() => StaThread.Run(() =>
+    {
+        var fill = new Fill("stripes", "#ff0000", "#0000ff", 90, 16);
+        var session = new EditorSession();
+        session.Apply(d => DocumentOps.PaintRegion(d, "torso_front", fill));
+        var (_, regions, _) = Make(session);
+        var px = Bgra((BitmapSource)Tile(regions, "torso_front").Swatch!);
+
+        (byte B, byte G, byte R) At(int x, int y) { int i = (y * 128 + x) * 4; return (px[i], px[i + 1], px[i + 2]); }
+
+        Assert.Equal(At(2, 40), At(125, 40));                                    // a row is one color
+        Assert.Equal(At(60, 4), At(60, 4 + 32));                                 // a column repeats every 2 * scale
+        Assert.NotEqual(At(60, 4), At(60, 4 + 16));
+    });
+
     [Theory] // regions-fill-all: All paints every region of the mode with the current fill, one undo step
     [InlineData(false)]
     [InlineData(true)]

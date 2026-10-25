@@ -128,6 +128,7 @@
   <!-- Motion (styles.css:84-86) -->
   <KeySpline x:Key="EaseOutSpline" ControlPoint1="0.2,0.7" ControlPoint2="0.2,1" />
   <Duration x:Key="DurFastDuration">0:0:0.12</Duration>
+  <KeyTime x:Key="DurFastKeyTime">0:0:0.12</KeyTime>
   <Duration x:Key="DurMedDuration">0:0:0.22</Duration>
 
   <!-- Typography (styles.css:89-91), the vendored UI families (assets/fonts/README.md) embedded by

@@ -12,6 +12,7 @@
         xmlns:views="clr-namespace:RBX15.App.Views"
         xmlns:vm="clr-namespace:RBX15.App.ViewModels"
         xmlns:app="clr-namespace:RBX15.App"
+        xmlns:conv="clr-namespace:RBX15.App.Converters"
         x:Name="Root"
         Title="{Binding Title}"
         Icon="pack://application:,,,/RBX15.App;component/app.ico"
@@ -27,11 +28,28 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d">
 
-  <!-- Ctrl+Z, Ctrl+S, Ctrl+Shift+S and Ctrl+O are added in MainWindow.xaml.cs (AddShortcut) behind TextFieldShortcutCommand.
+  <!-- Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z, Ctrl+D, Ctrl+S, Ctrl+Shift+S and Ctrl+O are added in MainWindow.xaml.cs (AddShortcut) behind TextFieldShortcutCommand.
        The title is MainViewModel.Title (M4a R3). While an Open reads its file the whole client takes no input (R4). -->
 
   <Window.Resources>
     <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    <conv:EnumMatchConverter x:Key="TabMatch" />
+    <conv:EqualsMultiConverter x:Key="Equal" />
+    <!-- A ribbon pane is Visible only while its tab is the active one; Hidden (not Collapsed) keeps its size in the shared cell. -->
+    <Style x:Key="RibbonPaneHost" TargetType="UserControl">
+      <Setter Property="Visibility" Value="Hidden" />
+      <Style.Triggers>
+        <DataTrigger Value="True">
+          <DataTrigger.Binding>
+            <MultiBinding Converter="{StaticResource Equal}">
+              <Binding Path="DataContext.ActiveTab" ElementName="Root" />
+              <Binding Path="Tag" RelativeSource="{RelativeSource Self}" />
+            </MultiBinding>
+          </DataTrigger.Binding>
+          <Setter Property="Visibility" Value="Visible" />
+        </DataTrigger>
+      </Style.Triggers>
+    </Style>
   </Window.Resources>
 
   <Grid x:Name="Viewport" IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}">
@@ -82,7 +100,8 @@
       </Border.Background>
       <DockPanel>
         <!-- .ribbon-tabs (styles.css:165-170): padding 0 8px, 180deg ink-950 to ink-900, 1px border-1 bottom.
-             M3a shows Home only (editor.html:23); Layout, Details and Text arrive in M4. -->
+             Home, Layout, Details and Text in 4.1's order (editor.html:23-27), bound two-way to MainViewModel.ActiveTab.
+             Layout, Details and Text are Collapsed until their pane has a group (IRibbonPane.HasGroups; the hide rule). -->
         <Border DockPanel.Dock="Top" Padding="8,0" BorderBrush="{StaticResource Border1Brush}" BorderThickness="0,0,0,1">
           <Border.Background>
             <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
@@ -92,17 +111,32 @@
           </Border.Background>
           <!-- The tabs carry no GroupName: a named RadioButton group is process-wide, so a second window would
                uncheck this one's tab. Unnamed, they group by this per-window parent panel (final fix wave 6). -->
-          <StackPanel x:Name="RibbonTabs" Orientation="Horizontal">
-            <RadioButton x:Name="HomeTab" Style="{StaticResource RibbonTab}"
-                         Content="Home" IsChecked="True" AutomationProperties.Name="Home tab" />
+          <!-- Each tab is its own Tab stop (a WPF radio group stops once, at the checked one) and the arrows do not move
+               between tabs (K1: arrows are not tab navigation). Space checks a tab as RadioButton does; Enter is added in MainWindow.xaml.cs. -->
+          <StackPanel x:Name="RibbonTabs" Orientation="Horizontal"
+                      KeyboardNavigation.TabNavigation="Continue" KeyboardNavigation.DirectionalNavigation="None">
+            <RadioButton x:Name="HomeTab" Style="{StaticResource RibbonTab}" Content="Home" AutomationProperties.Name="Home tab"
+                         IsChecked="{Binding ActiveTab, Mode=TwoWay, Converter={StaticResource TabMatch}, ConverterParameter=Home}" />
+            <RadioButton x:Name="LayoutTab" Style="{StaticResource RibbonTab}" Content="Background" AutomationProperties.Name="Background tab"
+                         IsChecked="{Binding ActiveTab, Mode=TwoWay, Converter={StaticResource TabMatch}, ConverterParameter=Layout}" />
+            <RadioButton x:Name="DetailsTab" Style="{StaticResource RibbonTab}" Content="Details" AutomationProperties.Name="Details tab"
+                         IsChecked="{Binding ActiveTab, Mode=TwoWay, Converter={StaticResource TabMatch}, ConverterParameter=Details}" />
+            <RadioButton x:Name="TextTab" Style="{StaticResource RibbonTab}" Content="Text" AutomationProperties.Name="Text tab"
+                         IsChecked="{Binding ActiveTab, Mode=TwoWay, Converter={StaticResource TabMatch}, ConverterParameter=Text}" />
           </StackPanel>
         </Border>
         <!-- .ribbon-pane.active (styles.css:197-198): padding 8px 12px, groups in a row that never
              shrink and scroll horizontally (ledger ribbon-overflow-hscroll). Task 3 puts HomeRibbon
              inside; HomeRibbon is the pane, so it brings its own ScrollViewer and its 12,8 margin. -->
-        <ContentControl x:Name="RibbonPane" Focusable="False">
-          <views:HomeRibbon DataContext="{Binding Home}" />
-        </ContentControl>
+        <!-- The four panes share one cell (R1: the ribbon keeps the tallest pane's height); the inactive ones are Hidden,
+             which keeps their size. Switching tabs changes this visibility only, never the document. -->
+        <Grid x:Name="RibbonPane">
+          <views:HomeRibbon x:Name="HomePane" DataContext="{Binding Home}"
+                            Style="{StaticResource RibbonPaneHost}" Tag="{x:Static vm:RibbonTab.Home}" />
+          <views:LayoutRibbon x:Name="LayoutPane" DataContext="{Binding Layout}" Style="{StaticResource RibbonPaneHost}" Tag="{x:Static vm:RibbonTab.Layout}" />
+          <views:DetailsRibbon x:Name="DetailsPane" DataContext="{Binding Details}" Style="{StaticResource RibbonPaneHost}" Tag="{x:Static vm:RibbonTab.Details}" />
+          <views:TextRibbon x:Name="TextPane" DataContext="{Binding Text}" Style="{StaticResource RibbonPaneHost}" Tag="{x:Static vm:RibbonTab.Text}" />
+        </Grid>
       </DockPanel>
     </Border>
 

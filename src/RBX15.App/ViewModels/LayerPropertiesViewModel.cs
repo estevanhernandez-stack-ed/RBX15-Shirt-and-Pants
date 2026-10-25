@@ -10,8 +10,8 @@ namespace RBX15.App.ViewModels;
 /// The left panel's "Selected layer" section (editor.html:320-323; updateUI's controls, editor.js:746-912;
 /// ledger <c>layers-selected-panel</c>). It shows the selected layer's Name, X and Y, Scale, Rotation,
 /// Opacity, Flip H and Flip V, Duplicate, Up and Down, and the collapsible Image adjustments with Reset.
-/// "Center on front torso" (editor.js:776-778) is <c>props-center-front</c>, owned by the Layout tab in M4,
-/// so it is absent (interface ruling R13).
+/// "Center on front torso" (editor.js:776-778) is <c>props-center-front</c>: a full-width button under Up and Down
+/// (M4b item 5; it was absent until then, interface ruling R13).
 /// <para>
 /// <b>One undo step per edit</b> (spec §5; every <c>props-*</c> row is a fix because 4.1 pushed none). A
 /// slider drag is one <see cref="BeginSliderDrag"/> gesture; a keyboard slider change, a button, and a typed
@@ -91,6 +91,8 @@ public sealed partial class LayerPropertiesViewModel : ObservableObject
         MoveUpCommand = new RelayCommand(() => Edit(LayerOps.MoveUp), () => Index() is int i && i < _session.Document.Layers.Count - 1);
         MoveDownCommand = new RelayCommand(() => Edit(LayerOps.MoveDown), () => Index() is > 0);
         ResetAdjustmentsCommand = new RelayCommand(() => Edit(LayerOps.ResetAdjustments), () => HasSelection);
+        // btnCenterFront (editor.js:776-778, :854-859): one step, scale and rotation untouched (props-center-front, fix).
+        CenterFrontCommand = new RelayCommand(() => PlacementActions.CenterOnFront(_session), () => HasSelection);
         _session.Changed += (_, e) =>
         {
             if ((e.What & (SessionChange.Document | SessionChange.Selection)) != 0) Refresh();
@@ -286,6 +288,13 @@ public sealed partial class LayerPropertiesViewModel : ObservableObject
     /// <summary>btnResetAdj (editor.js:801, :908-912): all seven to their defaults, one step (props-adjust-reset, fix).</summary>
     public IRelayCommand ResetAdjustmentsCommand { get; }
 
+    /// <summary>
+    /// "Center on front torso" (editor.js:854-859; ledger props-center-front): the layer's unrotated box goes to the middle of
+    /// the Body Front slot, in Shirt and in Pants (the label stays "front torso" in both). One undo step; a layer already
+    /// there records nothing.
+    /// </summary>
+    public IRelayCommand CenterFrontCommand { get; }
+
     /// <summary>One slider drag as one undo step (<see cref="EditorSession.BeginGesture"/>): it records one step iff the drag changed the layer.</summary>
     public IDisposable BeginSliderDrag() => _session.BeginGesture();
 
@@ -384,6 +393,7 @@ public sealed partial class LayerPropertiesViewModel : ObservableObject
         MoveUpCommand.NotifyCanExecuteChanged();
         MoveDownCommand.NotifyCanExecuteChanged();
         ResetAdjustmentsCommand.NotifyCanExecuteChanged();
+        CenterFrontCommand.NotifyCanExecuteChanged();
     }
 
     /// <summary>

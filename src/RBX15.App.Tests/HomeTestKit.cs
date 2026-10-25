@@ -29,9 +29,25 @@ internal static class HomeTestKit
         var status = new FakeStatus();
         return new(session, picker ?? new FakeColorPicker())
         {
+            Placement = new PlacementViewModel(session, () => new Random(1)),
             Tools = new ToolsViewModel(),
+            Keys = new KeysViewModel(),
             Brush = new BrushViewModel(picker ?? new FakeColorPicker()),
             File = FileGroup(session, new FakeFileDialogs(), new FakeDialogService(), status),
+        };
+    }
+
+    /// <summary>The Layout tab (shown as "Background") over fakes: Presets, Background, Fill Style and Template Regions.</summary>
+    public static LayoutViewModel Layout(EditorSession session, FakeColorPicker? picker = null)
+    {
+        var colors = picker ?? new FakeColorPicker();
+        var fillStyle = new FillStyleViewModel(session, colors);
+        return new LayoutViewModel
+        {
+            Presets = new PresetsViewModel(session, () => new Random(1)),
+            Background = new BackgroundViewModel(session, colors, new FakeFileDialogs(), new FakeStatus()),
+            FillStyle = fillStyle,
+            Regions = new RegionsGroupViewModel(session, fillStyle),
         };
     }
 

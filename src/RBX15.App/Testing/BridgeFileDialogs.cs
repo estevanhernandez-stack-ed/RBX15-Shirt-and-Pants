@@ -22,6 +22,8 @@ internal sealed class BridgeFileDialogs(TextWriter log) : IFileDialogs
     public IReadOnlyList<string> OpenImages() =>
         Next(nameof(OpenImages), "") is { } answer ? answer.Split('|', StringSplitOptions.RemoveEmptyEntries) : [];
 
+    public string? OpenImage() => Next(nameof(OpenImage), "");
+
     public string? SavePng(string suggestedFileName) => Next(nameof(SavePng), suggestedFileName);
 
     public string? OpenProject(string? initialDirectory) => Next(nameof(OpenProject), initialDirectory ?? "");

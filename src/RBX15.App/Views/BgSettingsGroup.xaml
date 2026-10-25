@@ -1,0 +1,45 @@
+<UserControl x:Class="RBX15.App.Views.BgSettingsGroup"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- The Layout tab's BG Settings group (editor.html:131-144; ledger bg-color-opacity, bg-image, layout-bg-settings).
+         DataContext: BackgroundViewModel. .ribbon-group-items.vert: a column, gap 4. Row 1: the color well (30x24, no border)
+         and the "Background" image button (10px, padding 3x8, btn-secondary), gap 4. Row 2: "Opacity" (9px #888) and the
+         80 px slider. The last group of the pane has no divider (styles.css:207). -->
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="HomeStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <!-- #bgColor (editor.html:134): 30x24, no border; the face shows the color; assistive tech reads its hex. -->
+            <Style x:Key="BgColorWell" TargetType="Button" BasedOn="{StaticResource ColorSwatchButton}">
+                <Setter Property="Width" Value="30" />
+                <Setter Property="Height" Value="24" />
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Border Style="{DynamicResource RibbonGroup}" BorderThickness="0">
+        <DockPanel>
+            <TextBlock Style="{DynamicResource RibbonGroupLabel}" Text="BG SETTINGS" />
+            <StackPanel VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                    <Button x:Name="BgColor" Style="{StaticResource BgColorWell}" Background="{Binding Color}"
+                            Command="{Binding PickColorCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Self}}"
+                            ToolTip="Background color" AutomationProperties.Name="Background color"
+                            AutomationProperties.HelpText="{Binding Color}" Margin="0,0,4,0" />
+                    <Button x:Name="BgImage" Content="Background" Style="{DynamicResource SecondaryButtonSm}" FontSize="10" Padding="8,3"
+                            Command="{Binding PickImageCommand}" ToolTip="Stretch an image across the whole template. To place it at its own size, drop it on the canvas."
+                            AutomationProperties.Name="Background image" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Style="{StaticResource MiniLabel}" Text="Opacity" Margin="0,0,4,0" />
+                    <!-- #bgOpacity (editor.html:140): 0..100, width 80. A press is one undo gesture (SliderGestureTracker);
+                         an arrow key is a step of its own. -->
+                    <Slider x:Name="OpacitySlider" Width="80" Minimum="0" Maximum="100" SmallChange="1" LargeChange="10"
+                            TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding OpacityPercent}" VerticalAlignment="Center"
+                            ToolTip="Background opacity" AutomationProperties.Name="Background opacity" />
+                </StackPanel>
+            </StackPanel>
+        </DockPanel>
+    </Border>
+</UserControl>

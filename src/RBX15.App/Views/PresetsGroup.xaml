@@ -1,0 +1,43 @@
+<UserControl x:Class="RBX15.App.Views.PresetsGroup"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- The Layout tab's Presets group (editor.html:113-124; ledger presets-six-buttons, layout-presets). DataContext:
+         PresetsViewModel. A 3-column grid with a 3px gap of .preset-btn (padding 4x8, 10px). Collapsed until a layer is
+         selected (spec §4; 4.1 always showed it). The buttons have no title in 4.1, so none has a tooltip. -->
+    <UserControl.Resources>
+        <!-- .preset-btn (styles.css:499-515): navy, 1px border-1, fg-2, radius r-xs, weight 500; hover cyan border and text.
+             Over SecondaryButtonSm for the focus ring, the disabled look and the hover glow. -->
+        <Style x:Key="PresetButton" TargetType="Button" BasedOn="{StaticResource SecondaryButtonSm}">
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Foreground" Value="{DynamicResource Fg2Brush}" />
+            <Setter Property="Background" Value="{DynamicResource BrandNavyBrush}" />
+            <Setter Property="Margin" Value="1.5" />
+        </Style>
+    </UserControl.Resources>
+    <UserControl.Style>
+        <Style TargetType="UserControl">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding HasSelection}" Value="True">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Style>
+
+    <Border Style="{DynamicResource RibbonGroup}">
+        <DockPanel>
+            <TextBlock Style="{DynamicResource RibbonGroupLabel}" Text="PRESETS" />
+            <UniformGrid Columns="3" VerticalAlignment="Center">
+                <Button x:Name="MemeButton" Content="Meme Tee" Style="{StaticResource PresetButton}" Command="{Binding MemeCommand}" AutomationProperties.Name="Meme Tee" />
+                <Button x:Name="AlloverButton" Content="Allover" Style="{StaticResource PresetButton}" Command="{Binding AlloverCommand}" AutomationProperties.Name="Allover preset" />
+                <Button x:Name="SleevePopButton" Content="Sleeve Pop" Style="{StaticResource PresetButton}" Command="{Binding SleevePopCommand}" AutomationProperties.Name="Sleeve Pop" />
+                <Button x:Name="MirrorButton" Content="Mirror F+B" Style="{StaticResource PresetButton}" Command="{Binding MirrorCommand}" AutomationProperties.Name="Mirror front and back" />
+                <Button x:Name="ScatterButton" Content="Scatter" Style="{StaticResource PresetButton}" Command="{Binding ScatterCommand}" AutomationProperties.Name="Scatter preset" />
+                <Button x:Name="FullbleedButton" Content="Fullbleed" Style="{StaticResource PresetButton}" Command="{Binding FullbleedCommand}" AutomationProperties.Name="Fullbleed" />
+            </UniformGrid>
+        </DockPanel>
+    </Border>
+</UserControl>

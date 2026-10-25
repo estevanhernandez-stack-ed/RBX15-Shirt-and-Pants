@@ -1,3 +1,5 @@
+using SkiaSharp;
+
 namespace RBX15.Engine;
 
 /// <summary>
@@ -126,6 +128,50 @@ public static class DocumentOps
     {
         ArgumentNullException.ThrowIfNull(doc);
         return doc.Layers.IsEmpty ? doc : doc with { Layers = doc.Layers.Clear() };
+    }
+
+    /// <summary>
+    /// A background swatch click or color pick (editor.js:922, :930; ledger <c>bg-swatches</c>, <c>bg-color-pick-clears-image</c>,
+    /// keep): sets <see cref="Document.BgColor"/> and CLEARS <see cref="Document.BgImage"/>. Opacity is not touched here
+    /// (4.1 never touched it; the app's rule for a transparent background lives in BackgroundViewModel). Setting the color the
+    /// document already has, with no image, changes nothing. The hex is stored lowercase, as an input of type color reports it.
+    /// </summary>
+    /// <exception cref="ArgumentException">Not <c>#rrggbb</c>.</exception>
+    public static Document SetBackgroundColor(Document doc, string hex)
+    {
+        ArgumentNullException.ThrowIfNull(doc);
+        ArgumentNullException.ThrowIfNull(hex);
+        if (hex.Length != 7 || hex[0] != '#' || hex.AsSpan(1).ContainsAnyExcept("0123456789abcdefABCDEF"))
+            throw new ArgumentException($"'{hex}' is not #rrggbb.", nameof(hex));
+        string color = hex.ToLowerInvariant();
+        if (doc.BgImage is null && string.Equals(doc.BgColor, color, StringComparison.Ordinal)) return doc;
+        return doc with { BgColor = color, BgImage = null };
+    }
+
+    /// <summary>
+    /// The Background button's pick (editor.js:934-946; ledger <c>bg-image</c>, fix): the image becomes the background,
+    /// drawn stretched over the whole template (editor.js:304-307). The color stays, as 4.1 kept it. The document keeps
+    /// the image by reference; the caller owns decoding it (<see cref="Images.Decode"/>, so the caps apply). The image
+    /// the document already holds changes nothing.
+    /// </summary>
+    public static Document SetBackgroundImage(Document doc, SKImage image)
+    {
+        ArgumentNullException.ThrowIfNull(doc);
+        ArgumentNullException.ThrowIfNull(image);
+        return ReferenceEquals(doc.BgImage, image) ? doc : doc with { BgImage = image };
+    }
+
+    /// <summary>
+    /// The Opacity slider (editor.js:932; ledger <c>bg-color-opacity</c>): <see cref="Document.BgOpacity"/> to
+    /// <paramref name="opacity"/>, 0 to 1 (clamped), applying to the color and the image alike.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">NaN.</exception>
+    public static Document SetBackgroundOpacity(Document doc, double opacity)
+    {
+        ArgumentNullException.ThrowIfNull(doc);
+        if (double.IsNaN(opacity)) throw new ArgumentOutOfRangeException(nameof(opacity), "NaN is not an opacity.");
+        double value = Math.Clamp(opacity, 0, 1);
+        return doc.BgOpacity.Equals(value) ? doc : doc with { BgOpacity = value };
     }
 
     static int IndexOf(Document doc, string region) => doc.RegionFills.FindIndex(e => e.Region == region);

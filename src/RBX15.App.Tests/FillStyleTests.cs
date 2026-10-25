@@ -2,6 +2,7 @@ using RBX15.App.Services;
 using RBX15.App.Tests.Fakes;
 using RBX15.App.ViewModels;
 using RBX15.Engine;
+using SkiaSharp;
 using static RBX15.App.Tests.HomeTestKit;
 
 namespace RBX15.App.Tests;
@@ -99,6 +100,94 @@ public class FillStyleTests
             [("torso_front", solid10), ("torso_back", solid10), ("torso_up", c), ("rarm_front", solid10), ("larm_front", solid10)],
             session.Document.RegionFills);
         Assert.NotEqual(c.Key, solid10.Key);
+    }
+
+    [Theory] // fillstyle-angle-scale / layout-fill-style: stripes at the slider extremes, painted through the controls, against the
+             // plain rule (a pixel is c2 when its position across the bands, u = x cos a + y sin a, mod 2 * scale is under scale)
+    [InlineData(4, 0)]
+    [InlineData(4, 45)]
+    [InlineData(4, 90)]
+    [InlineData(4, 360)]
+    [InlineData(48, 0)]
+    [InlineData(48, 45)]
+    [InlineData(48, 90)]
+    [InlineData(48, 360)]
+    public void Stripes_at_the_slider_extremes_follow_the_band_rule(int scale, int angle)
+    {
+        var (session, fill, regions) = Make();
+        fill.SetTypeCommand.Execute("stripes");
+        fill.Color1 = "#000000";
+        fill.Color2 = "#ffffff";
+        fill.Angle = angle;
+        fill.Scale = scale;
+        Tile(regions, "torso_front").PaintCommand.Execute(null);
+        Template.TryFind(TemplateMode.Shirt, "torso_front", out var r);
+        var info = new SKImageInfo(TemplateSize.Width, TemplateSize.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
+        using var surface = SKSurface.Create(info);
+        surface.Canvas.Clear(SKColors.Transparent);
+        Renderer.RenderComposite(surface.Canvas, session.Document, applyMask: false);
+        using var bitmap = new SKBitmap(info);
+        using (var snap = surface.Snapshot()) Assert.True(snap.ReadPixels(info, bitmap.GetPixels(), bitmap.RowBytes, 0, 0));
+
+        double a = angle * Math.PI / 180, period = 2.0 * scale;
+        int checkedPixels = 0;
+        for (int y = r.Y + 2; y < r.Y + r.H - 2; y += 3)
+            for (int x = r.X + 2; x < r.X + r.W - 2; x += 3)
+            {
+                double u = (x + 0.5) * Math.Cos(a) + (y + 0.5) * Math.Sin(a);
+                double m = ((u % period) + period) % period;                    // 0 .. period
+                if (Math.Min(Math.Min(m, Math.Abs(m - scale)), period - m) < 1.5) continue;   // within 1.5 px of a band edge: antialiased
+                var px = bitmap.GetPixel(x, y);
+                byte want = m < scale ? (byte)255 : (byte)0;
+                Assert.True(px.Red == want && px.Green == want && px.Blue == want && px.Alpha == 255,
+                    $"scale {scale} angle {angle} at ({x},{y}): u mod period = {m:F2}, got {px}");
+                checkedPixels++;
+            }
+        Assert.True(checkedPixels > 300, $"only {checkedPixels} pixels were checked");
+    }
+
+    [Theory] // checker and dots at the scale extremes: c2 on the even cells; a dot's center is c2 and the cell corners between dots are c1
+    [InlineData(4)]
+    [InlineData(48)]
+    public void Checker_and_dots_at_the_scale_extremes_follow_the_cell_rule(int scale)
+    {
+        SKColor c1 = new(0, 0, 0), c2 = new(255, 255, 255);
+        foreach (string type in new[] { "checker", "dots" })
+        {
+            var (session, fill, regions) = Make();
+            fill.SetTypeCommand.Execute(type);
+            fill.Color1 = "#000000";
+            fill.Color2 = "#ffffff";
+            fill.Scale = scale;
+            Tile(regions, "torso_front").PaintCommand.Execute(null);
+            Template.TryFind(TemplateMode.Shirt, "torso_front", out var r);
+            var info = new SKImageInfo(TemplateSize.Width, TemplateSize.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
+            using var surface = SKSurface.Create(info);
+            surface.Canvas.Clear(SKColors.Transparent);
+            Renderer.RenderComposite(surface.Canvas, session.Document, applyMask: false);
+            using var bitmap = new SKBitmap(info);
+            using (var snap = surface.Snapshot()) Assert.True(snap.ReadPixels(info, bitmap.GetPixels(), bitmap.RowBytes, 0, 0));
+
+            int checkedCells = 0;
+            for (int gy = (int)Math.Ceiling(r.Y / (double)scale); (gy + 1) * scale <= r.Y + r.H; gy++)
+                for (int gx = (int)Math.Ceiling(r.X / (double)scale); (gx + 1) * scale <= r.X + r.W; gx++)
+                {
+                    int cx = gx * scale + scale / 2, cy = gy * scale + scale / 2;
+                    if (type == "checker")
+                    {
+                        var want = ((gx + gy) & 1) == 0 ? c2 : c1;
+                        Assert.Equal(want, bitmap.GetPixel(cx, cy));
+                    }
+                    else
+                    {
+                        // a 0.3 * scale dot is antialiased (at scale 4 it is 1.2 px wide), so judge by which color it is nearer
+                        Assert.True(bitmap.GetPixel(cx, cy).Red > 128, $"{type} {scale}: dot center {bitmap.GetPixel(cx, cy)}");
+                        Assert.True(bitmap.GetPixel(gx * scale, gy * scale).Red < 20, $"{type} {scale}: cell corner {bitmap.GetPixel(gx * scale, gy * scale)}");
+                    }
+                    checkedCells++;
+                }
+            Assert.True(checkedCells >= 4, $"{type} at {scale}: only {checkedCells} cells were checked");
+        }
     }
 
     [Fact] // undo-empty-steps: re-clicking the active type changes nothing, so no step

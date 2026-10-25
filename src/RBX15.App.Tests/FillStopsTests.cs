@@ -426,16 +426,16 @@ public class FillStopsTests
         Assert.True(hidden.Width < full.Width);
     });
 
-    [Fact] // the ribbon itself: the Home tab's tallest group is unchanged by stops
-    public void The_home_ribbon_height_is_unchanged_by_stops() => StaThread.Run(() =>
+    [Fact] // the ribbon itself: the Background tab's tallest group (Fill Style is there since 2026-10-25) is unchanged by stops
+    public void The_background_ribbon_height_is_unchanged_by_stops() => StaThread.Run(() =>
     {
-        var home = Home(new EditorSession());
-        var view = new HomeRibbon { DataContext = home };
+        var layout = Layout(new EditorSession());
+        var view = new LayoutRibbon { DataContext = layout };
         StaThread.Pump();
-        home.FillStyle.SetTypeCommand.Execute("linear");
+        layout.FillStyle.SetTypeCommand.Execute("linear");
         view.Measure(new Size(4000, 400));
         double before = view.DesiredSize.Height;
-        for (int i = 0; i < 3; i++) home.FillStyle.AddStopCommand.Execute(null);
+        for (int i = 0; i < 3; i++) layout.FillStyle.AddStopCommand.Execute(null);
         view.InvalidateMeasure();
         view.Measure(new Size(4000, 400));
         Assert.Equal(before, view.DesiredSize.Height, 3);

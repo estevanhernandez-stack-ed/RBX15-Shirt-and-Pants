@@ -1461,6 +1461,10 @@ public sealed partial class LedgerScenarioTests : IDisposable
         public string? LoadFolder(SettingsFolder which) => Folders.GetValueOrDefault(which);
 
         public void SaveFolder(SettingsFolder which, string folder) => Folders[which] = folder;
+
+        public IReadOnlyList<string> LoadRecents() => [];
+
+        public void SaveRecents(IReadOnlyList<string> paths) { }
     }
 
     sealed class Picker(params string?[] answers) : IColorPicker

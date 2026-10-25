@@ -22,7 +22,7 @@ public class ShellWiringTests
                 new Layer { Id = 2, Image = image, X = 120, Y = 120 },
                 new Layer { Id = 3, Image = image, X = 300, Y = 300, Visible = false }),
         });
-        var main = TestShell.Quiet(Composition.Build(session, () => null, new Fakes.FakeSettingsStore(), TestShell.Storage(), new Fakes.ManualTickSource(), new Fakes.FakeProcessProbe()));
+        var main = TestShell.Quiet(Composition.Build(session, () => null, new Fakes.FakeSettingsStore(), TestShell.Storage(), new Fakes.ManualTickSource(), new Fakes.FakeProcessProbe(), new Fakes.FakeJumpListSink()));
         void Click(double x, double y)
         {
             main.Canvas.Interaction.PointerDown(new Point(x, y), 1);

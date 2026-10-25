@@ -16,7 +16,7 @@ internal static class TestShell
     public static MainViewModel Main(EditorSession session, bool previewVisible = false, Func<Random>? random = null)
 #pragma warning restore CS0028
     {
-        var main = Composition.Build(session, new FakeFileDialogs(), new FakeDialogService(), new FakeColorPicker(), new FakeSettingsStore(), Storage(), new ManualTickSource(), random);
+        var main = Composition.Build(session, new FakeFileDialogs(), new FakeDialogService(), new FakeColorPicker(), new FakeSettingsStore(), Storage(), new ManualTickSource(), new FakeProcessProbe(), random);
         main.AvatarPreview.IsVisible = previewVisible;
         main.Palette.Dispose();   // see Quiet: the palette's idle pass would read layer images a test may have freed
         return main;

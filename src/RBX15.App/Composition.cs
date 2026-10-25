@@ -17,11 +17,11 @@ internal static class Composition
     /// <summary>How often a dirty document autosaves (spec §3 "Upgrades").</summary>
     public static readonly TimeSpan AutosaveInterval = TimeSpan.FromSeconds(60);
 
-    public static MainViewModel Build(EditorSession session, Func<Window?> owner, ISettingsStore settings, AppStorage storage, ITickSource? autosaveTicks = null)
+    public static MainViewModel Build(EditorSession session, Func<Window?> owner, ISettingsStore settings, AppStorage storage, ITickSource? autosaveTicks = null, IProcessProbe? processes = null)
     {
         ArgumentNullException.ThrowIfNull(owner);
         var picker = new ThemedColorPicker(owner);
-        var main = Build(session, new Win32FileDialogs(owner), new ThemedDialogService(owner), picker, settings, storage, autosaveTicks ?? new DispatcherTimerTickSource(AutosaveInterval));
+        var main = Build(session, new Win32FileDialogs(owner), new ThemedDialogService(owner), picker, settings, storage, autosaveTicks ?? new DispatcherTimerTickSource(AutosaveInterval), processes ?? new ProcessProbe());
         // Every themed pick (brush, Fill Style colors, region swatches) offers the colors of the user's art.
         picker.Palette = () => main.Palette.Colors;
         return main;
@@ -31,7 +31,7 @@ internal static class Composition
     /// The wiring, once: the native services come in, so the app passes the real ones and the tests'
     /// TestShell passes fakes. Every line that connects view-models lives here and nowhere else.
     /// </summary>
-    public static MainViewModel Build(EditorSession session, IFileDialogs fileDialogs, IDialogService dialogs, IColorPicker colorPicker, ISettingsStore settings, AppStorage storage, ITickSource autosaveTicks, Func<Random>? random = null)
+    public static MainViewModel Build(EditorSession session, IFileDialogs fileDialogs, IDialogService dialogs, IColorPicker colorPicker, ISettingsStore settings, AppStorage storage, ITickSource autosaveTicks, IProcessProbe processes, Func<Random>? random = null)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(fileDialogs);
@@ -40,6 +40,7 @@ internal static class Composition
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(storage);
         ArgumentNullException.ThrowIfNull(autosaveTicks);
+        ArgumentNullException.ThrowIfNull(processes);
         // M3b: the status strip, the tool and the brush come first; the canvas, the Home tab and the eraser share them.
         var status = new StatusViewModel();
         var tools = new ToolsViewModel();
@@ -97,9 +98,15 @@ internal static class Composition
         var text = new TextViewModel(session, colorPicker, status);
         text.LayersAdded += (_, _) => tools.Set(Tool.Select);
         // M5 item 2: autosave over the session; a failure shows on the status strip, never a dialog. The session id names this window's pair.
-        var autosave = new AutosaveService(session, storage, autosaveTicks, TimeProvider.System, Guid.NewGuid().ToString("N"),
+        string sessionId = Guid.NewGuid().ToString("N");
+        var autosave = new AutosaveService(session, storage, autosaveTicks, TimeProvider.System, sessionId,
             () => Environment.ProcessId, () => Process.GetCurrentProcess().StartTime);
         autosave.Failed += reason => status.Show($"Couldn't autosave: {reason}");
+        // M5 item 3: recovery finds the autosaves of dead windows (a skipped file goes to the error log); the startup flow offers the newest
+        // one and claims it into this window's session id, so the restored work keeps autosaving under the id the autosave service writes.
+        var recovery = new RecoveryService(storage, processes, () => Environment.ProcessId, () => Process.GetCurrentProcess().StartTime,
+            new ErrorLog(storage.LogDirectory, TimeProvider.System).Write);
+        var startup = new StartupFlow(session, recovery, dialogs, status, projectFiles, sessionId);
         // M3a: construction lines above this line.
         return new MainViewModel(session)
         {
@@ -116,6 +123,8 @@ internal static class Composition
             AvatarPreview = avatarPreview,
             Palette = palette,
             Autosave = autosave,
+            Recovery = recovery,
+            Startup = startup,
             // M3a: required members above this line.
         };
     }

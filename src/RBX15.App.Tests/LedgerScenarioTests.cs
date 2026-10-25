@@ -1356,7 +1356,7 @@ public sealed partial class LedgerScenarioTests : IDisposable
         var s = new EditorSession();
         var dialogs = new Dialogs();
         var files = new Files(null);
-        var main = TestShell.Quiet(Composition.Build(s, files, dialogs, new Picker(), new Fakes.FakeSettingsStore(), TestShell.Storage(), new Fakes.ManualTickSource()));
+        var main = TestShell.Quiet(Composition.Build(s, files, dialogs, new Picker(), new Fakes.FakeSettingsStore(), TestShell.Storage(), new Fakes.ManualTickSource(), new Fakes.FakeProcessProbe()));
         Assert.True(s.ApplyWithSelection(x => LayerOps.AddImage(x, red, s.TakeId(), "art")));
         string first = Path.Combine(_dir, "first.r15proj");
         files.ProjectPath = first;
@@ -1394,7 +1394,7 @@ public sealed partial class LedgerScenarioTests : IDisposable
         var files = new ProjectDialogs();
         var dialogs = new PromptDialogs();
         var settings = new MemorySettings();
-        return (s, TestShell.Quiet(Composition.Build(s, files, dialogs, new Picker(), settings, TestShell.Storage(), new Fakes.ManualTickSource())), files, dialogs, settings);
+        return (s, TestShell.Quiet(Composition.Build(s, files, dialogs, new Picker(), settings, TestShell.Storage(), new Fakes.ManualTickSource(), new Fakes.FakeProcessProbe())), files, dialogs, settings);
     }
 
     /// <summary>Pumps the STA dispatcher until <paramref name="task"/> completes: Open reads on the pool and resumes here.</summary>
@@ -1445,6 +1445,8 @@ public sealed partial class LedgerScenarioTests : IDisposable
             SaveChanges.Add(documentName);
             return Choices.Count > 0 ? Choices.Dequeue() : SaveChoice.Cancel;
         }
+
+        public RestoreChoice AskRestore(string documentName, DateTimeOffset autosavedAt) => RestoreChoice.Later;
     }
 
     /// <summary>An in-memory settings file that keeps the remembered folders.</summary>
@@ -1496,6 +1498,8 @@ public sealed partial class LedgerScenarioTests : IDisposable
             SavePrompts.Add(documentName);
             return SaveAnswer;
         }
+
+        public RestoreChoice AskRestore(string documentName, DateTimeOffset autosavedAt) => RestoreChoice.Later;
     }
 
     sealed class Files(string? savePath) : IFileDialogs

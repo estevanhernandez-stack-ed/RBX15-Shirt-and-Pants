@@ -8,6 +8,19 @@ public enum SaveChoice
     Cancel,
 }
 
+/// <summary>The crash-recovery prompt's answer (M5 decision R1).</summary>
+public enum RestoreChoice
+{
+    /// <summary>Open the autosaved work, dirty.</summary>
+    Restore,
+
+    /// <summary>Delete the autosave.</summary>
+    Discard,
+
+    /// <summary>Esc or the caption's close button: keep the autosave for the next launch.</summary>
+    Later,
+}
+
 /// <summary>
 /// 4.1's blocking alert and confirm (ledger dialogs-inventory), as themed modal dialogs titled
 /// <see cref="AppInfo.ProductName"/> (io-empty-export-confirm quirk: Electron showed the page title).
@@ -26,4 +39,12 @@ public interface IDialogService
     /// the caption's close button).
     /// </summary>
     SaveChoice AskSaveChanges(string documentName);
+
+    /// <summary>
+    /// The crash-recovery prompt (M5 decision R1; new in v5): <see cref="DialogText.RestorePrompt"/> with Restore (Enter) and Discard;
+    /// Esc and the caption's close button answer <see cref="RestoreChoice.Later"/>, which keeps the file.
+    /// </summary>
+    /// <param name="documentName">The file name, or <see cref="DialogText.Untitled"/>.</param>
+    /// <param name="autosavedAt">When the autosave was written.</param>
+    RestoreChoice AskRestore(string documentName, DateTimeOffset autosavedAt);
 }

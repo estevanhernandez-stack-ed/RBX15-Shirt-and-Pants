@@ -62,6 +62,94 @@ public class ViewRendererTests
         }
     }
 
+    /// <summary>The heaviest document the frame budget names: 20 rotated, translucent, color-filtered layers.</summary>
+    static Document TwentyLayers()
+    {
+        var layers = ImmutableList.CreateBuilder<Layer>();
+        for (int i = 0; i < 20; i++)
+            layers.Add(new Layer
+            {
+                Id = i + 1,
+                Image = Px.Solid(160, 120, new SKColor((byte)(40 + i * 10), (byte)(220 - i * 8), (byte)(90 + i * 6))),
+                X = 20 + (i % 5) * 90, Y = 20 + (i / 5) * 110,
+                Rotation = i * 7, Opacity = 0.9, Scale = 1 + (i % 3) * 0.1,
+                Brightness = 110, Saturate = 120,
+            });
+        return new Document
+        {
+            BgOpacity = 0.7,
+            RegionFills = ImmutableList.Create(("torso_front", new Fill("linear", "#17d4fa", "#f22f89", 45, null))),
+            Layers = layers.ToImmutable(),
+        };
+    }
+
+    static IEnumerable<LivePreview> Growing(string tool)
+    {
+        for (int n = 2; n <= 12; n++)
+        {
+            var points = Enumerable.Range(0, n).Select(i => new SKPoint(30 + i * 38, 260 + (float)(120 * Math.Sin(i / 2.0)))).ToArray();
+            yield return tool == "eraser"
+                ? LivePreview.Erase(points, 18)
+                : LivePreview.Draw(new Stroke(tool switch { "line" => ShapeTool.Line, "rect" => ShapeTool.Rect, _ => ShapeTool.Pen },
+                    points, new SKColor(255, 200, 0, 200), 11, tool == "rect"));
+        }
+    }
+
+    [Theory] // render-pipeline-canvas-reset (C1): the cached static composite draws what the whole composite draws, byte for byte
+    [InlineData("pen", true)]
+    [InlineData("line", true)]
+    [InlineData("rect", true)]
+    [InlineData("eraser", true)]
+    [InlineData("pen", false)]
+    [InlineData("eraser", false)]
+    public void A_cached_stroke_frame_is_byte_equal_to_the_uncached_frame(string tool, bool showMask)
+    {
+        var doc = TwentyLayers() with { ShowMask = showMask, ShowGrid = true };
+        using var cached = new ViewRenderer();
+        using var whole = new ViewRenderer { CacheStatic = false };
+        int frame = 0;
+        foreach (var preview in Growing(tool))
+        foreach (var options in new[] { new ViewOptions(1) { Preview = preview, SelectedLayerId = 3 },
+                                        new ViewOptions(1.5, 1.25, true) { Preview = preview, ShowRegionGuide = true } })
+        {
+            var expected = Draw(c => whole.Render(c, doc, options), options);
+            var actual = Draw(c => cached.Render(c, doc, options), options);
+            Assert.True(expected.AsSpan().SequenceEqual(actual), $"{tool} frame {frame} differs under the cache");
+            frame++;
+        }
+        Assert.Equal(1, cached.CompositeCacheBuilds);   // one document, one stroke: drawn into the cache once
+        Assert.Equal(0, whole.CompositeCacheBuilds);
+    }
+
+    [Fact] // a new Document instance (an edit, an undo, a mode change) rebuilds the cache; the first frame without a preview releases it
+    public void The_cache_follows_the_document_instance_and_a_stroke_end_releases_it()
+    {
+        var doc = TwentyLayers();
+        var preview = Growing("pen").First();
+        var options = new ViewOptions(1) { Preview = preview };
+        using var r = new ViewRenderer();
+        Draw(c => r.Render(c, doc, options), options);
+        Draw(c => r.Render(c, doc, options), options);
+        Assert.Equal(1, r.CompositeCacheBuilds);
+        Assert.True(r.HasCompositeCache);
+
+        var undone = doc with { Layers = doc.Layers.RemoveAt(19) };   // an undo mid-stroke
+        var cachedFrame = Draw(c => r.Render(c, undone, options), options);
+        Assert.Equal(2, r.CompositeCacheBuilds);
+        using var whole = new ViewRenderer { CacheStatic = false };
+        Assert.True(Draw(c => whole.Render(c, undone, options), options).AsSpan().SequenceEqual(cachedFrame));
+
+        var mode = undone with { Mode = TemplateMode.Pants };         // a mode change mid-stroke
+        Draw(c => r.Render(c, mode, options), options);
+        Assert.Equal(3, r.CompositeCacheBuilds);
+
+        var plain = new ViewOptions(1);
+        Draw(c => r.Render(c, mode, plain), plain);                    // the stroke ended
+        Assert.False(r.HasCompositeCache);
+        Draw(c => r.Render(c, mode, options), options);                // the next stroke builds its own
+        Assert.Equal(4, r.CompositeCacheBuilds);
+    }
+
     [Fact] // a DPI change on the same renderer rebuilds the checker tile (CheckerHalf 8 -> 12 -> 8)
     public void A_device_scale_change_rebuilds_the_checker()
     {

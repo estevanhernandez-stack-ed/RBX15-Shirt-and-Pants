@@ -42,9 +42,9 @@ public partial class MainWindow : Window
             if (e.PropertyName == nameof(AvatarPreviewViewModel.IsVisible)) ApplyColumnWidths(Viewport.ActualWidth);
         };
         ApplyColumnWidths(ShellLayout.DefaultWidth);
-        // The window's seven chords (spec §4 "Keyboard"; M4b item 11): Undo, Redo (two chords), Duplicate and the three file chords. A focused
+        // The window's eight chords (spec §4 "Keyboard"; M4b item 11, M5 item 6): Undo, Redo (two chords), Duplicate, the three file chords and Paste. A focused
         // text field keeps each key even when it has nothing to do with it (final fix wave 5); anywhere else it is the command. Keys OFF never
-        // reaches them (they are KeyBindings, not routed). Ctrl+V is left unbound for M5's paste.
+        // reaches them (they are KeyBindings, not routed), and Ctrl+V toggles no tool.
         AddShortcut(viewModel.Home.Edit.UndoCommand, Key.Z, ModifierKeys.Control);
         AddShortcut(viewModel.Home.Edit.RedoCommand, Key.Y, ModifierKeys.Control);
         AddShortcut(viewModel.Home.Edit.RedoCommand, Key.Z, ModifierKeys.Control | ModifierKeys.Shift);
@@ -52,6 +52,7 @@ public partial class MainWindow : Window
         AddShortcut(viewModel.Home.File.SaveCommand, Key.S, ModifierKeys.Control);
         AddShortcut(viewModel.Home.File.SaveAsCommand, Key.S, ModifierKeys.Control | ModifierKeys.Shift);
         AddShortcut(viewModel.Home.File.OpenCommand, Key.O, ModifierKeys.Control);
+        AddShortcut(viewModel.Paste.PasteCommand, Key.V, ModifierKeys.Control);
         // The bare-key shortcuts (M4b items 10 and 11; K1, K2): characters from text input, keys from key downs, both through the router.
         PreviewTextInput += OnPreviewTextInput;
         PreviewKeyDown += OnPreviewKeyDown;

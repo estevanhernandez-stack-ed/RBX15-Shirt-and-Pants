@@ -17,11 +17,11 @@ internal static class Composition
     /// <summary>How often a dirty document autosaves (spec §3 "Upgrades").</summary>
     public static readonly TimeSpan AutosaveInterval = TimeSpan.FromSeconds(60);
 
-    public static MainViewModel Build(EditorSession session, Func<Window?> owner, ISettingsStore settings, AppStorage storage, ITickSource? autosaveTicks = null, IProcessProbe? processes = null, IJumpListSink? jumpList = null)
+    public static MainViewModel Build(EditorSession session, Func<Window?> owner, ISettingsStore settings, AppStorage storage, ITickSource? autosaveTicks = null, IProcessProbe? processes = null, IJumpListSink? jumpList = null, IClipboardSource? clipboard = null)
     {
         ArgumentNullException.ThrowIfNull(owner);
         var picker = new ThemedColorPicker(owner);
-        var main = Build(session, new Win32FileDialogs(owner), new ThemedDialogService(owner), picker, settings, storage, autosaveTicks ?? new DispatcherTimerTickSource(AutosaveInterval), processes ?? new ProcessProbe(), launcher: new ProcessAppLauncher(), jumpList: jumpList ?? new WpfJumpListSink());
+        var main = Build(session, new Win32FileDialogs(owner), new ThemedDialogService(owner), picker, settings, storage, autosaveTicks ?? new DispatcherTimerTickSource(AutosaveInterval), processes ?? new ProcessProbe(), launcher: new ProcessAppLauncher(), jumpList: jumpList ?? new WpfJumpListSink(), clipboard: clipboard ?? new WpfClipboardSource());
         // Every themed pick (brush, Fill Style colors, region swatches) offers the colors of the user's art.
         picker.Palette = () => main.Palette.Colors;
         return main;
@@ -31,7 +31,7 @@ internal static class Composition
     /// The wiring, once: the native services come in, so the app passes the real ones and the tests'
     /// TestShell passes fakes. Every line that connects view-models lives here and nowhere else.
     /// </summary>
-    public static MainViewModel Build(EditorSession session, IFileDialogs fileDialogs, IDialogService dialogs, IColorPicker colorPicker, ISettingsStore settings, AppStorage storage, ITickSource autosaveTicks, IProcessProbe processes, Func<Random>? random = null, IAppLauncher? launcher = null, IJumpListSink? jumpList = null)
+    public static MainViewModel Build(EditorSession session, IFileDialogs fileDialogs, IDialogService dialogs, IColorPicker colorPicker, ISettingsStore settings, AppStorage storage, ITickSource autosaveTicks, IProcessProbe processes, Func<Random>? random = null, IAppLauncher? launcher = null, IJumpListSink? jumpList = null, IClipboardSource? clipboard = null, Action<TimeSpan>? clipboardDelay = null)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(fileDialogs);
@@ -110,6 +110,9 @@ internal static class Composition
         var recovery = new RecoveryService(storage, processes, () => Environment.ProcessId, () => Process.GetCurrentProcess().StartTime,
             new ErrorLog(storage.LogDirectory, TimeProvider.System).Write);
         var startup = new StartupFlow(session, recovery, dialogs, status, projectFiles, launcher ?? new InertAppLauncher(), sessionId);
+        // M5 item 6: Ctrl+V pastes as a new layer on top; like an import it sets the Select tool.
+        var paste = new PasteService(session, import, clipboard ?? new EmptyClipboardSource(), status, clipboardDelay);
+        paste.LayersAdded += (_, _) => tools.Set(Tool.Select);
         // M3a: construction lines above this line.
         return new MainViewModel(session)
         {
@@ -129,6 +132,7 @@ internal static class Composition
             Recovery = recovery,
             Startup = startup,
             Recents = recents,
+            Paste = paste,
             // M3a: required members above this line.
         };
     }
@@ -145,6 +149,12 @@ internal static class Composition
         public void Publish(IReadOnlyList<JumpEntry> entries)
         {
         }
+    }
+
+    /// <summary>The injectable overload's default: a build that names no clipboard source sees an empty clipboard (the app overload passes the real one).</summary>
+    sealed class EmptyClipboardSource : IClipboardSource
+    {
+        public ClipboardContent Read() => new ClipboardContent.None();
     }
 
     /// <summary>The injectable overload's default: a build that names no launcher never starts a process (the app overload passes the real one).</summary>

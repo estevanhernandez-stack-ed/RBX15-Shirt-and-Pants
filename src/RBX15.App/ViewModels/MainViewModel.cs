@@ -140,4 +140,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     /// <summary>The recent projects (M5 item 5): the File group's Recent menu and the jump list both read them; a launch starts <see cref="RecentProjects.RefreshAsync"/>.</summary>
     public required RecentProjects Recents { get; init; }
+
+    /// <summary>Paste as layer (M5 item 6): Ctrl+V adds the clipboard's image as a new layer on top.</summary>
+    public required PasteService Paste { get; init; }
 }

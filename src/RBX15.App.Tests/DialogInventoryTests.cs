@@ -101,6 +101,12 @@ public sealed class DialogInventoryTests : IDisposable
             "ExportGuard.EmptyTemplateMessage", "DialogText.PackNotFound", "DialogText.PackEmpty",
             "DialogText.NoImagesInFolder", "DialogText.LoadFailed",
         }, shown);
+
+        // The two v5 prompts with their own buttons (the unsaved-changes guard, M5's restore prompt) take their text from DialogText
+        // inside ThemedDialogService; nothing else builds a dialog (checked above), so these are all the other modal texts there are.
+        var prompts = Regex.Matches(File.ReadAllText(Path.Combine(app, "Services", "ThemedDialogService.cs")), @"Show\(\s*(DialogText\.[A-Za-z]+)")
+            .Select(m => m.Groups[1].Value).ToHashSet(StringComparer.Ordinal);
+        Assert.Equal(new HashSet<string> { "DialogText.SaveChanges", "DialogText.RestorePrompt" }, prompts);
     }
 
     // ------------------------------------------------------------------ the alerts, triggered
@@ -394,7 +400,7 @@ public sealed class DialogInventoryTests : IDisposable
         var session = new EditorSession();
         var dialogs = new RecordingDialogs();
         var picks = new ScriptedPicks();
-        var main = TestShell.Quiet(Composition.Build(session, picks, dialogs, new FakeColorPicker(), new FakeSettingsStore(), TestShell.Storage(), new ManualTickSource()));
+        var main = TestShell.Quiet(Composition.Build(session, picks, dialogs, new FakeColorPicker(), new FakeSettingsStore(), TestShell.Storage(), new ManualTickSource(), new FakeProcessProbe()));
         return (session, main, dialogs, picks);
     }
 
@@ -491,6 +497,8 @@ public sealed class DialogInventoryTests : IDisposable
             SaveChanges.Add(documentName);
             return SaveChoiceAnswer;
         }
+
+        public RestoreChoice AskRestore(string documentName, DateTimeOffset autosavedAt) => RestoreChoice.Later;
     }
 
     /// <summary>Answers each picker from its own queue (an empty queue is a cancel) and counts the calls.</summary>

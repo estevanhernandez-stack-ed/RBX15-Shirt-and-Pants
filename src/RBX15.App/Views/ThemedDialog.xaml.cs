@@ -15,12 +15,16 @@ public enum ThemedDialogKind
 
     /// <summary>Save, Don't save and Cancel: the unsaved-changes prompt (M4a interfaces R13).</summary>
     SaveChanges,
+
+    /// <summary>Restore and Discard; Esc and the caption's close button close it unanswered: the crash-recovery prompt (M5 decision R1).</summary>
+    Restore,
 }
 
 /// <summary>
 /// The themed dialog: a message with OK, plus Cancel for a confirm, or Save, Don't save and Cancel for the
 /// unsaved-changes prompt. Shown modally by <see cref="ThemedDialogService"/>. <see cref="Choice"/> is Save on
-/// OK or Save, DontSave on Don't save, and Cancel on Cancel, Esc or the caption's close button.
+/// OK or Save, DontSave on Don't save, and Cancel on Cancel, Esc or the caption's close button. The restore prompt reuses
+/// the same three answers: Restore is Save, Discard is DontSave, and closing it is Cancel.
 /// </summary>
 public partial class ThemedDialog : Window
 {
@@ -52,6 +56,17 @@ public partial class ThemedDialog : Window
             case ThemedDialogKind.SaveChanges:
                 OkButton.Content = "Save";
                 DontSaveButton.Visibility = Visibility.Visible;
+                break;
+            case ThemedDialogKind.Restore:
+                OkButton.Content = "Restore";
+                DontSaveButton.Content = "Discard";
+                DontSaveButton.Visibility = Visibility.Visible;
+                CancelButton.Visibility = Visibility.Collapsed;
+                CancelButton.IsCancel = false;
+                PreviewKeyDown += (_, e) =>
+                {
+                    if (e.Key == Key.Escape) Close(); // Esc keeps the autosave, as the caption's close button does
+                };
                 break;
         }
     }

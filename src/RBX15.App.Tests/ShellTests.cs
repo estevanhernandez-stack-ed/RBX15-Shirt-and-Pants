@@ -267,7 +267,7 @@ public class ShellTests
         var dialogs = new FakeDialogService();
         var files = new FakeFileDialogs();
         var store = new FakeSettingsStore();
-        var main = TestShell.Quiet(Composition.Build(session, files, dialogs, new FakeColorPicker(), store, TestShell.Storage(), new ManualTickSource()));
+        var main = TestShell.Quiet(Composition.Build(session, files, dialogs, new FakeColorPicker(), store, TestShell.Storage(), new ManualTickSource(), new FakeProcessProbe()));
         var window = new MainWindow(main, store, [Primary]);
         StaThread.Pump();
         return (window, session, dialogs, files, store);

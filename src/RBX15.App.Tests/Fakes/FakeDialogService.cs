@@ -2,7 +2,7 @@ using RBX15.App.Services;
 
 namespace RBX15.App.Tests.Fakes;
 
-/// <summary>Records every dialog; Confirm answers <see cref="ConfirmAnswer"/>, the unsaved-changes prompt <see cref="SaveChoiceAnswer"/>.</summary>
+/// <summary>Records every dialog; Confirm answers <see cref="ConfirmAnswer"/>, the unsaved-changes prompt <see cref="SaveChoiceAnswer"/>, the restore prompt <see cref="RestoreChoiceAnswer"/>.</summary>
 sealed class FakeDialogService : IDialogService
 {
     public bool ConfirmAnswer { get; set; }
@@ -27,5 +27,17 @@ sealed class FakeDialogService : IDialogService
     {
         SaveChanges.Add(documentName);
         return SaveChoiceAnswer;
+    }
+
+    /// <summary>The restore prompt's answer; Later by default, so a test that forgets to answer never deletes or opens an autosave.</summary>
+    public RestoreChoice RestoreChoiceAnswer { get; set; } = RestoreChoice.Later;
+
+    /// <summary>Each restore prompt shown: the document name and the autosave time it named.</summary>
+    public List<(string DocumentName, DateTimeOffset AutosavedAt)> Restores { get; } = [];
+
+    public RestoreChoice AskRestore(string documentName, DateTimeOffset autosavedAt)
+    {
+        Restores.Add((documentName, autosavedAt));
+        return RestoreChoiceAnswer;
     }
 }

@@ -1,5 +1,6 @@
 using System.IO;
 using System.Windows;
+using System.Windows.Threading;
 using RBX15.App.Services;
 using RBX15.App.ViewModels;
 #if TEST_INPUT_BRIDGE
@@ -49,6 +50,17 @@ public partial class App : Application
         _crash!.EmergencyAutosave = main.Autosave.WriteNow;
         MainWindow = new MainWindow(main, settings);
         MainWindow.Show();
+        RunStartupFlow(main);
+    }
+
+    /// <summary>
+    /// M5 item 3: once the window is up, its recovery prompt (R1). Queued behind the first render, so the window is on screen under the
+    /// dialog. An exception past the flow's own handling is a crash like any other: the dispatcher handler logs it.
+    /// </summary>
+    static async void RunStartupFlow(MainViewModel main)
+    {
+        await Dispatcher.Yield(DispatcherPriority.Loaded);
+        await main.Startup.RecoverAsync();
     }
 
     /// <summary>
@@ -93,7 +105,7 @@ public partial class App : Application
         var files = new BridgeFileDialogs(Console.Out);
         Func<Window?> owner = () => Current?.MainWindow;
         var main = Composition.Build(session, files, new ThemedDialogService(owner), new ThemedColorPicker(owner), settings, storage,
-            new DispatcherTimerTickSource(Composition.AutosaveInterval));
+            new DispatcherTimerTickSource(Composition.AutosaveInterval), new ProcessProbe());
         _crash!.EmergencyAutosave = main.Autosave.WriteNow;
         var window = new MainWindow(main, settings);
         MainWindow = window;

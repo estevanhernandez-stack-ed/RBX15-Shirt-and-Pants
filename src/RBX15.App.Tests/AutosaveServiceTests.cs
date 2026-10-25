@@ -346,7 +346,7 @@ public sealed class AutosaveWiringTests : IDisposable
         var dialogs = new FakeDialogService();
         var ticks = new ManualTickSource();
         var store = new FakeSettingsStore();
-        var main = TestShell.Quiet(Composition.Build(session, new FakeFileDialogs(), dialogs, new FakeColorPicker(), store, _storage, ticks));
+        var main = TestShell.Quiet(Composition.Build(session, new FakeFileDialogs(), dialogs, new FakeColorPicker(), store, _storage, ticks, new FakeProcessProbe()));
         var window = new MainWindow(main, store, [Primary]);
         StaThread.Pump();
         return (window, session, dialogs, ticks, main);

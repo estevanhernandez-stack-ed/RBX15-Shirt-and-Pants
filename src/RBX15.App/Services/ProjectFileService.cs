@@ -216,7 +216,7 @@ public sealed class ProjectFileService : ObservableObject
         return true;
     }
 
-    static IReadOnlyCollection<SKImage> ImagesOf(Document doc)
+    internal static IReadOnlyCollection<SKImage> ImagesOf(Document doc)
     {
         var images = new List<SKImage>(doc.Layers.Count + 1);
         if (doc.BgImage is { } bg) images.Add(bg);
@@ -228,7 +228,7 @@ public sealed class ProjectFileService : ObservableObject
     /// R11: frees the images at ApplicationIdle, after the host has rendered the new document and every view-model has
     /// rebuilt, so nothing draws a disposed image.
     /// </summary>
-    static void ReleaseOnIdle(Dispatcher dispatcher, IReadOnlyCollection<SKImage> images)
+    internal static void ReleaseOnIdle(Dispatcher dispatcher, IReadOnlyCollection<SKImage> images)
     {
         if (images.Count == 0) return;
         dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, () =>

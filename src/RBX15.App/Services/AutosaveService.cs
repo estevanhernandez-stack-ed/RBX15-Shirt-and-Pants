@@ -144,6 +144,9 @@ public sealed class AutosaveService
         catch (JsonException) { return null; }
     }
 
+    /// <summary>The sidecar's text, as <see cref="ReadSidecar"/> reads it back; recovery rewrites a claimed sidecar with it.</summary>
+    internal static string WriteSidecar(AutosaveSidecar sidecar) => JsonSerializer.Serialize(sidecar, SidecarOptions);
+
     sealed record Snap(Document Document, string? File, DateTimeOffset At, int Generation);
 
     Snap Snapshot() => new(_session.Document, _session.CurrentFile, _clock.GetUtcNow(), Volatile.Read(ref _generation));
@@ -184,7 +187,7 @@ public sealed class AutosaveService
                 string json = ProjectIO.Write(s.Document, s.At, title: null);
                 File.WriteAllText(projectTemp, json, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
                 var meta = new AutosaveSidecar(_pid(), _processStart().ToUniversalTime(), s.File, s.At, AppInfo.Version);
-                File.WriteAllText(sidecarTemp, JsonSerializer.Serialize(meta, SidecarOptions), new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+                File.WriteAllText(sidecarTemp, WriteSidecar(meta), new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
                 BeforeMove(projectTemp);
                 File.Move(projectTemp, project, overwrite: true);
                 File.Move(sidecarTemp, sidecar, overwrite: true);

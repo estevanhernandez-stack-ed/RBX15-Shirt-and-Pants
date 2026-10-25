@@ -131,4 +131,10 @@ public sealed partial class MainViewModel : ObservableObject
 
     /// <summary>Autosave (M5 item 2): the 60 s copy of unsaved work. The window's real close deletes it; the crash handler writes it once more.</summary>
     public required AutosaveService Autosave { get; init; }
+
+    /// <summary>Crash recovery (M5 item 3): the orphaned autosaves of windows that died.</summary>
+    public required RecoveryService Recovery { get; init; }
+
+    /// <summary>What happens once the window is up (M5 item 3): the recovery prompt, then item 4's launch file.</summary>
+    public required StartupFlow Startup { get; init; }
 }

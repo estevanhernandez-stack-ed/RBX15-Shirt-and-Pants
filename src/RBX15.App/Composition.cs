@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Windows;
 using RBX15.App.Canvas;
 using RBX15.App.Services;
@@ -13,11 +14,14 @@ namespace RBX15.App;
 /// </summary>
 internal static class Composition
 {
-    public static MainViewModel Build(EditorSession session, Func<Window?> owner, ISettingsStore settings)
+    /// <summary>How often a dirty document autosaves (spec §3 "Upgrades").</summary>
+    public static readonly TimeSpan AutosaveInterval = TimeSpan.FromSeconds(60);
+
+    public static MainViewModel Build(EditorSession session, Func<Window?> owner, ISettingsStore settings, AppStorage storage, ITickSource? autosaveTicks = null)
     {
         ArgumentNullException.ThrowIfNull(owner);
         var picker = new ThemedColorPicker(owner);
-        var main = Build(session, new Win32FileDialogs(owner), new ThemedDialogService(owner), picker, settings);
+        var main = Build(session, new Win32FileDialogs(owner), new ThemedDialogService(owner), picker, settings, storage, autosaveTicks ?? new DispatcherTimerTickSource(AutosaveInterval));
         // Every themed pick (brush, Fill Style colors, region swatches) offers the colors of the user's art.
         picker.Palette = () => main.Palette.Colors;
         return main;
@@ -27,13 +31,15 @@ internal static class Composition
     /// The wiring, once: the native services come in, so the app passes the real ones and the tests'
     /// TestShell passes fakes. Every line that connects view-models lives here and nowhere else.
     /// </summary>
-    public static MainViewModel Build(EditorSession session, IFileDialogs fileDialogs, IDialogService dialogs, IColorPicker colorPicker, ISettingsStore settings, Func<Random>? random = null)
+    public static MainViewModel Build(EditorSession session, IFileDialogs fileDialogs, IDialogService dialogs, IColorPicker colorPicker, ISettingsStore settings, AppStorage storage, ITickSource autosaveTicks, Func<Random>? random = null)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(fileDialogs);
         ArgumentNullException.ThrowIfNull(dialogs);
         ArgumentNullException.ThrowIfNull(colorPicker);
         ArgumentNullException.ThrowIfNull(settings);
+        ArgumentNullException.ThrowIfNull(storage);
+        ArgumentNullException.ThrowIfNull(autosaveTicks);
         // M3b: the status strip, the tool and the brush come first; the canvas, the Home tab and the eraser share them.
         var status = new StatusViewModel();
         var tools = new ToolsViewModel();
@@ -90,6 +96,10 @@ internal static class Composition
         // M4b item 9: the Text tab; an added Word Art layer sets the Select tool (editor.js:2287), as an import does.
         var text = new TextViewModel(session, colorPicker, status);
         text.LayersAdded += (_, _) => tools.Set(Tool.Select);
+        // M5 item 2: autosave over the session; a failure shows on the status strip, never a dialog. The session id names this window's pair.
+        var autosave = new AutosaveService(session, storage, autosaveTicks, TimeProvider.System, Guid.NewGuid().ToString("N"),
+            () => Environment.ProcessId, () => Process.GetCurrentProcess().StartTime);
+        autosave.Failed += reason => status.Show($"Couldn't autosave: {reason}");
         // M3a: construction lines above this line.
         return new MainViewModel(session)
         {
@@ -105,6 +115,7 @@ internal static class Composition
             Assets = assets,
             AvatarPreview = avatarPreview,
             Palette = palette,
+            Autosave = autosave,
             // M3a: required members above this line.
         };
     }

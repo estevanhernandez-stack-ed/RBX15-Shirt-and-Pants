@@ -178,4 +178,88 @@ public partial class ProjectIOTests
         AssertSameDocument(doc, back.Document);
         Assert.Equal(10, back.NextId);
     }
+
+    /// <summary>A noisy RGBA image (a PNG of it does not compress to nothing), so an encode takes real time.</summary>
+    static SKImage Noise(int size, int seed)
+    {
+        var rng = new Random(seed);
+        var pixels = new byte[size * size * 4];
+        rng.NextBytes(pixels);
+        for (int i = 3; i < pixels.Length; i += 4) pixels[i] = 255;
+        return SKImage.FromPixelCopy(new SKImageInfo(size, size, SKColorType.Rgba8888, SKAlphaType.Unpremul), pixels);
+    }
+
+    [Fact] // M5 item 2: a 60 s autosave of an unchanged document re-encodes nothing; each image encodes once
+    public void Encoding_the_same_image_twice_through_Write_encodes_once()
+    {
+        var layerA = Px.Solid(6, 6, SKColors.Red);
+        var layerB = Px.Solid(6, 6, SKColors.Blue);
+        var doc = new Document
+        {
+            BgImage = Px.Solid(3, 3, SKColors.Green),
+            Layers = ImmutableList.Create(new Layer { Id = 1, Image = layerA }, new Layer { Id = 2, Image = layerB }),
+        };
+
+        int before = ProjectIO.PngEncodesOnThisThread;
+        var first = ProjectIO.Write(doc, Pinned);
+        Assert.Equal(3, ProjectIO.PngEncodesOnThisThread - before);
+
+        var second = ProjectIO.Write(doc, Pinned);
+        var edited = doc with { ShowGrid = true, Layers = doc.Layers.SetItem(0, doc.Layers[0] with { X = 4 }) };   // a new Document over the same images
+        var third = ProjectIO.Write(edited, Pinned);
+        Assert.Equal(3, ProjectIO.PngEncodesOnThisThread - before);
+        Assert.Equal(first, second);
+        Assert.NotEqual(first, third);
+        Assert.Equal(JsonNode.Parse(first)!["layers"]!.AsArray().Select(l => (string?)l!["imgSrc"]),
+                     JsonNode.Parse(third)!["layers"]!.AsArray().Select(l => (string?)l!["imgSrc"]));
+
+        var added = edited with { Layers = edited.Layers.Add(new Layer { Id = 3, Image = Px.Solid(6, 6, SKColors.Yellow) }) };
+        ProjectIO.Write(added, Pinned);
+        Assert.Equal(4, ProjectIO.PngEncodesOnThisThread - before);   // only the new image encodes
+    }
+
+    [Fact] // M5 item 2 risk: autosave encodes on a pool thread while the UI thread renders the same images; both only read
+    public async Task Writing_on_a_pool_thread_while_the_UI_thread_renders_the_same_images_agrees_with_both()
+    {
+        var doc = new Document
+        {
+            Layers = ImmutableList.Create(
+                new Layer { Id = 1, Image = Noise(512, 1), X = 20, Y = 30 },
+                new Layer { Id = 2, Image = Noise(512, 2), X = 100, Y = 90, Rotation = 17 },
+                new Layer { Id = 3, Image = Noise(512, 3), X = 200, Y = 150, Opacity = 0.6 }),
+        };
+        var expectedExport = Renderer.ExportPng(doc);
+
+        using var started = new ManualResetEventSlim();
+        var write = Task.Run(() =>
+        {
+            started.Set();
+            return ProjectIO.Write(doc, Pinned);
+        });
+        started.Wait();
+        int frames = 0;
+        do
+        {
+            Assert.Equal(expectedExport, Renderer.ExportPng(doc));
+            frames++;
+        } while (!write.IsCompleted || frames < 3);
+
+        var back = ProjectIO.Read(await write);
+        Assert.True(SameContent(doc, back.Document));
+        foreach (var layer in back.Document.Layers) layer.Image.Dispose();
+    }
+
+    /// <summary>Layer data and pixels equal (ContentEquals compares images by reference, which a decode never keeps).</summary>
+    static bool SameContent(Document a, Document b)
+    {
+        if (a.Layers.Count != b.Layers.Count) return false;
+        for (int i = 0; i < a.Layers.Count; i++)
+        {
+            if (a.Layers[i] != (b.Layers[i] with { Image = a.Layers[i].Image })) return false;
+            using var x = a.Layers[i].Image.Encode(SKEncodedImageFormat.Png, 100);
+            using var y = b.Layers[i].Image.Encode(SKEncodedImageFormat.Png, 100);
+            if (!x.AsSpan().SequenceEqual(y.AsSpan())) return false;
+        }
+        return true;
+    }
 }

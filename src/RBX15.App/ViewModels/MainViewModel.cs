@@ -128,4 +128,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     /// <summary>The colors of the user's art (ledger art-palette, new): the Brush group's Palette button and the picker's "From your art" row.</summary>
     public required ArtPalette Palette { get; init; }
+
+    /// <summary>Autosave (M5 item 2): the 60 s copy of unsaved work. The window's real close deletes it; the crash handler writes it once more.</summary>
+    public required AutosaveService Autosave { get; init; }
 }

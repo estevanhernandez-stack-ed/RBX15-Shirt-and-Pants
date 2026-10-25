@@ -50,17 +50,17 @@ public partial class App : Application
         _crash!.EmergencyAutosave = main.Autosave.WriteNow;
         MainWindow = new MainWindow(main, settings);
         MainWindow.Show();
-        RunStartupFlow(main);
+        RunStartupFlow(main, LaunchArguments.Parse(e.Args));
     }
 
     /// <summary>
-    /// M5 item 3: once the window is up, its recovery prompt (R1). Queued behind the first render, so the window is on screen under the
+    /// M5 items 3 and 4: once the window is up, its recovery prompt (R1), then the file the launch named. Queued behind the first render, so the window is on screen under the
     /// dialog. An exception past the flow's own handling is a crash like any other: the dispatcher handler logs it.
     /// </summary>
-    static async void RunStartupFlow(MainViewModel main)
+    static async void RunStartupFlow(MainViewModel main, string? launchPath)
     {
         await Dispatcher.Yield(DispatcherPriority.Loaded);
-        await main.Startup.RecoverAsync();
+        await main.Startup.RunAsync(launchPath);
     }
 
     /// <summary>

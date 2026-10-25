@@ -22,7 +22,7 @@ public enum RecoveryOutcome
 
 /// <summary>
 /// What the app does once the window is up (M5 item 3), as a class of its own so the order is tested without starting the app:
-/// the crash-recovery prompt comes first, before any other prompt (decision R1). Item 4 adds the launch file after it.
+/// the crash-recovery prompt comes first, before any other prompt (decision R1). The launch file (item 4) follows it.
 /// <list type="bullet">
 /// <item>One prompt per launch, the newest orphan first (R2). The orphan is claimed before it is asked about, so two launches never
 ///   offer the same file; one lost to another launch gives way to the next. The rest wait for later launches.</item>
@@ -31,6 +31,9 @@ public enum RecoveryOutcome
 ///   Discard deletes the pair. Later, and a restore that cannot read the file (<see cref="DialogText.LoadFailed"/>), give the pair
 ///   back to the dead owner's name untouched.</item>
 /// </list>
+/// The launch file comes after recovery (item 4; decisions S1, R3). Every launch is its own process and window, so a second project
+/// is another launch and nothing here looks for a running instance. With work restored into this window the launched file goes to
+/// <see cref="IAppLauncher"/> as a new window; otherwise (nothing to recover, Discard, Later) it opens here.
 /// </summary>
 public sealed class StartupFlow
 {
@@ -39,23 +42,51 @@ public sealed class StartupFlow
     readonly IDialogService _dialogs;
     readonly IStatus _status;
     readonly ProjectFileService _files;
+    readonly IAppLauncher _launcher;
     readonly string _sessionId;
     readonly Action<IReadOnlyCollection<SKImage>> _release;
 
     /// <param name="sessionId">This window's autosave session id: the claimed pair is renamed to it.</param>
     /// <param name="release">Frees images nothing references any more; by default <see cref="ProjectFileService.ReleaseOnIdle"/>.</param>
     public StartupFlow(EditorSession session, RecoveryService recovery, IDialogService dialogs, IStatus status, ProjectFileService files,
-        string sessionId, Action<IReadOnlyCollection<SKImage>>? release = null)
+        IAppLauncher launcher, string sessionId, Action<IReadOnlyCollection<SKImage>>? release = null)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(recovery);
         ArgumentNullException.ThrowIfNull(dialogs);
         ArgumentNullException.ThrowIfNull(status);
         ArgumentNullException.ThrowIfNull(files);
+        ArgumentNullException.ThrowIfNull(launcher);
         ArgumentException.ThrowIfNullOrEmpty(sessionId);
-        (_session, _recovery, _dialogs, _status, _files, _sessionId) = (session, recovery, dialogs, status, files, sessionId);
+        (_session, _recovery, _dialogs, _status, _files, _launcher, _sessionId) = (session, recovery, dialogs, status, files, launcher, sessionId);
         var dispatcher = System.Windows.Threading.Dispatcher.CurrentDispatcher;
         _release = release ?? (images => ProjectFileService.ReleaseOnIdle(dispatcher, images));
+    }
+
+    /// <summary>
+    /// The whole launch: recovery, then <paramref name="launchPath"/> (from <see cref="LaunchArguments.Parse"/>) when the launch named one.
+    /// A file that fails to open is the existing <see cref="DialogText.LoadFailed"/> alert over the document already there. UI thread.
+    /// </summary>
+    public async Task<RecoveryOutcome> RunAsync(string? launchPath)
+    {
+        var outcome = await RecoverAsync();
+        if (launchPath is null) return outcome;
+        if (outcome == RecoveryOutcome.Restored)
+        {
+            try
+            {
+                _launcher.Open(launchPath);
+            }
+            catch (Exception e) when (e is System.ComponentModel.Win32Exception or InvalidOperationException or IOException or UnauthorizedAccessException)
+            {
+                _dialogs.Alert(DialogText.LoadFailed(e.Message));
+            }
+        }
+        else
+        {
+            await _files.OpenAsync(launchPath);
+        }
+        return outcome;
     }
 
     /// <summary>The recovery step. UI thread.</summary>

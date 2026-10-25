@@ -37,6 +37,20 @@ internal static class HomeTestKit
         };
     }
 
+    /// <summary>The Layout tab (shown as "Background") over fakes: Presets, Background, Fill Style and Template Regions.</summary>
+    public static LayoutViewModel Layout(EditorSession session, FakeColorPicker? picker = null)
+    {
+        var colors = picker ?? new FakeColorPicker();
+        var fillStyle = new FillStyleViewModel(session, colors);
+        return new LayoutViewModel
+        {
+            Presets = new PresetsViewModel(session, () => new Random(1)),
+            Background = new BackgroundViewModel(session, colors, new FakeFileDialogs(), new FakeStatus()),
+            FillStyle = fillStyle,
+            Regions = new RegionsGroupViewModel(session, fillStyle),
+        };
+    }
+
     /// <summary>A File group over fakes, with its own project-file service (M4a Task 1 added the last constructor argument).</summary>
     public static FileGroupViewModel FileGroup(EditorSession session, IFileDialogs files, IDialogService dialogs, IStatus status) =>
         new(session, files, dialogs, status, new ImportService(session, status), new ProjectFileService(session, files, dialogs, status, new FakeSettingsStore()));

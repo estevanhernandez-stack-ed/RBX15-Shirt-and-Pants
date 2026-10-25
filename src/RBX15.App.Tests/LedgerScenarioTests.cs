@@ -842,7 +842,7 @@ public sealed partial class LedgerScenarioTests : IDisposable
         canvas.PointerUp(new Point(230, 170), 1);
         Assert.Equal(3, s.UndoCount);
 
-        main.Home.Regions.Body.Single(t => t.Region == "torso_front").PaintCommand.Execute(null);
+        main.Layout.Regions.Body.Single(t => t.Region == "torso_front").PaintCommand.Execute(null);
         // 200x100 into torso_front (231, 74, 128x128): scale 0.544, x 240.6, y 110.8, rotation 0 (editor.js:1658-1667)
         Assert.Equal(54.4, props.ScalePercent, 9);
         Assert.Equal("54%", props.ScaleLabel);
@@ -1261,18 +1261,18 @@ public sealed partial class LedgerScenarioTests : IDisposable
     public void Opening_a_project_with_a_camo_region_leaves_fill_style_at_its_defaults() => StaThread.Run(() =>
     {
         // fillstyle-ui-not-synced-from-region (editor.js:1599-1613, :2594-2690): the Fill Style controls never read back
-        // from a region, a project load or an undo. M4b item 3 (F1): the group stays on Home, so it is main.Home.FillStyle.
+        // from a region, a project load or an undo. Since 2026-10-25 the group is on the Layout (Background) tab, so it is main.Layout.FillStyle.
         var camo = new Fill("camo", "#556b2f", "#c2b280", 33, 24);
         string path = WriteText("camo.r15proj", ProjectIO.Write(DocumentOps.PaintRegion(new Document(), "torso_front", camo), DateTimeOffset.UnixEpoch));
         var (s, main, _, _, _) = Shell4a();
-        var style = main.Home.FillStyle;
+        var style = main.Layout.FillStyle;
         Assert.Equal(("solid", "#17d4fa", "#f22f89", 45.0, 16.0), (style.Type, style.Color1, style.Color2, style.Angle, style.Scale));
 
         Assert.True(Await(main.Files.OpenAsync(path)));
 
         var loaded = DocumentOps.RegionFill(s.Document, "torso_front")!;     // the camo region really opened ...
         Assert.Equal(("camo", "#556b2f", "#c2b280", 33.0, 24.0), (loaded.Type, loaded.C1, loaded.C2, loaded.Angle, loaded.Scale));
-        Assert.Equal("camo", main.Home.Regions.Body.Single(t => t.Region == "torso_front").Fill!.Type);
+        Assert.Equal("camo", main.Layout.Regions.Body.Single(t => t.Region == "torso_front").Fill!.Type);
         Assert.Equal(FillStyleViewModel.DefaultFill, style.Current);        // ... and the controls did not move
         Assert.Equal(("solid", "#17d4fa", "#f22f89", 45.0, 16.0), (style.Type, style.Color1, style.Color2, style.Angle, style.Scale));
 

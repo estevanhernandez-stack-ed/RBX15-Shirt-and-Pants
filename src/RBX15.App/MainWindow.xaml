@@ -117,7 +117,7 @@
                       KeyboardNavigation.TabNavigation="Continue" KeyboardNavigation.DirectionalNavigation="None">
             <RadioButton x:Name="HomeTab" Style="{StaticResource RibbonTab}" Content="Home" AutomationProperties.Name="Home tab"
                          IsChecked="{Binding ActiveTab, Mode=TwoWay, Converter={StaticResource TabMatch}, ConverterParameter=Home}" />
-            <RadioButton x:Name="LayoutTab" Style="{StaticResource RibbonTab}" Content="Layout" AutomationProperties.Name="Layout tab"
+            <RadioButton x:Name="LayoutTab" Style="{StaticResource RibbonTab}" Content="Background" AutomationProperties.Name="Background tab"
                          IsChecked="{Binding ActiveTab, Mode=TwoWay, Converter={StaticResource TabMatch}, ConverterParameter=Layout}" />
             <RadioButton x:Name="DetailsTab" Style="{StaticResource RibbonTab}" Content="Details" AutomationProperties.Name="Details tab"
                          IsChecked="{Binding ActiveTab, Mode=TwoWay, Converter={StaticResource TabMatch}, ConverterParameter=Details}" />

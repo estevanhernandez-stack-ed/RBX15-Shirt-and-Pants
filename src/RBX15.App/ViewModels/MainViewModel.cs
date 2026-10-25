@@ -88,7 +88,7 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>The Home tab (Task 3).</summary>
     public required HomeViewModel Home { get; init; }
 
-    /// <summary>The Layout tab (M4b item 5: Presets; item 6 adds Background and BG Settings).</summary>
+    /// <summary>The Layout tab, shown as "Background" (M4b item 5: Presets; item 6: Background and BG Settings; Fill Style and Template Regions since 2026-10-25).</summary>
     public required LayoutViewModel Layout { get; init; }
 
     /// <summary>The Details tab (M4b item 7): stroke settings and the 16 detail buttons.</summary>

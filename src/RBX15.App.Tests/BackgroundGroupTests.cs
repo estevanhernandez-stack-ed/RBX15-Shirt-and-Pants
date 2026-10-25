@@ -773,7 +773,8 @@ public class BackgroundGroupTests
         Layout(pane);
 
         var groups = (StackPanel)pane.FindName("Groups");
-        Assert.Equal(new[] { typeof(PresetsGroup), typeof(BackgroundGroup), typeof(BgSettingsGroup) }, groups.Children.Cast<object>().Select(c => c.GetType()));
+        Assert.Equal(new[] { typeof(PresetsGroup), typeof(BackgroundGroup), typeof(BgSettingsGroup), typeof(FillStyleGroup), typeof(RegionsGrid) },
+            groups.Children.Cast<object>().Select(c => c.GetType()));   // Fill Style and the regions since 2026-10-25, as on 4.1's Layout tab
         Assert.Equal(Visibility.Collapsed, ((FrameworkElement)pane.FindName("Presets")).Visibility);
         Assert.Equal(Visibility.Visible, ((FrameworkElement)pane.FindName("BackgroundSwatches")).Visibility);
         Assert.Equal(Visibility.Visible, ((FrameworkElement)pane.FindName("BgSettings")).Visibility);

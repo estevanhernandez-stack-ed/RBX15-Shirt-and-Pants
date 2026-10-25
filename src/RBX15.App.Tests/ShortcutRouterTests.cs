@@ -46,7 +46,7 @@ public class ShortcutRouterTests
         var list = (ListBox)layers.FindName("LayerList");
         var row = (ListBoxItem)list.ItemContainerGenerator.ContainerFromIndex(0);
 
-        var regions = new RegionsGrid { DataContext = Home(new EditorSession()).Regions };
+        var regions = new RegionsGrid { DataContext = Layout(new EditorSession()).Regions };
         Arrange(regions, 900, 300);
         var tile = Descendants<Button>(regions).First(b => b.DataContext is RegionTileViewModel);
 

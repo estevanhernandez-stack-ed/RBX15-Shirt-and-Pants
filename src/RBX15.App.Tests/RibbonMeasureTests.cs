@@ -67,8 +67,8 @@ public class RibbonMeasureTests
         .Select(t => t.Text)
         .ToArray();
 
-    [Fact] // R1 + shell-layout-skeleton: one ribbon height on every tab; Layout, Details and Text fit 1200. HOLD: Home does not (it scrolls, as 4.1's does)
-    public void The_ribbon_has_one_height_and_the_panes_fit_1200_except_Home_which_scrolls() => StaThread.Run(() =>
+    [Fact] // R1 + shell-layout-skeleton: one ribbon height on every tab; Details and Text fit 1200; Home and Layout scroll, as both did in 4.1
+    public void The_ribbon_has_one_height_and_Home_and_Layout_scroll_at_1200_as_in_4_1() => StaThread.Run(() =>
     {
         var w = Shell();
         var ribbon = (FrameworkElement)w.FindName("Ribbon");
@@ -116,23 +116,26 @@ public class RibbonMeasureTests
         Assert.Equal(tallest, fixedHeight, 1);                 // the fixed height is the tallest pane's, nothing taller
         Assert.Equal(RibbonTab.Text, paneHeights.MaxBy(kv => kv.Value).Key);
         Assert.Equal((FixedPaneHeight, RibbonHeight), (fixedHeight, ribbon.ActualHeight));
-        foreach (var tab in new[] { RibbonTab.Layout, RibbonTab.Details, RibbonTab.Text })
+        foreach (var tab in new[] { RibbonTab.Details, RibbonTab.Text })
             Assert.True(measured[tab].Width <= paneHost.ActualWidth, $"{tab} needs {measured[tab].Width} DIP; the ribbon is {paneHost.ActualWidth}");
 
-        // HOLD: Home carries Fill Style and the region grid (F1) on top of 4.1's Home, so it needs ~2184 DIP where 4.1's Home needed 1432 and scrolled
-        // in a 1184 client too (ribbon-overflow-hscroll, keep; ShellLookTests look note 1). Fitting it is a look change with no 4.1 source,
-        // so it is measured here and left scrolling; Este rules on it at the look sign-off.
-        Assert.True(measured[RibbonTab.Home].Width > paneHost.ActualWidth);
-        var scroller = Descendants<ScrollViewer>(panes[RibbonTab.Home]).First();
-        Assert.Equal(Visibility.Visible, scroller.ComputedHorizontalScrollBarVisibility);
+        // Home (about 1455 DIP; 4.1's needed 1432) and Layout, with Fill Style and the region grid back on it (Este, 2026-10-25, reversing F1;
+        // about 1460), are wider than a 1184 client, and both scrolled there in 4.1 too: the look page's 4.1 captures at 1184 show a 10 px
+        // scrollbar on each (ribbon-overflow-hscroll, keep; ShellLookTests look note 1).
+        foreach (var tab in new[] { RibbonTab.Home, RibbonTab.Layout })
+        {
+            Assert.True(measured[tab].Width > paneHost.ActualWidth, $"{tab} needs {measured[tab].Width} DIP");
+            var scroller = Descendants<ScrollViewer>(panes[tab]).First();
+            Assert.Equal(Visibility.Visible, scroller.ComputedHorizontalScrollBarVisibility);
+        }
     });
 
-    [Fact] // ribbon-group-structure: v5's group labels per tab, left to right (F1 puts the fill tool on Home; see the report for the 4.1 differences)
+    [Fact] // ribbon-group-structure: v5's group labels per tab, left to right; Fill Style and the regions end the Layout (Background) tab, as in 4.1
     public void Each_tab_carries_its_groups_labels() => StaThread.Run(() =>
     {
         var w = Shell();
-        Assert.Equal(["MODE", "TOOLS", "BRUSH", "PLACEMENT", "EDIT", "FILE", "SETTINGS", "FILL STYLE", "CLICK REGIONS TO FILL"], Labels(Pane(w, RibbonTab.Home)));
-        Assert.Equal(["PRESETS", "BACKGROUND", "BG SETTINGS"], Labels(Pane(w, RibbonTab.Layout)));
+        Assert.Equal(["MODE", "TOOLS", "BRUSH", "PLACEMENT", "EDIT", "FILE", "SETTINGS"], Labels(Pane(w, RibbonTab.Home)));
+        Assert.Equal(["PRESETS", "BACKGROUND", "BG SETTINGS", "FILL STYLE", "CLICK REGIONS TO FILL"], Labels(Pane(w, RibbonTab.Layout)));
         Assert.Equal(["SETTINGS", "NECKLINE", "EDGES", "SEAMS", "ACCENTS"], Labels(Pane(w, RibbonTab.Details)));
         Assert.Equal(["TEXT", "COLORS & SIZE", "STYLE", "PREVIEW"], Labels(Pane(w, RibbonTab.Text)));
     });

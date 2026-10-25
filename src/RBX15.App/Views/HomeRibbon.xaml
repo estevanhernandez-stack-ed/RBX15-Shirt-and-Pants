@@ -68,9 +68,6 @@
                 </DockPanel>
             </Border>
 
-            <!-- Fill Style and Template Regions: 4.1's Layout tab groups (editor.html:145-171), on Home until M4 -->
-            <views:FillStyleGroup x:Name="FillStyle" DataContext="{Binding FillStyle}" />
-            <views:RegionsGrid x:Name="Regions" DataContext="{Binding Regions}" />
         </StackPanel>
     </ScrollViewer>
 </UserControl>

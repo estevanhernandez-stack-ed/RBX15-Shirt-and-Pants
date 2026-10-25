@@ -62,10 +62,14 @@ internal static class Composition
         Func<Random> placementRng = random ?? (() => Random.Shared);
         var placement = new PlacementViewModel(session, placementRng);
         // M4b item 6: the Background and BG Settings groups edit the document's background through the shared picker, dialogs and status strip.
+        // Fill Style and Template Regions follow them, as on 4.1's Layout tab (Este, 2026-10-25, reversing F1).
+        var fillStyle = new FillStyleViewModel(session, colorPicker);
         var layout = new LayoutViewModel
         {
             Presets = new PresetsViewModel(session, placementRng),
             Background = new BackgroundViewModel(session, colorPicker, fileDialogs, status),
+            FillStyle = fillStyle,
+            Regions = new RegionsGroupViewModel(session, fillStyle),
         };
         var home = new HomeViewModel(session, colorPicker)
         {

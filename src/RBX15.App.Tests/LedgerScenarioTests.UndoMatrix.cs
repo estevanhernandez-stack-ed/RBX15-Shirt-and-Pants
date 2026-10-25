@@ -66,7 +66,7 @@ public sealed partial class LedgerScenarioTests
         }
 
         /// <summary>The body-front region tile (Torso Front, or Waist Front in Pants).</summary>
-        public RegionTileViewModel FrontTile => Main.Home.Regions.Body.Single(t => t.IsFront);
+        public RegionTileViewModel FrontTile => Main.Layout.Regions.Body.Single(t => t.IsFront);
 
         public void Dispose()
         {
@@ -194,17 +194,17 @@ public sealed partial class LedgerScenarioTests
         Add("region paint", null, r => r.FrontTile.PaintCommand.Execute(null), r => r.FrontTile.PaintCommand.Execute(null));
         Add("region fit layer", WithLayer, r => r.FrontTile.PaintCommand.Execute(null), r => r.FrontTile.PaintCommand.Execute(null));
         Add("region clear", r => r.FrontTile.PaintCommand.Execute(null), r => r.FrontTile.ClearCommand.Execute(null), r => r.FrontTile.ClearCommand.Execute(null));
-        Add("region fill ALL", null, r => r.Main.Home.Regions.FillAllCommand.Execute(null), r => r.Main.Home.Regions.FillAllCommand.Execute(null));
-        Add("region clear ALL", r => r.Main.Home.Regions.FillAllCommand.Execute(null), r => r.Main.Home.Regions.ClearAllCommand.Execute(null),
-            r => r.Main.Home.Regions.ClearAllCommand.Execute(null));
-        Action<MatrixRig> painted = r => { r.Main.Home.FillStyle.Type = "linear"; r.FrontTile.PaintCommand.Execute(null); };
-        Add("fill edit type", painted, r => r.Main.Home.FillStyle.Type = "radial", r => r.Main.Home.FillStyle.Type = "radial");
-        Add("fill edit color pick", painted, r => { r.Picker.Answer("#ff0000", "#00ff00"); r.Main.Home.FillStyle.PickColor1Command.Execute(null); },
-            r => { r.Picker.Answer(null, "#123456"); r.Main.Home.FillStyle.PickColor1Command.Execute(null); });
-        Add("fill edit angle drag", painted, r => { using (r.Main.Home.FillStyle.BeginSliderDrag()) { r.Main.Home.FillStyle.Angle = 90; r.Main.Home.FillStyle.Angle = 135; } },
-            r => { using (r.Main.Home.FillStyle.BeginSliderDrag()) r.Main.Home.FillStyle.Angle = 135; });
-        Add("fill edit scale", painted, r => r.Main.Home.FillStyle.Scale = 30, r => r.Main.Home.FillStyle.Scale = 30);
-        Add("fill edit add stop", painted, r => r.Main.Home.FillStyle.AddStopCommand.Execute(null));
+        Add("region fill ALL", null, r => r.Main.Layout.Regions.FillAllCommand.Execute(null), r => r.Main.Layout.Regions.FillAllCommand.Execute(null));
+        Add("region clear ALL", r => r.Main.Layout.Regions.FillAllCommand.Execute(null), r => r.Main.Layout.Regions.ClearAllCommand.Execute(null),
+            r => r.Main.Layout.Regions.ClearAllCommand.Execute(null));
+        Action<MatrixRig> painted = r => { r.Main.Layout.FillStyle.Type = "linear"; r.FrontTile.PaintCommand.Execute(null); };
+        Add("fill edit type", painted, r => r.Main.Layout.FillStyle.Type = "radial", r => r.Main.Layout.FillStyle.Type = "radial");
+        Add("fill edit color pick", painted, r => { r.Picker.Answer("#ff0000", "#00ff00"); r.Main.Layout.FillStyle.PickColor1Command.Execute(null); },
+            r => { r.Picker.Answer(null, "#123456"); r.Main.Layout.FillStyle.PickColor1Command.Execute(null); });
+        Add("fill edit angle drag", painted, r => { using (r.Main.Layout.FillStyle.BeginSliderDrag()) { r.Main.Layout.FillStyle.Angle = 90; r.Main.Layout.FillStyle.Angle = 135; } },
+            r => { using (r.Main.Layout.FillStyle.BeginSliderDrag()) r.Main.Layout.FillStyle.Angle = 135; });
+        Add("fill edit scale", painted, r => r.Main.Layout.FillStyle.Scale = 30, r => r.Main.Layout.FillStyle.Scale = 30);
+        Add("fill edit add stop", painted, r => r.Main.Layout.FillStyle.AddStopCommand.Execute(null));
 
         // -- the Selected layer panel --
         Add("flip horizontal", WithLayer, r => r.Main.LayerProperties.FlipHCommand.Execute(null));
@@ -370,11 +370,11 @@ public sealed partial class LedgerScenarioTests
         ["brush size"] = new(r => r.Main.Home.Brush.Size = 17, r => r.Main.Home.Brush.Size, 17),
         ["brush color"] = new(r => r.Main.Home.Brush.Color = "#123456", r => r.Main.Home.Brush.Color, "#123456"),
         ["brush fill"] = new(r => r.Main.Home.Brush.Fill = true, r => r.Main.Home.Brush.Fill, true),
-        ["fill style type"] = new(r => r.Main.Home.FillStyle.Type = "checker", r => r.Main.Home.FillStyle.Type, "checker"),
-        ["fill style colors"] = new(r => { r.Main.Home.FillStyle.Color1 = "#102030"; r.Main.Home.FillStyle.Color2 = "#405060"; },
-            r => (r.Main.Home.FillStyle.Color1, r.Main.Home.FillStyle.Color2), ("#102030", "#405060")),
-        ["fill style angle and scale"] = new(r => { r.Main.Home.FillStyle.Angle = 77; r.Main.Home.FillStyle.Scale = 22; },
-            r => (r.Main.Home.FillStyle.Angle, r.Main.Home.FillStyle.Scale), (77.0, 22.0)),
+        ["fill style type"] = new(r => r.Main.Layout.FillStyle.Type = "checker", r => r.Main.Layout.FillStyle.Type, "checker"),
+        ["fill style colors"] = new(r => { r.Main.Layout.FillStyle.Color1 = "#102030"; r.Main.Layout.FillStyle.Color2 = "#405060"; },
+            r => (r.Main.Layout.FillStyle.Color1, r.Main.Layout.FillStyle.Color2), ("#102030", "#405060")),
+        ["fill style angle and scale"] = new(r => { r.Main.Layout.FillStyle.Angle = 77; r.Main.Layout.FillStyle.Scale = 22; },
+            r => (r.Main.Layout.FillStyle.Angle, r.Main.Layout.FillStyle.Scale), (77.0, 22.0)),
         ["detail color"] = new(r => r.Main.Details.Color = "#ff8800", r => r.Main.Details.Color, "#ff8800"),
         ["detail width and stitch"] = new(r => { r.Main.Details.Width = 6; r.Main.Details.Stitch = true; },
             r => (r.Main.Details.Width, r.Main.Details.Stitch), (6, true)),
@@ -424,7 +424,7 @@ public sealed partial class LedgerScenarioTests
     {
         // file-undo-snapshot-scope: the edit that retargets painted regions is a step; the setting it changed is not part of that step.
         using var r = new MatrixRig(TemplateMode.Shirt, WritePng("matrix.png", 60, 40, Slate));
-        var fillStyle = r.Main.Home.FillStyle;
+        var fillStyle = r.Main.Layout.FillStyle;
         fillStyle.Type = "linear";
         r.FrontTile.PaintCommand.Execute(null);
         var painted = r.S.Document;

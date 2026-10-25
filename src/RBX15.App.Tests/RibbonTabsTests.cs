@@ -53,13 +53,13 @@ public class RibbonTabsTests
     static void Select(RadioButton tab) =>
         ((ISelectionItemProvider)UIElementAutomationPeer.CreatePeerForElement(tab).GetPattern(PatternInterface.SelectionItem)).Select();
 
-    [Fact] // the tabs are Home, Layout, Details, Text in 4.1's order; the window starts on Home
+    [Fact] // the tabs are 4.1's, in its order; the Layout tab reads "Background" (Este, 2026-10-25); the window starts on Home
     public void The_window_starts_on_Home_with_four_tabs_in_4_1s_order() => StaThread.Run(() =>
     {
         var w = Built();
         var tabs = ((StackPanel)w.FindName("RibbonTabs")).Children.OfType<RadioButton>().ToArray();
-        Assert.Equal(["Home", "Layout", "Details", "Text"], tabs.Select(t => (string)t.Content));
-        Assert.Equal(["Home tab", "Layout tab", "Details tab", "Text tab"], tabs.Select(AutomationProperties.GetName));
+        Assert.Equal(["Home", "Background", "Details", "Text"], tabs.Select(t => (string)t.Content));
+        Assert.Equal(["Home tab", "Background tab", "Details tab", "Text tab"], tabs.Select(AutomationProperties.GetName));
         Assert.Equal(RibbonTab.Home, w.ViewModel.ActiveTab);
         Assert.Equal([RibbonTab.Home], Checked(w));
         Assert.Equal([RibbonTab.Home], Visible(w));
@@ -234,13 +234,13 @@ public class RibbonTabsTests
         {
             var hwnd = StaThread.Run(() => new WindowInteropHelper(w).Handle);
             var root = AutomationElement.FromHandle(hwnd);
-            foreach (var name in new[] { "Home tab", "Layout tab", "Details tab", "Text tab" })
+            foreach (var name in new[] { "Home tab", "Background tab", "Details tab", "Text tab" })
             {
                 var tab = root.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, name));
                 Assert.NotNull(tab);
                 Assert.False(tab.Current.IsOffscreen);
             }
-            var layoutTab = root.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, "Layout tab"));
+            var layoutTab = root.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, "Background tab"));
             ((SelectionItemPattern)layoutTab.GetCurrentPattern(SelectionItemPattern.Pattern)).Select();
             var offscreen = StaThread.Run(() =>
             {

@@ -34,6 +34,17 @@ public class HomeRibbonViewTests
         return view;
     }
 
+    // Fill Style and Template Regions are on the Layout tab, shown as "Background" (Este, 2026-10-25, reversing F1).
+    static LayoutRibbon Load(LayoutViewModel layout)
+    {
+        var view = new LayoutRibbon { DataContext = layout };
+        StaThread.Pump();
+        view.Measure(new Size(3000, 200));
+        view.Arrange(new Rect(0, 0, 3000, 200));
+        view.UpdateLayout();
+        return view;
+    }
+
     static IEnumerable<T> Descendants<T>(DependencyObject root) where T : DependencyObject
     {
         for (int i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
@@ -44,13 +55,13 @@ public class HomeRibbonViewTests
         }
     }
 
-    static Button[] Tiles(HomeRibbon view) =>
+    static Button[] Tiles(FrameworkElement view) =>
         Descendants<Button>(view).Where(b => b.DataContext is RegionTileViewModel).ToArray();
 
     [Fact] // regions-grid-layout-shirt parityCheck (4.1's 14 tiles) plus the limbs' Top and Bot (regions-limb-caps): 18, every region
     public void The_grid_shows_all_eighteen_named_focusable_tiles() => StaThread.Run(() =>
     {
-        var view = Load(Home(new EditorSession()));
+        var view = Load(Layout(new EditorSession()));
         var tiles = Tiles(view);
 
         Assert.Equal(18, tiles.Length);
@@ -65,8 +76,8 @@ public class HomeRibbonViewTests
     public void A_tile_clears_on_right_click_and_from_the_keyboard() => StaThread.Run(() =>
     {
         var session = new EditorSession();
-        var home = Home(session);
-        var view = Load(home);
+        var layout = Layout(session);
+        var view = Load(layout);
         var front = Tiles(view).Single(t => ((RegionTileViewModel)t.DataContext).Region == "torso_front");
 
         var gestures = front.InputBindings.Cast<InputBinding>().Select(b => b.Gesture switch
@@ -78,26 +89,26 @@ public class HomeRibbonViewTests
         Assert.Equal(new[] { "RightClick", "Delete", "Shift+F10", "Apps" }, gestures);
 
         front.Command.Execute(null);
-        Assert.NotNull(Tile(home.Regions, "torso_front").Fill);
+        Assert.NotNull(Tile(layout.Regions, "torso_front").Fill);
         front.InputBindings.OfType<MouseBinding>().Single().Command.Execute(null);
-        Assert.Null(Tile(home.Regions, "torso_front").Fill);
+        Assert.Null(Tile(layout.Regions, "torso_front").Fill);
     });
 
     [Fact] // region-front-highlight-lost fix: after paint then clear, Front rests on #2a1040 again
     public void The_front_tile_keeps_its_tint_after_paint_and_clear() => StaThread.Run(() =>
     {
         var session = new EditorSession();
-        var home = Home(session);
-        var view = Load(home);
+        var layout = Layout(session);
+        var view = Load(layout);
         Border Bd() => (Border)Tiles(view).Single(t => ((RegionTileViewModel)t.DataContext).IsFront).Template
             .FindName("Bd", Tiles(view).Single(t => ((RegionTileViewModel)t.DataContext).IsFront));
         var tint = (Color)ColorConverter.ConvertFromString("#2A1040");
 
         Assert.Equal(tint, ((SolidColorBrush)Bd().Background).Color);
-        Tile(home.Regions, "torso_front").PaintCommand.Execute(null);
+        Tile(layout.Regions, "torso_front").PaintCommand.Execute(null);
         view.UpdateLayout();
         Assert.Equal(Colors.Transparent, ((SolidColorBrush)Bd().Background).Color);
-        Tile(home.Regions, "torso_front").ClearCommand.Execute(null);
+        Tile(layout.Regions, "torso_front").ClearCommand.Execute(null);
         view.UpdateLayout();
         Assert.Equal(tint, ((SolidColorBrush)Bd().Background).Color);
     });
@@ -105,14 +116,14 @@ public class HomeRibbonViewTests
     [Fact] // the type list's selection is FillStyle.Type, both ways
     public void The_fill_type_list_tracks_the_current_type() => StaThread.Run(() =>
     {
-        var home = Home(new EditorSession());
-        var view = Load(home);
+        var layout = Layout(new EditorSession());
+        var view = Load(layout);
         var list = Descendants<ListBox>(view).Single(l => AutomationProperties.GetName(l) == "Fill type");
 
         Assert.Equal("solid", list.SelectedValue);
         list.SelectedIndex = 6;
-        Assert.Equal("camo", home.FillStyle.Type);
-        home.FillStyle.SetTypeCommand.Execute("dots");
+        Assert.Equal("camo", layout.FillStyle.Type);
+        layout.FillStyle.SetTypeCommand.Execute("dots");
         Assert.Equal(5, list.SelectedIndex);
     });
 
@@ -120,12 +131,12 @@ public class HomeRibbonViewTests
     public void Each_fill_type_button_sets_the_type_and_is_the_only_active_one() => StaThread.Run(() =>
     {
         var session = new EditorSession();
-        var home = Home(session);
-        var view = Load(home);
+        var layout = Layout(session);
+        var view = Load(layout);
         var list = Descendants<ListBox>(view).Single(l => AutomationProperties.GetName(l) == "Fill type");
-        Tile(home.Regions, "torso_front").PaintCommand.Execute(null);
+        Tile(layout.Regions, "torso_front").PaintCommand.Execute(null);
         string[] types = ["solid", "linear", "radial", "stripes", "checker", "dots", "camo"];
-        Assert.Equal(types, home.FillStyle.Types.Select(t => t.Type));
+        Assert.Equal(types, layout.FillStyle.Types.Select(t => t.Type));
         Assert.Equal(7, list.Items.Count);
 
         foreach (int i in new[] { 1, 2, 3, 4, 5, 6, 0 })
@@ -134,8 +145,8 @@ public class HomeRibbonViewTests
             item.IsSelected = true;                                           // the click's effect on a single-selection list
             StaThread.Pump();
 
-            Assert.Equal(types[i], home.FillStyle.Type);
-            Assert.Equal(types[i], home.FillStyle.Current.Type);
+            Assert.Equal(types[i], layout.FillStyle.Type);
+            Assert.Equal(types[i], layout.FillStyle.Current.Type);
             Assert.Single(list.SelectedItems);                                // exclusive: one active button
             Assert.Equal(new[] { i }, Enumerable.Range(0, 7).Where(k => ((ListBoxItem)list.ItemContainerGenerator.ContainerFromIndex(k)).IsSelected));
             Assert.Equal(types[i], RBX15.Engine.DocumentOps.RegionFill(session.Document, "torso_front")!.Type);   // the painted region adopts the new type
@@ -145,8 +156,8 @@ public class HomeRibbonViewTests
     [Fact] // fillstyle-angle-scale parityCheck: bounds and defaults through the sliders' automation names
     public void The_angle_and_scale_sliders_have_4_1s_bounds_defaults_and_whole_steps() => StaThread.Run(() =>
     {
-        var home = Home(new EditorSession());
-        var view = Load(home);
+        var layout = Layout(new EditorSession());
+        var view = Load(layout);
         var angle = Descendants<Slider>(view).Single(l => AutomationProperties.GetName(l) == "Angle");
         var scale = Descendants<Slider>(view).Single(l => AutomationProperties.GetName(l) == "Pattern scale");
 
@@ -157,10 +168,10 @@ public class HomeRibbonViewTests
 
         angle.Value = 360;
         scale.Value = 4;
-        Assert.Equal((360.0, 4.0), (home.FillStyle.Angle, home.FillStyle.Scale));
+        Assert.Equal((360.0, 4.0), (layout.FillStyle.Angle, layout.FillStyle.Scale));
         angle.Value = 400;                                                    // past the range: the slider clamps
         scale.Value = 99;
-        Assert.Equal((360.0, 48.0), (home.FillStyle.Angle, home.FillStyle.Scale));
+        Assert.Equal((360.0, 48.0), (layout.FillStyle.Angle, layout.FillStyle.Scale));
     });
 
     [Fact] // home-mode-toggle parityCheck: the click flips the label SHIRT <-> PANTS and the gradient direction cyan->magenta <-> magenta->cyan
@@ -189,12 +200,12 @@ public class HomeRibbonViewTests
         Assert.Equal(("SHIRT", cyan, magenta), Look());
     });
 
-    [Fact] // home-mode-toggle's region-label half, on the ribbon: the visible limb headings follow the mode (F1: the grid stays on Home)
+    [Fact] // layout-mode-toggle's region-label half, on the ribbon: the visible limb headings follow the mode (the grid is on the Background tab)
     public void The_limb_headings_on_the_ribbon_follow_the_mode() => StaThread.Run(() =>
     {
         var session = new EditorSession();
-        var home = Home(session);
-        var view = Load(home);
+        var layout = Layout(session);
+        var view = Load(layout);
         string[] Headings() => Descendants<TextBlock>(view)
             .Where(t => t.Text is "Right Arm" or "Left Arm" or "Right Leg" or "Left Leg")
             .Select(t => t.Text).Order().ToArray();
@@ -235,7 +246,7 @@ public class HomeRibbonViewTests
         Descendants<TextBox>(view).Single().Text = "Hoodie";
         Assert.Equal("Hoodie", session.TemplateTitle);
 
-        Assert.Equal(new[] { "MODE", "TOOLS", "BRUSH", "EDIT", "SETTINGS", "FILL STYLE", "CLICK REGIONS TO FILL" },
+        Assert.Equal(new[] { "MODE", "TOOLS", "BRUSH", "EDIT", "SETTINGS" },
             texts.Where(t => t is "MODE" or "TOOLS" or "BRUSH" or "PLACEMENT" or "EDIT" or "SETTINGS" or "FILL STYLE" or "CLICK REGIONS TO FILL"));
         Assert.Contains(buttons, b => b.Content is "Draw");
         Assert.Equal(Visibility.Collapsed, ((UserControl)view.FindName("Placement")).Visibility);   // nothing selected
@@ -243,18 +254,29 @@ public class HomeRibbonViewTests
         Assert.Contains(buttons, b => b.Content is "Keys: ON");
         Assert.Contains(buttons, b => b.Content is "Save work");
         Assert.Contains(buttons, b => b.Content is "Open");
+        Assert.DoesNotContain("Set a style, then click a region to paint it. Right-click clears.", texts);   // the fill groups are on Background
+    });
+
+    [Fact] // Este, 2026-10-25 (reversing F1): the Background tab holds 4.1's Layout groups in editor.html order, Fill Style and the regions last
+    public void The_background_tab_ends_with_fill_style_and_the_regions() => StaThread.Run(() =>
+    {
+        var view = Load(Layout(new EditorSession()));
+        var texts = Descendants<TextBlock>(view).Select(t => t.Text).ToArray();
+        Assert.Equal(new[] { "BACKGROUND", "FILL STYLE", "CLICK REGIONS TO FILL" },
+            texts.Where(t => t is "BACKGROUND" or "FILL STYLE" or "CLICK REGIONS TO FILL"));
         Assert.Contains("Set a style, then click a region to paint it. Right-click clears.", texts);
+        Assert.Equal(18, Tiles(view).Length);
     });
 
     [Fact] // controller ruling 3: a thumb that loses mouse capture with no DragCompleted still ends the gesture
     public void A_slider_gesture_ends_on_lost_mouse_capture_as_well_as_drag_completed() => StaThread.Run(() =>
     {
         var session = new EditorSession();
-        var home = Home(session);
-        Tile(home.Regions, "torso_front").PaintCommand.Execute(null);
+        var layout = Layout(session);
+        Tile(layout.Regions, "torso_front").PaintCommand.Execute(null);
         // The group with the button held, as during a real press: Mouse.LeftButton always reads up in a test, and
         // SliderGestureTracker ignores a DragStarted that arrives with the button up (M3b Task 3).
-        var group = new FillStyleGroup(() => true) { DataContext = home.FillStyle };
+        var group = new FillStyleGroup(() => true) { DataContext = layout.FillStyle };
         var angle = (Slider)group.FindName("AngleSlider");
 
         void Start() => angle.RaiseEvent(new DragStartedEventArgs(0, 0) { RoutedEvent = Thumb.DragStartedEvent });
@@ -263,17 +285,17 @@ public class HomeRibbonViewTests
 
         // capture lost, no DragCompleted: the drag is one step, and the next edit is its own step
         Start();
-        home.FillStyle.Angle = 60;
-        home.FillStyle.Angle = 70;
+        layout.FillStyle.Angle = 60;
+        layout.FillStyle.Angle = 70;
         Assert.Equal(1, session.UndoCount);
         LoseCapture();
         Assert.Equal(2, session.UndoCount);
-        home.FillStyle.Angle = 80;
+        layout.FillStyle.Angle = 80;
         Assert.Equal(3, session.UndoCount);
 
         // the normal path still works, and the capture loss that follows it is a no-op
         Start();
-        home.FillStyle.Angle = 90;
+        layout.FillStyle.Angle = 90;
         Complete();
         LoseCapture();
         Assert.Equal(4, session.UndoCount);
@@ -283,14 +305,14 @@ public class HomeRibbonViewTests
     public void A_press_already_marked_handled_still_opens_the_fill_style_slider_gesture() => StaThread.Run(() =>
     {
         var session = new EditorSession();
-        var home = Home(session);
-        Tile(home.Regions, "torso_front").PaintCommand.Execute(null);
-        var group = new FillStyleGroup(() => true) { DataContext = home.FillStyle };
+        var layout = Layout(session);
+        Tile(layout.Regions, "torso_front").PaintCommand.Execute(null);
+        var group = new FillStyleGroup(() => true) { DataContext = layout.FillStyle };
         var scale = (Slider)group.FindName("ScaleSlider");
 
         scale.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, Environment.TickCount, MouseButton.Left) { RoutedEvent = UIElement.PreviewMouseLeftButtonDownEvent, Handled = true });
-        home.FillStyle.Scale = 20;
-        home.FillStyle.Scale = 24;
+        layout.FillStyle.Scale = 20;
+        layout.FillStyle.Scale = 24;
         Assert.Equal(1, session.UndoCount);                         // the paint; the drag is open
         scale.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, Environment.TickCount, MouseButton.Left) { RoutedEvent = UIElement.PreviewMouseLeftButtonUpEvent, Handled = true });
         Assert.Equal((2, false), (session.UndoCount, session.InGesture));
@@ -300,15 +322,15 @@ public class HomeRibbonViewTests
     public void A_pressed_slider_is_one_step_however_many_changes_it_repeats() => StaThread.Run(() =>
     {
         var session = new EditorSession();
-        var home = Home(session);
-        Tile(home.Regions, "torso_front").PaintCommand.Execute(null);
+        var layout = Layout(session);
+        Tile(layout.Regions, "torso_front").PaintCommand.Execute(null);
         // The group with the button held, as during a real press: Mouse.LeftButton always reads up in a test, and
         // SliderGestureTracker ignores a DragStarted that arrives with the button up (M3b Task 3).
-        var group = new FillStyleGroup(() => true) { DataContext = home.FillStyle };
+        var group = new FillStyleGroup(() => true) { DataContext = layout.FillStyle };
         var angle = (Slider)group.FindName("AngleSlider");
 
         angle.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, Environment.TickCount, MouseButton.Left) { RoutedEvent = UIElement.PreviewMouseLeftButtonDownEvent });
-        for (int a = 50; a < 80; a++) home.FillStyle.Angle = a;   // the repeat button's LargeChange ticks
+        for (int a = 50; a < 80; a++) layout.FillStyle.Angle = a;   // the repeat button's LargeChange ticks
         Assert.Equal(1, session.UndoCount);
         angle.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice, Environment.TickCount) { RoutedEvent = Mouse.LostMouseCaptureEvent });
         Assert.Equal(2, session.UndoCount);
@@ -316,34 +338,34 @@ public class HomeRibbonViewTests
         // a thumb press also raises DragStarted: no second gesture, and the release closes it exactly once
         angle.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, Environment.TickCount, MouseButton.Left) { RoutedEvent = UIElement.PreviewMouseLeftButtonDownEvent });
         angle.RaiseEvent(new DragStartedEventArgs(0, 0) { RoutedEvent = Thumb.DragStartedEvent });
-        home.FillStyle.Angle = 100;
-        home.FillStyle.Angle = 110;
+        layout.FillStyle.Angle = 100;
+        layout.FillStyle.Angle = 110;
         angle.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice, Environment.TickCount) { RoutedEvent = Mouse.LostMouseCaptureEvent });
         angle.RaiseEvent(new DragCompletedEventArgs(0, 0, false) { RoutedEvent = Thumb.DragCompletedEvent });
         Assert.Equal(3, session.UndoCount);
         Assert.False(session.InGesture);
 
         // keyboard arrows: outside any press, one step each
-        home.FillStyle.Angle = 111;
-        home.FillStyle.Angle = 112;
+        layout.FillStyle.Angle = 111;
+        layout.FillStyle.Angle = 112;
         Assert.Equal(5, session.UndoCount);
     });
 
     [Fact] // fix round 1: Ctrl+click on the selected type deselects; the list snaps back to the active type
     public void Deselecting_the_fill_type_keeps_the_type_and_the_selection() => StaThread.Run(() =>
     {
-        var home = Home(new EditorSession());
-        var view = Load(home);
+        var layout = Layout(new EditorSession());
+        var view = Load(layout);
         var list = Descendants<ListBox>(view).Single(l => AutomationProperties.GetName(l) == "Fill type");
 
         list.SelectedItem = null;
         StaThread.Pump();
 
-        Assert.Equal("solid", home.FillStyle.Type);
+        Assert.Equal("solid", layout.FillStyle.Type);
         Assert.Equal("solid", list.SelectedValue);
     });
 
-    [Fact] // home-tool-buttons, tools-set-tool: six buttons in editor.html:43-48 order; the active one is .btn-active, and
+    [Fact] // layout-tool-buttons, tools-set-tool: six buttons in editor.html:43-48 order; the active one is .btn-active, and
            // final fix wave 14: it is a toggle that is On for assistive tech (Narrator does not reliably announce ItemStatus)
     public void The_tool_buttons_show_4_1_labels_and_the_active_tool() => StaThread.Run(() =>
     {
@@ -432,7 +454,7 @@ public class HomeRibbonViewTests
     public void The_all_tile_fills_and_right_click_clears_every_region() => StaThread.Run(() =>
     {
         var session = new EditorSession();
-        var view = Load(Home(session));
+        var view = Load(Layout(session));
         var all = Descendants<Button>(view).Single(b => AutomationProperties.GetName(b) == "Fill all regions");
         Assert.True(all.Focusable && all.IsTabStop);
 

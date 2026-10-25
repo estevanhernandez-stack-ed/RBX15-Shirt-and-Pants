@@ -344,6 +344,7 @@ public class PlacementGroupTests
 
         var (none, one) = (Measure(false), Measure(true));
         Assert.Equal((none.Ribbon, none.Area), (one.Ribbon, one.Area));
-        Assert.True(one.Placement > 0 && one.Placement < one.Home, $"Placement {one.Placement} against the tallest Home group {one.Home}");
+        // With the region grid on the Background tab (2026-10-25), Placement can be Home's tallest group; it still fits the fixed ribbon.
+        Assert.True(one.Placement > 0 && one.Placement <= one.Home, $"Placement {one.Placement} against the tallest Home group {one.Home}");
     });
 }

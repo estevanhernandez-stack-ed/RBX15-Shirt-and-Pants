@@ -3,10 +3,9 @@ using RBX15.App.Services;
 namespace RBX15.App.ViewModels;
 
 /// <summary>
-/// The Home tab (editor.html:29-110): the Mode, Tools, Brush, Edit, File and Settings groups, then
-/// Fill Style and Template Regions, which 4.1 kept on the Layout tab (editor.html:145-171) and which
-/// M3a hosts here, and M4b decision F1 keeps there as the one fill tool. Placement follows Brush
-/// and shows only with a selected layer; the Keys toggle is the last button of the Tools group (M4b item 10).
+/// The Home tab (editor.html:29-110): the Mode, Tools, Brush, Edit, File and Settings groups. Placement follows Brush
+/// and shows only with a selected layer; the Keys toggle is the last button of the Tools group (M4b item 10). Fill Style
+/// and Template Regions, hosted here from M3a until Este's 2026-10-25 ruling, are on the Layout tab, as in 4.1.
 /// </summary>
 public sealed class HomeViewModel
 {
@@ -15,15 +14,11 @@ public sealed class HomeViewModel
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(colorPicker);
         Mode = new ModeGroupViewModel(session);
-        FillStyle = new FillStyleViewModel(session, colorPicker);
-        Regions = new RegionsGroupViewModel(session, FillStyle);
         Settings = new SettingsGroupViewModel(session);
         Edit = new EditGroupViewModel(session);
     }
 
     public ModeGroupViewModel Mode { get; }
-    public RegionsGroupViewModel Regions { get; }
-    public FillStyleViewModel FillStyle { get; }
     public SettingsGroupViewModel Settings { get; }
     public EditGroupViewModel Edit { get; }
 

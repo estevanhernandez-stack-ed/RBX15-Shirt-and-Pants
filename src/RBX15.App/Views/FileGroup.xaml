@@ -98,7 +98,8 @@
                                         </Style>
                                     </TextBlock.Style>
                                 </TextBlock>
-                                <ItemsControl x:Name="RecentList" ItemsSource="{Binding Items}" IsTabStop="False">
+                                <ItemsControl x:Name="RecentList" ItemsSource="{Binding Items}" IsTabStop="False" Focusable="False"
+                                              AutomationProperties.Name="Recent projects list">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Button Style="{StaticResource RecentItemButton}" ToolTip="{Binding Path}"

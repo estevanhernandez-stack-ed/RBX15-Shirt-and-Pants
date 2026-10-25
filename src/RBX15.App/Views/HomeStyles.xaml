@@ -294,5 +294,11 @@
         <Setter Property="Foreground" Value="#999999" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="FocusVisualStyle" Value="{DynamicResource FocusRing}" />
+        <!-- WPF's stock CheckBox template sets its own FocusVisualStyle once it has content, which beats the setter above; a style trigger beats the template's. -->
+        <Style.Triggers>
+            <Trigger Property="HasContent" Value="True">
+                <Setter Property="FocusVisualStyle" Value="{DynamicResource FocusRing}" />
+            </Trigger>
+        </Style.Triggers>
     </Style>
 </ResourceDictionary>

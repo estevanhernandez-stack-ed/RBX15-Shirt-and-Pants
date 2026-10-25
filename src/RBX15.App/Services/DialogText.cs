@@ -28,4 +28,8 @@ public static class DialogText
 
     /// <summary>The document name before the first save, in the prompt and the window title (R3).</summary>
     public const string Untitled = "Untitled";
+
+    /// <summary>The crash dialog (M5 decision E2): the work was autosaved, the log names the failure.</summary>
+    public static string FatalError(string logPath) =>
+        $"Something went wrong and RBX15 has to close. Your work was autosaved and will be offered next time you open the app. Details: {logPath}";
 }

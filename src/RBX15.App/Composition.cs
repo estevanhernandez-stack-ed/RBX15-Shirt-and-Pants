@@ -21,7 +21,7 @@ internal static class Composition
     {
         ArgumentNullException.ThrowIfNull(owner);
         var picker = new ThemedColorPicker(owner);
-        var main = Build(session, new Win32FileDialogs(owner), new ThemedDialogService(owner), picker, settings, storage, autosaveTicks ?? new DispatcherTimerTickSource(AutosaveInterval), processes ?? new ProcessProbe());
+        var main = Build(session, new Win32FileDialogs(owner), new ThemedDialogService(owner), picker, settings, storage, autosaveTicks ?? new DispatcherTimerTickSource(AutosaveInterval), processes ?? new ProcessProbe(), launcher: new ProcessAppLauncher());
         // Every themed pick (brush, Fill Style colors, region swatches) offers the colors of the user's art.
         picker.Palette = () => main.Palette.Colors;
         return main;
@@ -31,7 +31,7 @@ internal static class Composition
     /// The wiring, once: the native services come in, so the app passes the real ones and the tests'
     /// TestShell passes fakes. Every line that connects view-models lives here and nowhere else.
     /// </summary>
-    public static MainViewModel Build(EditorSession session, IFileDialogs fileDialogs, IDialogService dialogs, IColorPicker colorPicker, ISettingsStore settings, AppStorage storage, ITickSource autosaveTicks, IProcessProbe processes, Func<Random>? random = null)
+    public static MainViewModel Build(EditorSession session, IFileDialogs fileDialogs, IDialogService dialogs, IColorPicker colorPicker, ISettingsStore settings, AppStorage storage, ITickSource autosaveTicks, IProcessProbe processes, Func<Random>? random = null, IAppLauncher? launcher = null)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(fileDialogs);
@@ -106,7 +106,7 @@ internal static class Composition
         // one and claims it into this window's session id, so the restored work keeps autosaving under the id the autosave service writes.
         var recovery = new RecoveryService(storage, processes, () => Environment.ProcessId, () => Process.GetCurrentProcess().StartTime,
             new ErrorLog(storage.LogDirectory, TimeProvider.System).Write);
-        var startup = new StartupFlow(session, recovery, dialogs, status, projectFiles, sessionId);
+        var startup = new StartupFlow(session, recovery, dialogs, status, projectFiles, launcher ?? new InertAppLauncher(), sessionId);
         // M3a: construction lines above this line.
         return new MainViewModel(session)
         {
@@ -127,5 +127,13 @@ internal static class Composition
             Startup = startup,
             // M3a: required members above this line.
         };
+    }
+
+    /// <summary>The injectable overload's default: a build that names no launcher never starts a process (the app overload passes the real one).</summary>
+    sealed class InertAppLauncher : IAppLauncher
+    {
+        public void Open(string path)
+        {
+        }
     }
 }

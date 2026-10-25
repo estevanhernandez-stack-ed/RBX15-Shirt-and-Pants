@@ -13,10 +13,10 @@ namespace RBX15.App.Tests;
 internal static class TestShell
 {
 #pragma warning disable CS0028 // The name Main is the interface sheet's; the test SDK's generated Program.Main is the entry point.
-    public static MainViewModel Main(EditorSession session, bool previewVisible = false, Func<Random>? random = null)
+    public static MainViewModel Main(EditorSession session, bool previewVisible = false, Func<Random>? random = null, IClipboardSource? clipboard = null)
 #pragma warning restore CS0028
     {
-        var main = Composition.Build(session, new FakeFileDialogs(), new FakeDialogService(), new FakeColorPicker(), new FakeSettingsStore(), Storage(), new ManualTickSource(), new FakeProcessProbe(), random, jumpList: new FakeJumpListSink());
+        var main = Composition.Build(session, new FakeFileDialogs(), new FakeDialogService(), new FakeColorPicker(), new FakeSettingsStore(), Storage(), new ManualTickSource(), new FakeProcessProbe(), random, jumpList: new FakeJumpListSink(), clipboard: clipboard ?? new FakeClipboardSource(), clipboardDelay: _ => { });
         main.AvatarPreview.IsVisible = previewVisible;
         main.Palette.Dispose();   // see Quiet: the palette's idle pass would read layer images a test may have freed
         return main;

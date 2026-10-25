@@ -238,9 +238,10 @@ public class ShellTests
         Assert.True(guard.CanExecute(null));
     });
 
-    [Fact] // the window binds exactly seven chords, in this order, each behind TextFieldShortcutCommand: Ctrl+Z, Ctrl+Y and Ctrl+Shift+Z (M4b item 11),
-           // Ctrl+D (Duplicate), and the three file chords (M4a). Ctrl+V stays unbound: paste is M5's, and Ctrl+V must not toggle a tool (K3)
-    public void The_window_binds_exactly_the_seven_chords_and_not_ctrl_v() => StaThread.Run(() =>
+    [Fact] // the window binds exactly eight chords, in this order, each behind TextFieldShortcutCommand: Ctrl+Z, Ctrl+Y and Ctrl+Shift+Z (M4b item 11),
+           // Ctrl+D (Duplicate), the three file chords (M4a) and Ctrl+V (Paste, M5 item 6); Ctrl+V still toggles no tool (K3)
+           // (was The_window_binds_exactly_the_seven_chords_and_not_ctrl_v)
+    public void The_window_binds_exactly_the_eight_chords() => StaThread.Run(() =>
     {
         var window = new MainWindow(TestShell.Main(new EditorSession()), new FakeSettingsStore(), [Primary]);
         StaThread.Pump();
@@ -254,9 +255,9 @@ public class ShellTests
             (Key.S, ModifierKeys.Control),
             (Key.S, ModifierKeys.Control | ModifierKeys.Shift),
             (Key.O, ModifierKeys.Control),
+            (Key.V, ModifierKeys.Control),
         }, gestures);
-        Assert.Equal(7, window.InputBindings.Count);
-        Assert.DoesNotContain(gestures, g => g.Key == Key.V);
+        Assert.Equal(8, window.InputBindings.Count);
         Assert.All(window.InputBindings.OfType<KeyBinding>(), b => Assert.IsType<TextFieldShortcutCommand>(b.Command));
     });
 

@@ -39,6 +39,15 @@ public static class DialogText
     public static string RestorePrompt(string documentName, string autosavedWhen) =>
         $"RBX15 didn't close properly. Restore your unsaved work on {documentName}, autosaved {autosavedWhen}?";
 
+    /// <summary>The status line when Ctrl+V finds nothing usable on the clipboard (M5 decision P2).</summary>
+    public const string NothingToPaste = "Nothing to paste. Copy an image first.";
+
+    /// <summary>The status line when another app holds the clipboard through every retry (M5 decision P2).</summary>
+    public const string ClipboardBusy = "Couldn't read the clipboard. Another app is using it. Try again.";
+
+    /// <summary>The status line for a pasted image that fails the import caps or doesn't decode (M5 decision P2).</summary>
+    public static string PasteFailed(string reason) => $"Couldn't paste the image: {reason}";
+
     /// <summary>The status line for a Recent entry whose file is gone (M5 decision H1); the entry leaves the list.</summary>
     public static string RecentMissing(string fileName) => $"{fileName} was moved or deleted.";
 

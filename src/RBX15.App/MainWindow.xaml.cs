@@ -184,7 +184,7 @@ public partial class MainWindow : Window
     /// <summary>
     /// Closing (R13): a pending Open's read is cancelled and released; dirty work asks Save / Don't save / Cancel, and
     /// Cancel, a cancelled Save As or a failed save keeps the window open. A clean document closes with no prompt
-    /// (ledger shell-no-unsaved-changes-guard parityCheck). The placement is saved only when the window really closes.
+    /// (ledger shell-no-unsaved-changes-guard parityCheck). The placement is saved and the autosave deleted only when the window really closes.
     /// </summary>
     protected override void OnClosing(CancelEventArgs e)
     {
@@ -194,6 +194,9 @@ public partial class MainWindow : Window
             ViewModel.Files.CancelPendingOpen();
             if (!ViewModel.Files.ConfirmDiscardChanges()) e.Cancel = true;
         }
-        if (!e.Cancel) _settings.SaveWindowPlacement(CapturePlacement());
+        if (e.Cancel) return;
+        _settings.SaveWindowPlacement(CapturePlacement());
+        // A real close: the work was saved or deliberately discarded, so the autosave goes with it (a cancelled close keeps it).
+        ViewModel.Autosave.Close();
     }
 }

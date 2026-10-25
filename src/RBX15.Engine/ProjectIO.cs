@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -427,8 +428,22 @@ public static class ProjectIO
         return order.Select(r => (r, last[r]));
     }
 
-    static string PngDataUrl(SKImage image)
+    /// <summary>
+    /// Each image's data URL, cached per <see cref="SKImage"/> (M5 item 2; M2b carry-forward): a 60 s autosave of an unchanged
+    /// 20-layer document re-encodes nothing, and a Save after an autosave reuses it. Images are immutable, so the cache cannot
+    /// go stale; an entry lives exactly as long as its image object.
+    /// </summary>
+    static readonly ConditionalWeakTable<SKImage, string> PngUrls = new();
+
+    /// <summary>PNG encodes done by the calling thread, for the tests' counter seam; thread-static so parallel tests do not count each other's.</summary>
+    [ThreadStatic]
+    internal static int PngEncodesOnThisThread;
+
+    static string PngDataUrl(SKImage image) => PngUrls.GetValue(image, EncodePngDataUrl);
+
+    static string EncodePngDataUrl(SKImage image)
     {
+        PngEncodesOnThisThread++;
         using var data = image.Encode(SKEncodedImageFormat.Png, 100) ?? throw new InvalidOperationException("PNG encode failed");
         return "data:image/png;base64," + Convert.ToBase64String(data.AsSpan());
     }

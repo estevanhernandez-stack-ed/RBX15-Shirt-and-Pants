@@ -24,6 +24,8 @@ public partial class App : Application
     public static string SettingsDirectory =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "RBX15");
 
+    CrashHandler? _crash;
+
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
@@ -43,7 +45,8 @@ public partial class App : Application
         }
 #endif
         var settings = new JsonSettingsStore(storage.SettingsDirectory);
-        var main = Composition.Build(session, () => Current?.MainWindow, settings);
+        var main = Composition.Build(session, () => Current?.MainWindow, settings, storage);
+        _crash!.EmergencyAutosave = main.Autosave.WriteNow;
         MainWindow = new MainWindow(main, settings);
         MainWindow.Show();
     }
@@ -57,7 +60,7 @@ public partial class App : Application
     {
         var errorLog = new ErrorLog(storage.LogDirectory, TimeProvider.System);
         var dialogs = new ThemedDialogService(() => Current?.MainWindow);
-        var crash = new CrashHandler(errorLog.Write, errorLog.FilePath, dialogs.Alert, () => Environment.Exit(1));
+        var crash = _crash = new CrashHandler(errorLog.Write, errorLog.FilePath, dialogs.Alert, () => Environment.Exit(1));
         DispatcherUnhandledException += (_, args) =>
         {
             args.Handled = true;
@@ -89,7 +92,9 @@ public partial class App : Application
         var settings = new JsonSettingsStore(settingsDirectory);
         var files = new BridgeFileDialogs(Console.Out);
         Func<Window?> owner = () => Current?.MainWindow;
-        var main = Composition.Build(session, files, new ThemedDialogService(owner), new ThemedColorPicker(owner), settings);
+        var main = Composition.Build(session, files, new ThemedDialogService(owner), new ThemedColorPicker(owner), settings, storage,
+            new DispatcherTimerTickSource(Composition.AutosaveInterval));
+        _crash!.EmergencyAutosave = main.Autosave.WriteNow;
         var window = new MainWindow(main, settings);
         MainWindow = window;
         window.Show();

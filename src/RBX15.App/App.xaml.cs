@@ -54,13 +54,16 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// M5 items 3 and 4: once the window is up, its recovery prompt (R1), then the file the launch named. Queued behind the first render, so the window is on screen under the
+    /// M5 items 3 to 5: once the window is up, its recovery prompt (R1), then the file the launch named; the recents refresh beside them. Queued behind the first render, so the window is on screen under the
     /// dialog. An exception past the flow's own handling is a crash like any other: the dispatcher handler logs it.
     /// </summary>
     static async void RunStartupFlow(MainViewModel main, string? launchPath)
     {
         await Dispatcher.Yield(DispatcherPriority.Loaded);
+        // M5 item 5: prune the recents of files that are gone and publish the jump list once (the checks run off the UI thread).
+        var recents = main.Recents.RefreshAsync();
         await main.Startup.RunAsync(launchPath);
+        await recents;
     }
 
     /// <summary>

@@ -17,11 +17,11 @@ internal static class Composition
     /// <summary>How often a dirty document autosaves (spec §3 "Upgrades").</summary>
     public static readonly TimeSpan AutosaveInterval = TimeSpan.FromSeconds(60);
 
-    public static MainViewModel Build(EditorSession session, Func<Window?> owner, ISettingsStore settings, AppStorage storage, ITickSource? autosaveTicks = null, IProcessProbe? processes = null)
+    public static MainViewModel Build(EditorSession session, Func<Window?> owner, ISettingsStore settings, AppStorage storage, ITickSource? autosaveTicks = null, IProcessProbe? processes = null, IJumpListSink? jumpList = null)
     {
         ArgumentNullException.ThrowIfNull(owner);
         var picker = new ThemedColorPicker(owner);
-        var main = Build(session, new Win32FileDialogs(owner), new ThemedDialogService(owner), picker, settings, storage, autosaveTicks ?? new DispatcherTimerTickSource(AutosaveInterval), processes ?? new ProcessProbe(), launcher: new ProcessAppLauncher());
+        var main = Build(session, new Win32FileDialogs(owner), new ThemedDialogService(owner), picker, settings, storage, autosaveTicks ?? new DispatcherTimerTickSource(AutosaveInterval), processes ?? new ProcessProbe(), launcher: new ProcessAppLauncher(), jumpList: jumpList ?? new WpfJumpListSink());
         // Every themed pick (brush, Fill Style colors, region swatches) offers the colors of the user's art.
         picker.Palette = () => main.Palette.Colors;
         return main;
@@ -31,7 +31,7 @@ internal static class Composition
     /// The wiring, once: the native services come in, so the app passes the real ones and the tests'
     /// TestShell passes fakes. Every line that connects view-models lives here and nowhere else.
     /// </summary>
-    public static MainViewModel Build(EditorSession session, IFileDialogs fileDialogs, IDialogService dialogs, IColorPicker colorPicker, ISettingsStore settings, AppStorage storage, ITickSource autosaveTicks, IProcessProbe processes, Func<Random>? random = null, IAppLauncher? launcher = null)
+    public static MainViewModel Build(EditorSession session, IFileDialogs fileDialogs, IDialogService dialogs, IColorPicker colorPicker, ISettingsStore settings, AppStorage storage, ITickSource autosaveTicks, IProcessProbe processes, Func<Random>? random = null, IAppLauncher? launcher = null, IJumpListSink? jumpList = null)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(fileDialogs);
@@ -54,8 +54,11 @@ internal static class Composition
         var import = new ImportService(session, status);
         // addLayer and selectLayer set the Select tool; a drawing commit keeps the drawing tool (editor.js:523, :577; R8).
         import.LayersAdded += (_, _) => tools.Set(Tool.Select);
+        // M5 item 5: the recent projects (a successful Save, Save As or Open adds to them) and the taskbar jump list that follows them.
+        var recents = new RecentProjects(settings);
+        var jumpListPublisher = new JumpListPublisher(recents, jumpList ?? new InertJumpListSink());
         // M4a Task 1: Save, Save As, Open and the unsaved-changes guard over the session (spec §3).
-        var projectFiles = new ProjectFileService(session, fileDialogs, dialogs, status, settings);
+        var projectFiles = new ProjectFileService(session, fileDialogs, dialogs, status, settings, recents: recents);
         var fileGroup = new FileGroupViewModel(session, fileDialogs, dialogs, status, import, projectFiles);
         var layers = new LayersViewModel(session, import, fileDialogs);
         layers.LayerPicked += (_, _) => tools.Set(Tool.Select);
@@ -125,8 +128,23 @@ internal static class Composition
             Autosave = autosave,
             Recovery = recovery,
             Startup = startup,
+            Recents = recents,
             // M3a: required members above this line.
         };
+    }
+
+    /// <summary>The injectable overload's default: a build that names no jump-list sink never touches the taskbar (the app overload passes the real one).</summary>
+    sealed class InertJumpListSink : IJumpListSink
+    {
+        public event Action<IReadOnlyList<string>>? ItemsRemovedByUser
+        {
+            add { }
+            remove { }
+        }
+
+        public void Publish(IReadOnlyList<JumpEntry> entries)
+        {
+        }
     }
 
     /// <summary>The injectable overload's default: a build that names no launcher never starts a process (the app overload passes the real one).</summary>

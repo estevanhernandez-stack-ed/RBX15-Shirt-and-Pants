@@ -14,6 +14,11 @@ internal sealed class FakeSettingsStore(WindowPlacement? saved = null) : ISettin
 
     public List<(SettingsFolder Which, string Folder)> FolderSaves { get; } = [];
 
+    /// <summary>The stored recents; LoadRecents returns these as they are (the fake does not check the disk).</summary>
+    public List<string> Recents { get; set; } = [];
+
+    public List<IReadOnlyList<string>> RecentSaves { get; } = [];
+
     public WindowPlacement? LoadWindowPlacement() => Saved;
 
     public void SaveWindowPlacement(WindowPlacement placement)
@@ -28,5 +33,13 @@ internal sealed class FakeSettingsStore(WindowPlacement? saved = null) : ISettin
     {
         FolderSaves.Add((which, folder));
         Folders[which] = folder;
+    }
+
+    public IReadOnlyList<string> LoadRecents() => [.. Recents];
+
+    public void SaveRecents(IReadOnlyList<string> paths)
+    {
+        RecentSaves.Add([.. paths]);
+        Recents = [.. paths];
     }
 }

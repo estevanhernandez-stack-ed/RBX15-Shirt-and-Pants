@@ -254,7 +254,34 @@ public class HomeRibbonViewTests
         Assert.Contains(buttons, b => b.Content is "Keys: ON");
         Assert.Contains(buttons, b => b.Content is "Save work");
         Assert.Contains(buttons, b => b.Content is "Open");
+        Assert.Equal(["Save work", "Open", "Recent", "Add image", "Download template"],
+                     buttons.Select(b => b.Content).OfType<string>().Where(c => c is "Save work" or "Open" or "Recent" or "Add image" or "Download template").ToArray());   // M5 item 5: Recent sits beside Open
         Assert.DoesNotContain("Set a style, then click a region to paint it. Right-click clears.", texts);   // the fill groups are on Background
+    });
+
+    [Fact] // M5 item 5 (H1): the Recent drop-down matches its File group neighbors exactly: SecondaryButton, padding 10,5, 11px, the FocusRing, a name, and the popup menu's entries are named and focus-ringed
+    public void The_recent_button_matches_the_file_group_buttons_and_its_menu_is_named() => StaThread.Run(() =>
+    {
+        var view = Load(Home(new EditorSession()));
+        var fileGroup = Descendants<FrameworkElement>(view).OfType<Views.FileGroup>().Single();
+        var open = (Button)fileGroup.FindName("OpenButton");
+        var recent = (Button)fileGroup.FindName("RecentButton");
+
+        Assert.Equal("Recent", recent.Content);
+        Assert.Equal("Recent projects", AutomationProperties.GetName(recent));
+        Assert.Same(open.Style, recent.Style);
+        Assert.Equal((open.Padding, open.FontSize, open.Margin), (recent.Padding, recent.FontSize, recent.Margin));
+        Assert.NotNull(recent.FocusVisualStyle);
+        Assert.Equal(open.FocusVisualStyle, recent.FocusVisualStyle);
+        Assert.True(recent.Focusable && recent.IsTabStop);
+        Assert.Equal(open.ActualHeight, recent.ActualHeight);
+
+        // The popup's contents are not in the button's visual tree until it opens, so the menu is checked through its named parts.
+        var frame = (FrameworkElement)fileGroup.FindName("RecentFrame");
+        var clear = (Button)fileGroup.FindName("RecentClear");
+        Assert.Equal("Clear recent list", AutomationProperties.GetName(clear));
+        Assert.NotNull(clear.FocusVisualStyle);
+        Assert.NotNull(frame);
     });
 
     [Fact] // Este, 2026-10-25 (reversing F1): the Background tab holds 4.1's Layout groups in editor.html order, Fill Style and the regions last

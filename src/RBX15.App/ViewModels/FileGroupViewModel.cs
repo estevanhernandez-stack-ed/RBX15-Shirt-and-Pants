@@ -33,6 +33,7 @@ public sealed class FileGroupViewModel : ObservableObject
         SaveCommand = new RelayCommand(() => projectFiles.Save(), () => !projectFiles.IsBusy);
         SaveAsCommand = new RelayCommand(() => projectFiles.SaveAs(), () => !projectFiles.IsBusy);
         OpenCommand = new AsyncRelayCommand(projectFiles.OpenAsync, () => !projectFiles.IsBusy);
+        Recent = new RecentMenuViewModel(projectFiles.Recents, projectFiles, status);
         projectFiles.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName != nameof(ProjectFileService.IsBusy)) return;
@@ -56,6 +57,9 @@ public sealed class FileGroupViewModel : ObservableObject
 
     /// <summary>btnLoadProject, "Open" (editor.html:89, editor.js:2683). One run at a time; waits while an Open reads.</summary>
     public IAsyncRelayCommand OpenCommand { get; }
+
+    /// <summary>The "Recent" drop-down beside Open (M5 decision H1): the last 10 projects, then "Clear recent list".</summary>
+    public RecentMenuViewModel Recent { get; }
 
     void AddImage()
     {

@@ -110,7 +110,7 @@ public class Task4ViewTests
         Assert.Same(((LayersViewModel)zone.DataContext).BrowseCommand, button.Command);
     });
 
-    [Fact] // home-file-group (M4a): 4.1's four buttons in its order, with its title= tooltips (editor.html:88-90, :93)
+    [Fact] // home-file-group (M4a): 4.1's four buttons in its order, with its title= tooltips (editor.html:88-90, :93); M5 item 5 adds Recent beside Open (decision H1)
     public void The_file_group_shows_4_1s_four_buttons_in_order() => StaThread.Run(() =>
     {
         var session = new EditorSession();
@@ -118,15 +118,16 @@ public class Task4ViewTests
         var group = new FileGroup { DataContext = HomeTestKit.FileGroup(session, new FakeFileDialogs(), new FakeDialogService(), status) };
         Layout(group);
         var buttons = Descendants<Button>(group).ToArray();
-        Assert.Equal(new[] { "Save work", "Open", "Add image", "Download template" }, buttons.Select(b => b.Content as string));
+        Assert.Equal(new[] { "Save work", "Open", "Recent", "Add image", "Download template" }, buttons.Select(b => b.Content as string));
         Assert.Equal(new[]
         {
             "Save your workspace. Reopen and keep editing.",
             "Open a saved workspace.",
+            "Open one of the last 10 projects you saved or opened.",
             "Add an image file as a layer.",
             "Export the finished 585x559 PNG. Ready to upload to Roblox.",
         }, buttons.Select(b => b.ToolTip as string));
-        Assert.Equal(new[] { "SaveButton", "OpenButton" }, buttons.Take(2).Select(b => b.Name));
+        Assert.Equal(new[] { "SaveButton", "OpenButton", "RecentButton" }, buttons.Take(3).Select(b => b.Name));
         var vm = (FileGroupViewModel)group.DataContext;
         Assert.Same(vm.SaveCommand, buttons[0].Command);
         Assert.Same(vm.OpenCommand, buttons[1].Command);

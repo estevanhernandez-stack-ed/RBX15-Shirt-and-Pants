@@ -39,6 +39,9 @@ public static class DialogText
     public static string RestorePrompt(string documentName, string autosavedWhen) =>
         $"RBX15 didn't close properly. Restore your unsaved work on {documentName}, autosaved {autosavedWhen}?";
 
+    /// <summary>The status line for a Recent entry whose file is gone (M5 decision H1); the entry leaves the list.</summary>
+    public static string RecentMissing(string fileName) => $"{fileName} was moved or deleted.";
+
     /// <summary>
     /// When an autosave was written, in local time for the restore prompt: "today at 3:41 PM", or the date and time when it is
     /// older than today.

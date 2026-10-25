@@ -7,7 +7,7 @@ namespace RBX15.App.Services;
 /// <summary>
 /// <c>settings.json</c> in one directory (the app passes <c>%LOCALAPPDATA%\RBX15</c>, which MSIX
 /// redirects into the package's local data, removed on uninstall). The file holds one object:
-/// <c>{ "window": { "left", "top", "width", "height", "maximized" }, "lastProjectFolder": "...", "lastAssetFolder": "..." }</c>.
+/// <c>{ "window": { "left", "top", "width", "height", "maximized" }, "lastProjectFolder": "...", "lastAssetFolder": "...", "recentProjects": ["..."] }</c>.
 /// Each save rewrites only its own key and keeps every other key it read.
 /// <para>
 /// Writes are atomic: the whole file goes to <c>settings.json.tmp</c>, then
@@ -25,6 +25,7 @@ public sealed class JsonSettingsStore(string directory) : ISettingsStore
 {
     public const string FileName = "settings.json";
     const string WindowKey = "window";
+    const string RecentsKey = "recentProjects";
 
     /// <summary>The root key of each remembered folder.</summary>
     internal static string FolderKey(SettingsFolder which) => which switch
@@ -81,6 +82,40 @@ public sealed class JsonSettingsStore(string directory) : ISettingsStore
         string key = FolderKey(which);
         if (string.IsNullOrEmpty(folder) || !Path.IsPathFullyQualified(folder)) return;
         Update(key, JsonValue.Create(folder));
+    }
+
+    public IReadOnlyList<string> LoadRecents()
+    {
+        if (ReadRoot()?[RecentsKey] is not JsonArray array) return [];
+        var paths = new List<string>(array.Count);
+        foreach (var item in array)
+        {
+            if (item is JsonValue v && v.TryGetValue(out string? path) && !string.IsNullOrEmpty(path) && IsFullyQualified(path)) paths.Add(path);
+        }
+        return paths;
+    }
+
+    public void SaveRecents(IReadOnlyList<string> paths)
+    {
+        ArgumentNullException.ThrowIfNull(paths);
+        var array = new JsonArray();
+        foreach (var path in paths)
+        {
+            if (!string.IsNullOrEmpty(path) && IsFullyQualified(path)) array.Add(JsonValue.Create(path));
+        }
+        Update(RecentsKey, array);
+    }
+
+    static bool IsFullyQualified(string path)
+    {
+        try
+        {
+            return Path.IsPathFullyQualified(path);
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
     }
 
     /// <summary>Finite coordinates and a positive finite size; anything else is a corrupt file.</summary>

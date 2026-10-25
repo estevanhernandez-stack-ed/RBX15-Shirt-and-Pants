@@ -185,4 +185,103 @@ public sealed class JsonSettingsStoreTests : IDisposable
         store.SaveWindowPlacement(new WindowPlacement(0, 0, 0, 600, false));
         Assert.False(File.Exists(FilePath));
     }
+
+    // ---- recentProjects (M5 item 5; ledger upgrade-recent-projects, shell-no-persistence) ----
+
+    [Fact] // the recents are a JSON array of full paths under "recentProjects", and they round-trip in order
+    public void Recents_round_trip_as_an_array_of_full_paths()
+    {
+        var store = new JsonSettingsStore(_dir);
+        Assert.Empty(store.LoadRecents());
+
+        store.SaveRecents([@"C:\p\b.r15proj", @"C:\p\a.r15proj"]);
+
+        Assert.Equal([@"C:\p\b.r15proj", @"C:\p\a.r15proj"], new JsonSettingsStore(_dir).LoadRecents());
+        var array = JsonNode.Parse(File.ReadAllText(FilePath))!["recentProjects"]!.AsArray();
+        Assert.Equal([@"C:\p\b.r15proj", @"C:\p\a.r15proj"], array.Select(n => n!.GetValue<string>()));
+    }
+
+    [Fact] // a recents write keeps window, lastProjectFolder, lastAssetFolder and any other key
+    public void A_recents_write_keeps_window_and_the_folders()
+    {
+        Directory.CreateDirectory(_dir);
+        string project = Directory.CreateDirectory(Path.Combine(_dir, "projects")).FullName;
+        string asset = Directory.CreateDirectory(Path.Combine(_dir, "assets")).FullName;
+        var store = new JsonSettingsStore(_dir);
+        store.SaveWindowPlacement(new WindowPlacement(5, 6, 700, 500, true));
+        store.SaveFolder(SettingsFolder.Project, project);
+        store.SaveFolder(SettingsFolder.Asset, asset);
+        var root = JsonNode.Parse(File.ReadAllText(FilePath))!.AsObject();
+        root["other"] = "kept";
+        File.WriteAllText(FilePath, root.ToJsonString());
+
+        store.SaveRecents([@"C:\p\a.r15proj"]);
+
+        var after = new JsonSettingsStore(_dir);
+        Assert.Equal(new WindowPlacement(5, 6, 700, 500, true), after.LoadWindowPlacement());
+        Assert.Equal(project, after.LoadFolder(SettingsFolder.Project));
+        Assert.Equal(asset, after.LoadFolder(SettingsFolder.Asset));
+        Assert.Equal([@"C:\p\a.r15proj"], after.LoadRecents());
+        Assert.Equal("kept", JsonNode.Parse(File.ReadAllText(FilePath))!["other"]!.GetValue<string>());
+        // and a window or folder write keeps the recents
+        after.SaveFolder(SettingsFolder.Project, asset);
+        after.SaveWindowPlacement(new WindowPlacement(1, 2, 800, 600, false));
+        Assert.Equal([@"C:\p\a.r15proj"], new JsonSettingsStore(_dir).LoadRecents());
+    }
+
+    public static TheoryData<string> CorruptRecents => new()
+    {
+        "",
+        "{",
+        "null",
+        """{ "recentProjects": null }""",
+        """{ "recentProjects": "C:\\p\\a.r15proj" }""",
+        """{ "recentProjects": { "0": "C:\\p\\a.r15proj" } }""",
+    };
+
+    [Theory, MemberData(nameof(CorruptRecents))] // a hand-edited or truncated file reads as no recents
+    public void Corrupt_recents_load_as_empty(string content)
+    {
+        Directory.CreateDirectory(_dir);
+        File.WriteAllText(FilePath, content);
+        Assert.Empty(new JsonSettingsStore(_dir).LoadRecents());
+    }
+
+    [Fact] // entries that are not full path strings are skipped, the good ones kept in order
+    public void Entries_that_are_not_full_paths_are_skipped()
+    {
+        Directory.CreateDirectory(_dir);
+        File.WriteAllText(FilePath, """{ "recentProjects": [ "C:\\p\\a.r15proj", 7, null, "", "relative.r15proj", "C:\\p\\b.r15proj" ] }""");
+        Assert.Equal([@"C:\p\a.r15proj", @"C:\p\b.r15proj"], new JsonSettingsStore(_dir).LoadRecents());
+    }
+
+    [Fact] // the M4a rule: a recents write after a read that failed on a locked file is skipped, never written over the siblings
+    public void A_recents_write_after_a_failed_read_is_skipped()
+    {
+        Directory.CreateDirectory(_dir);
+        string original = """{ "window": { "left": 1, "top": 2, "width": 300, "height": 400, "maximized": false }, "recentProjects": ["C:\\p\\old.r15proj"] }""";
+        File.WriteAllText(FilePath, original);
+        var store = new JsonSettingsStore(_dir);
+        var file = new FileInfo(FilePath);
+        var user = System.Security.Principal.WindowsIdentity.GetCurrent().User!;
+        var deny = new System.Security.AccessControl.FileSystemAccessRule(user, System.Security.AccessControl.FileSystemRights.ReadData,
+            System.Security.AccessControl.AccessControlType.Deny);
+        var acl = file.GetAccessControl();
+        acl.AddAccessRule(deny);
+        file.SetAccessControl(acl);
+        try
+        {
+            Assert.Throws<UnauthorizedAccessException>(() => File.ReadAllText(FilePath));
+            Assert.Empty(store.LoadRecents());
+            store.SaveRecents([@"C:\p\new.r15proj"]);
+        }
+        finally
+        {
+            acl = file.GetAccessControl();
+            acl.RemoveAccessRule(deny);
+            file.SetAccessControl(acl);
+        }
+        Assert.Equal(original, File.ReadAllText(FilePath));
+        Assert.False(File.Exists(FilePath + ".tmp"));
+    }
 }

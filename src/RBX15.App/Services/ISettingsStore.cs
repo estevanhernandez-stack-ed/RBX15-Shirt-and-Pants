@@ -24,4 +24,10 @@ public interface ISettingsStore
 
     /// <summary>Remembers <paramref name="folder"/>. Best effort and atomic, keeps sibling keys, never throws, and skips the write after a failed read (interfaces §2.5).</summary>
     void SaveFolder(SettingsFolder which, string folder);
+
+    /// <summary>The recent project paths, newest first (<c>recentProjects</c>); empty when unset or unreadable. Existence is not checked here: <see cref="RecentProjects"/> prunes.</summary>
+    IReadOnlyList<string> LoadRecents();
+
+    /// <summary>Saves the recent paths. Best effort and atomic, keeps sibling keys, never throws, and skips the write after a failed read (the same <c>Update</c> path as the folders).</summary>
+    void SaveRecents(IReadOnlyList<string> paths);
 }

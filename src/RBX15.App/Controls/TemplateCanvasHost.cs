@@ -194,6 +194,9 @@ public sealed class TemplateCanvasHost : FrameworkElement
     /// <summary>True while the control keeps a persistent <see cref="ViewRenderer"/>. Read by tests.</summary>
     internal bool HasRenderer => _renderer is not null;
 
+    /// <summary>How many times the persistent renderer has cached the static composite for a stroke (frame budget, C1). Read by tests.</summary>
+    internal int CompositeCacheBuilds => _renderer?.CompositeCacheBuilds ?? 0;
+
     /// <summary>How many times the control has created the Skia surface that wraps the frame bitmap. Read by tests (frame budget).</summary>
     internal int SurfaceAllocations { get; private set; }
 

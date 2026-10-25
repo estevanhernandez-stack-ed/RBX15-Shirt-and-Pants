@@ -91,10 +91,26 @@ public static class Renderer
     {
         ArgumentNullException.ThrowIfNull(canvas);
         ArgumentNullException.ThrowIfNull(doc);
+        RenderStatic(canvas, doc);
+        FinishComposite(canvas, doc, applyMask, preview, previewSurface);
+    }
+
+    /// <summary>
+    /// Everything of the composite that sits below the live preview: clear, background, region fills, visible layers bottom
+    /// to top. <see cref="ViewRenderer"/> caches this half while a stroke is live (ledger render-pipeline-canvas-reset);
+    /// <see cref="FinishComposite"/> is the rest.
+    /// </summary>
+    internal static void RenderStatic(SKCanvas canvas, Document doc)
+    {
         canvas.Clear(SKColors.Transparent);
         DrawBackground(canvas, doc);
         Fills.PaintRegions(canvas, doc.Mode, doc.RegionFills);
         foreach (var layer in doc.Layers) DrawLayer(canvas, layer);
+    }
+
+    /// <summary>The half above <see cref="RenderStatic"/>: the live preview at its alpha, then the mask iff <paramref name="applyMask"/>.</summary>
+    internal static void FinishComposite(SKCanvas canvas, Document doc, bool applyMask, LivePreview? preview, SKSurface? previewSurface)
+    {
         if (preview is not null) DrawPreview(canvas, preview, previewSurface);
         if (!applyMask) return;
         using var mask = new SKPaint { BlendMode = SKBlendMode.DstIn };

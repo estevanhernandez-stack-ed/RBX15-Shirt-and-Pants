@@ -211,15 +211,16 @@ public class FrameBudgetTests(ITestOutputHelper output)
     [Fact] // render-pipeline-canvas-reset budget: a 120-point pen stroke over 20 layers, one render per point
     public void A_pen_stroke_over_twenty_layers_reports_its_frame_times() => StaThread.Run(() =>
     {
-        // Provisional baseline form (item 13): p95 did not hold under 16.7 ms with margin for the worst-case document.
-        // The ceilings (about 4x the p95 measured alone) are asserted only when RBX15_PERF=1: inside the full suite the
-        // test collections run in parallel and the light row's p95 reached 70 ms, so a wall-clock assert there flakes.
-        // The numbers always go in the output, and the one-surface pin always holds.
+        // With the static composite cached for the length of a stroke (M5/M6 item 7, C1) both documents hold the 60 fps
+        // budget, one frame at 16.7 ms. The ceiling is asserted only when RBX15_PERF=1: inside the full suite the test
+        // collections run in parallel and a wall-clock assert there flakes (the light row's p95 reached 70 ms before the
+        // cache). The numbers always go in the output, and the one-surface pin always holds. Before the cache the same
+        // stroke measured p95 10-13 ms (rotated, translucent) and 30-31 ms (color-filtered).
         bool assertCeilings = Environment.GetEnvironmentVariable("RBX15_PERF") == "1";
         foreach (var (name, doc, ceilingMs) in new[]
         {
-            ("rotated, translucent", TwentyLayers(filtered: false), 40.0),
-            ("rotated, translucent, color-filtered", TwentyLayers(filtered: true), 130.0),
+            ("rotated, translucent", TwentyLayers(filtered: false), 16.7),
+            ("rotated, translucent, color-filtered", TwentyLayers(filtered: true), 16.7),
         })
         {
             using var rig = Show(doc);
@@ -230,6 +231,38 @@ public class FrameBudgetTests(ITestOutputHelper output)
             Assert.Equal(1, rig.Surfaces);
             if (assertCeilings) Assert.True(p95 < ceilingMs, $"{line}; over the {ceilingMs} ms ceiling");
         }
+    });
+
+    [Fact] // render-pipeline-canvas-reset (C1): a stroke caches the static composite once; an undo or mode change mid-stroke rebuilds it
+    public void A_stroke_caches_the_static_composite_once_and_a_document_change_rebuilds_it() => StaThread.Run(() =>
+    {
+        using var rig = Show(TwentyLayers());
+        var host = rig.Host;
+        Assert.Equal(0, host.CompositeCacheBuilds);
+
+        Assert.True(rig.Down(PathPoint(0)));
+        for (int i = 1; i <= 30; i++)
+        {
+            rig.Move(PathPoint(i));
+            _ = host.Frame;
+        }
+        Assert.Equal(1, host.CompositeCacheBuilds);           // 30 frames of one stroke over one document: one cache
+
+        host.Document = host.Document! with { Mode = TemplateMode.Pants };   // an undo or a mode change lands a new Document
+        _ = host.Frame;
+        Assert.Equal(2, host.CompositeCacheBuilds);
+        rig.Move(PathPoint(31));
+        _ = host.Frame;
+        Assert.Equal(2, host.CompositeCacheBuilds);
+
+        rig.Up(PathPoint(31));                                // the stroke commits: its frames hold no preview, so nothing is cached
+        _ = host.Frame;
+        Assert.Equal(2, host.CompositeCacheBuilds);
+
+        Assert.True(rig.Down(PathPoint(0)));                  // the next stroke builds its own
+        rig.Move(PathPoint(1));
+        _ = host.Frame;
+        Assert.Equal(3, host.CompositeCacheBuilds);
     });
 
     /// <summary>Draws the 120-point pen stroke with a render per point, the worst case of no coalescing.</summary>

@@ -30,6 +30,12 @@ jobs:
           "version=$($Matches[1])" >> $env:GITHUB_OUTPUT
           "msix_version=$($Matches[1]).0" >> $env:GITHUB_OUTPUT
 
+      - name: Tag matches the csproj version
+        shell: pwsh
+        run: |
+          $csproj = ([xml](Get-Content src/RBX15.App/RBX15.App.csproj -Raw)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          if ($csproj -ne "${{ steps.ver.outputs.version }}") { throw "Tag ${{ github.ref_name }} does not match RBX15.App.csproj <Version> '$csproj'. Bump the csproj, then re-tag." }
+
       - name: Release notes are filled in
         shell: pwsh
         run: |

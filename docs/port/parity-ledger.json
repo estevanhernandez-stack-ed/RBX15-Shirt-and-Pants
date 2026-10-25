@@ -3136,7 +3136,7 @@
    "quirks": "Painted order of limb faces differs between arms (mirrored to match the template atlas layout); keep. Grid omits arm up/down panels, so 'paint everything' via the grid never reaches 4 regions of 18; decide: keep (parity) or add buttons. Recommended: keep for 1.0, log as enhancement.",
    "portTarget": "XAML Grid with 5 columns x 3 rows for the torso cross, UniformGrid(1x4) per limb inside a 2-column Grid. Region buttons are ToggleButton-like Border/Button controls bound by region key (Tag). Build from a data-driven list so Pants reuses the same template with different prefixes.",
    "risk": "low",
-   "parityCheck": "RegionsGroupTests (M3a): 14 tiles in 4.1's cell order with its labels, each with a region automation name. The grid compared side by side with 4.1's Layout tab in the M3b look sign-off (state 02), signed off by Este on 2026-10-16 (.superpowers/m3b-look/SIGNOFF.txt). Narrowed in M3b: the grid sits on the Home tab until M4 moves it to Layout.",
+   "parityCheck": "RegionsGroupTests (M3a): 14 tiles in 4.1's cell order with its labels, each with a region automation name. The grid compared side by side with 4.1's Layout tab in the M3b look sign-off (state 02), signed off by Este on 2026-10-16 (.superpowers/m3b-look/SIGNOFF.txt). Narrowed in M3b: the grid sits on the Home tab until M4 moves it to Layout. M4b moved it back to the Layout tab (Este, 2026-10-25).",
    "owner": "App.Ribbon.Home",
    "check": "ui-auto",
    "disposition": "keep",
@@ -4673,12 +4673,12 @@
    "quirks": "No virtualization/lazy decode in Electron: 156 full-size images decode eagerly. Browser scroll area persists max-height only (see resizable). Grid order = array order (not sorted by name except what the OS returned).",
    "portTarget": "ListBox with UniformGrid(Columns=3) or VirtualizingWrapPanel; ItemTemplate Border 1px #333 radius 4 bg #111 with Image Stretch=Uniform and bottom TextBlock overlay (7pt ~ 9.3px => use FontSize 7 DIP-equivalent 7px, CharacterEllipsis). Decode thumbnails at reduced size (DecodePixelWidth) off-thread; dispose bitmaps on folder change. Keep ListBox virtualization on to handle thousands.",
    "risk": "med",
-   "parityCheck": "Screenshot diff of grid at 3 columns for Drips pack; verify UUID-named file shows parent folder name; tooltip equals file name. Open after M4b: MAN-7 (docs/port/m4b-manual.md), the asset grid at three columns on the look page; the virtualized grid, captions and order are proven (M4a A1).",
+   "parityCheck": "Screenshot diff of grid at 3 columns for Drips pack; verify UUID-named file shows parent folder name; tooltip equals file name. Signed off at MAN-7 (Este, 2026-10-25, by eye in a live side-by-side with 4.1): the asset grid at three columns on the look page; the virtualized grid, captions and order are proven (M4a A1).",
    "owner": "App.AssetLibrary",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: every full-size image is decoded eagerly and pack order is whatever the OS returns. v5: thumbnails decode lazily at thumb size and packs are deterministically sorted. The grid is virtualized by rows of three, and only realized rows decode, at 160 px on one background worker (M4a, interfaces R5).",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "asset-click-add",
@@ -4900,12 +4900,12 @@
    "quirks": "Electron window state (size/position) is not persisted; keep or add (additive). Missing: single-instance lock, app.on activate only for macOS.",
    "portTarget": "MainWindow 1200x800 (default; set MinWidth/MinHeight to taste), Title identical, no menu. Constructor order: load fonts -> init VM -> first SKElement paint. Startup perf budget: first frame <= 0.96 s per spike numbers.",
    "risk": "low",
-   "parityCheck": "Cold start: window title, size, default visuals equal the 4.1.0 screenshot set in docs/store; first frame time recorded. Open after M4b: MAN-7 (docs/port/m4b-manual.md), the default-visuals clause. Proven by the M4b smoke cold start: zero sockets over 6 launches, the title 'RBX15 Classic Shirt and Pants Maker', window 1200x800 (client 1184x761), first frame 1.11-1.18 s recorded (over the 0.96 s port-target spike budget). The divergence's remembered window size and position is M5's (shell-no-persistence).",
+   "parityCheck": "Cold start: window title, size, default visuals equal the 4.1.0 screenshot set in docs/store; first frame time recorded. Signed off at MAN-7 (Este, 2026-10-25, by eye in a live side-by-side with 4.1): the default-visuals clause. Proven by the M4b smoke cold start: zero sockets over 6 launches, the title 'RBX15 Classic Shirt and Pants Maker', window 1200x800 (client 1184x761), first frame 1.11-1.18 s recorded (over the 0.96 s port-target spike budget). The divergence's remembered window size and position is M5's (shell-no-persistence).",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: requests Google Fonts at startup and does not remember window size or position. v5: zero network requests and the window remembers size and position.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "project-electron-integration-risks",
@@ -4969,12 +4969,12 @@
    "quirks": "Ribbon height is NOT constant: each pane has different content height (Home panes have 2-row vertical groups, Details is single row), so switching ribbon tabs changes the ribbon height and resizes/shifts the canvas area vertically (canvas is vertically centered so it jumps). Decide: keep (parity) or fix to a fixed ribbon height (recommended, tiny deviation).",
    "portTarget": "Grid with rows Auto (header), Auto (ribbon), * (app), Auto (footer); app row = columns 280 (panel, ScrollViewer vertical auto) and * (canvas area). Drop the dead .rpanel and btnExport2.",
    "risk": "low",
-   "parityCheck": "Overlay native screenshot against docs/screenshots/4.1/*.png at 1920x1080 window content; region boundaries (header bottom, ribbon bottom, panel right edge x=280, footer top) match within 1 px. RibbonMeasureTests (M4b item 12): at 1184x761 with a layer selected, the ribbon is 167 DIP (138 DIP panes) on every tab, and Layout, Details and Text fit without a horizontal scroll; ShellLookTests pins the ribbon at 167 and the canvas area at 519. Narrowed in M4b: Home scrolls horizontally at this width, as 4.1's did (ribbon-overflow-hscroll), accepted by Este on 2026-10-18. Open after M4b: the boundary overlay against 4.1 is the look sign-off, MAN-7 Call (a). The 167 and 138 DIP pins are 100% measurements: at a real 125% the ribbon is 165.6 and the panes 137.6, still one height on every tab (MAN-8, 2026-10-25).",
+   "parityCheck": "Overlay native screenshot against docs/screenshots/4.1/*.png at 1920x1080 window content; region boundaries (header bottom, ribbon bottom, panel right edge x=280, footer top) match within 1 px. RibbonMeasureTests (M4b item 12): at 1184x761 with a layer selected, the ribbon is 167 DIP (138 DIP panes) on every tab, and Details and Text fit without a horizontal scroll; ShellLookTests pins the ribbon at 167 and the canvas area at 519. Narrowed in M4b: Home and Layout scroll horizontally at this width, as both did in 4.1 (ribbon-overflow-hscroll; Este, 2026-10-18 and 2026-10-25; RibbonMeasureTests.The_ribbon_has_one_height_and_Home_and_Layout_scroll_at_1200_as_in_4_1). Signed off at MAN-7 (Este, 2026-10-25, by eye in a live side-by-side with 4.1): the region boundaries; the 1 px overlay was not measured. The 167 and 138 DIP pins are 100% measurements: at a real 125% the ribbon is 165.6 and the panes 137.6, still one height on every tab (MAN-8, 2026-10-25).",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "fix",
-   "divergence": "4.1: ribbon height changes per tab, shifting the canvas vertically on tab switch. v5: fixed ribbon height. The fixed height is the tallest pane's, the Text tab's 138 DIP, so Home is 17 DIP taller than its content; with Fill Style and the region grid on Home (F1), Home scrolls sideways at 1200 DIP as 4.1's Home did (M4b, R1; Este, 2026-10-18).",
-   "status": "open"
+   "divergence": "4.1: ribbon height changes per tab, shifting the canvas vertically on tab switch. v5: fixed ribbon height. The fixed height is the tallest pane's, the Text tab's 138 DIP, so Home is 17 DIP taller than its content; Home (about 1455 DIP) and Layout (about 1460, with Fill Style and the region grid back on it) scroll sideways at 1200 DIP, as both did in 4.1 (M4b, R1; Este, 2026-10-18; F1 reversed 2026-10-25).",
+   "status": "done"
   },
   {
    "id": "shell-responsive-breakpoint",
@@ -5008,12 +5008,12 @@
    "quirks": "Gradient text is clipped to the h1 box only (not the whole header). Letter-spacing in WPF needs a workaround; budget for it for all mono uppercase labels (tabs, group labels, h3, .info, footer).",
    "portTarget": "Border with LinearGradientBrush background; TextBlock for title using a gradient foreground (LinearGradientBrush Foreground with StartPoint/EndPoint 0,0->1,1 in bounding box) and FontFamily Space Grotesk; subtitle TextBlock with CharacterSpacing equivalent (WPF has no letter-spacing: use Typography or per-glyph Run spacing / a custom TextBlock with TextOptions; or use FormattedText + DrawingContext). Bind version text to assembly/MSIX version formatted 'v{Major}.{Minor}'.",
    "risk": "med",
-   "parityCheck": "Pixel-compare header strip against 4.1 screenshots; text bounds within 1 px; gradient endpoints cyan at left, magenta at right of the h1 box. Version string equals MSIX identity version major.minor. ShellTests: the byline is 'v<major.minor>' (shown 'V5.0') and the HeaderMark image shows the LabsMarkDuo resource at 18 DIP, named '626Labs' for UI Automation. Open after M4b: MAN-7 (docs/port/m4b-manual.md), the header pair on the look page; the byline and mark facts are in ShellTests.",
+   "parityCheck": "Pixel-compare header strip against 4.1 screenshots; text bounds within 1 px; gradient endpoints cyan at left, magenta at right of the h1 box. Version string equals MSIX identity version major.minor. ShellTests: the byline is 'v<major.minor>' (shown 'V5.0') and the HeaderMark image shows the LabsMarkDuo resource at 18 DIP, named '626Labs' for UI Automation. Signed off at MAN-7 (Este, 2026-10-25, by eye in a live side-by-side with 4.1): the header pair on the look page; the byline and mark facts are in ShellTests.",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: the header span reads 'ItsjustEste | v4.1' (editor.html:17). v5: the 626Labs signature mark (bold duo, no 'LLC'; 626labs-design/assets/Logos/626labs-signature-bold-duo.svg as a vector DrawingImage, 18 DIP high) stands in for the name, followed by the version alone ('v5.0', shown as 'V5.0'), per Este's call (2026-10-17).",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "shell-footer",
@@ -5068,12 +5068,12 @@
    "quirks": "box-shadow glow blur radius semantics differ from WPF DropShadowEffect; tune visually, not numerically.",
    "portTarget": "DropShadowEffect (BlurRadius ~ 2x CSS blur, Opacity from alpha) for glows; Storyboard ColorAnimation/DoubleAnimation with CubicEase approximating the bezier (use KeySpline 0.2,0.7,0.2,1 via SplineDoubleKeyFrame) at 120/220 ms. ClearType vs grayscale: WPF TextOptions.TextRenderingMode=Grayscale to mimic -webkit-font-smoothing:antialiased.",
    "risk": "med",
-   "parityCheck": "Manual visual check of hover transitions (duration within 30 ms); screenshot of selected layer glow versus 02-layers.png. Open after M4b: MAN-7 (docs/port/m4b-manual.md), hover transitions and the selected-layer glow by eye.",
+   "parityCheck": "Manual visual check of hover transitions (duration within 30 ms); screenshot of selected layer glow versus 02-layers.png. Signed off at MAN-7 (Este, 2026-10-25, by eye in a live side-by-side with 4.1): hover transitions and the selected-layer glow by eye.",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "font-ui-runtime-google",
@@ -5195,12 +5195,12 @@
    "quirks": "Group labels are displayed uppercase by CSS (e.g. 'BG SETTINGS', 'COLORS & SIZE').",
    "portTarget": "A RibbonGroup UserControl: Grid rows (Content *, Label Auto), right border 1px, Padding 0,0 10,0; WrapPanel (Horizontal) or StackPanel for items. Set Margin so label sits 5 px below items.",
    "risk": "low",
-   "parityCheck": "Group dividers and labels line up with 4.1 screenshot; labels: Mode, Tools, Brush, Placement, Edit, File, Settings (Home); Presets, Background, BG Settings, Fill Style, Template Regions (Layout); Settings, Neckline, Edges, Seams, Accents (Details); Text, Colors & Size, Style, Preview (Text). RibbonMeasureTests.Each_tab_carries_its_groups_labels (M4b item 12) asserts v5's labels per tab; under F1 Fill Style and the region grid (labelled CLICK REGIONS TO FILL, ribbon-fill-regions-joined) are on Home, not Layout. Open after M4b: the divider and label alignment against 4.1 is the look sign-off, MAN-7.",
+   "parityCheck": "Group dividers and labels line up with 4.1 screenshot; labels: Mode, Tools, Brush, Placement, Edit, File, Settings (Home); Presets, Background, BG Settings, Fill Style, Template Regions (Layout); Settings, Neckline, Edges, Seams, Accents (Details); Text, Colors & Size, Style, Preview (Text). RibbonMeasureTests.Each_tab_carries_its_groups_labels (M4b item 12) asserts v5's labels per tab; Fill Style and the region grid (labelled CLICK REGIONS TO FILL, ribbon-fill-regions-joined) end the Layout tab, as in 4.1 (Este, 2026-10-25, reversing F1). Signed off at MAN-7 (Este, 2026-10-25, by eye in a live side-by-side with 4.1): the divider and label alignment.",
    "owner": "App.Shell",
    "check": "manual",
-   "disposition": "keep",
-   "divergence": "",
-   "status": "open"
+   "disposition": "fix",
+   "divergence": "4.1: the second ribbon tab is labelled Layout. v5: it reads Background (automation name 'Background tab'), since it holds the background, fill and region groups; the code keeps the name Layout (RibbonTab.Layout, LayoutViewModel), so the tab plumbing is unchanged (Este, MAN-7, 2026-10-25).",
+   "status": "done"
   },
   {
    "id": "ribbon-overflow-hscroll",
@@ -5472,11 +5472,11 @@
    "quirks": "Live-edit couples to equal fills: two regions painted with identical fills move together, but a region painted earlier with a slightly different fill never updates. Scale slider max 48 vs lib clamps; fillToCSS clamps scale min 2.",
    "portTarget": "Same controls bound to CurrentFill record {Type,C1,C2,Angle,Scale}; fill descriptor compare via FillKey string 'type|c1|c2|angle|scale' (editor.js uses lib/fills.js fillKey). Spike already proves paintRegions pixel-exact.",
    "risk": "med",
-   "parityCheck": "FillStyleTests.The_row_scenario_runs_to_the_end_with_exact_region_fills and A_slider_drag_is_one_step_and_undo_restores_the_starting_fills (painted regions follow a drag live; one undo reverts the gesture). Narrowed in M4b: the per-type extremes are checked against 4.1's band and cell rules (FillStyleTests.Stripes_at_the_slider_extremes_follow_the_band_rule at scale 4 and 48, Checker_and_dots_at_the_scale_extremes_follow_the_cell_rule) and the frozen fill goldens (fill-stripes-30, fill-stripes-48-neg, fill-checker-12, fill-dots-16, fill-camo-16, fill-camo-48 and the rest, GoldenRenderTests); camo at scale 4 has no 4.1 capture (run 1 D5, D10).",
+   "parityCheck": "FillStyleTests.The_row_scenario_runs_to_the_end_with_exact_region_fills and A_slider_drag_is_one_step_and_undo_restores_the_starting_fills (painted regions follow a drag live; one undo reverts the gesture). Narrowed in M4b: the per-type extremes are checked against 4.1's band and cell rules (FillStyleTests.Stripes_at_the_slider_extremes_follow_the_band_rule at scale 4 and 48, Checker_and_dots_at_the_scale_extremes_follow_the_cell_rule) and the frozen fill goldens (fill-stripes-30, fill-stripes-48-neg, fill-checker-12, fill-dots-16, fill-camo-16, fill-camo-48 and the rest, GoldenRenderTests); camo at scale 4 has no 4.1 capture (run 1 D5, D10). Back on the Layout tab after BG Settings, as in 4.1 (Este, 2026-10-25, reversing F1; RibbonMeasureTests.Each_tab_carries_its_groups_labels).",
    "owner": "App.Ribbon.Layout",
    "check": "ui-auto",
-   "disposition": "fix",
-   "divergence": "4.1: Fill Style is a group on the Layout tab. v5: it sits on Home, next to the tools, joined with the region grid as one fill tool (M4b, F1; ribbon-fill-regions-joined).",
+   "disposition": "keep",
+   "divergence": "",
    "status": "done"
   },
   {
@@ -5494,12 +5494,12 @@
    "quirks": "A selected layer silently converts 'paint' into 'fit layer', and the hint text never says so (user must click empty canvas to deselect). The Front tile's built-in purple tint (inline #2a1040) is lost permanently once any paint/clear sets style.background (paintRegionButton clears it to ''), so after painting then clearing, Front looks like other tiles. Region tiles are not keyboard accessible.",
    "portTarget": "Custom Control with Grid layout and tiles (Button) using GradientBrush previews derived from the fill (replicate fillToCSS: linear/radial/repeating stripes/conic checker/dots/camo gradient -> render each tile preview via the same Skia fill code into a small WriteableBitmap rather than approximating with XAML brushes).",
    "risk": "med",
-   "parityCheck": "Click Front with no layer selected: region paints with current fill and the Front tile shows preview; right-click clears; with a layer selected the same click re-fits the layer instead; compare tile layout against 4.1 screenshots. Open after M4b: MAN-7 (docs/port/m4b-manual.md), the tile layout against 4.1's capture on the look page; the paint, fit, clear and keyboard clauses are proven (RegionsGroupTests, HomeRibbonViewTests).",
+   "parityCheck": "Click Front with no layer selected: region paints with current fill and the Front tile shows preview; right-click clears; with a layer selected the same click re-fits the layer instead; compare tile layout against 4.1 screenshots. Signed off at MAN-7 (Este, 2026-10-25, by eye in a live side-by-side with 4.1): the tile layout against 4.1's capture on the look page; the paint, fit, clear and keyboard clauses are proven (RegionsGroupTests, HomeRibbonViewTests).",
    "owner": "App.Ribbon.Layout",
    "check": "ui-auto",
    "disposition": "fix",
-   "divergence": "4.1: region tiles are mouse-only divs and the Front tile permanently loses its built-in tint after any paint or clear. v5: keyboard-reachable tiles with automation names and a consistent Front tile style, with region keys resolved through semantic slots per mode. Delete, Shift+F10 and the Menu key clear a focused tile, as right-click does. The grid sits on Home, next to the tools, where 4.1 had it on the Layout tab (M4b, F1).",
-   "status": "open"
+   "divergence": "4.1: region tiles are mouse-only divs and the Front tile permanently loses its built-in tint after any paint or clear. v5: keyboard-reachable tiles with automation names and a consistent Front tile style, with region keys resolved through semantic slots per mode. Delete, Shift+F10 and the Menu key clear a focused tile, as right-click does.",
+   "status": "done"
   },
   {
    "id": "ribbon-fill-regions-joined",
@@ -5574,12 +5574,12 @@
    "quirks": "Number input allows values outside 8..300 when typed (e.g. 1000 would render huge). Multi-line text supported: lines split by \\n, line height 1.15*size.",
    "portTarget": "Multi-line TextBox (AcceptsReturn, resizable vertically via GridSplitter/Thumb or fixed), ComboBox with the same 15 display strings mapping to family names (value differs from label: value 'Poppins' label 'Poppins (Bold)'), color buttons, NumericUpDown-like TextBox (Min 8 Max 300 enforce on commit, parity keeps typed overshoot), Sliders.",
    "risk": "med",
-   "parityCheck": "Defaults: text RIZZ, font Anton, colors/size as listed; changing each control updates preview immediately. Open after M4b: MAN-7 (docs/port/m4b-manual.md), the Text tab's look sign-off; the closed font list's label (P-1) is fixed and pinned by TextTabTests.The_font_select_draws_labels_in_the_closed_box_and_the_open_list, and the defaults and live preview are in TextTabTests.",
+   "parityCheck": "Defaults: text RIZZ, font Anton, colors/size as listed; changing each control updates preview immediately. Signed off at MAN-7 (Este, 2026-10-25, by eye in a live side-by-side with 4.1): the Text tab's look sign-off; the closed font list's label (P-1) is fixed and pinned by TextTabTests.The_font_select_draws_labels_in_the_closed_box_and_the_open_list, and the defaults and live preview are in TextTabTests.",
    "owner": "App.Ribbon.Text",
    "check": "ui-auto",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "text-styles",
@@ -5615,12 +5615,12 @@
    "quirks": "Wide text is top-aligned in the preview box rather than centered.",
    "portTarget": "A small Skia surface control (SKElement) 200x80 max with same fit logic; decide whether to center (quirk) or top-left align (parity).",
    "risk": "low",
-   "parityCheck": "Screenshot compare of the preview region for 'RIZZ' defaults vs 04-word-art.png. Open after M4b: MAN-7 (docs/port/m4b-manual.md), the Text pair on the look page against 4.1's capture; the preview is the engine render, centered (TextTabTests.The_Preview_group_has_4_1s_pixel_values, The_default_preview_is_the_engine_render_of_RIZZ_in_Anton_cropped_to_its_content).",
+   "parityCheck": "Screenshot compare of the preview region for 'RIZZ' defaults vs 04-word-art.png. Signed off at MAN-7 (Este, 2026-10-25, by eye in a live side-by-side with 4.1): the Text pair on the look page against 4.1's capture; the preview is the engine render, centered (TextTabTests.The_Preview_group_has_4_1s_pixel_values, The_default_preview_is_the_engine_render_of_RIZZ_in_Anton_cropped_to_its_content).",
    "owner": "App.Ribbon.Text",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: preview content is drawn at the top-left of the box, leaving blank space right and bottom (clearly unintended, not named in the design). v5: preview is centered in the box with the same uniform fit scale.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "text-add-to-canvas",
@@ -5700,12 +5700,12 @@
    "quirks": "Async FileReader completion order can reorder multiple dropped files; no error UI when an image fails to decode (console.error only). Zone is not keyboard focusable.",
    "portTarget": "Border with AllowDrop=True handling DragEnter/DragLeave/Drop (DataFormats.FileDrop), plus Click -> OpenFileDialog Multiselect. Window-level: ignore drops outside valid targets. Load files sequentially in file order (original is racy).",
    "risk": "low",
-   "parityCheck": "Drop 3 PNGs: three layers named by filename (extension stripped) centered in front torso at 0.85 fit; dragover state visible; non-image file ignored with no dialog. Open after M4b: MAN-4 (docs/port/m4b-manual.md), an Explorer drop of three PNGs and a .txt with the dragover look; the in-app import order and one-step drop are unit-tested.",
+   "parityCheck": "Drop 3 PNGs: three layers named by filename (extension stripped) centered in front torso at 0.85 fit; dragover state visible; non-image file ignored with no dialog. Passed at MAN-4 (Este, 2026-10-25): an Explorer drop of three PNGs and a .txt with the dragover look; the in-app import order and one-step drop are unit-tested.",
    "owner": "App.AssetLibrary",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: multi-file drops add layers in racy FileReader completion order with one undo entry each and the zone is not keyboard focusable. v5: multi-file import in pick order as one undo step and a keyboard-reachable zone. The label wraps in the narrow 200 px panel instead of clipping (M3b Task 4).",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "layers-list",
@@ -6018,12 +6018,12 @@
    "quirks": "No :active (pressed) style exists except layer-item cursor and resize handle; keep pressed state neutral.",
    "portTarget": "A shared Styles.xaml: ButtonBase templates PrimaryButton, SecondaryButton, ToggleActiveButton, PresetButton, FillTypeButton (ToggleButton), with Trigger/VisualState for hover/pressed/disabled and DropShadowEffect glows. Do not port dead classes.",
    "risk": "med",
-   "parityCheck": "State matrix screenshot (normal/hover/pressed/disabled/focus) per button family compared with the web build; disabled opacity exactly 0.4. Open after M4b: MAN-7 (docs/port/m4b-manual.md), the button state matrix on the look page.",
+   "parityCheck": "State matrix screenshot (normal/hover/pressed/disabled/focus) per button family compared with the web build; disabled opacity exactly 0.4. Signed off at MAN-7 (Este, 2026-10-25, by eye in a live side-by-side with 4.1): the button state matrix on the look page.",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "cross-inline-style-overrides",
@@ -6037,12 +6037,12 @@
    "quirks": "Mixed token/hard-coded colors; keep for visual parity.",
    "portTarget": "Port from the inline values, not from the unused CSS rules; build a one-line table per control in XAML (sizes: drawColor 26x24, drawSize 60w, fillColor1/2 26x22, fillAngle 44w, fillScale 44w, bgColor 30x24, bgOpacity 80w, detailColor 26x22, detailWidth 50w, wa colors 28x20, waSize 44w, waStrokeW 60w, waAngle 50w, waText 150w min 36h, waFont 150w, exportTitle 140w).",
    "risk": "low",
-   "parityCheck": "Measure each control's bounding box from a 1920x1080 screenshot and compare with XAML (within 1 px). Open after M4b: MAN-7 (docs/port/m4b-manual.md), the control boxes on the look page.",
+   "parityCheck": "Measure each control's bounding box from a 1920x1080 screenshot and compare with XAML (within 1 px). Signed off at MAN-7 (Este, 2026-10-25, by eye in a live side-by-side with 4.1): the control boxes on the look page.",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "cross-text-select-and-selection",
@@ -6059,12 +6059,12 @@
    "quirks": "Selectable chrome text is accidental.",
    "portTarget": "ToolTip on every control that has a title (strings listed in each item). Set TextBlock.IsHitTestVisible/Selectable false everywhere (WPF TextBlock is not selectable by default; accept deviation). No ContextMenu except where noted.",
    "risk": "low",
-   "parityCheck": "Hover audit: every tooltip string matches the title attributes; no tooltip where none existed (unless added by decision). Open after M4b: MAN-7 (docs/port/m4b-manual.md), the hover and tooltip audit.",
+   "parityCheck": "Hover audit: every tooltip string matches the title attributes; no tooltip where none existed (unless added by decision). Signed off at MAN-7 (Este, 2026-10-25, by eye in a live side-by-side with 4.1): the hover and tooltip audit.",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: tooltips are native title= attributes, shown on mouse hover only. v5: a control's tooltip also shows while the control has keyboard focus and stays until focus moves, Esc or Ctrl (WPF's default, WCAG 1.4.13), so keyboard users read the same text; the tool tooltips drop their shortcut letters until M4's keys exist (measured M3b: the 52x26 and 162x26 windows under Color 1 and Add image).",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "cross-window-dpi-rendering",
@@ -6501,12 +6501,12 @@
    "quirks": "Skia text vs Chromium text shaping/hinting will not be pixel-exact; the parity check for word art must be tolerance or perceptual, unlike fills. The family 'Poppins 700;900' etc. means weight naming must map to the right TTF files. Updating PRIVACY/SECURITY/TEST_PLAN/reviewer letter is part of the port.",
    "portTarget": "Bundle all 15 families as .ttf (OFL-licensed; keep licenses) as Resource/Content fonts and reference via FontFamily('pack://application:,,,/Fonts/#Anton') or load SKTypeface.FromFile for rendering to SkiaSharp. Include the exact weights (Dancing Script 700, Poppins 700+900, Lato 900, Orbitron 700+900). Zero network access afterwards.",
    "risk": "med",
-   "parityCheck": "Render the string 'RIZZ' in each of the 15 fonts x 6 styles with the native renderer and diff against a reference rendered by Electron with fonts installed locally; allow font-rasterizer tolerance. Network monitor: zero outbound connections. Open after M4b, not proven: the 15 fonts are frozen in Solid only (GoldenWordArtFontTests, W1), and the five other styles have goldens in Anton, Poppins and Dancing Script only, so 15 fonts x 6 styles is not shown. Zero outbound connections is proven by the M4b smoke cold start (no socket owned by the process over 6 launches), and the faces are vendored (WordArtHardeningTests.Every_font_renders_RIZZ_in_its_vendored_face_with_no_fallback).",
+   "parityCheck": "Render the string 'RIZZ' in each of the 15 fonts x 6 styles with the native renderer and diff against a reference rendered by Electron with fonts installed locally; allow font-rasterizer tolerance. Network monitor: zero outbound connections. Narrowed in M4b, accepted by Este on 2026-10-25: the 15 fonts are frozen in Solid only (GoldenWordArtFontTests, W1), and the five other styles have goldens in Anton, Poppins and Dancing Script only, so 15 fonts x 6 styles is not shown. Zero outbound connections is proven by the M4b smoke cold start (no socket owned by the process over 6 launches), and the faces are vendored (WordArtHardeningTests.Every_font_renders_RIZZ_in_its_vendored_face_with_no_fallback).",
    "owner": "Engine.WordArt",
    "check": "golden",
    "disposition": "fix",
    "divergence": "4.1: 15 Word Art fonts load from Google Fonts at runtime and fall back offline. v5: fonts bundled with the app and zero network requests.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "build-electron-builder-config",

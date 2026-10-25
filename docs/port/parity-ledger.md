@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**429 rows.** Status: done 352, open 77. Disposition: fix 211, keep 184, drop 26, new 8. Checks: ui-auto 125, unit 124, manual 67, golden 66, none-retired 25, doc 22.
+**429 rows.** Status: done 366, open 63. Disposition: fix 211, keep 184, drop 26, new 8. Checks: ui-auto 125, unit 124, manual 67, golden 66, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -16,12 +16,12 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `asset-dedupe-by-name` | Deduplicate by filename (deepest path wins) | unit | keep | med |
 | done | `asset-folder-grouping` | Grouping by immediate parent folder and subfolder buttons | unit | keep | med |
 | done | `asset-count-label` | Asset count label text | ui-auto | fix | low |
-| open | `asset-grid-thumbnails` | Asset grid thumbnails rendering | ui-auto | fix | med |
+| done | `asset-grid-thumbnails` | Asset grid thumbnails rendering | ui-auto | fix | med |
 | done | `asset-drag-to-canvas` | Drag a thumbnail onto the canvas | ui-auto | fix | med |
 | done | `asset-resizable-browser` | Resizable asset browser (drag handle) | ui-auto | keep | low |
 | done | `panel-asset-library` | Asset library: packs, folder, browser | manual | fix | high |
 | done | `panel-asset-resize-handle` | Asset browser vertical resize handle | ui-auto | keep | low |
-| open | `panel-drop-zone` | Drop art here zone | ui-auto | fix | low |
+| done | `panel-drop-zone` | Drop art here zone | ui-auto | fix | low |
 | done | `io-folder-picker` | Asset library folder picker semantics | unit | fix | med |
 | done | `io-image-formats` | Accepted image inputs (drop, Add image, Background, folder) | manual | fix | med |
 | done | `pack-builtin-load` | Built-in Drips and Word art pack loading | manual | keep | low |
@@ -196,8 +196,8 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `layout-presets` | Layout tab: Presets (6 buttons) | ui-auto | fix | low |
 | done | `layout-background-swatches` | Background swatches (12) | ui-auto | fix | low |
 | done | `layout-bg-settings` | BG Settings: color, image, opacity | ui-auto | fix | low |
-| done | `layout-fill-style` | Fill Style: type, colors, angle, scale | ui-auto | fix | med |
-| open | `layout-template-regions` | Template Regions grid (dynamic) | ui-auto | fix | med |
+| done | `layout-fill-style` | Fill Style: type, colors, angle, scale | ui-auto | keep | med |
+| done | `layout-template-regions` | Template Regions grid (dynamic) | ui-auto | fix | med |
 | done | `ribbon-fill-regions-joined` | Fill Style and the region grid read as one fill tool | ui-auto | fix | low |
 
 ## App.Ribbon.Text
@@ -206,8 +206,8 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 |---|---|---|---|---|---|
 | done | `wordart-state-defaults` | Word Art control set and default values | ui-auto | fix | low |
 | done | `wordart-preview-live` | Live preview wiring | ui-auto | fix | low |
-| open | `text-inputs` | Text tab: text, font, colors, size | ui-auto | keep | med |
-| open | `text-preview` | Word Art live preview canvas | ui-auto | fix | low |
+| done | `text-inputs` | Text tab: text, font, colors, size | ui-auto | keep | med |
+| done | `text-preview` | Word Art live preview canvas | ui-auto | fix | low |
 | done | `text-add-to-canvas` | Add to canvas (Word Art layer) | unit | fix | med |
 
 ## App.Shell
@@ -216,23 +216,23 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 |---|---|---|---|---|---|
 | done | `ribbon-tab-switch` | Ribbon tab switching | ui-auto | keep | low |
 | done | `mode-toggle-button` | Shirt/Pants toggle button | ui-auto | keep | low |
-| open | `project-startup` | Initial render and startup order | manual | fix | low |
+| done | `project-startup` | Initial render and startup order | manual | fix | low |
 | open | `shell-window-frame` | Window frame, title, menu, default size | manual | fix | low |
-| open | `shell-layout-skeleton` | Page skeleton and flex layout | manual | fix | low |
+| done | `shell-layout-skeleton` | Page skeleton and flex layout | manual | fix | low |
 | done | `shell-responsive-breakpoint` | Narrow-window breakpoint | ui-auto | keep | low |
-| open | `shell-header` | Header bar content and styling | manual | fix | med |
+| done | `shell-header` | Header bar content and styling | manual | fix | med |
 | done | `shell-footer` | Footer line | unit | fix | low |
 | done | `theme-tokens-colors` | Color token set (:root) | manual | keep | low |
-| open | `theme-tokens-shape-motion-type` | Radii, shadows, motion, type tokens | manual | keep | med |
+| done | `theme-tokens-shape-motion-type` | Radii, shadows, motion, type tokens | manual | keep | med |
 | done | `font-ui-runtime-google` | UI fonts loaded at runtime from Google Fonts | manual | fix | med |
 | done | `theme-scrollbars` | Scrollbar styling (effective result) | manual | keep | low |
 | open | `a11y-focus-rings` | Keyboard focus ring | ui-auto | fix | med |
 | done | `ribbon-tabs-switching` | Ribbon tab strip and switching | ui-auto | keep | low |
-| open | `ribbon-group-structure` | Ribbon group chrome | manual | keep | low |
+| done | `ribbon-group-structure` | Ribbon group chrome | manual | fix | low |
 | done | `ribbon-overflow-hscroll` | Ribbon horizontal overflow | manual | keep | low |
-| open | `cross-undo-disabled-style` | Button visual states (base, hover, active, disabled) | manual | keep | med |
-| open | `cross-inline-style-overrides` | Inline styles override CSS (effective values) | manual | keep | low |
-| open | `cross-text-select-and-selection` | Text selection, context menu, tooltips | manual | fix | low |
+| done | `cross-undo-disabled-style` | Button visual states (base, hover, active, disabled) | manual | keep | med |
+| done | `cross-inline-style-overrides` | Inline styles override CSS (effective values) | manual | keep | low |
+| done | `cross-text-select-and-selection` | Text selection, context menu, tooltips | manual | fix | low |
 | done | `cross-window-dpi-rendering` | Pixel scale / DPI behavior | manual | keep | med |
 | open | `shell-window-size` | Initial window 1200x800, centered, resizable | ui-auto | fix | low |
 | done | `shell-window-title` | Window title is a static product name | ui-auto | keep | low |
@@ -507,7 +507,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `wordart-edge-cases` | Word Art edge cases and invalid input | unit | fix | low |
 | done | `font-wordart-runtime-google` | 15 Word Art fonts loaded from Google Fonts | golden | fix | med |
 | done | `text-styles` | Word Art styles (6) and render pipeline | golden | keep | high |
-| open | `fonts-google-runtime` | 15 Word Art fonts load from Google Fonts at runtime (offline users get fallbacks) | golden | fix | med |
+| done | `fonts-google-runtime` | 15 Word Art fonts load from Google Fonts at runtime (offline users get fallbacks) | golden | fix | med |
 | done | `wordart-layer-name-emoji` | Word Art layer name has a sparkle emoji prefix | unit | keep | low |
 
 ## Package

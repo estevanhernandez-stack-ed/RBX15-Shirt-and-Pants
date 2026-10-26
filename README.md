@@ -24,9 +24,8 @@ that fills the window, built for the exact 585×559 template grid.
 <sub>Independent third-party tool. Not affiliated with Roblox Corporation. Roblox is a trademark of Roblox Corporation, used nominatively to describe the output format.</sub>
 </p>
 
-<!-- D3: item 16 swaps this and the Quick tour images for v5 captures from docs/screenshots/5.0/ (Home, Background, Details, Text, a finished shirt). -->
 <p align="center">
-  <img src="docs/screenshots/app-home.png" alt="RBX15 Classic Shirt and Pants Maker, Home tab" width="860">
+  <img src="docs/screenshots/5.0/05-finished-shirt.png" alt="RBX15 Classic Shirt and Pants Maker 5.0 with a finished shirt: a gradient across every panel, a drip, a collar, cuffs and Word Art, with the 3D preview" width="860">
 </p>
 
 ---
@@ -63,19 +62,14 @@ To build the MSIX and the portable zip, run `scripts/build-msix.ps1` (it needs t
 
 ## A quick tour
 
-<!-- D3: these images are the 4.1 look until item 16 captures v5. -->
 <table>
   <tr>
-    <td align="center" width="50%"><img src="docs/screenshots/app-layers.png" alt="Layers panel" width="420"><br><strong>Layers panel</strong><br><sub>large thumbnails, Dupe, Hide and Del buttons</sub></td>
-    <td align="center" width="50%"><img src="docs/screenshots/app-adjustments.png" alt="Image adjustments panel" width="420"><br><strong>Image adjustments</strong><br><sub>brightness, contrast, saturation, hue, live</sub></td>
+    <td align="center" width="50%"><img src="docs/screenshots/5.0/01-home.png" alt="Home tab with a layer selected" width="420"><br><strong>Home</strong><br><sub>tools, brush, placement, undo, file and recent projects</sub></td>
+    <td align="center" width="50%"><img src="docs/screenshots/5.0/02-background.png" alt="Background tab with presets, swatches, fill styles and template regions" width="420"><br><strong>Background</strong><br><sub>presets, backgrounds, fill styles, template regions</sub></td>
   </tr>
   <tr>
-    <td align="center" width="50%"><img src="docs/screenshots/app-adjustments-rgb.png" alt="Per-channel RGB shift sliders" width="420"><br><strong>Per-channel RGB shift</strong><br><sub>tint a layer without touching the source image</sub></td>
-    <td align="center" width="50%"><img src="docs/screenshots/app-wordart.png" alt="Word Art tab" width="420"><br><strong>Word Art</strong><br><sub>15 fonts, six styles, live preview</sub></td>
-  </tr>
-  <tr>
-    <td align="center" width="50%"><img src="docs/screenshots/app-layout.png" alt="Background tab with presets" width="420"><br><strong>Background tab</strong><br><sub>presets, backgrounds, fill styles, template regions</sub></td>
-    <td align="center" width="50%"><img src="docs/screenshots/app-details.png" alt="Details tab with clothing details" width="420"><br><strong>Details tab</strong><br><sub>collars, cuffs, hems, seams, pockets, plackets</sub></td>
+    <td align="center" width="50%"><img src="docs/screenshots/5.0/03-details.png" alt="Details tab with collars, cuffs, seams and accents" width="420"><br><strong>Details</strong><br><sub>collars, cuffs, hems, seams, pockets, plackets</sub></td>
+    <td align="center" width="50%"><img src="docs/screenshots/5.0/04-text.png" alt="Text tab with the Word Art preview" width="420"><br><strong>Text</strong><br><sub>Word Art: 15 fonts, six styles, live preview</sub></td>
   </tr>
 </table>
 

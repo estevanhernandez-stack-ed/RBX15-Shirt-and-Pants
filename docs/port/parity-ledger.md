@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**436 rows.** Status: done 401, open 35. Disposition: fix 211, keep 184, drop 26, new 15. Checks: ui-auto 127, unit 127, manual 69, golden 66, none-retired 25, doc 22.
+**436 rows.** Status: done 407, open 29. Disposition: fix 211, keep 184, drop 26, new 15. Checks: ui-auto 127, unit 127, manual 69, golden 66, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -10,7 +10,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 |---|---|---|---|---|---|
 | done | `drop-panel` | Drop zone panel: click-to-browse and drag-over highlight | ui-auto | keep | low |
 | done | `drop-filetypes` | Image file acceptance and naming | ui-auto | fix | med |
-| open | `packs-resolve-dir` | Packs directory resolution: dev vs packaged | manual | keep | low |
+| done | `packs-resolve-dir` | Packs directory resolution: dev vs packaged | manual | keep | low |
 | done | `packs-load-builtin` | Load built-in pack into asset browser | ui-auto | fix | low |
 | done | `asset-open-folder` | Open folder (webkitdirectory) and image filtering | ui-auto | fix | low |
 | done | `asset-dedupe-by-name` | Deduplicate by filename (deepest path wins) | unit | keep | med |
@@ -84,7 +84,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
-| open | `upgrade-paste-as-layer` | Ctrl+V pastes the clipboard image as a new layer (new in v5) | unit | new | med |
+| done | `upgrade-paste-as-layer` | Ctrl+V pastes the clipboard image as a new layer (new in v5) | unit | new | med |
 
 ## App.Dialogs
 
@@ -223,7 +223,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `ribbon-tab-switch` | Ribbon tab switching | ui-auto | keep | low |
 | done | `mode-toggle-button` | Shirt/Pants toggle button | ui-auto | keep | low |
 | done | `project-startup` | Initial render and startup order | manual | fix | low |
-| open | `shell-window-frame` | Window frame, title, menu, default size | manual | fix | low |
+| done | `shell-window-frame` | Window frame, title, menu, default size | manual | fix | low |
 | done | `shell-layout-skeleton` | Page skeleton and flex layout | manual | fix | low |
 | done | `shell-responsive-breakpoint` | Narrow-window breakpoint | ui-auto | keep | low |
 | done | `shell-header` | Header bar content and styling | manual | fix | med |
@@ -251,8 +251,8 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `font-ui-weight-600` | UI labels at CSS weight 600 in the vendored variable fonts | manual | fix | low |
 | done | `window-title-dirty-marker` | Window title names the project file and marks unsaved changes | unit | fix | low |
 | done | `upgrade-error-log` | Local error log of unhandled exceptions (new in v5) | unit | new | low |
-| open | `upgrade-jump-list` | Recent projects on the taskbar jump list (new in v5) | manual | new | med |
-| open | `upgrade-file-association-launch` | Launch with a .r15proj; a second project opens a second window (new in v5) | manual | new | med |
+| done | `upgrade-jump-list` | Recent projects on the taskbar jump list (new in v5) | manual | new | med |
+| done | `upgrade-file-association-launch` | Launch with a .r15proj; a second project opens a second window (new in v5) | manual | new | med |
 
 ## App.Storage
 
@@ -530,7 +530,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `shell-window-no-icon` | No window or exe icon configured | manual | fix | low |
 | done | `pack-contents` | Pack inventory that must ship byte-identical | unit | keep | low |
 | done | `msix-identity` | MSIX Identity must be preserved exactly (same Store identity) | manual | keep | high |
-| open | `msix-application-entry` | Application element: Id, Executable, EntryPoint, tiles | manual | keep | med |
+| done | `msix-application-entry` | Application element: Id, Executable, EntryPoint, tiles | manual | keep | med |
 | done | `msix-capabilities` | Capabilities: only runFullTrust; justification text; network capability gap | doc | fix | med |
 | done | `msix-target-os` | TargetDeviceFamily min/max | manual | keep | low |
 | open | `msix-arch-self-contained` | x64 only; self-contained publish layout | manual | keep | med |

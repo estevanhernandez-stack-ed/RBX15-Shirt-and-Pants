@@ -40,7 +40,7 @@ If you block the app in a firewall, nothing changes.
 
 ## Fonts
 
-The app includes 18 font families, all under the SIL Open Font License 1.1: Anton, Bangers, Bebas Neue, Bungee Shade, Creepster, Dancing Script, Great Vibes, Inter, JetBrains Mono, Lato, Orbitron, Pacifico, Permanent Marker, Poppins, Press Start 2P, Righteous, Rubik Mono One and Space Grotesk. Each family's license text ships with the app in `assets\fonts\<family>\OFL.txt`.
+The app includes 18 font families. Seventeen are under the SIL Open Font License 1.1: Anton, Bangers, Bebas Neue, Bungee Shade, Creepster, Dancing Script, Great Vibes, Inter, JetBrains Mono, Lato, Orbitron, Pacifico, Poppins, Press Start 2P, Righteous, Rubik Mono One and Space Grotesk. Permanent Marker is under the Apache License 2.0. Each family's license text ships with the app in `assets\fonts\<family>\` (`OFL.txt`, or `LICENSE.txt` for Permanent Marker).
 
 ## What the app does NOT do
 

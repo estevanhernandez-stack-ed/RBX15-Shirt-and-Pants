@@ -22,3 +22,35 @@ Run the Release build, `dotnet run --project src/RBX15.App/RBX15.App.csproj -c R
 | MAN-18 | With the window restored (not maximized), drag the bottom-right corner inward as far as it goes. Then hover the maximize button for a second. Then drag the window by its title bar into a screen corner. Compare the caption with another app's in dark mode. | The window stops shrinking at 640x480 and the layout stays readable, with no overlapping or cut-off controls and no error. Hovering maximize shows the Windows 11 snap layouts flyout, and the corner drag snaps the window. The caption bar is dark, matching the app header, with the standard minimize, maximize and close buttons. | `shell-window-frame` |
 
 The smoke proved the rest of item 16's list on the real exe, in `.superpowers/m5m6-smoke/out/` (scratch, not in git): an autosave pair within one 60-second tick in the bridged and the normal build, with a sidecar of pid, times, path and version only; Save and Don't save each deleting the pair; a killed process's pair offered at the next launch, Restore giving the dirty titled document and Save writing the original, and Discard deleting the pair; a launch with a project path and a second launch with another giving two windows with their own documents; the Recent drop-down listing both saved files newest first and opening one; a cold start with zero sockets; and the unsigned MSIX and zip build with its package-contents and bridge-exclusion checks. The error log has no bridge command to raise a throw; its real-app check is run D9 (2026-10-25).
+
+## Ledger state after the M5/M6 close
+
+Plan item 17 closed every row the evidence proves. These stay open, each behind one check, and close when it passes: `upgrade-autosave-recovery` and `a11y-focus-rings` are closed with MAN-10 and MAN-14 as pending corroboration (a fail reopens them), and `msix-capabilities` with MAN-17.
+
+| Check | Rows still open behind it |
+| --- | --- |
+| MAN-11 | `upgrade-jump-list` |
+| MAN-12 | `upgrade-file-association-launch` |
+| MAN-13 | `upgrade-paste-as-layer` |
+| MAN-14 | `docs-known-limitations` |
+| MAN-15 | `msix-arch-self-contained` |
+| MAN-16 | `msix-application-entry`, `packs-resolve-dir`, `shell-userdata-footprint` |
+| MAN-18 | `shell-window-frame` |
+| PR #56 merged | `parity-store-update-path` |
+
+## Este / release and after certification
+
+Not buildable by the run and not a MAN check: each needs the release, Partner Center, certification or a clean VM. The ledger closed these rows on what is proven locally (decision L1, marked "Narrowed in M6"), and each clause below is what moved here. A failure here reopens the row it names.
+
+| Row | Moved clause | When |
+| --- | --- | --- |
+| `msix-identity` | Partner Center validation of the uploaded 5.0.0.0 package passes with no identity error. | `/store-api rbx15`, then the Packages page |
+| `msix-capabilities` | Store certification passes with the runFullTrust justification from `reviewer-letter-5.0.0.0.md`. (The local Kit run is MAN-17.) | After submission |
+| `msix-target-os` | The package installs and launches on a Windows 10 1809 (Enterprise or LTSC) VM. | Before or after the tag, on a VM |
+| `ci-windows-release` | The `v5.0.0` tag's run creates the release with the MSIX and zip asset names and a non-empty body; a tag that does not match the csproj version fails the job. | `/cut-release`, then push the tag |
+| `tests-windows-test-plan` | `windows/TEST_PLAN.md` passes on a clean Windows 10 1809+ or 11 VM. | Before the tag |
+| `tests-manual-smoke` | `docs/SMOKE_TEST.md` passes on the release candidate: Part A 4/4, Part B no regressions. | Before the tag |
+| `docs-store-listing` | The Store screenshots: reuse `docs/screenshots/5.0/` or reshoot (D3). A fail in MAN-10, MAN-11 or MAN-12 cuts its bullet from the listing and the release notes. | Before submission |
+| `docs-privacy-claims` | The privacy URL (`docs/PRIVACY.md` on main) shows the 2026-10-25 text. | After this branch merges |
+| `docs-manifest-626labs` | The manifest validates against the hub's schema and the hub card shows the WPF stack after a rebuild. | After merge, on the hub's rebuild |
+| `parity-store-update-path` | Merge PR #56, which closes the row on Este's in-place update of the Store-signed 4.1 (2026-10-25). | Este's review |

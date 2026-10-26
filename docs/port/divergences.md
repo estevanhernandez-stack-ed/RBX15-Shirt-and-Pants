@@ -249,7 +249,7 @@ Every deliberate behavior change in v5, generated from `parity-ledger.json` rows
 | `tests-smoke-parse` | Retired | 4.1: new Function() parse check on main.js and editor.js. v5: the compiler with warnings-as-errors is the syntax floor. |
 | `vestigial-hidden-controls` | Retired | 4.1: hidden unused assetType select and btnExport2 button exist in markup. v5: not carried over. |
 
-## New in v5 (15)
+## New in v5 (16)
 
 | ID | Owner | Behavior |
 |---|---|---|
@@ -267,4 +267,5 @@ Every deliberate behavior change in v5, generated from `parity-ledger.json` rows
 | `upgrade-jump-list` | App.Shell | Recent projects on the taskbar jump list (new in v5) |
 | `upgrade-file-association-launch` | App.Shell | Launch with a .r15proj; a second project opens a second window (new in v5) |
 | `upgrade-paste-as-layer` | App.Clipboard | Ctrl+V pastes the clipboard image as a new layer (new in v5) |
+| `upgrade-new-window` | App.Clipboard | New: a fresh, empty window (Ctrl+N and a File group button) |
 | `parity-ui-automation-suite` | Parity | Thin UI automation suite over the real window (spec §6 Tier 3) |

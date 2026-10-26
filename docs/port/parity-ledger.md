@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**436 rows.** Status: done 407, open 29. Disposition: fix 211, keep 184, drop 26, new 15. Checks: ui-auto 127, unit 127, manual 69, golden 66, none-retired 25, doc 22.
+**437 rows.** Status: done 408, open 29. Disposition: fix 211, keep 184, drop 26, new 16. Checks: ui-auto 128, unit 127, manual 69, golden 66, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -85,6 +85,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
 | done | `upgrade-paste-as-layer` | Ctrl+V pastes the clipboard image as a new layer (new in v5) | unit | new | med |
+| done | `upgrade-new-window` | New: a fresh, empty window (Ctrl+N and a File group button) | ui-auto | new | low |
 
 ## App.Dialogs
 

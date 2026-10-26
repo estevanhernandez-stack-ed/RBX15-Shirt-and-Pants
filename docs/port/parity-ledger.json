@@ -8981,7 +8981,7 @@
    "portTarget": "A New button first in the File group and Ctrl+N open a new, empty RBX15 window as its own process (S1: one process per window); the current window and its document are untouched. A focused text field keeps Ctrl+N, as it keeps Ctrl+O; Keys OFF does not block it. A failed launch is a status-strip line.",
    "risk": "low",
    "parityCheck": "FileGroupTests.New_asks_the_launcher_for_a_window_and_leaves_this_document_alone and New_reports_a_failed_launch_in_the_status_strip; ShellTests.A_file_chord_runs_its_file_group_command_unless_a_text_field_has_focus and The_window_binds_exactly_the_nine_chords; Task4ViewTests.The_file_group_shows_New_then_4_1s_four_buttons_then_Recent; HomeRibbonViewTests.The_recent_button_matches_the_file_group_buttons_and_its_menu_is_named; UiFlowTests.New_asks_the_launcher_for_a_new_window_and_changes_nothing_here (UIA Invoke and Ctrl+N with Keys OFF, a fake launcher). Narrowed in M6: the real second window from the installed package is not run by a test; ProcessAppLauncher is the same code path MAN-12's second-window launch and the smoke's N1d proved, with no path argument.",
-   "owner": "App.Clipboard",
+   "owner": "App.Shell",
    "check": "ui-auto",
    "disposition": "new",
    "divergence": "4.1: no New command. v5: New and Ctrl+N open a fresh, empty window (Este, 2026-10-25).",

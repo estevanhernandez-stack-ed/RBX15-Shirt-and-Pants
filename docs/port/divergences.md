@@ -267,5 +267,5 @@ Every deliberate behavior change in v5, generated from `parity-ledger.json` rows
 | `upgrade-jump-list` | App.Shell | Recent projects on the taskbar jump list (new in v5) |
 | `upgrade-file-association-launch` | App.Shell | Launch with a .r15proj; a second project opens a second window (new in v5) |
 | `upgrade-paste-as-layer` | App.Clipboard | Ctrl+V pastes the clipboard image as a new layer (new in v5) |
-| `upgrade-new-window` | App.Clipboard | New: a fresh, empty window (Ctrl+N and a File group button) |
+| `upgrade-new-window` | App.Shell | New: a fresh, empty window (Ctrl+N and a File group button) |
 | `parity-ui-automation-suite` | Parity | Thin UI automation suite over the real window (spec §6 Tier 3) |

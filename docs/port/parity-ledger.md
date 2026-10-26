@@ -85,7 +85,6 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
 | done | `upgrade-paste-as-layer` | Ctrl+V pastes the clipboard image as a new layer (new in v5) | unit | new | med |
-| done | `upgrade-new-window` | New: a fresh, empty window (Ctrl+N and a File group button) | ui-auto | new | low |
 
 ## App.Dialogs
 
@@ -254,6 +253,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `upgrade-error-log` | Local error log of unhandled exceptions (new in v5) | unit | new | low |
 | done | `upgrade-jump-list` | Recent projects on the taskbar jump list (new in v5) | manual | new | med |
 | done | `upgrade-file-association-launch` | Launch with a .r15proj; a second project opens a second window (new in v5) | manual | new | med |
+| done | `upgrade-new-window` | New: a fresh, empty window (Ctrl+N and a File group button) | ui-auto | new | low |
 
 ## App.Storage
 

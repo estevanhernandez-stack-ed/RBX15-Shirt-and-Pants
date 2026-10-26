@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RBX15 Classic Shirt and Pants Maker — desktop editor for Roblox templates</title>
-  <meta name="description" content="Native Windows desktop editor for Roblox Classic R15 shirt and pants templates. Layer-based compositing, non-destructive image adjustments, word art, drawing tools, built for the exact 585x559 template grid." />
+  <title>RBX15 Classic Shirt and Pants Maker: a desktop editor for Roblox templates</title>
+  <meta name="description" content="Native Windows desktop editor for Roblox Classic R15 shirt and pants templates. Layers, non-destructive image adjustments, word art, drawing tools and a 3D preview, built for the exact 585x559 template grid. Makes no network requests." />
   <meta name="theme-color" content="#0f1f31" />
   <meta name="color-scheme" content="dark" />
 
@@ -12,10 +12,6 @@
   <meta property="og:title" content="RBX15 Classic Shirt and Pants Maker" />
   <meta property="og:description" content="Layer-based desktop editor for Roblox Classic R15 shirt and pants templates. Non-destructive adjustments, word art, drawing tools." />
   <meta name="twitter:card" content="summary_large_image" />
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
     :root {
@@ -37,9 +33,10 @@
       --border-1: rgba(255,255,255,.08);
       --border-2: rgba(255,255,255,.14);
       --border-accent: rgba(23,212,250,.45);
-      --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-      --font-body: 'Inter', system-ui, -apple-system, sans-serif;
-      --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+      /* System fonts only: the page makes no font requests. */
+      --font-display: 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
+      --font-body: 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      --font-mono: 'Cascadia Mono', Consolas, ui-monospace, 'SF Mono', Menlo, monospace;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -411,21 +408,22 @@
       <a href="#shots">Tour</a>
       <a href="#features">Features</a>
       <a href="#install">Install</a>
-      <a href="#roadmap">Roadmap</a>
+      <a href="#whats-new">What's new</a>
       <a href="https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants">GitHub</a>
-      <a href="https://626labs.dev" class="pub-chip">626 Labs</a>
+      <a href="https://626labs.dev" class="pub-chip">626Labs</a>
     </div>
   </div>
 </nav>
 
 <section class="hero">
   <div class="container">
-    <div class="eyebrow">Windows desktop · v4.0 · open source</div>
+    <div class="eyebrow">Windows desktop · v5.0 · open source</div>
     <h1>Design Roblox templates<br>without fighting your tools.</h1>
-    <p class="tagline">A native editor for Roblox Classic R15 shirt and pants templates. Layer-based compositing, non-destructive image adjustments, word art, drawing tools — built for the exact 585×559 template grid.</p>
+    <p class="tagline">A native editor for Roblox Classic R15 shirt and pants templates. Layers, non-destructive image adjustments, word art and drawing tools, on a large canvas that fills the window and is built for the exact 585×559 template grid.</p>
     <p class="sub">Imagine Something Else.</p>
     <div class="ctas">
-      <a href="https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/releases" class="btn btn-primary">Download for Windows</a>
+      <a href="https://apps.microsoft.com/detail/9MV9G4XFJ8S0" class="btn btn-primary">Get it from the Microsoft Store</a>
+      <a href="https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/releases" class="btn btn-ghost">Portable zip</a>
       <a href="https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants" class="btn btn-ghost">View on GitHub</a>
     </div>
   </div>
@@ -434,20 +432,22 @@
 <section id="shots" class="shots">
   <div class="container">
     <h2>See it in action.</h2>
-    <p class="subhead">The whole editor fits in one window. Ribbon toolbar up top, asset library on the left, the canvas in the middle, zoom and transform tools on demand.</p>
+    <p class="subhead">The whole editor fits in one window. Ribbon up top, asset library and layers on the left, the canvas in the middle, a 3D preview on the right.</p>
+
+    <!-- D3: item 16 swaps these images for v5 captures from docs/screenshots/5.0/ (Home, Background, Details, Text, a finished shirt). Until then they are the 4.1 look. -->
 
     <div class="hero-shot">
-      <img src="screenshots/app-home.png" alt="RBX15 Classic Shirt and Pants Maker — Home tab" />
+      <img src="screenshots/app-home.png" alt="RBX15 Classic Shirt and Pants Maker, Home tab" />
     </div>
 
     <div class="grid">
       <div class="shot">
         <img src="screenshots/app-layers.png" alt="Layers panel with large thumbnails and labeled action buttons" />
-        <div class="cap"><strong>Layers panel</strong>Big thumbnails. Labeled Dupe / Hide / Del buttons.</div>
+        <div class="cap"><strong>Layers panel</strong>Big thumbnails. Labeled Dupe, Hide and Del buttons.</div>
       </div>
       <div class="shot">
         <img src="screenshots/app-adjustments.png" alt="Image adjustments panel with brightness, contrast, saturation, hue sliders" />
-        <div class="cap"><strong>Image adjustments</strong>Brightness, contrast, saturation, hue rotate — real-time.</div>
+        <div class="cap"><strong>Image adjustments</strong>Brightness, contrast, saturation and hue rotate, live.</div>
       </div>
       <div class="shot">
         <img src="screenshots/app-adjustments-rgb.png" alt="Per-channel RGB shift sliders" />
@@ -455,11 +455,11 @@
       </div>
       <div class="shot">
         <img src="screenshots/app-wordart.png" alt="Word art generator tab" />
-        <div class="cap"><strong>Word art generator</strong>15 fonts. Six styles. Live preview.</div>
+        <div class="cap"><strong>Word art</strong>15 fonts. Six styles. Live preview.</div>
       </div>
       <div class="shot">
-        <img src="screenshots/app-layout.png" alt="Layout tab with presets and template regions" />
-        <div class="cap"><strong>Layout tab</strong>Presets, backgrounds, template regions.</div>
+        <img src="screenshots/app-layout.png" alt="Background tab with presets and template regions" />
+        <div class="cap"><strong>Background tab</strong>Presets, backgrounds, fill styles, template regions.</div>
       </div>
       <div class="shot">
         <img src="screenshots/app-details.png" alt="Details tab with clothing generators" />
@@ -478,42 +478,62 @@
       <div class="card">
         <div class="tag">Compositing</div>
         <h3>Layer-based editing</h3>
-        <p>Drag to reorder, duplicate, hide, or delete. Every layer keeps its own transform and adjustment state. On-canvas handles for move / scale / rotate. Scroll-wheel scales. Arrow keys nudge.</p>
+        <p>Drag to reorder, duplicate, hide, or delete. Every layer keeps its own transform and adjustment state. On-canvas handles for move, scale and rotate. The scroll wheel scales. Arrow keys nudge.</p>
       </div>
       <div class="card">
         <div class="tag">Adjustments</div>
         <h3>Non-destructive image adjustments</h3>
-        <p>Brightness, contrast, saturation, hue rotate, plus per-channel RGB shift. Every slider renders in real time. Baked into the exported PNG. Reset in one click.</p>
+        <p>Brightness, contrast, saturation, hue rotate, plus per-channel RGB shift. Every slider updates the canvas as you drag. Baked into the exported PNG. Reset in one click.</p>
       </div>
       <div class="card">
         <div class="tag">Roblox-specific</div>
         <h3>Exact R15 grid awareness</h3>
-        <p>Precise torso, arm, leg, and waist regions. Mode toggle between Shirt and Pants templates. Live mask overlay so you can see what will actually show on the model. Placement presets for Fit Front, F+B, Stretch, Allover, Scatter.</p>
+        <p>Precise torso, arm, leg, and waist regions. Mode toggle between Shirt and Pants templates. A mask overlay shows what will actually show on the model. Placement buttons for Fit Front, F+B, Stretch, Allover and Scatter.</p>
       </div>
       <div class="card">
         <div class="tag">Assets</div>
         <h3>Asset library browser</h3>
-        <p>Point at a folder, get a thumbnail grid. Drag to canvas and the image lands where you drop it. Click for the default torso spot. Right-click for full-bleed scale.</p>
+        <p>Load the bundled Drips and Word art packs, or point at a folder. Drag a thumbnail to the canvas and the image lands where you drop it. Click to fit it in the front slot. Right-click for full-template scale.</p>
       </div>
       <div class="card">
         <div class="tag">Word art</div>
         <h3>15 fonts, six styles</h3>
-        <p>Solid, gradient, neon, shadow, outline, retro. Live preview, adjustable stroke and angle. Add to canvas at any size. Full text wraps, multi-line support.</p>
+        <p>Solid, gradient, neon, shadow, outline, retro. Live preview, adjustable stroke and angle. Lines break where you press Enter. Add to canvas places the text at 85% of the front slot, whatever the size box says.</p>
       </div>
       <div class="card">
         <div class="tag">Clothing details</div>
         <h3>Auto-generate seams + trim</h3>
-        <p>V-neck, crew, scoop, henley collars. Cuffs, hems, side seams, pockets, plackets, shoulder stripes, arm bands, back yokes. Adjustable width, color, and optional stitched-dash look.</p>
+        <p>V-neck, crew, scoop and henley collars. Cuffs, hems, side seams, pockets, plackets, shoulder stripes, arm bands and back yokes. Adjustable width and color, with an optional stitched look.</p>
       </div>
       <div class="card">
         <div class="tag">Privacy</div>
-        <h3>No accounts, no telemetry</h3>
-        <p>Images load from disk. Projects save to disk. Templates download to disk. The one outbound request is loading fonts from Google Fonts on launch &mdash; no telemetry, no analytics, no cloud sync. See the <a href="PRIVACY.md">privacy policy</a> for the full detail.</p>
+        <h3>No accounts, no telemetry, no network</h3>
+        <p>Images load from disk. Projects save to disk. Templates download to disk. The app makes no network requests, and its fonts are bundled. No analytics, no cloud sync. The <a href="PRIVACY.md">privacy policy</a> lists the few small files the app keeps and where.</p>
       </div>
       <div class="card">
         <div class="tag">Workflow</div>
         <h3>Save work, download template</h3>
-        <p>Save your workspace as a <code>.r15proj</code> file and reopen it later with every layer and adjustment preserved. Export the finished 585×559 PNG when you're ready to upload to Roblox.</p>
+        <p>Save your workspace as a <code>.r15proj</code> file and reopen it later with every layer and adjustment preserved. Undo and redo cover every edit, 30 steps deep. Export the finished 585×559 PNG when you're ready to upload to Roblox.</p>
+      </div>
+      <div class="card">
+        <div class="tag">Preview</div>
+        <h3>3D preview</h3>
+        <p>A Classic or R15 avatar wearing your template, updated as you edit. Drag to turn it, double-click to face front. Hide it with one checkbox when you need the room.</p>
+      </div>
+      <div class="card">
+        <div class="tag">Safety net</div>
+        <h3>Autosave and crash recovery</h3>
+        <p>While you have unsaved changes, RBX15 keeps a copy of your work every 60 seconds, never over your own file. After a crash, the next launch offers to restore it.</p>
+      </div>
+      <div class="card">
+        <div class="tag">Launch</div>
+        <h3>Recent projects and the jump list</h3>
+        <p>A Recent button beside Open lists your last 10 projects. The same list sits on the taskbar jump list. Double-click a <code>.r15proj</code> in Explorer and it opens in its own window.</p>
+      </div>
+      <div class="card">
+        <div class="tag">Import</div>
+        <h3>Paste as a layer</h3>
+        <p>Press Ctrl+V and the image on your clipboard becomes a new layer on top, with its transparency kept. Image files copied in Explorer paste too.</p>
       </div>
     </div>
   </div>
@@ -522,55 +542,55 @@
 <section id="install" class="install">
   <div class="container">
     <h2>Install.</h2>
-    <p style="color: var(--ink-300); max-width: 620px;">Windows 10 / 11. Microsoft Store submission pending — for now, install via the NSIS installer or build from source.</p>
+    <p style="color: var(--ink-300); max-width: 620px;">Windows 10 (version 1809) or 11, 64-bit. Nothing else to install: the app carries its own .NET runtime.</p>
 
     <div class="steps">
       <div class="step">
         <div class="num">1</div>
-        <p>Download <code>RBX15 Classic Shirt and Pants Maker Setup.exe</code> from <a href="https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/releases">Releases</a>.</p>
+        <p>Get <a href="https://apps.microsoft.com/detail/9MV9G4XFJ8S0">RBX15 Classic Shirt and Pants Maker</a> from the Microsoft Store. It installs and updates itself, and Explorer opens <code>.r15proj</code> files in it.</p>
       </div>
       <div class="step">
         <div class="num">2</div>
-        <p>Click through the SmartScreen "unknown publisher" warning. Code signing is deferred until Microsoft Store approval clears.</p>
+        <p>Or download <code>RBX15-Maker-v5.0.0-portable-win-x64.zip</code> from <a href="https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/releases">Releases</a>, extract it anywhere and run <code>RBX15.App.exe</code>. The zip is unsigned, so SmartScreen may ask you to confirm the first launch.</p>
       </div>
       <div class="step">
         <div class="num">3</div>
-        <p>Run the installer. Pick an install directory. Desktop and Start Menu shortcuts are created automatically.</p>
+        <p>Quit RBX15 before updating, and save your work first. With the zip, extract the new version into a fresh folder.</p>
       </div>
     </div>
 
     <h3 style="font-family: var(--font-display); font-size: 18px; color: var(--ink-0); margin-top: 40px; margin-bottom: 14px;">Or build from source</h3>
     <pre><code>git clone https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants.git
 cd RBX15-Shirt-and-Pants
-npm install
-npm run build    # produces dist/ with the installer</code></pre>
-    <p style="color: var(--ink-400); font-size: 13px; margin-top: 12px;">Node.js 18+ and Electron 41 required. <code>npm start</code> for dev mode.</p>
+dotnet build src/RBX15.slnx -c Release
+dotnet run --project src/RBX15.App</code></pre>
+    <p style="color: var(--ink-400); font-size: 13px; margin-top: 12px;">The .NET 10 SDK on Windows. <code>scripts/build-msix.ps1</code> builds the MSIX and the portable zip.</p>
   </div>
 </section>
 
-<section id="roadmap" class="roadmap">
+<section id="whats-new" class="roadmap">
   <div class="container">
-    <h2>Roadmap.</h2>
+    <h2>What's new in 5.0.</h2>
 
     <ul>
-      <li><span class="status shipped">Shipped</span><p>v4.0 polish release — decomposition, non-destructive adjustments, canvas drop positioning, redesigned layer panel, 626 Labs brand palette.</p></li>
-      <li><span class="status next">In review</span><p>Microsoft Store MSIX submission.</p></li>
-      <li><span class="status next">Next</span><p>Code signing for the Windows binary — eliminates the SmartScreen prompt.</p></li>
-      <li><span class="status next">Next</span><p><code>winget install rbx-maker</code> manifest (blocked on MS Store certificate).</p></li>
-      <li><span class="status next">Future</span><p>Accessibility pass — keyboard navigation for canvas, screen-reader-friendly controls.</p></li>
-      <li><span class="status next">Future</span><p>Historical versions browser — open any saved <code>.r15proj</code> as a starting point for a new design.</p></li>
+      <li><span class="status shipped">5.0</span><p>A native Windows app on WPF and .NET 10, self-contained, with no network requests and every font bundled.</p></li>
+      <li><span class="status shipped">5.0</span><p>Autosave every 60 seconds while you have unsaved changes, and a restore prompt after a crash.</p></li>
+      <li><span class="status shipped">5.0</span><p>Recent projects in the File group and on the taskbar jump list. Double-click a <code>.r15proj</code> to open it. Ctrl+V pastes an image as a layer.</p></li>
+      <li><span class="status shipped">5.0</span><p>A 3D avatar preview, undo and redo that cover every edit, and an accessibility pass: focus rings and names on every control.</p></li>
+      <li><span class="status next">Limit</span><p>High-contrast themes are not supported: the app draws its own dark palette.</p></li>
+      <li><span class="status next">Limit</span><p>Screen readers read the controls, but edits made on the canvas are not announced.</p></li>
     </ul>
   </div>
 </section>
 
 <footer>
   <div class="container inner">
-    <div>Built by <a href="https://626labs.dev">626 Labs LLC</a></div>
+    <div>Built by <a href="https://626labs.dev">626Labs</a></div>
     <div>
       <a href="https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants">GitHub</a> ·
       <a href="PRIVACY.md">Privacy</a> ·
       <a href="https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/blob/main/LICENSE">License</a> ·
-      <a href="https://626labs.dev">More 626 Labs tools</a>
+      <a href="https://626labs.dev">More 626Labs tools</a>
     </div>
   </div>
 </footer>

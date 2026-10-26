@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**437 rows.** Status: done 408, open 29. Disposition: fix 211, keep 184, drop 26, new 16. Checks: ui-auto 128, unit 127, manual 69, golden 66, none-retired 25, doc 22.
+**437 rows.** Status: done 409, open 28. Disposition: fix 211, keep 184, drop 26, new 16. Checks: ui-auto 128, unit 127, manual 69, golden 66, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -286,7 +286,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `docs-manifest-626labs` | .626labs/manifest.json product card | doc | fix | low |
 | done | `docs-feedback-md` | feedback.md: four seeded audit findings, all marked fixed | doc | keep | low |
 | done | `legacy-docs-superpowers` | docs/superpowers specs and plans (v4 polish) | doc | fix | low |
-| open | `docs-known-limitations` | Known limitations documented in RELEASE_NOTES that the port can close | doc | fix | low |
+| done | `docs-known-limitations` | Known limitations documented in RELEASE_NOTES that the port can close | doc | fix | low |
 | done | `wordart-claim-wrap-any-size` | Landing page claims 'full text wraps' and 'add at any size'; the code does neither | doc | fix | low |
 | done | `claim-fullscreen-canvas` | 'Fullscreen canvas' claim has no fullscreen feature behind it | doc | fix | low |
 | done | `claim-region-click-color-picker` | Test docs say clicking a region opens a color picker; it paints the current Fill Style | doc | fix | low |

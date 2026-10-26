@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**437 rows.** Status: done 409, open 28. Disposition: fix 211, keep 184, drop 26, new 16. Checks: ui-auto 128, unit 127, manual 69, golden 66, none-retired 25, doc 22.
+**437 rows.** Status: done 410, open 27. Disposition: fix 211, keep 184, drop 26, new 16. Checks: ui-auto 128, unit 127, manual 69, golden 66, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -542,7 +542,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `ci-windows-release` | windows-release.yml: tag-triggered release with NSIS + MSIX assets | manual | fix | med |
 | done | `ci-docs-check` | docs-check.yml: informational markdownlint | manual | keep | low |
 | done | `ci-funding` | FUNDING.yml sponsor link | manual | keep | low |
-| open | `parity-store-update-path` | Upgrade path from the live Electron package to the native build | manual | keep | med |
+| done | `parity-store-update-path` | Upgrade path from the live Electron package to the native build | manual | keep | med |
 
 ## Parity
 

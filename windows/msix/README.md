@@ -63,7 +63,7 @@ Proves a 4.1 install updates in place to 5.0.0.0 with the same identity, the pin
    Export-Certificate -Cert $c -FilePath C:\temp\rbx15-41-dev.cer
    ```
 
-3. If the Store copy of RBX15 is installed, uninstall it first. Same identity with a different signer does not install over it.
+3. If the Store copy of RBX15 is installed, you can skip the 4.1 package and update the Store copy directly: a Store-signed 4.1 takes the self-signed 5.0 as an in-place update once the dev certificate is trusted (proven 2026-10-25; ledger `parity-store-update-path`). Build the test-signed 4.1 only when no copy is installed.
 4. In an **elevated** PowerShell, trust both public certs for sideloading (this is the step that needs you; you undo it in step 8):
 
    ```powershell

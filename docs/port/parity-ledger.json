@@ -7376,12 +7376,12 @@
    "quirks": "Store requires the new package to be a strict upgrade with same Publisher; going from 4.x to a different major is allowed.",
    "portTarget": "Plan version number (suggest 5.0.0.0, MAJOR bump for a runtime change), staged rollout in Partner Center, release notes that call out smaller size and offline fonts. MSIX uninstall of the old package is automatic on update.",
    "risk": "med",
-   "parityCheck": "Install Electron 4.1.0.0 MSIX (self-signed) then install native package with the same identity: in-place upgrade succeeds, Start tile retained.",
+   "parityCheck": "Install Electron 4.1.0.0 MSIX (self-signed) then install native package with the same identity: in-place upgrade succeeds, Start tile retained. Proven on Este's machine, 2026-10-25, with a stronger start than the check asks: the Store-signed 4.1.0.0 (SignatureKind Store) took the 5.0.0.0 package from main at 35a5935, self-signed with the dev certificate, as an ordinary Add-AppxPackage update with no overrides. Afterwards one package, version 5.0.0.0, family 626LabsLLC.RBX15ClassicShirtandPantsMaker_wz1chhb2h2v4a, app entry RBXMaker; the pinned Start tile and taskbar pin open v5; a .r15proj lists RBX15 under Open with and opens the app; Settings > Apps shows one RBX15 at 5.0.0.0.",
    "owner": "Package",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "docs-known-limitations",

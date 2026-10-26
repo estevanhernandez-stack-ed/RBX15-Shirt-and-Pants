@@ -209,6 +209,8 @@ public sealed class StartupLaunchFileTests : RecoveryTestBase
     sealed class ThrowingLauncher : IAppLauncher
     {
         public void Open(string path) => throw new InvalidOperationException("no such exe");
+
+        public void OpenNew() => throw new InvalidOperationException("no such exe");
     }
 
     [Fact] // the bridged launch runs no startup flow and reads no arguments but its own flag

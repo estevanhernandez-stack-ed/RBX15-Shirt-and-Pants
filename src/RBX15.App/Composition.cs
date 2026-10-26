@@ -59,7 +59,7 @@ internal static class Composition
         var jumpListPublisher = new JumpListPublisher(recents, jumpList ?? new InertJumpListSink());
         // M4a Task 1: Save, Save As, Open and the unsaved-changes guard over the session (spec §3).
         var projectFiles = new ProjectFileService(session, fileDialogs, dialogs, status, settings, recents: recents);
-        var fileGroup = new FileGroupViewModel(session, fileDialogs, dialogs, status, import, projectFiles);
+        var fileGroup = new FileGroupViewModel(session, fileDialogs, dialogs, status, import, projectFiles, launcher ?? new InertAppLauncher());
         var layers = new LayersViewModel(session, import, fileDialogs);
         layers.LayerPicked += (_, _) => tools.Set(Tool.Select);
         // A canvas drop lands every file on the drop point (editor.js:961-986, drop-canvas).
@@ -161,6 +161,10 @@ internal static class Composition
     sealed class InertAppLauncher : IAppLauncher
     {
         public void Open(string path)
+        {
+        }
+
+        public void OpenNew()
         {
         }
     }

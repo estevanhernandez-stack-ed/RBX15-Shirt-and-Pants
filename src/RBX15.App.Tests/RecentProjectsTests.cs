@@ -398,7 +398,7 @@ public sealed class RecentMenuTests : IDisposable
         var status = new FakeStatus();
         var settings = new FakeSettingsStore();
         var service = new ProjectFileService(session, files, dialogs, status, settings, release: _ => { });
-        var group = new FileGroupViewModel(session, files, dialogs, status, new ImportService(session, status), service);
+        var group = new FileGroupViewModel(session, files, dialogs, status, new ImportService(session, status), service, new FakeAppLauncher());
         return new Rig(session, dialogs, status, settings, group, service);
     }
 

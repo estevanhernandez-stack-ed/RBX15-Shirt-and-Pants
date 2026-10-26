@@ -103,6 +103,7 @@ To build the MSIX and the portable zip, run `scripts/build-msix.ps1` (it needs t
 
 ### Workflow
 
+- **New** (Ctrl+N) opens a new, empty window and leaves this one as it is.
 - **Save work** writes a `.r15proj` file. Open it later with layers, adjustments, positions and region fills intact. Save As is Ctrl+Shift+S.
 - **Download template** exports a 585×559 PNG ready to upload to Roblox.
 - **Undo covers every edit.** Each change to the document is one undo step: layers, transforms, adjustments, region fills, the background and the mode. History holds 30 steps, with Redo on Ctrl+Y and Ctrl+Shift+Z.
@@ -147,6 +148,7 @@ Keyboard. The Keys button in the Tools group turns the bare keys on and off (`Ke
 | `Ctrl+Z` | Undo |
 | `Ctrl+Y` or `Ctrl+Shift+Z` | Redo |
 | `Ctrl+D` | Duplicate the selected layer |
+| `Ctrl+N` | Open a new, empty window |
 | `Ctrl+O` | Open a project |
 | `Ctrl+S` | Save work |
 | `Ctrl+Shift+S` | Save As |

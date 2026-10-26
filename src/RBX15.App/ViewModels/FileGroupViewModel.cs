@@ -7,7 +7,7 @@ using RBX15.Engine;
 namespace RBX15.App.ViewModels;
 
 /// <summary>
-/// The Home tab's File group (editor.html:85-97; ledger home-file-group): Save work, Open and Add image, then
+/// The Home tab's File group (editor.html:85-97; ledger home-file-group): New (M5), Save work, Open and Add image, then
 /// Download template. Save As has no button (interfaces §2.1); the window binds it to Ctrl+Shift+S.
 /// </summary>
 public sealed class FileGroupViewModel : ObservableObject
@@ -17,9 +17,10 @@ public sealed class FileGroupViewModel : ObservableObject
     readonly IDialogService _dialogs;
     readonly IStatus _status;
     readonly ImportService _import;
+    readonly IAppLauncher _launcher;
 
     public FileGroupViewModel(EditorSession session, IFileDialogs files, IDialogService dialogs, IStatus status, ImportService import,
-        ProjectFileService projectFiles)
+        ProjectFileService projectFiles, IAppLauncher launcher)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(files);
@@ -27,7 +28,9 @@ public sealed class FileGroupViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(status);
         ArgumentNullException.ThrowIfNull(import);
         ArgumentNullException.ThrowIfNull(projectFiles);
-        (_session, _files, _dialogs, _status, _import) = (session, files, dialogs, status, import);
+        ArgumentNullException.ThrowIfNull(launcher);
+        (_session, _files, _dialogs, _status, _import, _launcher) = (session, files, dialogs, status, import, launcher);
+        NewCommand = new RelayCommand(NewWindow);
         AddImageCommand = new RelayCommand(AddImage);
         DownloadTemplateCommand = new RelayCommand(DownloadTemplate);
         SaveCommand = new RelayCommand(() => projectFiles.Save(), () => !projectFiles.IsBusy);
@@ -42,6 +45,9 @@ public sealed class FileGroupViewModel : ObservableObject
             OpenCommand.NotifyCanExecuteChanged();
         };
     }
+
+    /// <summary>"New", Ctrl+N (M5 decision S1: one process per window): opens a new, empty window. This window's document, undo and title are untouched.</summary>
+    public IRelayCommand NewCommand { get; }
 
     /// <summary>btnLoadImage (editor.js:2692-2708; project-load-image-layer): pick, then one undo step for all.</summary>
     public IRelayCommand AddImageCommand { get; }
@@ -60,6 +66,18 @@ public sealed class FileGroupViewModel : ObservableObject
 
     /// <summary>The "Recent" drop-down beside Open (M5 decision H1): the last 10 projects, then "Clear recent list".</summary>
     public RecentMenuViewModel Recent { get; }
+
+    void NewWindow()
+    {
+        try
+        {
+            _launcher.OpenNew();
+        }
+        catch (Exception e) when (e is System.ComponentModel.Win32Exception or InvalidOperationException or IOException or UnauthorizedAccessException)
+        {
+            _status.Show($"Couldn't open a new window: {e.Message}");
+        }
+    }
 
     void AddImage()
     {

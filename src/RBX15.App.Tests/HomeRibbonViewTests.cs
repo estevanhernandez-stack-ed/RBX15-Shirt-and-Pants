@@ -252,10 +252,11 @@ public class HomeRibbonViewTests
         Assert.Equal(Visibility.Collapsed, ((UserControl)view.FindName("Placement")).Visibility);   // nothing selected
         Assert.DoesNotContain(buttons, b => b.Content is "Fit Front");
         Assert.Contains(buttons, b => b.Content is "Keys: ON");
+        Assert.Contains(buttons, b => b.Content is "New");
         Assert.Contains(buttons, b => b.Content is "Save work");
         Assert.Contains(buttons, b => b.Content is "Open");
-        Assert.Equal(["Save work", "Open", "Recent", "Add image", "Download template"],
-                     buttons.Select(b => b.Content).OfType<string>().Where(c => c is "Save work" or "Open" or "Recent" or "Add image" or "Download template").ToArray());   // M5 item 5: Recent sits beside Open
+        Assert.Equal(["New", "Save work", "Open", "Recent", "Add image", "Download template"],
+                     buttons.Select(b => b.Content).OfType<string>().Where(c => c is "New" or "Save work" or "Open" or "Recent" or "Add image" or "Download template").ToArray());   // M5 item 5: Recent sits beside Open; item 18: New comes first
         Assert.DoesNotContain("Set a style, then click a region to paint it. Right-click clears.", texts);   // the fill groups are on Background
     });
 
@@ -275,6 +276,15 @@ public class HomeRibbonViewTests
         Assert.Equal(open.FocusVisualStyle, recent.FocusVisualStyle);
         Assert.True(recent.Focusable && recent.IsTabStop);
         Assert.Equal(open.ActualHeight, recent.ActualHeight);
+
+        // M5 item 18: New is one more of the same buttons, first in the group.
+        var newButton = (Button)fileGroup.FindName("NewButton");
+        Assert.Same(open.Style, newButton.Style);
+        Assert.Equal((open.Padding, open.FontSize, open.Margin), (newButton.Padding, newButton.FontSize, newButton.Margin));
+        Assert.NotNull(newButton.FocusVisualStyle);
+        Assert.Equal(open.FocusVisualStyle, newButton.FocusVisualStyle);
+        Assert.True(newButton.Focusable && newButton.IsTabStop);
+        Assert.Equal(open.ActualHeight, newButton.ActualHeight);
 
         // The popup's contents are not in the button's visual tree until it opens, so the menu is checked through its named parts.
         var frame = (FrameworkElement)fileGroup.FindName("RecentFrame");

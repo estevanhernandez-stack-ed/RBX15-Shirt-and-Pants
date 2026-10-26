@@ -122,7 +122,7 @@ public class RibbonMeasureTests
         foreach (var tab in new[] { RibbonTab.Details, RibbonTab.Text })
             Assert.True(measured[tab].Width <= paneHost.ActualWidth, $"{tab} needs {measured[tab].Width} DIP; the ribbon is {paneHost.ActualWidth}");
 
-        // Home (about 1540 DIP with the File group's Recent button, 74 DIP over the 1466 before it; 4.1's needed 1432) and Layout, with Fill Style and the region grid back on it (Este, 2026-10-25, reversing F1;
+        // Home (about 1589 DIP with the File group's New and Recent buttons, 49 DIP over the 1540 before New; 4.1's needed 1432) and Layout, with Fill Style and the region grid back on it (Este, 2026-10-25, reversing F1;
         // about 1460), are wider than a 1184 client, and both scrolled there in 4.1 too: the look page's 4.1 captures at 1184 show a 10 px
         // scrollbar on each (ribbon-overflow-hscroll, keep; ShellLookTests look note 1).
         foreach (var tab in new[] { RibbonTab.Home, RibbonTab.Layout })

@@ -37,6 +37,7 @@ public class UiFlowTests
         public FakeFileDialogs FileDialogs { get; } = new();
         public FakeDialogService Dialogs { get; } = new();
         public FakeClipboardSource Clipboard { get; } = new();
+        public FakeAppLauncher Launcher { get; } = new();
         public EditorSession Session { get; } = new();
         public MainViewModel Main { get; }
         public MainWindow Window { get; }
@@ -46,7 +47,7 @@ public class UiFlowTests
         {
             var settings = new FakeSettingsStore();
             Main = TestShell.Quiet(Composition.Build(Session, FileDialogs, Dialogs, new FakeColorPicker(), settings, Storage,
-                new ManualTickSource(), new FakeProcessProbe(), random: () => new Random(1), jumpList: new FakeJumpListSink(),
+                new ManualTickSource(), new FakeProcessProbe(), random: () => new Random(1), jumpList: new FakeJumpListSink(), launcher: Launcher,
                 clipboard: Clipboard, clipboardDelay: _ => { }));
             Window = new MainWindow(Main, settings, [OffScreen]) { ShowActivated = false, ShowInTaskbar = false };
             Window.FocusedElement = () => null;   // the unactivated window has no keyboard focus; a KeyBinding sees "no text field"
@@ -308,6 +309,26 @@ public class UiFlowTests
         Assert.Equal($"Saved {Path.GetFileName(target)}.", rig.Main.Status.Message);
         Assert.Empty(rig.Dialogs.Confirms);          // the document has art, so the empty-template question never shows
         Assert.Empty(rig.Dialogs.Alerts);
+    });
+
+    [Fact] // New: Invoke "New" and press Ctrl+N (also with Keys OFF); the launcher is asked for a new window each time and this document is untouched
+    public void New_asks_the_launcher_for_a_new_window_and_changes_nothing_here() => StaThread.Run(() =>
+    {
+        using var rig = new Rig();
+        string title = rig.Main.Title;
+        rig.Click("New");
+        Assert.Equal(1, rig.Launcher.NewWindows);
+
+        var binding = Assert.Single(rig.Window.InputBindings.OfType<KeyBinding>(), b => b.Key == Key.N && b.Modifiers == ModifierKeys.Control);
+        rig.Main.Home.Keys.ToggleCommand.Execute(null);   // Keys OFF does not block the chord
+        Assert.True(binding.Command.CanExecute(binding.CommandParameter));
+        binding.Command.Execute(binding.CommandParameter);
+        StaThread.Pump();
+        Assert.Equal(2, rig.Launcher.NewWindows);
+        Assert.Empty(rig.Launcher.Opened);
+        Assert.Equal(0, rig.Session.UndoCount);
+        Assert.Equal(title, rig.Main.Title);
+        Assert.Empty(rig.Session.Document.Layers);
     });
 
     [Fact] // Paste and Recent: Ctrl+V through the window's KeyBinding pastes a layer; after a Save the Recent drop-down lists the file

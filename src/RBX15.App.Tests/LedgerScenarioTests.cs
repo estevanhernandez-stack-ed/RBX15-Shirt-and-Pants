@@ -266,7 +266,7 @@ public sealed partial class LedgerScenarioTests : IDisposable
         string path = Path.Combine(_dir, "blank.png");
         var files = new Files(path);
         var status = new Status();
-        var file = new FileGroupViewModel(s, files, dialogs, status, new ImportService(s, status), new ProjectFileService(s, files, dialogs, status, new Fakes.FakeSettingsStore()));
+        var file = new FileGroupViewModel(s, files, dialogs, status, new ImportService(s, status), new ProjectFileService(s, files, dialogs, status, new Fakes.FakeSettingsStore()), new Fakes.FakeAppLauncher());
 
         file.DownloadTemplateCommand.Execute(null);         // a fresh document
         Assert.Equal(ExportGuard.EmptyTemplateMessage, Assert.Single(dialogs.Confirms));
@@ -303,7 +303,7 @@ public sealed partial class LedgerScenarioTests : IDisposable
         var files = new Files(path);
         var status = new Status();
 
-        new FileGroupViewModel(s, files, dialogs, status, new ImportService(s, status), new ProjectFileService(s, files, dialogs, status, new Fakes.FakeSettingsStore())).DownloadTemplateCommand.Execute(null);
+        new FileGroupViewModel(s, files, dialogs, status, new ImportService(s, status), new ProjectFileService(s, files, dialogs, status, new Fakes.FakeSettingsStore()), new Fakes.FakeAppLauncher()).DownloadTemplateCommand.Execute(null);
 
         Assert.Empty(dialogs.Confirms);
         Assert.Equal("My_Shirt__roblox.png", Assert.Single(files.Suggested));

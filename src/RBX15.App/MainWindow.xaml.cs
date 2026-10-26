@@ -42,13 +42,14 @@ public partial class MainWindow : Window
             if (e.PropertyName == nameof(AvatarPreviewViewModel.IsVisible)) ApplyColumnWidths(Viewport.ActualWidth);
         };
         ApplyColumnWidths(ShellLayout.DefaultWidth);
-        // The window's eight chords (spec §4 "Keyboard"; M4b item 11, M5 item 6): Undo, Redo (two chords), Duplicate, the three file chords and Paste. A focused
+        // The window's nine chords (spec §4 "Keyboard"; M4b item 11, M5 items 6 and 18): Undo, Redo (two chords), Duplicate, the four file chords (New, Save, Save As, Open) and Paste. A focused
         // text field keeps each key even when it has nothing to do with it (final fix wave 5); anywhere else it is the command. Keys OFF never
         // reaches them (they are KeyBindings, not routed), and Ctrl+V toggles no tool.
         AddShortcut(viewModel.Home.Edit.UndoCommand, Key.Z, ModifierKeys.Control);
         AddShortcut(viewModel.Home.Edit.RedoCommand, Key.Y, ModifierKeys.Control);
         AddShortcut(viewModel.Home.Edit.RedoCommand, Key.Z, ModifierKeys.Control | ModifierKeys.Shift);
         AddShortcut(_layerKeys.DuplicateCommand, Key.D, ModifierKeys.Control);
+        AddShortcut(viewModel.Home.File.NewCommand, Key.N, ModifierKeys.Control);
         AddShortcut(viewModel.Home.File.SaveCommand, Key.S, ModifierKeys.Control);
         AddShortcut(viewModel.Home.File.SaveAsCommand, Key.S, ModifierKeys.Control | ModifierKeys.Shift);
         AddShortcut(viewModel.Home.File.OpenCommand, Key.O, ModifierKeys.Control);

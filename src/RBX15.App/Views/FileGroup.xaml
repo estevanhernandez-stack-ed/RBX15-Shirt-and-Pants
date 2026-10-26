@@ -43,6 +43,15 @@
             <TextBlock DockPanel.Dock="Bottom" Text="FILE" Style="{DynamicResource RibbonGroupLabel}" />
             <StackPanel VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                    <Button x:Name="NewButton"
+                            Content="New"
+                            ToolTip="Open a new, empty RBX15 window."
+                            AutomationProperties.Name="New"
+                            Command="{Binding NewCommand}"
+                            Padding="10,5"
+                            FontSize="11"
+                            Margin="0,0,3,0"
+                            Style="{DynamicResource SecondaryButton}" />
                     <Button x:Name="SaveButton"
                             Content="Save work"
                             ToolTip="Save your workspace. Reopen and keep editing."

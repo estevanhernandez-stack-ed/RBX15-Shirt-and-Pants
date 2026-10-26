@@ -50,12 +50,11 @@
     "tile_150": "docs/store-assets/app-tile-150x150.png",
     "tile_71": "docs/store-assets/app-tile-71x71.png",
     "screenshots": [
-      {"file": "docs/screenshots/4.1/01-fills-that-wrap.png", "caption": "Fills that wrap: one gradient across every torso panel, patterns tiling across the seams"},
-      {"file": "docs/screenshots/4.1/02-layers.png", "caption": "Stack layers and adjust them without touching the original"},
-      {"file": "docs/screenshots/4.1/03-live-fill-editing.png", "caption": "Change a fill's angle after painting and every connected panel updates"},
-      {"file": "docs/screenshots/4.1/04-word-art.png", "caption": "Word art placed on the template"},
-      {"file": "docs/screenshots/4.1/05-pants.png", "caption": "Pants: a pattern running down both legs"},
-      {"file": "docs/screenshots/4.1/06-export-585x559.png", "caption": "The exported 585x559 PNG"}
+      {"file": "docs/screenshots/5.0/05-finished-shirt.png", "caption": "A finished shirt: one gradient across every panel, a drip, a collar, cuffs and Word Art, with the 3D preview"},
+      {"file": "docs/screenshots/5.0/01-home.png", "caption": "Home: tools, brush, placement, undo, file and recent projects"},
+      {"file": "docs/screenshots/5.0/02-background.png", "caption": "Background: presets, backgrounds, fill styles and template regions"},
+      {"file": "docs/screenshots/5.0/03-details.png", "caption": "Details: collars, cuffs, hems, seams, pockets and plackets"},
+      {"file": "docs/screenshots/5.0/04-text.png", "caption": "Text: Word Art with 15 fonts, six styles and a live preview"}
     ]
   },
   "tech": {

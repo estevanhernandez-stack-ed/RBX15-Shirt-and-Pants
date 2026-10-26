@@ -387,14 +387,17 @@ public class UiFlowTests
         using var rig = new Rig();   // FakeSettingsStore holds no placement: the first launch (PlacementGuardTests pins the rule itself)
         var w = rig.Window;
         Assert.Equal((1200.0, 800.0), (w.Width, w.Height));
-        Assert.Equal((1200.0, 800.0), (w.ActualWidth, w.ActualHeight));
+        // Windows caps a window at the screen's maximum track size (a CI runner's screen is about 1024x768, giving 1044x788),
+        // so the laid-out size is 1200x800 only where the screen allows it; the requested size above is 1200x800 everywhere.
+        double expectW = Math.Min(1200, SystemParameters.MaximumWindowTrackWidth), expectH = Math.Min(800, SystemParameters.MaximumWindowTrackHeight);
+        Assert.Equal((expectW, expectH), (w.ActualWidth, w.ActualHeight));
         Assert.Equal((OffScreen.Left + (OffScreen.Width - 1200) / 2, OffScreen.Top + (OffScreen.Height - 800) / 2), (w.Left, w.Top));
         Assert.Equal(WindowState.Normal, w.WindowState);
 
         var dpi = VisualTreeHelper.GetDpi(w);
         var px = PixelRect(w);
-        Assert.InRange(px.Width, Math.Round(1200 * dpi.DpiScaleX) - 1, Math.Round(1200 * dpi.DpiScaleX) + 1);
-        Assert.InRange(px.Height, Math.Round(800 * dpi.DpiScaleY) - 1, Math.Round(800 * dpi.DpiScaleY) + 1);
+        Assert.InRange(px.Width, Math.Round(expectW * dpi.DpiScaleX) - 1, Math.Round(expectW * dpi.DpiScaleX) + 1);
+        Assert.InRange(px.Height, Math.Round(expectH * dpi.DpiScaleY) - 1, Math.Round(expectH * dpi.DpiScaleY) + 1);
         Assert.InRange(px.Left, Math.Round(w.Left * dpi.DpiScaleX) - 1, Math.Round(w.Left * dpi.DpiScaleX) + 1);
         Assert.InRange(px.Top, Math.Round(w.Top * dpi.DpiScaleY) - 1, Math.Round(w.Top * dpi.DpiScaleY) + 1);
     });

@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**429 rows.** Status: done 367, open 62. Disposition: fix 211, keep 184, drop 26, new 8. Checks: ui-auto 125, unit 124, manual 67, golden 66, none-retired 25, doc 22.
+**437 rows.** Status: done 410, open 27. Disposition: fix 211, keep 184, drop 26, new 16. Checks: ui-auto 128, unit 127, manual 69, golden 66, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -10,7 +10,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 |---|---|---|---|---|---|
 | done | `drop-panel` | Drop zone panel: click-to-browse and drag-over highlight | ui-auto | keep | low |
 | done | `drop-filetypes` | Image file acceptance and naming | ui-auto | fix | med |
-| open | `packs-resolve-dir` | Packs directory resolution: dev vs packaged | manual | keep | low |
+| done | `packs-resolve-dir` | Packs directory resolution: dev vs packaged | manual | keep | low |
 | done | `packs-load-builtin` | Load built-in pack into asset browser | ui-auto | fix | low |
 | done | `asset-open-folder` | Open folder (webkitdirectory) and image filtering | ui-auto | fix | low |
 | done | `asset-dedupe-by-name` | Deduplicate by filename (deepest path wins) | unit | keep | med |
@@ -29,7 +29,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `asset-thumb-uuid-label` | Thumbnail caption substitutes parent folder name for UUID filenames | manual | keep | low |
 | done | `asset-count-label-overwritten` | Count label's dedupe/pack message is immediately overwritten | ui-auto | fix | low |
 | done | `pack-load-sync-and-mime` | Built-in pack load is synchronous and labels every file image/png | ui-auto | fix | low |
-| open | `asset-objecturl-lifecycle` | Thumbnail blob URLs created eagerly and revoked on folder switch | manual | fix | low |
+| done | `asset-objecturl-lifecycle` | Thumbnail blob URLs created eagerly and revoked on folder switch | manual | fix | low |
 
 ## App.Canvas
 
@@ -66,7 +66,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `eraser-selection-semantics` | Eraser operates on selection, not on topmost under cursor | ui-auto | fix | low |
 | done | `zoom-controls` | Zoom buttons and label | ui-auto | keep | med |
 | done | `overlay-grid-checkbox` | Grid checkbox (default off) region outlines | manual | fix | low |
-| open | `render-pipeline-canvas-reset` | Render loop characteristics that affect input | manual | keep | low |
+| done | `render-pipeline-canvas-reset` | Render loop characteristics that affect input | manual | keep | low |
 | done | `canvas-zoom-controls` | Zoom controls | ui-auto | fix | med |
 | done | `canvas-select-gestures` | Select tool gestures: move, resize, rotate, wheel | ui-auto | fix | high |
 | done | `select-hidden-layer-still-handled` | Hidden selected layer keeps box and live handles | ui-auto | fix | low |
@@ -79,6 +79,12 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `wheel-scale-undo-burst` | A burst of wheel scaling is one undo step | unit | fix | low |
 | done | `canvas-automation-peer` | The canvas is exposed to UI Automation | unit | fix | low |
 | done | `canvas-layer-automation` | Each canvas layer is exposed to UI Automation and can be moved through it | unit | fix | low |
+
+## App.Clipboard
+
+| Status | ID | Behavior | Check | Disposition | Risk |
+|---|---|---|---|---|---|
+| done | `upgrade-paste-as-layer` | Ctrl+V pastes the clipboard image as a new layer (new in v5) | unit | new | med |
 
 ## App.Dialogs
 
@@ -217,7 +223,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `ribbon-tab-switch` | Ribbon tab switching | ui-auto | keep | low |
 | done | `mode-toggle-button` | Shirt/Pants toggle button | ui-auto | keep | low |
 | done | `project-startup` | Initial render and startup order | manual | fix | low |
-| open | `shell-window-frame` | Window frame, title, menu, default size | manual | fix | low |
+| done | `shell-window-frame` | Window frame, title, menu, default size | manual | fix | low |
 | done | `shell-layout-skeleton` | Page skeleton and flex layout | manual | fix | low |
 | done | `shell-responsive-breakpoint` | Narrow-window breakpoint | ui-auto | keep | low |
 | done | `shell-header` | Header bar content and styling | manual | fix | med |
@@ -226,7 +232,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `theme-tokens-shape-motion-type` | Radii, shadows, motion, type tokens | manual | keep | med |
 | done | `font-ui-runtime-google` | UI fonts loaded at runtime from Google Fonts | manual | fix | med |
 | done | `theme-scrollbars` | Scrollbar styling (effective result) | manual | keep | low |
-| open | `a11y-focus-rings` | Keyboard focus ring | ui-auto | fix | med |
+| done | `a11y-focus-rings` | Keyboard focus ring | ui-auto | fix | med |
 | done | `ribbon-tabs-switching` | Ribbon tab strip and switching | ui-auto | keep | low |
 | done | `ribbon-group-structure` | Ribbon group chrome | manual | fix | low |
 | done | `ribbon-overflow-hscroll` | Ribbon horizontal overflow | manual | keep | low |
@@ -234,9 +240,9 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `cross-inline-style-overrides` | Inline styles override CSS (effective values) | manual | keep | low |
 | done | `cross-text-select-and-selection` | Text selection, context menu, tooltips | manual | fix | low |
 | done | `cross-window-dpi-rendering` | Pixel scale / DPI behavior | manual | keep | med |
-| open | `shell-window-size` | Initial window 1200x800, centered, resizable | ui-auto | fix | low |
+| done | `shell-window-size` | Initial window 1200x800, centered, resizable | ui-auto | fix | low |
 | done | `shell-window-title` | Window title is a static product name | ui-auto | keep | low |
-| open | `shell-lifecycle-quit` | Quit on last window closed; macOS activate branch is dead code | ui-auto | fix | low |
+| done | `shell-lifecycle-quit` | Quit on last window closed; macOS activate branch is dead code | ui-auto | fix | low |
 | done | `shell-single-instance` | No single-instance lock | manual | keep | low |
 | done | `shell-external-drop-guard` | Dropping files outside the drop zone/canvas is swallowed, not navigated | ui-auto | keep | low |
 | done | `shell-header-version-hardcoded` | Header version string is hand-typed and drifts from docs | manual | fix | low |
@@ -244,6 +250,10 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `avatar-preview-r15` | R15 body in the 3D preview (new in v5.1) | ui-auto | new | low |
 | done | `font-ui-weight-600` | UI labels at CSS weight 600 in the vendored variable fonts | manual | fix | low |
 | done | `window-title-dirty-marker` | Window title names the project file and marks unsaved changes | unit | fix | low |
+| done | `upgrade-error-log` | Local error log of unhandled exceptions (new in v5) | unit | new | low |
+| done | `upgrade-jump-list` | Recent projects on the taskbar jump list (new in v5) | manual | new | med |
+| done | `upgrade-file-association-launch` | Launch with a .r15proj; a second project opens a second window (new in v5) | manual | new | med |
+| done | `upgrade-new-window` | New: a fresh, empty window (Ctrl+N and a File group button) | ui-auto | new | low |
 
 ## App.Storage
 
@@ -251,36 +261,38 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 |---|---|---|---|---|---|
 | done | `doc-new-transparent-background` | A new template's background starts transparent | unit | fix | low |
 | done | `project-save-filename` | Save filename and dialog behavior | ui-auto | keep | low |
-| open | `shell-no-persistence` | Zero persisted settings: window rect, tool state, last folder, template name | doc | fix | low |
+| done | `shell-no-persistence` | Zero persisted settings: window rect, tool state, last folder, template name | doc | fix | low |
 | done | `io-download-save-dialog` | Exports and project saves go through anchor-download, relying on Chromium/Electron's Save As behavior | manual | fix | med |
-| open | `shell-no-unsaved-changes-guard` | No unsaved-work prompt on close or reload | ui-auto | fix | low |
+| done | `shell-no-unsaved-changes-guard` | No unsaved-work prompt on close or reload | ui-auto | fix | low |
 | open | `shell-userdata-footprint` | Electron writes a hidden per-user profile folder despite the 'no hidden data' claim | doc | fix | low |
 | done | `shell-unsaved-work-loss` | No unsaved-changes guard on close, reload or quit | ui-auto | new | med |
+| done | `upgrade-autosave-recovery` | Autosave every 60 s and crash recovery at the next launch (new in v5) | ui-auto | new | high |
+| done | `upgrade-recent-projects` | Recent projects in the File group (new in v5) | unit | new | low |
 
 ## Docs
 
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
-| open | `tests-count-claims` | Test-count claims are inconsistent across docs | doc | fix | low |
-| open | `tests-manual-smoke` | docs/SMOKE_TEST.md: 4 revival regression groups + 7 core groups | manual | fix | low |
-| open | `tests-windows-test-plan` | windows/TEST_PLAN.md: 15-section clean-VM release checklist | manual | fix | low |
-| open | `docs-privacy-claims` | PRIVACY.md claims to preserve or correct (last updated 2026-04-20) | doc | fix | med |
-| open | `docs-security-md` | SECURITY.md scope list references Electron surfaces | doc | fix | low |
-| open | `docs-index-landing` | docs/index.html landing page (GitHub Pages) claims | doc | fix | low |
-| open | `docs-readme-claims` | README.md feature/controls claims that the native app must satisfy | doc | fix | low |
-| open | `docs-store-listing` | Store listing copy and keywords (4.1.0) | doc | fix | low |
-| open | `docs-reviewer-letter` | Notes-for-certification letter: statements the native build must still make true | doc | fix | med |
-| open | `docs-store-assets` | docs/store-assets and make-store-assets.py | doc | keep | low |
-| open | `docs-manifest-626labs` | .626labs/manifest.json product card | doc | fix | low |
-| open | `docs-feedback-md` | feedback.md: four seeded audit findings, all marked fixed | doc | keep | low |
-| open | `legacy-docs-superpowers` | docs/superpowers specs and plans (v4 polish) | doc | fix | low |
-| open | `docs-known-limitations` | Known limitations documented in RELEASE_NOTES that the port can close | doc | fix | low |
-| open | `wordart-claim-wrap-any-size` | Landing page claims 'full text wraps' and 'add at any size'; the code does neither | doc | fix | low |
-| open | `claim-fullscreen-canvas` | 'Fullscreen canvas' claim has no fullscreen feature behind it | doc | fix | low |
-| open | `claim-region-click-color-picker` | Test docs say clicking a region opens a color picker; it paints the current Fill Style | doc | fix | low |
-| open | `claim-network-surface-inconsistent` | Network claims contradict each other and the code | doc | fix | med |
-| open | `claim-undo-everything` | Store 'Undo everything' overstates coverage | doc | fix | low |
-| open | `docs-dev-workflow-claims` | Build-from-source and dev-mode instructions are Node/Electron-specific | doc | fix | low |
+| done | `tests-count-claims` | Test-count claims are inconsistent across docs | doc | fix | low |
+| done | `tests-manual-smoke` | docs/SMOKE_TEST.md: 4 revival regression groups + 7 core groups | manual | fix | low |
+| done | `tests-windows-test-plan` | windows/TEST_PLAN.md: 15-section clean-VM release checklist | manual | fix | low |
+| done | `docs-privacy-claims` | PRIVACY.md claims to preserve or correct (last updated 2026-04-20) | doc | fix | med |
+| done | `docs-security-md` | SECURITY.md scope list references Electron surfaces | doc | fix | low |
+| done | `docs-index-landing` | docs/index.html landing page (GitHub Pages) claims | doc | fix | low |
+| done | `docs-readme-claims` | README.md feature/controls claims that the native app must satisfy | doc | fix | low |
+| done | `docs-store-listing` | Store listing copy and keywords (4.1.0) | doc | fix | low |
+| done | `docs-reviewer-letter` | Notes-for-certification letter: statements the native build must still make true | doc | fix | med |
+| done | `docs-store-assets` | docs/store-assets and make-store-assets.py | doc | keep | low |
+| done | `docs-manifest-626labs` | .626labs/manifest.json product card | doc | fix | low |
+| done | `docs-feedback-md` | feedback.md: four seeded audit findings, all marked fixed | doc | keep | low |
+| done | `legacy-docs-superpowers` | docs/superpowers specs and plans (v4 polish) | doc | fix | low |
+| done | `docs-known-limitations` | Known limitations documented in RELEASE_NOTES that the port can close | doc | fix | low |
+| done | `wordart-claim-wrap-any-size` | Landing page claims 'full text wraps' and 'add at any size'; the code does neither | doc | fix | low |
+| done | `claim-fullscreen-canvas` | 'Fullscreen canvas' claim has no fullscreen feature behind it | doc | fix | low |
+| done | `claim-region-click-color-picker` | Test docs say clicking a region opens a color picker; it paints the current Fill Style | doc | fix | low |
+| done | `claim-network-surface-inconsistent` | Network claims contradict each other and the code | doc | fix | med |
+| done | `claim-undo-everything` | Store 'Undo everything' overstates coverage | doc | fix | low |
+| done | `docs-dev-workflow-claims` | Build-from-source and dev-mode instructions are Node/Electron-specific | doc | fix | low |
 
 ## Engine.Adjust
 
@@ -518,16 +530,16 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `packs-inventory-wordart` | packs/word_art contents (25 PNGs) and packs/README.md | manual | keep | low |
 | done | `shell-window-no-icon` | No window or exe icon configured | manual | fix | low |
 | done | `pack-contents` | Pack inventory that must ship byte-identical | unit | keep | low |
-| open | `msix-identity` | MSIX Identity must be preserved exactly (same Store identity) | manual | keep | high |
-| open | `msix-application-entry` | Application element: Id, Executable, EntryPoint, tiles | manual | keep | med |
-| open | `msix-capabilities` | Capabilities: only runFullTrust; justification text; network capability gap | doc | fix | med |
-| open | `msix-target-os` | TargetDeviceFamily min/max | manual | keep | low |
+| done | `msix-identity` | MSIX Identity must be preserved exactly (same Store identity) | manual | keep | high |
+| done | `msix-application-entry` | Application element: Id, Executable, EntryPoint, tiles | manual | keep | med |
+| done | `msix-capabilities` | Capabilities: only runFullTrust; justification text; network capability gap | doc | fix | med |
+| done | `msix-target-os` | TargetDeviceFamily min/max | manual | keep | low |
 | open | `msix-arch-self-contained` | x64 only; self-contained publish layout | manual | keep | med |
 | done | `msix-make-script` | make-msix.ps1 pipeline: stage, inject version, pack, optional self-sign | manual | fix | med |
 | done | `msix-images` | Generated tile images (Pillow) and their required set | manual | keep | low |
 | done | `msix-signing-policy` | Signing policy per channel | doc | fix | med |
-| open | `ci-windows-ci` | windows-ci.yml: lint, unit tests, NSIS build, MSIX build, artifact existence | manual | fix | med |
-| open | `ci-windows-release` | windows-release.yml: tag-triggered release with NSIS + MSIX assets | manual | fix | med |
+| done | `ci-windows-ci` | windows-ci.yml: lint, unit tests, NSIS build, MSIX build, artifact existence | manual | fix | med |
+| done | `ci-windows-release` | windows-release.yml: tag-triggered release with NSIS + MSIX assets | manual | fix | med |
 | done | `ci-docs-check` | docs-check.yml: informational markdownlint | manual | keep | low |
 | done | `ci-funding` | FUNDING.yml sponsor link | manual | keep | low |
 | done | `parity-store-update-path` | Upgrade path from the live Electron package to the native build | manual | keep | med |
@@ -537,6 +549,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | Status | ID | Behavior | Check | Disposition | Risk |
 |---|---|---|---|---|---|
 | done | `test-input-bridge` | Test-only input bridge (absent from Release and Store builds) | unit | new | medium |
+| done | `parity-ui-automation-suite` | Thin UI automation suite over the real window (spec §6 Tier 3) | ui-auto | new | low |
 
 ## Retired
 

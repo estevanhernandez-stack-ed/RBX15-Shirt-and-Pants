@@ -216,12 +216,13 @@ public class ShellTests
 
     public static TheoryData<Key, ModifierKeys, string> FileChords => new()
     {
+        { Key.N, ModifierKeys.Control, nameof(FileGroupViewModel.NewCommand) },
         { Key.S, ModifierKeys.Control, nameof(FileGroupViewModel.SaveCommand) },
         { Key.S, ModifierKeys.Control | ModifierKeys.Shift, nameof(FileGroupViewModel.SaveAsCommand) },
         { Key.O, ModifierKeys.Control, nameof(FileGroupViewModel.OpenCommand) },
     };
 
-    [Theory, MemberData(nameof(FileChords))] // spec §4 "New: Ctrl+O, Ctrl+S, Ctrl+Shift+S"; each binding: its gesture, its inner command, the text-field guard
+    [Theory, MemberData(nameof(FileChords))] // spec §4 "New: Ctrl+O, Ctrl+S, Ctrl+Shift+S", plus Ctrl+N (M5 item 18); each binding: its gesture, its inner command, the text-field guard
     public void A_file_chord_runs_its_file_group_command_unless_a_text_field_has_focus(Key key, ModifierKeys modifiers, string command) => StaThread.Run(() =>
     {
         var main = TestShell.Main(new EditorSession());
@@ -238,9 +239,10 @@ public class ShellTests
         Assert.True(guard.CanExecute(null));
     });
 
-    [Fact] // the window binds exactly seven chords, in this order, each behind TextFieldShortcutCommand: Ctrl+Z, Ctrl+Y and Ctrl+Shift+Z (M4b item 11),
-           // Ctrl+D (Duplicate), and the three file chords (M4a). Ctrl+V stays unbound: paste is M5's, and Ctrl+V must not toggle a tool (K3)
-    public void The_window_binds_exactly_the_seven_chords_and_not_ctrl_v() => StaThread.Run(() =>
+    [Fact] // the window binds exactly nine chords, in this order, each behind TextFieldShortcutCommand: Ctrl+Z, Ctrl+Y and Ctrl+Shift+Z (M4b item 11),
+           // Ctrl+D (Duplicate), the four file chords (New, M5 item 18; Save, Save As, Open, M4a) and Ctrl+V (Paste, M5 item 6); Ctrl+V still toggles no tool (K3)
+           // (was The_window_binds_exactly_the_eight_chords, before that ..._the_seven_chords_and_not_ctrl_v)
+    public void The_window_binds_exactly_the_nine_chords() => StaThread.Run(() =>
     {
         var window = new MainWindow(TestShell.Main(new EditorSession()), new FakeSettingsStore(), [Primary]);
         StaThread.Pump();
@@ -251,12 +253,13 @@ public class ShellTests
             (Key.Y, ModifierKeys.Control),
             (Key.Z, ModifierKeys.Control | ModifierKeys.Shift),
             (Key.D, ModifierKeys.Control),
+            (Key.N, ModifierKeys.Control),
             (Key.S, ModifierKeys.Control),
             (Key.S, ModifierKeys.Control | ModifierKeys.Shift),
             (Key.O, ModifierKeys.Control),
+            (Key.V, ModifierKeys.Control),
         }, gestures);
-        Assert.Equal(7, window.InputBindings.Count);
-        Assert.DoesNotContain(gestures, g => g.Key == Key.V);
+        Assert.Equal(9, window.InputBindings.Count);
         Assert.All(window.InputBindings.OfType<KeyBinding>(), b => Assert.IsType<TextFieldShortcutCommand>(b.Command));
     });
 
@@ -267,7 +270,7 @@ public class ShellTests
         var dialogs = new FakeDialogService();
         var files = new FakeFileDialogs();
         var store = new FakeSettingsStore();
-        var main = TestShell.Quiet(Composition.Build(session, files, dialogs, new FakeColorPicker(), store));
+        var main = TestShell.Quiet(Composition.Build(session, files, dialogs, new FakeColorPicker(), store, TestShell.Storage(), new ManualTickSource(), new FakeProcessProbe()));
         var window = new MainWindow(main, store, [Primary]);
         StaThread.Pump();
         return (window, session, dialogs, files, store);

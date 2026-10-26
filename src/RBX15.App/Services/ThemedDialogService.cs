@@ -13,6 +13,14 @@ public sealed class ThemedDialogService(Func<Window?> owner) : IDialogService
     public SaveChoice AskSaveChanges(string documentName) =>
         Show(DialogText.SaveChanges(documentName), ThemedDialogKind.SaveChanges).Choice;
 
+    public RestoreChoice AskRestore(string documentName, DateTimeOffset autosavedAt) =>
+        Show(DialogText.RestorePrompt(documentName, DialogText.AutosavedWhen(autosavedAt, TimeProvider.System.GetUtcNow())), ThemedDialogKind.Restore).Choice switch
+        {
+            SaveChoice.Save => RestoreChoice.Restore,
+            SaveChoice.DontSave => RestoreChoice.Discard,
+            _ => RestoreChoice.Later,
+        };
+
     ThemedDialog Show(string message, ThemedDialogKind kind)
     {
         var dialog = new ThemedDialog(message, kind);

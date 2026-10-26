@@ -214,7 +214,7 @@ public class ArtPaletteTests
     public void The_app_picker_is_fed_by_the_art_palette() => StaThread.Run(() =>
     {
         var session = SessionWith(Of(1, SKColors.Red));
-        var main = TestShell.Quiet(Composition.Build(session, () => null, new FakeSettingsStore()));
+        var main = TestShell.Quiet(Composition.Build(session, () => null, new FakeSettingsStore(), TestShell.Storage(), new ManualTickSource(), new FakeProcessProbe(), new FakeJumpListSink()));
         var field = typeof(BrushViewModel).GetField("_picker", BindingFlags.NonPublic | BindingFlags.Instance)!;
         var picker = Assert.IsType<ThemedColorPicker>(field.GetValue(main.Home.Brush));
         Assert.NotNull(picker.Palette);

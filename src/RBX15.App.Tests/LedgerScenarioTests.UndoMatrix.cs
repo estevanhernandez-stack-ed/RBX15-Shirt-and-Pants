@@ -30,7 +30,7 @@ public sealed partial class LedgerScenarioTests
         {
             Png = png;
             S = new EditorSession(EditorSession.NewDocument() with { Mode = mode });
-            Main = TestShell.Quiet(Composition.Build(S, Files, new FakeDialogService(), Picker, new FakeSettingsStore(), () => new Random(7)));
+            Main = TestShell.Quiet(Composition.Build(S, Files, new FakeDialogService(), Picker, new FakeSettingsStore(), TestShell.Storage(), new ManualTickSource(), new FakeProcessProbe(), () => new Random(7)));
             Keys = new LayerKeys(S);
             Router = new ShortcutRouter(Main.Home.Tools, Keys);
         }

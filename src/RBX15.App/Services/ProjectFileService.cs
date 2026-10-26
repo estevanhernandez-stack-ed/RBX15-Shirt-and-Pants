@@ -30,6 +30,7 @@ public sealed class ProjectFileService : ObservableObject
     readonly IStatus _status;
     readonly ISettingsStore _settings;
     readonly TimeProvider _clock;
+    readonly RecentProjects _recents;
     readonly Func<string, CancellationToken, Task<ProjectLoad>> _read;
     readonly Action<IReadOnlyCollection<SKImage>> _release;
     CancellationTokenSource? _pending;
@@ -38,10 +39,12 @@ public sealed class ProjectFileService : ObservableObject
     /// <param name="clock">savedAt's clock; TimeProvider.System by default.</param>
     /// <param name="read">The off-thread read; by default <see cref="ReadFile"/> on the thread pool.</param>
     /// <param name="release">Frees images nothing references any more; by default <see cref="ReleaseOnIdle"/> (R11).</param>
+    /// <param name="recents">The recent projects a successful write or open adds to; by default one over <paramref name="settings"/>.</param>
     public ProjectFileService(EditorSession session, IFileDialogs files, IDialogService dialogs, IStatus status, ISettingsStore settings,
         TimeProvider? clock = null,
         Func<string, CancellationToken, Task<ProjectLoad>>? read = null,
-        Action<IReadOnlyCollection<SKImage>>? release = null)
+        Action<IReadOnlyCollection<SKImage>>? release = null,
+        RecentProjects? recents = null)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(files);
@@ -50,10 +53,14 @@ public sealed class ProjectFileService : ObservableObject
         ArgumentNullException.ThrowIfNull(settings);
         (_session, _files, _dialogs, _status, _settings) = (session, files, dialogs, status, settings);
         _clock = clock ?? TimeProvider.System;
+        _recents = recents ?? new RecentProjects(settings);
         _read = read ?? ((path, cancel) => Task.Run(() => ReadFile(path), cancel));
         var dispatcher = Dispatcher.CurrentDispatcher;
         _release = release ?? (images => ReleaseOnIdle(dispatcher, images));
     }
+
+    /// <summary>The recent projects this service adds to (the File group's Recent menu and the jump list read them).</summary>
+    public RecentProjects Recents => _recents;
 
     /// <summary>True while <see cref="OpenAsync(string)"/> awaits its read (R4). The window blocks input and every file command waits.</summary>
     public bool IsBusy
@@ -158,6 +165,7 @@ public sealed class ProjectFileService : ObservableObject
         }
         _release(_session.Open(load!, path));
         RememberFolder(path);
+        _recents.Add(path);
         string name = Path.GetFileName(path);
         if (load!.DroppedLayers.IsEmpty) _status.Clear();
         else _status.Show($"Opened {name}. Couldn't load: {string.Join(", ", load.DroppedLayers)}.");
@@ -212,11 +220,12 @@ public sealed class ProjectFileService : ObservableObject
         }
         _session.MarkSaved(path, doc);
         RememberFolder(path);
+        _recents.Add(path);
         _status.Show($"Saved {name}.");
         return true;
     }
 
-    static IReadOnlyCollection<SKImage> ImagesOf(Document doc)
+    internal static IReadOnlyCollection<SKImage> ImagesOf(Document doc)
     {
         var images = new List<SKImage>(doc.Layers.Count + 1);
         if (doc.BgImage is { } bg) images.Add(bg);
@@ -228,7 +237,7 @@ public sealed class ProjectFileService : ObservableObject
     /// R11: frees the images at ApplicationIdle, after the host has rendered the new document and every view-model has
     /// rebuilt, so nothing draws a disposed image.
     /// </summary>
-    static void ReleaseOnIdle(Dispatcher dispatcher, IReadOnlyCollection<SKImage> images)
+    internal static void ReleaseOnIdle(Dispatcher dispatcher, IReadOnlyCollection<SKImage> images)
     {
         if (images.Count == 0) return;
         dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, () =>

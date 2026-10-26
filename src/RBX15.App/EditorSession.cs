@@ -61,6 +61,7 @@ public sealed class EditorSession
     EditorSnapshot? _gestureStart;
     int _generation;      // bumped by Open, which abandons open gestures: a stale scope's Dispose then does nothing
     Document _saved;      // the saved-state marker (R2)
+    bool _recovered;      // a restored autosave: dirty until the next MarkSaved, whatever the saved marker says (M5 item 3)
     string _templateTitle = "";
 
     /// <summary>
@@ -103,7 +104,7 @@ public sealed class EditorSession
     /// <see cref="Engine.Document.ContentEquals"/> against the saved marker, O(layers + fills). Inside an open
     /// gesture it reflects the live content.
     /// </summary>
-    public bool IsDirty => !_saved.ContentEquals(Document);
+    public bool IsDirty => _recovered || !_saved.ContentEquals(Document);
 
     /// <summary>
     /// The export title box (editor.html:100, <c>#exportTitle</c>). It is not part of the document, so it
@@ -211,6 +212,7 @@ public sealed class EditorSession
         ArgumentNullException.ThrowIfNull(saved);
         CurrentFile = path;
         _saved = saved;
+        _recovered = false;
         Raise(SessionChange.File);
     }
 
@@ -235,6 +237,25 @@ public sealed class EditorSession
     {
         ArgumentNullException.ThrowIfNull(load);
         ArgumentException.ThrowIfNullOrEmpty(path);
+        return Replace(load, path, recovered: false);
+    }
+
+    /// <summary>
+    /// Adopts a restored autosave (M5 item 3; decision R1): everything <see cref="Open"/> does (Changing, abandoned gestures, cleared
+    /// history, collected images, the top layer selected, one Replaced event), except that the session reads dirty until the next
+    /// <see cref="MarkSaved"/>, whatever the document holds, so the title shows the "*" and the close guard asks. <see cref="CurrentFile"/>
+    /// becomes <paramref name="originalPath"/> only when that file still exists, so Ctrl+S writes the user's file; an untitled restore
+    /// (null, or a path that is gone) stays untitled. Returns the collected images for the caller to release, as <see cref="Open"/> does.
+    /// </summary>
+    public IReadOnlyCollection<SKImage> Recover(ProjectLoad load, string? originalPath)
+    {
+        ArgumentNullException.ThrowIfNull(load);
+        string? file = !string.IsNullOrEmpty(originalPath) && System.IO.File.Exists(originalPath) ? originalPath : null;
+        return Replace(load, file, recovered: true);
+    }
+
+    IReadOnlyCollection<SKImage> Replace(ProjectLoad load, string? path, bool recovered)
+    {
         RaiseChanging();
         var outgoing = new HashSet<SKImage>(ReferenceEqualityComparer.Instance);
         void Collect(Document doc)
@@ -256,6 +277,7 @@ public sealed class EditorSession
         NextId = Math.Max(load.NextId, MaxLayerId(Document) + 1);
         CurrentFile = path;
         _saved = Document;
+        _recovered = recovered;
 
         if (Document.BgImage is { } kept) outgoing.Remove(kept);
         foreach (var layer in Document.Layers) outgoing.Remove(layer.Image);

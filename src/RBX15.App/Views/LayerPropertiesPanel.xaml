@@ -46,7 +46,7 @@
              max((max - min) / 10, step) (RangeInputType::HandleKeydownEvent), snapped to a whole number.
              WPF's track press steps toward the point instead of jumping to it (IsMoveToPointEnabled marks the
              press handled and ends the drag there); the Fill Style sliders behave the same way. -->
-        <Style x:Key="PropSlider" TargetType="Slider">
+        <Style x:Key="PropSlider" TargetType="Slider" BasedOn="{StaticResource {x:Type Slider}}">
             <Setter Property="SmallChange" Value="1" />
             <Setter Property="TickFrequency" Value="1" />
             <Setter Property="IsSnapToTickEnabled" Value="True" />

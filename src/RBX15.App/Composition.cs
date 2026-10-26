@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Windows;
 using RBX15.App.Canvas;
 using RBX15.App.Services;
@@ -13,11 +14,14 @@ namespace RBX15.App;
 /// </summary>
 internal static class Composition
 {
-    public static MainViewModel Build(EditorSession session, Func<Window?> owner, ISettingsStore settings)
+    /// <summary>How often a dirty document autosaves (spec §3 "Upgrades").</summary>
+    public static readonly TimeSpan AutosaveInterval = TimeSpan.FromSeconds(60);
+
+    public static MainViewModel Build(EditorSession session, Func<Window?> owner, ISettingsStore settings, AppStorage storage, ITickSource? autosaveTicks = null, IProcessProbe? processes = null, IJumpListSink? jumpList = null, IClipboardSource? clipboard = null)
     {
         ArgumentNullException.ThrowIfNull(owner);
         var picker = new ThemedColorPicker(owner);
-        var main = Build(session, new Win32FileDialogs(owner), new ThemedDialogService(owner), picker, settings);
+        var main = Build(session, new Win32FileDialogs(owner), new ThemedDialogService(owner), picker, settings, storage, autosaveTicks ?? new DispatcherTimerTickSource(AutosaveInterval), processes ?? new ProcessProbe(), launcher: new ProcessAppLauncher(), jumpList: jumpList ?? new WpfJumpListSink(), clipboard: clipboard ?? new WpfClipboardSource());
         // Every themed pick (brush, Fill Style colors, region swatches) offers the colors of the user's art.
         picker.Palette = () => main.Palette.Colors;
         return main;
@@ -27,13 +31,16 @@ internal static class Composition
     /// The wiring, once: the native services come in, so the app passes the real ones and the tests'
     /// TestShell passes fakes. Every line that connects view-models lives here and nowhere else.
     /// </summary>
-    public static MainViewModel Build(EditorSession session, IFileDialogs fileDialogs, IDialogService dialogs, IColorPicker colorPicker, ISettingsStore settings, Func<Random>? random = null)
+    public static MainViewModel Build(EditorSession session, IFileDialogs fileDialogs, IDialogService dialogs, IColorPicker colorPicker, ISettingsStore settings, AppStorage storage, ITickSource autosaveTicks, IProcessProbe processes, Func<Random>? random = null, IAppLauncher? launcher = null, IJumpListSink? jumpList = null, IClipboardSource? clipboard = null, Action<TimeSpan>? clipboardDelay = null)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(fileDialogs);
         ArgumentNullException.ThrowIfNull(dialogs);
         ArgumentNullException.ThrowIfNull(colorPicker);
         ArgumentNullException.ThrowIfNull(settings);
+        ArgumentNullException.ThrowIfNull(storage);
+        ArgumentNullException.ThrowIfNull(autosaveTicks);
+        ArgumentNullException.ThrowIfNull(processes);
         // M3b: the status strip, the tool and the brush come first; the canvas, the Home tab and the eraser share them.
         var status = new StatusViewModel();
         var tools = new ToolsViewModel();
@@ -47,9 +54,12 @@ internal static class Composition
         var import = new ImportService(session, status);
         // addLayer and selectLayer set the Select tool; a drawing commit keeps the drawing tool (editor.js:523, :577; R8).
         import.LayersAdded += (_, _) => tools.Set(Tool.Select);
+        // M5 item 5: the recent projects (a successful Save, Save As or Open adds to them) and the taskbar jump list that follows them.
+        var recents = new RecentProjects(settings);
+        var jumpListPublisher = new JumpListPublisher(recents, jumpList ?? new InertJumpListSink());
         // M4a Task 1: Save, Save As, Open and the unsaved-changes guard over the session (spec §3).
-        var projectFiles = new ProjectFileService(session, fileDialogs, dialogs, status, settings);
-        var fileGroup = new FileGroupViewModel(session, fileDialogs, dialogs, status, import, projectFiles);
+        var projectFiles = new ProjectFileService(session, fileDialogs, dialogs, status, settings, recents: recents);
+        var fileGroup = new FileGroupViewModel(session, fileDialogs, dialogs, status, import, projectFiles, launcher ?? new InertAppLauncher());
         var layers = new LayersViewModel(session, import, fileDialogs);
         layers.LayerPicked += (_, _) => tools.Set(Tool.Select);
         // A canvas drop lands every file on the drop point (editor.js:961-986, drop-canvas).
@@ -90,6 +100,19 @@ internal static class Composition
         // M4b item 9: the Text tab; an added Word Art layer sets the Select tool (editor.js:2287), as an import does.
         var text = new TextViewModel(session, colorPicker, status);
         text.LayersAdded += (_, _) => tools.Set(Tool.Select);
+        // M5 item 2: autosave over the session; a failure shows on the status strip, never a dialog. The session id names this window's pair.
+        string sessionId = Guid.NewGuid().ToString("N");
+        var autosave = new AutosaveService(session, storage, autosaveTicks, TimeProvider.System, sessionId,
+            () => Environment.ProcessId, () => Process.GetCurrentProcess().StartTime);
+        autosave.Failed += reason => status.Show($"Couldn't autosave: {reason}");
+        // M5 item 3: recovery finds the autosaves of dead windows (a skipped file goes to the error log); the startup flow offers the newest
+        // one and claims it into this window's session id, so the restored work keeps autosaving under the id the autosave service writes.
+        var recovery = new RecoveryService(storage, processes, () => Environment.ProcessId, () => Process.GetCurrentProcess().StartTime,
+            new ErrorLog(storage.LogDirectory, TimeProvider.System).Write);
+        var startup = new StartupFlow(session, recovery, dialogs, status, projectFiles, launcher ?? new InertAppLauncher(), sessionId);
+        // M5 item 6: Ctrl+V pastes as a new layer on top; like an import it sets the Select tool.
+        var paste = new PasteService(session, import, clipboard ?? new EmptyClipboardSource(), status, clipboardDelay);
+        paste.LayersAdded += (_, _) => tools.Set(Tool.Select);
         // M3a: construction lines above this line.
         return new MainViewModel(session)
         {
@@ -105,7 +128,44 @@ internal static class Composition
             Assets = assets,
             AvatarPreview = avatarPreview,
             Palette = palette,
+            Autosave = autosave,
+            Recovery = recovery,
+            Startup = startup,
+            Recents = recents,
+            Paste = paste,
             // M3a: required members above this line.
         };
+    }
+
+    /// <summary>The injectable overload's default: a build that names no jump-list sink never touches the taskbar (the app overload passes the real one).</summary>
+    sealed class InertJumpListSink : IJumpListSink
+    {
+        public event Action<IReadOnlyList<string>>? ItemsRemovedByUser
+        {
+            add { }
+            remove { }
+        }
+
+        public void Publish(IReadOnlyList<JumpEntry> entries)
+        {
+        }
+    }
+
+    /// <summary>The injectable overload's default: a build that names no clipboard source sees an empty clipboard (the app overload passes the real one).</summary>
+    sealed class EmptyClipboardSource : IClipboardSource
+    {
+        public ClipboardContent Read() => new ClipboardContent.None();
+    }
+
+    /// <summary>The injectable overload's default: a build that names no launcher never starts a process (the app overload passes the real one).</summary>
+    sealed class InertAppLauncher : IAppLauncher
+    {
+        public void Open(string path)
+        {
+        }
+
+        public void OpenNew()
+        {
+        }
     }
 }

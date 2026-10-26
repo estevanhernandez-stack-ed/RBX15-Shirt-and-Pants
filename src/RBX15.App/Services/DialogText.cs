@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace RBX15.App.Services;
 
 /// <summary>
@@ -28,4 +30,36 @@ public static class DialogText
 
     /// <summary>The document name before the first save, in the prompt and the window title (R3).</summary>
     public const string Untitled = "Untitled";
+
+    /// <summary>The crash dialog (M5 decision E2): the work was autosaved, the log names the failure.</summary>
+    public static string FatalError(string logPath) =>
+        $"Something went wrong and RBX15 has to close. Your work was autosaved and will be offered next time you open the app. Details: {logPath}";
+
+    /// <summary>The crash-recovery prompt (M5 decision R1). <paramref name="autosavedWhen"/> is <see cref="AutosavedWhen"/>.</summary>
+    public static string RestorePrompt(string documentName, string autosavedWhen) =>
+        $"RBX15 didn't close properly. Restore your unsaved work on {documentName}, autosaved {autosavedWhen}?";
+
+    /// <summary>The status line when Ctrl+V finds nothing usable on the clipboard (M5 decision P2).</summary>
+    public const string NothingToPaste = "Nothing to paste. Copy an image first.";
+
+    /// <summary>The status line when another app holds the clipboard through every retry (M5 decision P2).</summary>
+    public const string ClipboardBusy = "Couldn't read the clipboard. Another app is using it. Try again.";
+
+    /// <summary>The status line for a pasted image that fails the import caps or doesn't decode (M5 decision P2).</summary>
+    public static string PasteFailed(string reason) => $"Couldn't paste the image: {reason}";
+
+    /// <summary>The status line for a Recent entry whose file is gone (M5 decision H1); the entry leaves the list.</summary>
+    public static string RecentMissing(string fileName) => $"{fileName} was moved or deleted.";
+
+    /// <summary>
+    /// When an autosave was written, in local time for the restore prompt: "today at 3:41 PM", or the date and time when it is
+    /// older than today.
+    /// </summary>
+    public static string AutosavedWhen(DateTimeOffset autosavedAt, DateTimeOffset now, CultureInfo? culture = null)
+    {
+        culture ??= CultureInfo.CurrentCulture;
+        var at = autosavedAt.ToLocalTime();
+        string time = at.ToString("t", culture);
+        return at.Date == now.ToLocalTime().Date ? $"today at {time}" : $"{at.ToString("d", culture)} at {time}";
+    }
 }

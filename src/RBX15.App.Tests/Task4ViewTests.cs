@@ -110,26 +110,30 @@ public class Task4ViewTests
         Assert.Same(((LayersViewModel)zone.DataContext).BrowseCommand, button.Command);
     });
 
-    [Fact] // home-file-group (M4a): 4.1's four buttons in its order, with its title= tooltips (editor.html:88-90, :93)
-    public void The_file_group_shows_4_1s_four_buttons_in_order() => StaThread.Run(() =>
+    [Fact] // home-file-group (M4a): 4.1's four buttons in its order, with its title= tooltips (editor.html:88-90, :93); M5 item 5 adds Recent beside Open (decision H1); M5 item 18 adds New first
+    public void The_file_group_shows_New_then_4_1s_four_buttons_then_Recent() => StaThread.Run(() =>
     {
         var session = new EditorSession();
         var status = new FakeStatus();
         var group = new FileGroup { DataContext = HomeTestKit.FileGroup(session, new FakeFileDialogs(), new FakeDialogService(), status) };
         Layout(group);
         var buttons = Descendants<Button>(group).ToArray();
-        Assert.Equal(new[] { "Save work", "Open", "Add image", "Download template" }, buttons.Select(b => b.Content as string));
+        Assert.Equal(new[] { "New", "Save work", "Open", "Recent", "Add image", "Download template" }, buttons.Select(b => b.Content as string));
         Assert.Equal(new[]
         {
+            "Open a new, empty RBX15 window.",
             "Save your workspace. Reopen and keep editing.",
             "Open a saved workspace.",
+            "Open one of the last 10 projects you saved or opened.",
             "Add an image file as a layer.",
             "Export the finished 585x559 PNG. Ready to upload to Roblox.",
         }, buttons.Select(b => b.ToolTip as string));
-        Assert.Equal(new[] { "SaveButton", "OpenButton" }, buttons.Take(2).Select(b => b.Name));
+        Assert.Equal(new[] { "NewButton", "SaveButton", "OpenButton", "RecentButton" }, buttons.Take(4).Select(b => b.Name));
         var vm = (FileGroupViewModel)group.DataContext;
-        Assert.Same(vm.SaveCommand, buttons[0].Command);
-        Assert.Same(vm.OpenCommand, buttons[1].Command);
+        Assert.Same(vm.NewCommand, buttons[0].Command);
+        Assert.Equal("New", AutomationProperties.GetName(buttons[0]));
+        Assert.Same(vm.SaveCommand, buttons[1].Command);
+        Assert.Same(vm.OpenCommand, buttons[2].Command);
     });
 
     [Fact]

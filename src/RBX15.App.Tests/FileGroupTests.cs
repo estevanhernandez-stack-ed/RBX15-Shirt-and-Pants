@@ -175,7 +175,7 @@ public class FileGroupTests
         var status = new FakeStatus();
         var pending = new TaskCompletionSource<ProjectLoad>();
         var service = new ProjectFileService(session, files, dialogs, status, new FakeSettingsStore(), read: (_, _) => pending.Task, release: _ => { });
-        var vm = new FileGroupViewModel(session, files, dialogs, status, new ImportService(session, status), service);
+        var vm = new FileGroupViewModel(session, files, dialogs, status, new ImportService(session, status), service, new FakeAppLauncher());
         int changes = 0;
         vm.SaveCommand.CanExecuteChanged += (_, _) => changes++;
         vm.SaveAsCommand.CanExecuteChanged += (_, _) => changes++;
@@ -192,6 +192,42 @@ public class FileGroupTests
         Assert.True(await open);
         Assert.True(vm.SaveCommand.CanExecute(null) && vm.SaveAsCommand.CanExecute(null) && vm.OpenCommand.CanExecute(null));
         Assert.Equal(6, changes);
+    }
+
+    [Fact] // M5 item 18: New asks the launcher for a new window and changes nothing here: no undo step, the same document, the same title
+    public void New_asks_the_launcher_for_a_window_and_leaves_this_document_alone()
+    {
+        var session = new EditorSession(new Document { Layers = [new Layer { Id = 1, Image = Img() }] });
+        var launcher = new FakeAppLauncher();
+        var status = new FakeStatus();
+        var vm = HomeTestKit.FileGroup(session, new FakeFileDialogs(), new FakeDialogService(), status, launcher);
+        var before = session.Document;
+        string title = MainViewModel.WindowTitle(session.CurrentFile, session.IsDirty);
+        Assert.True(vm.NewCommand.CanExecute(null));
+        vm.NewCommand.Execute(null);
+        Assert.Equal(1, launcher.NewWindows);
+        Assert.Empty(launcher.Opened);
+        Assert.Same(before, session.Document);
+        Assert.Equal(0, session.UndoCount);
+        Assert.Null(session.CurrentFile);
+        Assert.Equal(title, MainViewModel.WindowTitle(session.CurrentFile, session.IsDirty));
+        Assert.Empty(status.Shown);
+    }
+
+    [Fact] // M5 item 18: a launcher that cannot start the exe says so in the status strip, not as a crash
+    public void New_reports_a_failed_launch_in_the_status_strip()
+    {
+        var status = new FakeStatus();
+        var vm = HomeTestKit.FileGroup(new EditorSession(), new FakeFileDialogs(), new FakeDialogService(), status, new ThrowingLauncher());
+        vm.NewCommand.Execute(null);
+        Assert.Equal("Couldn't open a new window: no such exe", Assert.Single(status.Shown));
+    }
+
+    sealed class ThrowingLauncher : IAppLauncher
+    {
+        public void Open(string path) => throw new InvalidOperationException("no such exe");
+
+        public void OpenNew() => throw new InvalidOperationException("no such exe");
     }
 
     [Fact] // project-load-image-layer: Add image imports what the picker returns, one step

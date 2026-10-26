@@ -42,16 +42,18 @@ public partial class MainWindow : Window
             if (e.PropertyName == nameof(AvatarPreviewViewModel.IsVisible)) ApplyColumnWidths(Viewport.ActualWidth);
         };
         ApplyColumnWidths(ShellLayout.DefaultWidth);
-        // The window's seven chords (spec §4 "Keyboard"; M4b item 11): Undo, Redo (two chords), Duplicate and the three file chords. A focused
+        // The window's nine chords (spec §4 "Keyboard"; M4b item 11, M5 items 6 and 18): Undo, Redo (two chords), Duplicate, the four file chords (New, Save, Save As, Open) and Paste. A focused
         // text field keeps each key even when it has nothing to do with it (final fix wave 5); anywhere else it is the command. Keys OFF never
-        // reaches them (they are KeyBindings, not routed). Ctrl+V is left unbound for M5's paste.
+        // reaches them (they are KeyBindings, not routed), and Ctrl+V toggles no tool.
         AddShortcut(viewModel.Home.Edit.UndoCommand, Key.Z, ModifierKeys.Control);
         AddShortcut(viewModel.Home.Edit.RedoCommand, Key.Y, ModifierKeys.Control);
         AddShortcut(viewModel.Home.Edit.RedoCommand, Key.Z, ModifierKeys.Control | ModifierKeys.Shift);
         AddShortcut(_layerKeys.DuplicateCommand, Key.D, ModifierKeys.Control);
+        AddShortcut(viewModel.Home.File.NewCommand, Key.N, ModifierKeys.Control);
         AddShortcut(viewModel.Home.File.SaveCommand, Key.S, ModifierKeys.Control);
         AddShortcut(viewModel.Home.File.SaveAsCommand, Key.S, ModifierKeys.Control | ModifierKeys.Shift);
         AddShortcut(viewModel.Home.File.OpenCommand, Key.O, ModifierKeys.Control);
+        AddShortcut(viewModel.Paste.PasteCommand, Key.V, ModifierKeys.Control);
         // The bare-key shortcuts (M4b items 10 and 11; K1, K2): characters from text input, keys from key downs, both through the router.
         PreviewTextInput += OnPreviewTextInput;
         PreviewKeyDown += OnPreviewKeyDown;
@@ -184,7 +186,7 @@ public partial class MainWindow : Window
     /// <summary>
     /// Closing (R13): a pending Open's read is cancelled and released; dirty work asks Save / Don't save / Cancel, and
     /// Cancel, a cancelled Save As or a failed save keeps the window open. A clean document closes with no prompt
-    /// (ledger shell-no-unsaved-changes-guard parityCheck). The placement is saved only when the window really closes.
+    /// (ledger shell-no-unsaved-changes-guard parityCheck). The placement is saved and the autosave deleted only when the window really closes.
     /// </summary>
     protected override void OnClosing(CancelEventArgs e)
     {
@@ -194,6 +196,9 @@ public partial class MainWindow : Window
             ViewModel.Files.CancelPendingOpen();
             if (!ViewModel.Files.ConfirmDiscardChanges()) e.Cancel = true;
         }
-        if (!e.Cancel) _settings.SaveWindowPlacement(CapturePlacement());
+        if (e.Cancel) return;
+        _settings.SaveWindowPlacement(CapturePlacement());
+        // A real close: the work was saved or deliberately discarded, so the autosave goes with it (a cancelled close keeps it).
+        ViewModel.Autosave.Close();
     }
 }

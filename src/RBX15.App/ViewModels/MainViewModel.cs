@@ -128,4 +128,19 @@ public sealed partial class MainViewModel : ObservableObject
 
     /// <summary>The colors of the user's art (ledger art-palette, new): the Brush group's Palette button and the picker's "From your art" row.</summary>
     public required ArtPalette Palette { get; init; }
+
+    /// <summary>Autosave (M5 item 2): the 60 s copy of unsaved work. The window's real close deletes it; the crash handler writes it once more.</summary>
+    public required AutosaveService Autosave { get; init; }
+
+    /// <summary>Crash recovery (M5 item 3): the orphaned autosaves of windows that died.</summary>
+    public required RecoveryService Recovery { get; init; }
+
+    /// <summary>What happens once the window is up (M5 item 3): the recovery prompt, then item 4's launch file.</summary>
+    public required StartupFlow Startup { get; init; }
+
+    /// <summary>The recent projects (M5 item 5): the File group's Recent menu and the jump list both read them; a launch starts <see cref="RecentProjects.RefreshAsync"/>.</summary>
+    public required RecentProjects Recents { get; init; }
+
+    /// <summary>Paste as layer (M5 item 6): Ctrl+V adds the clipboard's image as a new layer on top.</summary>
+    public required PasteService Paste { get; init; }
 }

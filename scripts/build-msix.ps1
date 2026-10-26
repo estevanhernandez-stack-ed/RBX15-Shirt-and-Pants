@@ -8,7 +8,7 @@
   3. Renders windows/msix/Package.v5.appxmanifest.template, asserts the Store identity and capabilities
      against the contract below, checks every manifest-referenced image exists at its required pixel size.
   4. makeappx pack (with validation; /nv is NOT used) -> RBX15-Maker-v<Version>.msix
-  5. makeappx unpack of the finished package, then runs BridgeExclusionTests.The_packaged_app_has_no_bridge
+  5. makeappx unpack of the finished package, asserts its packs, fonts and native libraries, then runs BridgeExclusionTests.The_packaged_app_has_no_bridge
      against the PACKAGED RBX15.App.dll (fails the build if a test-bridge type or string is present).
   6. -SelfSign: signs the MSIX with a local dev certificate whose subject equals the manifest Publisher.
   7. Zips the same publish folder -> RBX15-Maker-v<Version>-portable-win-x64.zip (unsigned).
@@ -46,13 +46,9 @@ param(
 $ErrorActionPreference = "Stop"
 $RepoRoot = Split-Path -Parent $PSScriptRoot
 
-# ---- The Store identity contract. Kept EXACTLY as 4.1 (windows/msix/Package.appxmanifest.template). -------------
-$Contract = @{
-    IdentityName         = "626LabsLLC.RBX15ClassicShirtandPantsMaker"
-    Publisher            = "CN=177BCE59-0966-4975-9962-10E36652141F"
-    PublisherDisplayName = "626Labs LLC"
-    ApplicationId        = "RBXMaker"
-}
+# ---- The Store identity contract and the assertions live in msix-contract.psm1 (shared with Test-BuildMsix.ps1). ----
+Import-Module (Join-Path $PSScriptRoot "msix-contract.psm1") -Force
+$Contract = Get-MsixContract
 
 function Step($text) { Write-Host "-> $text" -ForegroundColor Cyan }
 
@@ -132,35 +128,13 @@ $ImagesSrc = Join-Path $RepoRoot "windows/msix/Images"
 Copy-Item $ImagesSrc $MsixStage -Recurse -Force
 
 $template = Get-Content (Join-Path $RepoRoot "windows/msix/Package.v5.appxmanifest.template") -Raw
-$manifestText = $template.Replace("{{VERSION}}", $Version).Replace("{{EXECUTABLE}}", $ExeName)
+$manifestText = Expand-ManifestTemplate $template $Version $ExeName
 $manifestPath = Join-Path $MsixStage "AppxManifest.xml"
 [System.IO.File]::WriteAllText($manifestPath, $manifestText, (New-Object System.Text.UTF8Encoding($false)))
 
 # Assert the rendered manifest against the contract.
-[xml]$m = Get-Content $manifestPath -Raw
-$ns = New-Object System.Xml.XmlNamespaceManager($m.NameTable)
-$ns.AddNamespace("p", "http://schemas.microsoft.com/appx/manifest/foundation/windows10")
-$ns.AddNamespace("uap", "http://schemas.microsoft.com/appx/manifest/uap/windows10")
-$ns.AddNamespace("rescap", "http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities")
-function Assert-Equal($what, $actual, $expected) {
-    if ($actual -cne $expected) { throw "Manifest $what is '$actual', expected '$expected'." }
-}
-$id = $m.SelectSingleNode("/p:Package/p:Identity", $ns)
-Assert-Equal "Identity Name" $id.Name $Contract.IdentityName
-Assert-Equal "Identity Publisher" $id.Publisher $Contract.Publisher
-Assert-Equal "Identity Version" $id.Version $Version
-Assert-Equal "PublisherDisplayName" $m.SelectSingleNode("/p:Package/p:Properties/p:PublisherDisplayName", $ns).InnerText $Contract.PublisherDisplayName
-$app = $m.SelectSingleNode("/p:Package/p:Applications/p:Application", $ns)
-Assert-Equal "Application Id" $app.Id $Contract.ApplicationId
-Assert-Equal "Application Executable" $app.Executable $ExeName
-Assert-Equal "Application EntryPoint" $app.EntryPoint "Windows.FullTrustApplication"
-$caps = @($m.SelectNodes("/p:Package/p:Capabilities/*", $ns))
-if ($caps.Count -ne 1 -or $caps[0].Name -ne "runFullTrust") {
-    throw "Manifest capabilities must be exactly runFullTrust; found: $(($caps | ForEach-Object { $_.Name }) -join ', ')."
-}
-$ext = $m.SelectSingleNode("//uap:FileType", $ns)
-if (-not $ext -or $ext.InnerText -ne ".r15proj") { throw "Manifest is missing the .r15proj file type association." }
-Step "Manifest matches the identity contract (Name, Publisher, PublisherDisplayName, Application Id, runFullTrust only, .r15proj)"
+Assert-ManifestContract $manifestText $Version $ExeName $Contract
+Step "Manifest matches the identity contract (Name, Publisher, PublisherDisplayName, Application Id, MinVersion $($Contract.MinVersion), runFullTrust only, .r15proj)"
 
 # Every manifest-referenced image exists at its required pixel size (4.0.0 was rejected for a tile name mismatch).
 function Get-PngSize($path) {
@@ -204,6 +178,10 @@ Remove-Item -Recurse -Force $Unpacked -ErrorAction SilentlyContinue
 if ($LASTEXITCODE -ne 0) { throw "makeappx unpack failed (exit $LASTEXITCODE)" }
 $PackagedDll = Join-Path $Unpacked "RBX15.App.dll"
 if (-not (Test-Path $PackagedDll)) { throw "RBX15.App.dll is not in the unpacked MSIX." }
+
+Step "Package contents (packs, fonts with licenses, native libraries)"
+Assert-PackageContents $Unpacked $Contract
+Step "Package holds $($Contract.DripsCount) drips, $($Contract.WordArtCount) word art, $($Contract.FontFamilyCount) font families with licenses, $($Contract.NativeLibraries -join ' and ')"
 
 Step "Bridge-exclusion scan of the packaged RBX15.App.dll"
 $trxDir = Join-Path $Stage "scan-results"
@@ -278,5 +256,6 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 Write-Host ""
 Write-Host "-> MSIX: $MsixPath ($([math]::Round((Get-Item $MsixPath).Length / 1MB, 2)) MB)" -ForegroundColor Green
+Write-Host "-> Installed (unpacked) size: $([math]::Round((Get-FolderSizeBytes $Unpacked) / 1MB, 2)) MB" -ForegroundColor Green
 if (-not $SelfSign) { Write-Host "   (Unsigned: Store ingestion signs it on upload.)" -ForegroundColor Gray }
 Write-Host "-> ZIP:  $ZipPath ($([math]::Round((Get-Item $ZipPath).Length / 1MB, 2)) MB, unsigned)" -ForegroundColor Green

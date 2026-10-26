@@ -52,8 +52,8 @@ internal static class HomeTestKit
     }
 
     /// <summary>A File group over fakes, with its own project-file service (M4a Task 1 added the last constructor argument).</summary>
-    public static FileGroupViewModel FileGroup(EditorSession session, IFileDialogs files, IDialogService dialogs, IStatus status) =>
-        new(session, files, dialogs, status, new ImportService(session, status), new ProjectFileService(session, files, dialogs, status, new FakeSettingsStore()));
+    public static FileGroupViewModel FileGroup(EditorSession session, IFileDialogs files, IDialogService dialogs, IStatus status, IAppLauncher? launcher = null) =>
+        new(session, files, dialogs, status, new ImportService(session, status), new ProjectFileService(session, files, dialogs, status, new FakeSettingsStore()), launcher ?? new FakeAppLauncher());
 
     public static RegionTileViewModel Tile(RegionsGroupViewModel regions, string region) =>
         regions.Body.Concat(regions.Limb1).Concat(regions.Limb2).Single(t => t.Region == region);

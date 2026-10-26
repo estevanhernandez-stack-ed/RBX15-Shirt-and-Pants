@@ -53,7 +53,7 @@ Automated: `LayerPropertiesViewModelTests`.
 
 ### A4. Undo and redo
 
-Automated: `EditorSessionTests`, `LedgerScenarioTests.UndoMatrix`.
+Automated: `EditorSessionTests`, `LedgerScenarioTests` (the undo matrix).
 
 - [ ] On a new document, Undo and Redo are both disabled.
 - [ ] Add a layer: Undo enables. Click Undo: the layer is gone and Redo enables. Click Redo: the layer returns.
@@ -136,7 +136,7 @@ Automated: `ModeGroupTests`.
 
 ### C1. Autosave and crash recovery
 
-Automated: `AutosaveServiceTests`, `RecoveryTests` (a manual tick source, never a real 60 s timer). The real crash is MAN-10.
+Automated: `AutosaveServiceTests`, `RecoveryServiceTests`, `StartupFlowTests` (a manual tick source, never a real 60 s timer). The real crash is MAN-10.
 
 - [ ] Add a layer so the title shows `*`. Wait 70 seconds.
 - [ ] Open `%LOCALAPPDATA%\RBX15\autosave`: a `.r15proj` and a `.json` with the same name exist.
@@ -158,7 +158,7 @@ Automated: `RecentProjectsTests`, `FileGroupTests`. The packaged jump list is MA
 
 ### C3. Open from Explorer
 
-Automated: `LaunchTests`. Explorer behavior on the Store build is MAN-12.
+Automated: `LaunchArgumentsTests`, `StartupLaunchFileTests`. Explorer behavior on the Store build is MAN-12.
 
 - [ ] Double-click a `.r15proj` (Store build) or use Open with and choose `RBX15.App.exe` (zip), with the app closed: the file opens in a new window.
 - [ ] Do it again while the app is open: a second window opens and the first is unchanged.

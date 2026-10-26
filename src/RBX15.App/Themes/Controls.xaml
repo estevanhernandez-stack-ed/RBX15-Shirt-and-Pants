@@ -28,8 +28,10 @@
     </Setter>
   </Style>
 
-  <!-- Every slider keeps WPF's stock template; this only names its two page buttons for screen readers (SliderPartNames). -->
+  <!-- Every slider keeps WPF's stock template; this names its two page buttons for screen readers (SliderPartNames) and gives it the
+       FocusRing in place of the stock dotted outline (a11y-focus-rings). -->
   <Style TargetType="Slider">
+    <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRing}" />
     <Setter Property="ctl:SliderPartNames.Enabled" Value="True" />
   </Style>
 

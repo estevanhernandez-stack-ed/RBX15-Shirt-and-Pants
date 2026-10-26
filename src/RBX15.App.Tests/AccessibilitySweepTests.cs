@@ -89,9 +89,6 @@ public class AccessibilitySweepTests
         owner is TextBox or ComboBox && owner is Control { Template: { } template }
         && template.Triggers.OfType<Trigger>().Any(t => t.Property == UIElement.IsKeyboardFocusedProperty || t.Property == UIElement.IsKeyboardFocusWithinProperty);
 
-    /// <summary>The controls whose focus visual would change how the app looks (stock slider outline, a text field with no focus look): held for the look sign-off.</summary>
-    static bool HeldForLookSignOff(FrameworkElement owner) => owner is Slider || owner.Name == "TemplateName";
-
     /// <summary>
     /// The problems among <paramref name="roots"/>' shown peers: an unnamed actionable element; a focusable control without the FocusRing
     /// (list boxes are checked through their items, which take the focus; text fields and combo boxes that draw their own cyan focus border are exempt).
@@ -110,7 +107,7 @@ public class AccessibilitySweepTests
             if (!Actionable(peer)) continue;
             if (string.IsNullOrWhiteSpace(peer.GetName())) problems.Add($"{where}: no Name: {Describe(peer)}");
             if (peer is UIElementAutomationPeer { Owner: FrameworkElement owner and not Window and not ItemsControl } && owner.Focusable && owner.IsEnabled
-                && !ReferenceEquals(owner.FocusVisualStyle, focusRing) && !DrawsOwnFocus(owner) && !HeldForLookSignOff(owner))
+                && !ReferenceEquals(owner.FocusVisualStyle, focusRing) && !DrawsOwnFocus(owner))
                 problems.Add($"{where}: no FocusRing: {Describe(peer)}");
         }
         return problems;

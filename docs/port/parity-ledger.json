@@ -3073,12 +3073,12 @@
    "quirks": "Heavy for many layers with CSS filters; native can improve without behavior change.",
    "portTarget": "Invalidate and render on the UI thread (CompositionTarget/InvalidateVisual) with coalescing; cache the composite of static layers during a stroke or drag for performance, but output must remain identical.",
    "risk": "low",
-   "parityCheck": "Performance budget: stroke on a 20-layer document stays at 60 fps; correctness unchanged. Open after M4b, not proven (run 2 D12). Measured baseline (FrameBudgetTests.A_pen_stroke_over_twenty_layers_reports_its_frame_times, a 120-point pen stroke on 20 layers): p95 12.6-13.3 ms with rotated, translucent layers, under 16.7 ms; 31.7-32.5 ms with color filters too, over it. The canvas host keeps one frame surface per size or DPI (FrameBudgetTests.Frames_at_a_fixed_size_allocate_one_surface_and_a_size_change_one_more), and reuse draws what a fresh host draws. Closes when the static-layer composite is cached during a stroke, or Este narrows the budget to the lighter document.",
+   "parityCheck": "Closed in M6 (C1's success branch, D12): while a pen, line, shape or eraser preview is live, ViewRenderer caches the background, region fills and every layer per Document instance and draws the preview, mask, grid, region guide and overlays over it each frame, in 4.1's order. Frames are byte-equal to uncached frames for pen, line, rect and eraser, mask on and off (ViewRendererTests.A_cached_stroke_frame_is_byte_equal_to_the_uncached_frame); the cache follows the Document instance and a stroke end releases it (ViewRendererTests.The_cache_follows_the_document_instance_and_a_stroke_end_releases_it; FrameBudgetTests.A_stroke_caches_the_static_composite_once_and_a_document_change_rebuilds_it). FrameBudgetTests.A_pen_stroke_over_twenty_layers_reports_its_frame_times asserts p95 under 16.7 ms for both 20-layer documents under RBX15_PERF=1: 1.4-2.3 ms (before: 10-13 ms rotated and translucent, 30-31 ms with color filters too); the controller's rerun 1.59 and 1.43 ms. The canvas host keeps one frame surface per size or DPI (FrameBudgetTests.Frames_at_a_fixed_size_allocate_one_surface_and_a_size_change_one_more). Narrowed in M6: the budget is p95, not every frame; the first frame of a stroke builds the cache (max 20.7 ms in the controller's run, up to 27 ms on the filtered document), one frame over budget per stroke.",
    "owner": "App.Canvas",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "project-and-export-dependency-note",
@@ -3700,7 +3700,7 @@
    "quirks": "Ctrl+V/B/L/U/O are NOT excluded: they switch tools and preventDefault, which blocks native paste (Ctrl+V), Ctrl+O open, Ctrl+U etc. (Ctrl+E is explicitly excluded.) Check whether image paste relies on a 'paste' event (none found in editor.js grep). Port decision: ignore tool keys when Ctrl/Alt held (recommended) and define Ctrl+V paste separately.",
    "portTarget": "InputBindings or a central KeyRouter; ToolService.Toggle(tool). Match case-insensitively on key, not scan code (layout-dependent).",
    "risk": "low",
-   "parityCheck": "ShortcutRouterTests.The_six_letters_map_to_the_six_tools_in_either_case and Tool_keys_run_toggleTool (repeat returns to Select, V twice stays Select), through ToolsViewModel, which the toolbar's active state binds to. Narrowed in M4b: Ctrl+V's paste moves to M5's paste row; M4b proves Ctrl+V and the other Ctrl or Alt letters toggle no tool (ShortcutRouterTests.Ctrl_and_alt_letters_leave_the_tool_alone; K3).",
+   "parityCheck": "ShortcutRouterTests.The_six_letters_map_to_the_six_tools_in_either_case and Tool_keys_run_toggleTool (repeat returns to Select, V twice stays Select), through ToolsViewModel, which the toolbar's active state binds to. Narrowed in M4b: Ctrl+V's paste is upgrade-paste-as-layer (M5); M4b proves Ctrl+V and the other Ctrl or Alt letters toggle no tool (ShortcutRouterTests.Ctrl_and_alt_letters_leave_the_tool_alone; K3).",
    "owner": "App.Keyboard",
    "check": "ui-auto",
    "disposition": "fix",
@@ -4548,7 +4548,7 @@
    "quirks": "main.js enables nodeIntegration:true / contextIsolation:false (root of the PR #27 injection issue), which the native port drops. __dirname check means a packaged app whose asar contains a packs dir would pick that; extraResources avoids this.",
    "portTarget": "Resolve via AppContext.BaseDirectory + 'Assets\\\\packs\\\\<name>' (works for self-contained MSIX since package install folder is the base dir). No dev/prod fork needed; keep a Missing-pack MessageBox with same text for parity ('Built-in pack \"drips\" not found. Reinstall the app to restore it.').",
    "risk": "low",
-   "parityCheck": "Run from dev output dir and from installed MSIX; both list 156/25. Temporarily delete folder: MessageBox text matches.",
+   "parityCheck": "Dev output: AssetLibraryViewModelTests.Drips_loads_156_sorted_with_its_own_count_and_no_group_buttons and Word_art_loads_25_and_replaces_the_previous_set; a missing pack alerts 4.1's text and changes nothing (AssetLibraryViewModelTests.A_missing_pack_alerts_and_changes_nothing). The package: build-msix.ps1 unpacks the finished MSIX and asserts packs\\drips holds 156 PNGs and packs\\word_art 25 (Assert-PackageContents; Test-BuildMsix.ps1's missing-pack and one-short cases), and the item 16 build passed it (D23). Open after M6, behind MAN-16: the installed MSIX listing 156 and 25 from the Start tile.",
    "owner": "App.AssetLibrary",
    "check": "manual",
    "disposition": "keep",
@@ -4944,7 +4944,7 @@
    "quirks": "Ctrl+R in Electron reloads the page and wipes all work with no confirmation (editor.js:1803 comment shows the author knows). Port should simply not have this. No min window size: at narrow widths the ribbon scrolls horizontally and the canvas area can collapse.",
    "portTarget": "WPF Window Width=1200 Height=800 (client area differs from Electron content area, so match content area ~1200x(800-title bar)), Title string as-is, no MenuBar. Do not carry over browser reload/devtools/zoom accelerators. Decide deliberately: add an unsaved-changes prompt on close (recommended deviation) or keep silent discard.",
    "risk": "low",
-   "parityCheck": "Launch: title bar text matches, no menu, window opens 1200x800, resizes without crash down to ~640x480, closing with edits shows no prompt (or the new prompt if chosen). The caption reads as one band with the header (brand-navy-deep), its text is light, the caption buttons and snap layouts work, and on Windows without the DWM color attributes the window still opens with the default caption. CaptionThemeTests pin the attribute values.",
+   "parityCheck": "UiFlowTests.The_frame_has_the_title_no_menu_and_asks_before_closing_unsaved_work (the title, no menu, the close prompt), The_window_opens_1200_by_800_centered_in_the_work_area_at_the_real_dpi and Resizing_to_640_by_480_lays_out_and_below_the_minimum_the_window_refuses; CaptionThemeTests (The_caption_takes_the_header_band_and_light_ink, Applying_to_a_window_never_throws_before_or_after_it_has_a_handle, Colors_become_COLORREFs) pin the DWM attribute values and the no-DWM fallback. Open after M6, behind MAN-18: the caption seen as one band with the header, the snap layouts flyout and a corner snap, and a drag-resize by hand to the 640x480 floor.",
    "owner": "App.Shell",
    "check": "manual",
    "disposition": "fix",
@@ -5154,12 +5154,12 @@
    "quirks": "Current app is keyboard-inaccessible for swatches, region tiles, layers, drop zone, adjustments toggle. Port should fix, but it is a deliberate deviation to record.",
    "portTarget": "WPF FocusVisualStyle: custom Style with 2px cyan Rectangle, Margin -2 (offset 2); WPF shows focus visuals for keyboard only by default. Apply to Button, ComboBox, TextBox, CheckBox, Slider, ribbon tabs. Decision: fix parity gaps by making swatches, region tiles, layer items, drop zone and adj toggle focusable (Button/ListBoxItem) with AutomationProperties.Name; add AutomationProperties to all controls (UIA) since MSIX Store certification favors it.",
    "risk": "med",
-   "parityCheck": "Tab through the whole Home tab: each stop shows 2px cyan ring offset 2 px; mouse click does not. Run Accessibility Insights UIA scan: no unnamed interactive controls.",
+   "parityCheck": "AccessibilitySweepTests over a shown MainWindow (four tabs, a layer selected), the themed dialogs and the recovery prompt, the color picker and the Recent drop-down: Every_actionable_element_in_every_tab_has_a_name_and_the_focus_ring, The_recent_dropdown_entries_are_named_and_focus_ringed, The_themed_dialogs_and_the_recovery_prompt_are_named_and_focus_ringed, The_color_picker_is_named_and_focus_ringed; every element a client can focus or act on has a Name, and every focusable control resolves the FocusRing style (a 2 px BrandCyan rectangle at Margin -4, so the ring sits 2 px off the edge). Tab_order_reaches_the_ribbon_the_left_panel_the_layers_and_the_canvas and Tab_order_reaches_the_background_swatches_and_every_region_tile: region tiles, swatches, layer rows and the drop zone are tab stops. Sliders and the Template name field take the ring (ac7d46b, Este's look call, D16). Narrowed in M6: the in-process UIA sweep stands in for Accessibility Insights; tab order is read from tree order, not by moving real focus; that the ring shows for the keyboard and not the mouse is WPF's FocusVisualStyle rule, not asserted; text fields and combo boxes keep their own cyan border (exempt). MAN-14 (Narrator) is pending corroboration; a fail reopens the row.",
    "owner": "App.Shell",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: swatches, region tiles, layers and the drop zone are not keyboard reachable. v5: keyboard-reachable tiles, layers and swatches with automation names and a cyan focus ring.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "ribbon-tabs-switching",
@@ -5943,11 +5943,11 @@
    "quirks": "Ctrl+B/L/U/O/V also trigger tools because only E and D check ctrl (Ctrl+V therefore selects Select; Ctrl+O would collide with a native Open shortcut if added). Backspace with a focused button still deletes a layer. After touching a slider or checkbox, shortcuts stay disabled until focus moves away (clicking the canvas moves focus to body). Slider arrow keys therefore never conflict. Shortcuts are not discoverable except via tooltips on the tool buttons and undo/redo.",
    "portTarget": "Window.PreviewKeyDown handler with the same focus guard (TextBox/ComboBox/Slider/CheckBox focus suppresses, also ToggleButton? original suppresses only input/select/textarea so focused buttons still allow shortcuts). Map Key + Modifiers; note WPF Key.OemPlus for '+/=', Oem4/Oem6 for [ ].",
    "risk": "med",
-   "parityCheck": "ShortcutRouterTests.RouteText_table_over_focus_modifiers_and_keys and the Route tables (every key over no focus, a TextBox, a Slider, a CheckBox, a Button, a layer row, a region tile and the 3D viewport, with no modifier, Shift, Ctrl and Alt, Keys on and off), plus the item 11 window facts (layer deltas, one undo step each) and ShellTests.The_window_binds_exactly_the_seven_chords_and_not_ctrl_v. Narrowed in M4b: Ctrl+V's paste moves to M5's paste row; M4b proves Ctrl+V toggles no tool and does nothing (K3; M4b smoke K2).",
+   "parityCheck": "ShortcutRouterTests.RouteText_table_over_focus_modifiers_and_keys and the Route tables (every key over no focus, a TextBox, a Slider, a CheckBox, a Button, a layer row, a region tile and the 3D viewport, with no modifier, Shift, Ctrl and Alt, Keys on and off), plus the item 11 window facts (layer deltas, one undo step each) and ShellTests.The_window_binds_exactly_the_eight_chords (renamed in M5, D11). Narrowed in M4b: Ctrl+V's paste is upgrade-paste-as-layer (M5); M4b proved Ctrl+V toggles no tool (K3; M4b smoke K2).",
    "owner": "App.Keyboard",
    "check": "ui-auto",
    "disposition": "fix",
-   "divergence": "4.1: shortcuts are trapped by sliders and checkboxes, Ctrl+letter toggles tools, '[' rotation wraps incorrectly, and Keys OFF disables everything. v5: only text fields suppress shortcuts, Ctrl+letter no longer toggles tools, Ctrl+O/S/Shift+S/V added, Keys OFF disables only bare-key shortcuts, and '[' rotation wrap fixed. Character shortcuts ([ ] { } + = - _ r and the tool letters) match the typed character, so they follow the keyboard layout as 4.1's e.key did; an AltGr (Ctrl+Alt) character routes like the bare character while a lone Ctrl or Alt still blocks, and { and } always step 15, Shift or not (M4b, K2, D9, D15). Ctrl+V paste arrives with M5's paste row; in M4b Ctrl+V does nothing and toggles no tool (M4b, K3).",
+   "divergence": "4.1: shortcuts are trapped by sliders and checkboxes, Ctrl+letter toggles tools, '[' rotation wraps incorrectly, and Keys OFF disables everything. v5: only text fields suppress shortcuts, Ctrl+letter no longer toggles tools, Ctrl+O/S/Shift+S/V added, Keys OFF disables only bare-key shortcuts, and '[' rotation wrap fixed. Character shortcuts ([ ] { } + = - _ r and the tool letters) match the typed character, so they follow the keyboard layout as 4.1's e.key did; an AltGr (Ctrl+Alt) character routes like the bare character while a lone Ctrl or Alt still blocks, and { and } always step 15, Shift or not (M4b, K2, D9, D15). Ctrl+V pastes an image as a new layer (upgrade-paste-as-layer, M5) and toggles no tool (M4b, K3).",
    "status": "done"
   },
   {
@@ -6099,12 +6099,12 @@
    "quirks": "No minimum size, so the UI can be shrunk until panels overlap. Port should either keep (parity) or add a sane MinWidth; log the choice.",
    "portTarget": "MainWindow.xaml Width=1200 Height=800 WindowStartupLocation=CenterScreen. Note Electron 1200x800 is the OUTER size in DIPs; WPF Width/Height is also outer, so use the same numbers. Set Background to brand navy #0f1f31 so there is no white flash. Decide MinWidth/MinHeight (Electron had none; the editor layout likely breaks when small).",
    "risk": "low",
-   "parityCheck": "Launch at 100% and 150% DPI on a 1920x1080 screen; screenshot window rect and confirm 1200x800 DIP and centered within 1px. Resize to very small and compare behavior.",
+   "parityCheck": "UiFlowTests.The_window_opens_1200_by_800_centered_in_the_work_area_at_the_real_dpi: with no saved placement the window opens at 1200x800 DIP (Width and ActualWidth), centered in its work area, and its device-pixel rectangle is 1200x800 times the real DPI within 1 px. Resizing_to_640_by_480_lays_out_and_below_the_minimum_the_window_refuses: at 640x480 every column is non-negative, the canvas and ribbon keep a size and Add image still runs; 300x200 stays at 640x480. PlacementGuardTests pin centering on the primary work area and the saved-placement rules. Narrowed in M6: the test window centers in an off-screen work area, not the primary display, at the test machine's DPI (100%); the 150% launch is not run (MAN-8 ran the suite at a real 125% before these facts existed).",
    "owner": "App.Shell",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: fixed 1200x800 centered window with no memory of size or position. v5: window remembers size and position. The window has a 640x480 minimum (4.1 had none, and its panels overlapped when shrunk).",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "shell-window-title",
@@ -6225,12 +6225,12 @@
    "quirks": "Silent data loss on close is current behavior; the port should decide explicitly. Because the editor does not track a 'dirty' flag today, adding a prompt is a new feature, not parity.",
    "portTarget": "Application.ShutdownMode=OnMainWindowClose; no close confirmation for parity. Drop the darwin branch. Consider (flagged improvement) an unsaved-changes prompt since history already tracks dirty state.",
    "risk": "low",
-   "parityCheck": "Add a layer, click close: app exits with no dialog, no residual process in Task Manager (native: 1 process, Electron: 4).",
+   "parityCheck": "Reworded in M5 to the fixed behavior: ShellTests.Closing_dirty_work_asks_save_dont_save_or_cancel and Closing_a_clean_document_shows_no_prompt; AutosaveWiringTests.A_real_close_deletes_the_pair_and_a_cancelled_close_keeps_it; RestoredWindowCloseTests.A_restored_window_asks_on_close_and_Dont_save_deletes_the_pair. On the real exe (item 16 smoke, D23): a Don't-save close of the normal Release build deleted the pair, and the cold-start runs closed with no prompt. Narrowed in M5: one process per window holds by construction (S1, shell-single-instance); the process count after close was not counted in Task Manager.",
    "owner": "App.Shell",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: closing the window exits immediately with no unsaved-work prompt and no autosave. v5: save-changes prompt on close with dirty tracking, backed by autosave and crash recovery.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "shell-single-instance",
@@ -6265,12 +6265,12 @@
    "quirks": "Electron still writes Chromium cache dirs (Cache, GPUCache, Network, Local Storage) under %APPDATA%\\<productName>; Electron's uninstall leaves them behind. The 'no hidden data' privacy claim is slightly off for the Electron build; native build makes it exactly true.",
    "portTarget": "Do not add a settings store without updating PRIVACY.md and the Store privacy answers. Native app writes nothing outside user-chosen files (plus optional crash log decision). MSIX will create the per-package LocalState folder automatically but it stays empty.",
    "risk": "low",
-   "parityCheck": "Run Process Monitor on native build through a full session: only reads of install dir, user-chosen files, and fonts; no writes outside chosen save paths. Compare to Electron build, which writes Cache, GPUCache, Local Storage, etc. under %APPDATA%.",
+   "parityCheck": "Reworded in M5 to the fixed behavior: v5 writes settings.json (window placement, the last project and asset folders, recentProjects), the autosave pair and the error log, all under one AppStorage root, %LOCALAPPDATA%\\RBX15 (ErrorLogTests.The_storage_root_holds_settings_autosave_and_logs), plus the files the user picks. AutosaveServiceTests.A_titled_document_autosaves_into_the_autosave_folder_and_names_the_original (never beside the user's file) and A_dirty_document_writes_on_the_first_tick_and_not_again_until_it_changes; JsonSettingsStoreTests.Recents_round_trip_as_an_array_of_full_paths, A_recents_write_keeps_window_and_the_folders, A_recents_write_after_a_failed_read_is_skipped; the jump list is Windows' own store (upgrade-jump-list). docs/PRIVACY.md (2026-10-25) lists each file, what it holds and when it goes away (doc review, M6 item 17). Narrowed in M6: no Process Monitor session was run; that nothing else is written rests on the one storage root and the item 16 smoke (the autosave pair and settings only, D23). Where the packaged build's writes land, and that uninstall removes them, is MAN-16 on shell-userdata-footprint.",
    "owner": "App.Storage",
    "check": "doc",
    "disposition": "fix",
-   "divergence": "4.1: zero persisted settings and no hidden data. v5: remembers window rect, autosaves every 60s while dirty for crash recovery, and keeps 10 recent projects and a jump list, with PRIVACY docs updated to match.",
-   "status": "open"
+   "divergence": "4.1: zero persisted settings and no hidden data. v5: remembers window rect, autosaves every 60s while dirty for crash recovery, and keeps 10 recent projects and a jump list, with PRIVACY docs updated to match. It also remembers the last project and asset folders and keeps a local error log of unhandled exceptions (upgrade-error-log), all in one folder that PRIVACY lists (M5).",
+   "status": "done"
   },
   {
    "id": "shell-gpu-canvas-edge-drift",
@@ -6586,12 +6586,12 @@
    "quirks": "The Store-ingested package is re-signed; PFN suffix wz1chhb2h2v4a derives from Publisher so any CN change breaks the upgrade path. Must also ship version > 4.1.0.0; current native spike is not versioned. Runtime flip: Electron->WPF in the same PFN is allowed because architecture is x64 for both.",
    "portTarget": "Use the identical Identity/Publisher in Package.appxmanifest of a Windows Application Packaging Project (or hand-written manifest + MakeAppx on `dotnet publish -r win-x64 --self-contained`). Version for the native release must be strictly greater than the last Store-submitted 4.1.0.0 (Store requires monotonically increasing; the 4th component is reserved by the Store for the Store, keep .0). Do NOT reserve a new app name.",
    "risk": "high",
-   "parityCheck": "Open built .msix with `MakeAppx unpack` or Get-AppxPackage: Name/Publisher/PFN exactly equal to the values above; upload to Partner Center validation passes without identity errors; update installs over the Electron 4.1.0.0 package as an upgrade (same PFN).",
+   "parityCheck": "Narrowed in M6 (L1): build-msix.ps1 asserts Identity Name, Publisher, Version and PublisherDisplayName exactly on every build (scripts/msix-contract.psm1 Assert-ManifestContract), and scripts/Test-BuildMsix.ps1 fails a wrong identity name and a wrong version with their reasons, so the PFN 626LabsLLC.RBX15ClassicShirtandPantsMaker_wz1chhb2h2v4a follows from the unchanged Name and Publisher. The in-place update over the Store-signed 4.1 is parity-store-update-path (Este, 2026-10-25, PR #56). Partner Center validation of the uploaded package moves to the 'Este / release and after certification' list in docs/port/m5m6-manual.md.",
    "owner": "Package",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "msix-application-entry",
@@ -6605,7 +6605,7 @@
    "quirks": "4.0.0 was REJECTED by Partner Center for a tile filename mismatch (SmallTile.png/LargeTile.png vs Square71x71Logo.png/Square310x310Logo.png), fixed in 4.0.1; the make-msix flow uses /nv which skips semantic validation, so image-name errors are only caught at upload. Add a validation step that checks every manifest-referenced file exists.",
    "portTarget": "Keep Application Id 'RBXMaker' (changing Id breaks pinned-tile / jump-list continuity), set Executable to the WPF exe name (rename AssemblyName or keep the same file name with spaces), same visual elements. Add scale variants (scale-125/150/200/400) for crisp tiles since Images only has base sizes. M6a: Application Id RBXMaker kept; Executable is RBX15.App.exe (AssemblyName unchanged, the PE name is the only visible effect); visual elements unchanged; tile scale variants not added.",
    "risk": "med",
-   "parityCheck": "Install the native package: Start tile label 'RBX15', tile and splash match images; pinned tile from the Electron install keeps working after upgrade.",
+   "parityCheck": "build-msix.ps1 asserts Application Id RBXMaker, Executable RBX15.App.exe and EntryPoint Windows.FullTrustApplication on every build (Assert-ManifestContract; Test-BuildMsix.ps1's wrong-entry-point and wrong-executable cases), and that every manifest-referenced image exists at its pixel size. Open after M6, behind MAN-16: the Start entry and tile reading 'RBX15' and the splash on the installed package. The pinned-tile continuity across the 4.1 update is parity-store-update-path (PR #56).",
    "owner": "Package",
    "check": "manual",
    "disposition": "keep",
@@ -6626,12 +6626,12 @@
    "quirks": "The old justification point (1) 'Electron spawns renderer child process' no longer exists and point (2) 'folder picker every load' is weak: with a user picker the sandbox also allows access via the file picker broker. runFullTrust remains for the .NET runtime.",
    "portTarget": "Native WPF (.NET) still requires runFullTrust (Windows.FullTrustApplication; WPF cannot run as UWP). The Electron-specific justification is invalid, rewrite it: 'WPF desktop application (Win32/.NET) cannot run in the AppContainer; reads and writes only user-chosen files'. With fonts bundled there is zero network use, so internetClient is correctly not needed. Re-answer the Store submission's capability justification and reviewer letter. M6a: the manifest declares runFullTrust only (build-msix.ps1 asserts it on every build) and a source scan finds no HttpClient, WebClient or socket use in src/. The reviewer letter rewrite and the App Certification Kit run remain.",
    "risk": "med",
-   "parityCheck": "Manifest declares exactly one capability; static scan shows no network calls; reviewer letter text updated to WPF wording; App Certification Kit passes.",
+   "parityCheck": "Narrowed in M6 (L1): exactly one capability, runFullTrust, asserted on every build (Assert-ManifestContract; Test-BuildMsix.ps1's 'a second capability' and 'no runFullTrust' cases); no network client in src/RBX15.App (ErrorLogTests.The_app_source_has_no_network_client) and zero sockets at three cold starts of the real exe (item 16 smoke, D23); docs/store/reviewer-letter-5.0.0.0.md carries the WPF justification ('a Win32/.NET desktop app cannot run in the AppContainer; it reads and writes only user-chosen files, plus its own settings, autosave and error log in its local app data') with no Electron wording (doc review, M6 item 17). The App Certification Kit run is MAN-17 and Store certification is on the 'Este / release and after certification' list in docs/port/m5m6-manual.md; a WACK or certification failure reopens the row.",
    "owner": "Package",
    "check": "doc",
    "disposition": "fix",
    "divergence": "4.1: runFullTrust justification cites Electron child processes and the folder picker. v5: justification rewritten for the .NET self-contained runtime.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "msix-target-os",
@@ -6646,12 +6646,12 @@
    "quirks": "Verify .NET 10 actually runs on 1809 (support matrix: Windows 10 1607+ for .NET 8; check .NET 10 notes) before promising the same floor.",
    "portTarget": ".NET 10 supports Windows 10 1607+ / 11; keep 10.0.17763.0 to avoid dropping users on the Store listing (raising it hides the app from those devices). Update MaxVersionTested to the current tested build (this dev machine is 10.0.26220). Update the comment. M6a: MinVersion 10.0.17763.0 kept, MaxVersionTested 10.0.26100.0 (the newest Windows SDK installed; 10.0.26220 has no SDK bin). The .NET 10 supported-OS table lists Windows 10 1607 and 1809 as Enterprise/LTSC only, so the 1809 floor holds for those SKUs; the VM launch test is not run.",
    "risk": "low",
-   "parityCheck": "Package Viewer / Store submission shows same minimum; install and launch on an 1809 or 1903 VM if still supported by .NET 10.",
+   "parityCheck": "Narrowed in M6 (L1): build-msix.ps1 asserts TargetDeviceFamily Windows.Desktop with MinVersion 10.0.17763.0 on every build (Assert-ManifestContract; Test-BuildMsix.ps1's 'a wrong MinVersion' case fails with its reason); MaxVersionTested is 10.0.26100.0. The .NET 10 support table lists 1809 for Enterprise and LTSC only (M6a). The install and launch on an 1809 VM moves to the 'Este / release and after certification' list in docs/port/m5m6-manual.md.",
    "owner": "Package",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "msix-arch-self-contained",
@@ -6665,7 +6665,7 @@
    "quirks": "ReadyToRun and trimming interactions with WPF are fragile; verify startup after publish, not just debug.",
    "portTarget": "`dotnet publish -c Release -r win-x64 --self-contained -p:PublishReadyToRun=true` (avoid single-file/trimming that break SkiaSharp native libs and WPF). Expected about 66 MB. Optionally add win-arm64 as a bundle.",
    "risk": "med",
-   "parityCheck": "Installed size and MSIX size reported; clean machine with no .NET installed launches the app; native libSkiaSharp.dll present.",
+   "parityCheck": "Sizes reported from the unsigned build (D14, D23): MSIX 69.18 MB, zip 70.25 MB, installed 155.55 MB. build-msix.ps1 asserts libSkiaSharp.dll and libHarfBuzzSharp.dll in the unpacked package (Assert-PackageContents; Test-BuildMsix.ps1's missing-library cases). Open after M6, behind MAN-15: the portable zip launching on a machine with no .NET installed (Windows Sandbox).",
    "owner": "Package",
    "check": "manual",
    "disposition": "keep",
@@ -6744,12 +6744,12 @@
    "quirks": "Bug to NOT port: editing lib/fills.js, lib/erase.js, lib/history.js or tests alone does not trigger CI (path filter omits them), so the lint+test gate can be bypassed. The 'Verify artifacts' step is the only post-build check.",
    "portTarget": "New pipeline: setup-dotnet 10.x, `dotnet restore --locked-mode`, `dotnet build -warnaserror`, `dotnet test` (unit + pixel-parity tests), `dotnet publish` self-contained, run make-msix.ps1, verify .msix exists and manifest references resolve. Fix the path filter so engine/test/pack changes trigger CI.",
    "risk": "med",
-   "parityCheck": "Break a test on a branch touching only the shared fills library: CI must fail. PR touching only docs does not run the heavy job.",
+   "parityCheck": "tools/ci/test_workflows.py (DotnetCiTests.test_real_file_passes and test_every_asserted_line_is_load_bearing, which breaks each asserted line in a copy and sees it fail) pins dotnet-ci.yml to run on pull requests and pushes touching src/**, packs/**, tests/goldens/** and tools/**, never on a docs-only, markdown or catch-all path, with the tools/ci tests after the build. The shared engine is src/RBX15.Engine, inside src/**, and a failing dotnet test fails the job. The workflow has run on the v5 PRs (green on #55 and on PR #56's branch, 2026-10-25). Narrowed in M6: no deliberately broken engine test was pushed to a scratch branch, and the docs-only skip is pinned from the workflow text, not watched on GitHub; the new tools/ci step first runs when this branch is pushed (D14).",
    "owner": "Package",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: path filter omits lib/**, tests/** and packs/**, so lint and test gates can be bypassed. v5: CI builds and runs dotnet tests on every PR with no path-filter hole.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "ci-windows-release",
@@ -6764,12 +6764,12 @@
    "quirks": "RELEASE_NOTES.md is a single file, so a new tag without editing it republishes stale notes. No check that tag == package.json version. Release does not run tests.",
    "portTarget": "Same shape: restore, test, publish, make-msix, upload .msix (and installer if kept) with an artifact-name contract. Add a tests gate before packaging. Keep body_path from RELEASE_NOTES.md (must be rewritten per release or the old 4.1.0 text posts on the new tag). The cut-release skill requires real commit bullets in the body.",
    "risk": "med",
-   "parityCheck": "Push a v-tag on a fork: release created with the expected asset names and a non-empty body; tag/version mismatch with csproj fails the job.",
+   "parityCheck": "Narrowed in M6 (L1): V5ReleaseTests (test_real_file_passes, test_every_asserted_line_is_load_bearing, test_msix_step_moved_ahead_of_tests_fails) pin v5-release.yml to v5.* tags alone, the tag checked against RBX15.App.csproj's version, the placeholder release notes refused, and the ledger gate, dotnet build and dotnet test all before build-msix.ps1, with no self-signing; WindowsReleaseTests fence the 4.1 workflow to v4.*. The tagged run (the release with its asset names and a non-empty body, and a mismatched tag failing) moves to the 'Este / release and after certification' list in docs/port/m5m6-manual.md: it is the v5.0.0 tag after /cut-release.",
    "owner": "Package",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: tag release reuses a single RELEASE_NOTES.md, never checks tag against version and runs no tests. v5: release builds MSIX and zip, verifies tag against version and runs tests first.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "ci-docs-check",
@@ -6928,12 +6928,12 @@
    "quirks": "Stale docs only.",
    "portTarget": "Regenerate counts from the new suite automatically (badge or CI summary) instead of hand-written numbers.",
    "risk": "low",
-   "parityCheck": "Docs contain no stale numeric test counts after the port.",
+   "parityCheck": "README.md, CONTRIBUTING.md, docs/SMOKE_TEST.md, windows/TEST_PLAN.md, docs/index.html and the 5.0 Store files state no hand-written test count (grep, M6 item 17); README and CONTRIBUTING point at the .NET CI run instead. The 4.1 counts remain only in CHANGELOG.md and windows/RELEASE_NOTES.md, which are 4.1 history.",
    "owner": "Docs",
    "check": "doc",
    "disposition": "fix",
    "divergence": "4.1: docs disagree on test counts (17+, 31, no framework). v5: docs state counts generated from the xUnit and golden suites.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "tests-manual-smoke",
@@ -6947,12 +6947,12 @@
    "quirks": "Mentions Ctrl+Shift+I to see console; native substitute needed (log file).",
    "portTarget": "Convert to a native smoke checklist; where possible automate with FlaUI/WinAppDriver UI tests for the deterministic parts (disabled-state of Undo/Redo on launch, shortcut handling, dialog texts).",
    "risk": "low",
-   "parityCheck": "Execute every checkbox on the native build; Part A 4/4 and Part B no regressions before release.",
+   "parityCheck": "Narrowed in M6: docs/SMOKE_TEST.md is rewritten for v5 (item 14, ae9c48f and d407348): Part A keeps the four revival regressions in v5 terms, Part B covers the core path and each M5 upgrade, every step names the automated tests that already prove it (each cited class checked to exist, D20), the diagnostic is %LOCALAPPDATA%\\RBX15\\logs\\error.log, and DevTools and Ctrl+Shift+I are gone (doc review, M6 item 17). The item 16 smoke ran the upgrade steps on the real exe (D23). Running the whole checklist on the release candidate (Part A 4/4, Part B no regressions) moves to the 'Este / release and after certification' list in docs/port/m5m6-manual.md.",
    "owner": "Docs",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: SMOKE_TEST covers Electron flows and tells testers to open DevTools with Ctrl+Shift+I. v5: smoke test rewritten for the WPF app with a log file instead of DevTools.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "tests-windows-test-plan",
@@ -6966,12 +6966,12 @@
    "quirks": "Plan claims 'ItsjustEste | v4.0' header and '2 outbound hosts'; the first is stale and the second disappears with bundled fonts.",
    "portTarget": "Becomes the native release gate; update section 1/15 for the MSIX install path, section 14 to 'zero connections', section 2 to the native visuals (footer font bundled).",
    "risk": "low",
-   "parityCheck": "Run the rewritten plan on a clean Windows 10 1809+/11 VM before tagging.",
+   "parityCheck": "Narrowed in M6 (L1, the clean-VM clause): windows/TEST_PLAN.md is rewritten for v5 (item 14): the MSIX (Store or sideload) and zip installs, the v5 first launch (1200x800 centered, the 626Labs mark, v5.0), region tiles painting the Fill Style with nothing opening, zero network connections, autosave and recovery, accessibility, uninstall including the local data folder, and the MSIX submission checks; no NSIS, DevTools or picker step remains (doc review, M6 item 17). Running it on a clean Windows 10 1809+ or 11 VM before tagging moves to the 'Este / release and after certification' list in docs/port/m5m6-manual.md.",
    "owner": "Docs",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: TEST_PLAN assumes NSIS install, a stale v4.0 header and two outbound hosts. v5: plan rewritten for MSIX and zip with zero network requests.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "tests-eslint-gate",
@@ -7004,12 +7004,12 @@
    "quirks": "SECURITY.md opens with 'zero network requests' and then lists the Google Fonts request in the same section; PRIVACY.md is accurate. Fix by making both true natively.",
    "portTarget": "Rewrite for native: network section becomes 'The app makes no network requests' (fonts bundled); remove 'Electron HTTP cache' language; keep every other claim. Update the privacy URL contents (manifest.links.privacy and the Store listing point at docs/PRIVACY.md on GitHub main) at the same moment the native build ships.",
    "risk": "med",
-   "parityCheck": "Wireshark/ProcMon on native build: zero sockets. Policy diff reviewed; URL still resolves.",
+   "parityCheck": "Narrowed in M6: zero sockets at three cold starts of the real exe (item 16 smoke, D23) and no network client in src/RBX15.App (ErrorLogTests.The_app_source_has_no_network_client), in place of a Wireshark or ProcMon session. docs/PRIVACY.md (last updated 2026-10-25) reviewed against the code (M6 item 17): 'The app makes no network requests'; settings.json, the autosave pair and the error log listed with what each holds and when it goes away; the Store and zip locations; the clipboard read only on Ctrl+V; 17 OFL families and Permanent Marker under Apache 2.0 (D17); runFullTrust only; every other 4.1 claim kept, with no Electron cache or Google Fonts text. The privacy URL points at docs/PRIVACY.md on main and shows this text once the branch merges; checking it there is on the 'Este / release and after certification' list in docs/port/m5m6-manual.md.",
    "owner": "Docs",
    "check": "doc",
    "disposition": "fix",
    "divergence": "4.1: PRIVACY claims a Google Fonts request and no hidden data. v5: PRIVACY states zero network requests and discloses autosave, recents and settings storage.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "docs-security-md",
@@ -7023,12 +7023,12 @@
    "quirks": "'We sanitize on load' is not demonstrably true in code (loadProject trusts imgSrc data URLs and numeric fields); native loader should actually validate (see project-format item).",
    "portTarget": "Rewrite scope: WPF host, SkiaSharp decoding of untrusted images, .r15proj JSON/base64 deserialization (size limits, decompression bombs, huge dimensions), MSIX package. Add native-image-decoder fuzz notes.",
    "risk": "low",
-   "parityCheck": "Doc matches the native attack surface; project loader has explicit max dimension/size limits tested.",
+   "parityCheck": "SECURITY.md (item 12) scopes the WPF host, SkiaSharp decoding with the 100 MiB, 16384 px and 50 MP caps on every route, the .r15proj loader (512 MiB, all-or-nothing, data: URLs only), clipboard paste, the autosave and recovery files and the launch path, the error log and the MSIX; no Electron, IPC or NSIS item remains, and 'we sanitize on load' became 'the loader validates it and caps sizes' (doc review, M6 item 17). The limits are tested: ImagesCapsTests (The_caps_are_100_MiB_16384_a_side_and_50_megapixels, Decode_refuses_a_payload_over_the_size_cap_before_parsing_it, A_side_over_the_cap_is_refused_from_the_header, A_pixel_count_over_the_cap_is_refused_from_the_header, A_project_layer_over_the_cap_is_dropped_by_name), ProjectFileServiceTests.A_file_over_the_size_limit_alerts_and_changes_nothing, PasteServiceTests.An_oversized_image_is_refused_through_the_caps.",
    "owner": "Docs",
    "check": "doc",
    "disposition": "fix",
    "divergence": "4.1: SECURITY scope lists Electron surfaces, claims zero network requests while listing one, and claims load sanitizing that code does not do. v5: scope rewritten for WPF and the validated all-or-nothing project loader.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "docs-index-landing",
@@ -7042,12 +7042,12 @@
    "quirks": "Page says Store 'pending' while .626labs/manifest.json says status 'live'; README also says pending. Resolve against the actual Store state (listing-copy folder exists and Store ID is real).",
    "portTarget": "Not part of the app; update copy for native at cutover: v4.1+, Store link https://apps.microsoft.com/detail/9MV9G4XFJ8S0, remove 'Electron 41', new screenshots (docs/screenshots/4.1 already exists), drop the 'Setup.exe' install steps if no installer is kept.",
    "risk": "low",
-   "parityCheck": "Page lints and links resolve; text no longer says Electron, pending, or v4.0.",
+   "parityCheck": "Narrowed in M6: docs/index.html (item 13, 467704d; screenshots 89ad1c9) is v5.0, links the Store listing (9MV9G4XFJ8S0), loads no Google Fonts, says nothing of Electron, 'pending', Setup.exe or v4.0, and corrects the Word Art and canvas copy (grep and doc review, M6 item 17); every local screenshot it references exists under docs/screenshots/5.0/. Not run: an HTML linter and a check of the external links on the published page.",
    "owner": "Docs",
    "check": "doc",
    "disposition": "fix",
    "divergence": "4.1: landing page loads Google Fonts, says v4.0 and Store pending. v5: bundled fonts, current version and corrected Store claims.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "docs-readme-claims",
@@ -7062,12 +7062,12 @@
    "quirks": "README says 'Undo - 30-step history. Ctrl+Z bound.' but Redo exists since 4.1.0; 'launches Electron with hot-reload disabled' is meaningless. CHANGELOG 4.0.1 mentions 'RBX Maker -> RBX15' ShortName fix.",
    "portTarget": "Use README controls table (L124-137) as the shortcut acceptance list for the shell/keyboard slice; rewrite install/build sections for .NET 10 (`dotnet build`, `dotnet run`).",
    "risk": "low",
-   "parityCheck": "Every row of the Controls table works identically in native; docs rewritten for new stack.",
+   "parityCheck": "README.md is rewritten for v5 (item 13): install from the Store or the portable zip, 'quit RBX15 before updating', building with the .NET 10 SDK, the upgrades, and the known limitations. Every keyboard row of its Controls table names a binding the tests pin: ShellTests.The_window_binds_exactly_the_eight_chords (Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z, Ctrl+D, Ctrl+S, Ctrl+Shift+S, Ctrl+O, Ctrl+V), ShortcutRouterTests.Route_maps_the_arrows_and_delete, RouteText_maps_the_layer_characters and Tool_keys_run_toggleTool; the mouse rows are the asset, wheel, region-tile and layer-row behaviors closed in M4a and M4b. Narrowed in M6: the table's rows are matched to the tests by doc review (M6 item 17), not by a test that parses README.",
    "owner": "Docs",
    "check": "doc",
    "disposition": "fix",
    "divergence": "4.1: README describes Electron, 30-step undo with only Ctrl+Z and a hot-reload note. v5: README rewritten for the native app including redo and the named upgrades.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "docs-store-listing",
@@ -7082,12 +7082,12 @@
    "quirks": "Screenshots/4.1 are Electron captures; recapture from native for the first native listing (UI differences) or keep if pixel-identical.",
    "portTarget": "Native release gets its own listing-copy-<ver>.md and reviewer letter; cannot claim 'Electron'. Keep disclaimer text verbatim. Do not claim features not yet at parity.",
    "risk": "low",
-   "parityCheck": "Listing copy shows only features present in the native build.",
+   "parityCheck": "docs/store/listing-copy-5.0.0.md (item 15) claims only what the build does, each claim mapped to a closed row or a test in item 15's report (D21): 'native' is now accurate, 'a large canvas that fills the window' replaces 'fullscreen' (D2), 'Undo covers every edit' rests on LedgerScenarioTests.Every_action_is_exactly_one_undo_step, about 69 MB against 141 MB is the measured package (D14), and the Roblox disclaimer is verbatim (doc review, M6 item 17). Narrowed in M6: the jump-list, open-from-Explorer and crash-restore bullets rest on MAN-11, MAN-12 and MAN-10; a fail there cuts its bullet (D21) and reopens this row. The Store screenshots are Este's call (D3), on the 'Este / release and after certification' list in docs/port/m5m6-manual.md.",
    "owner": "Docs",
    "check": "doc",
    "disposition": "fix",
    "divergence": "4.1: listing copy describes the Electron build as 'native'. v5: copy updated so the 'native' claim is accurate; screenshots are reshot only if the native polish visibly changes the look (spec section 7).",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "docs-reviewer-letter",
@@ -7101,12 +7101,12 @@
    "quirks": "Letter references the Electron architecture three times; leaving it unchanged would be a false statement to certification.",
    "portTarget": "New reviewer letter for the native version: WPF/.NET 10 self-contained, no network, runFullTrust justification for a Win32/.NET desktop app, bundled fonts under OFL (list the 15). Keep checklist items.",
    "risk": "med",
-   "parityCheck": "Letter claims verified against the built package (capabilities, network scan).",
+   "parityCheck": "docs/store/reviewer-letter-5.0.0.0.md (item 15) describes the native WPF app on .NET 10, self-contained, with no network requests and no internetClient, the runFullTrust justification for a Win32/.NET desktop app, the 15 Word Art and 3 UI fonts by name with 17 under the SIL OFL 1.1 and Permanent Marker under Apache 2.0 (D17), and keeps the checklist (5.0.0.0, the identity strings, runFullTrust only, tile images at their pixel sizes, MinVersion 10.0.17763.0). Verified against the build: build-msix.ps1 asserts the identity strings, the single capability, MinVersion and every manifest image's pixel size on every build; ErrorLogTests.The_app_source_has_no_network_client and the item 16 smoke's zero sockets back 'no network' (doc review, M6 item 17).",
    "owner": "Docs",
    "check": "doc",
    "disposition": "fix",
    "divergence": "4.1: certification letter calls the app an Electron desktop app and cites a Google Fonts request. v5: letter describes the native .NET app with zero network requests.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "docs-store-assets",
@@ -7121,12 +7121,12 @@
    "quirks": "Script depends on a file under the author's home Claude skills dir; fresh clones need --company.",
    "portTarget": "Reuse unchanged for the native listing; they are product-brand art, not tied to Electron. Dev tooling, not shipped.",
    "risk": "low",
-   "parityCheck": "Asset files present with exact pixel dimensions listed.",
+   "parityCheck": "StoreAssetsTests.Every_listed_png_exists_at_its_stated_pixel_size and Every_png_in_the_folder_is_listed: each PNG in docs/store-assets has the pixel size its README table states, and none is unlisted.",
    "owner": "Docs",
    "check": "doc",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "docs-manifest-626labs",
@@ -7141,12 +7141,12 @@
    "quirks": "Manifest says store 'live' while README/index.html say 'pending submission'; verify truth in Partner Center.",
    "portTarget": "At cutover set version, tech.stack ['wpf','dotnet','skiasharp'], source_language csharp, build dotnet/msix, drop the 'electron' tag, remove or keep the nsis distribution entry per installer decision, revise description. Keep id and store ids.",
    "risk": "low",
-   "parityCheck": "JSON validates against the hub schema; hub card shows new stack after rebuild.",
+   "parityCheck": "Narrowed in M6: .626labs/manifest.json parses as JSON and reads version 5.0.0, tech.stack wpf, dotnet and skiasharp, source_language csharp, build dotnet/msix, no electron tag, 'Native Windows desktop editor', and the Store MSIX plus the portable zip, with the ids and Store ids kept (item 13; checked M6 item 17). No hub schema is in this repo or the hub's (D19), so schema validation and the hub card's rebuild move to the 'Este / release and after certification' list in docs/port/m5m6-manual.md.",
    "owner": "Docs",
    "check": "doc",
    "disposition": "fix",
    "divergence": "4.1: manifest says 'Windows desktop editor (Electron)' and lists NSIS distribution. v5: manifest says native WPF, version 5.0.0 and lists Store MSIX plus portable zip.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "docs-feedback-md",
@@ -7160,12 +7160,12 @@
    "quirks": "None.",
    "portTarget": "Each becomes a native regression test (see tests-injection, tests-lib-erase, tests-lib-history, asset click-to-add).",
    "risk": "low",
-   "parityCheck": "Native build has a named test for each of the four.",
+   "parityCheck": "feedback.md names a v5 regression test for each of the four findings, and each exists: LayerOpsEditTests.SetName_takes_any_text and ProjectIOTests.A_built_document_round_trips_including_a_semi_transparent_image (layer-name injection); AssetLibraryViewModelTests.A_click_adds_the_file_fit_in_the_front_slot_as_one_step (clickName); EraserTests.Erases_stroked_pixels_at_identity_and_leaves_the_rest and LedgerScenarioTests.The_eraser_refuses_without_a_selection_and_erases_only_the_selected_layer_even_when_hidden (the eraser); HistoryTests.Redo_brings_back_the_state_undo_parked and LedgerScenarioTests.Mode_switch_wipes_fills_keeps_layers_and_undo_brings_the_fills_back (redo and the mode switch).",
    "owner": "Docs",
    "check": "doc",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "legacy-launcher-bat",
@@ -7335,12 +7335,12 @@
    "quirks": "CONTRIBUTING architecture section (four files, no frameworks, 'don't introduce a build step') becomes false after the port; rewrite.",
    "portTarget": "Not shipped. Port gets its own spec and plan; leave these as Electron-era history.",
    "risk": "low",
-   "parityCheck": "None.",
+   "parityCheck": "None for the 4.0 specs themselves. CONTRIBUTING.md (item 13) describes the .NET solution layout, the ledger and golden rules and C# recipes, and names docs/superpowers' 4.0 specs and plans as history, not the current design (doc review, M6 item 17).",
    "owner": "Docs",
    "check": "doc",
    "disposition": "fix",
    "divergence": "4.1: CONTRIBUTING describes four files, no frameworks and no build step. v5: CONTRIBUTING rewritten for the .NET solution, historical superpowers specs kept as history.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "project-format-r15proj",
@@ -7396,7 +7396,7 @@
    "quirks": "4.1.0 added 'keyboard focus rings'; WPF default focus visuals are dotted rectangles, so a themed FocusVisualStyle is needed to match.",
    "portTarget": "WPF gives UI Automation peers for free for standard controls; custom Skia canvas needs an AutomationPeer and keyboard navigation (accessibility is a product decision for the port). Bundled fonts close limitation 2.",
    "risk": "low",
-   "parityCheck": "Narrator can read ribbon tabs, buttons, sliders, layer list; Tab order covers all controls; focus visuals visible (the 4.1.0 focus rings must be matched by FocusVisualStyle).",
+   "parityCheck": "windows/RELEASE_NOTES_v5.md (item 15) lists the known issues: no high-contrast support, canvas edits not announced, the unsigned zip and SmartScreen; bundled fonts close the Google Fonts limitation. AccessibilitySweepTests prove every actionable control is named and focus-ringed and that Tab reaches the region tiles, swatches, layer rows and drop zone (a11y-focus-rings), and the class's comment block records X1's limitations. Open after M6, behind MAN-14: Narrator reading the ribbon tabs, buttons, sliders and the layer list, including the Recent popup, which has no peer in the window's tree (D15, D16).",
    "owner": "Docs",
    "check": "doc",
    "disposition": "fix",
@@ -7440,12 +7440,12 @@
    "quirks": "A candidate deliberate fix. If added, the prompt must not appear on a pristine launch or straight after a save.",
    "portTarget": "Window.Closing handler. Either keep parity (no prompt) or deliberately add a dirty flag that is set whenever history.push runs and cleared on Save work, plus a Save/Discard/Cancel MessageBox.",
    "risk": "low",
-   "parityCheck": "Make an edit and close the window. Electron closes immediately. The native build should match, or show the documented prompt if the fix is taken.",
+   "parityCheck": "Reworded in M5 to the fixed behavior: ShellTests.Closing_dirty_work_asks_save_dont_save_or_cancel and Closing_a_clean_document_shows_no_prompt (a pristine or just-saved document closes at once); a restored autosave reads dirty, so its close asks too (RestoredWindowCloseTests.A_restored_window_asks_on_close_and_Dont_save_deletes_the_pair), and a cancelled prompt before a restore keeps the pair and the edits (StartupFlowTests.A_cancelled_unsaved_changes_prompt_keeps_the_pair_and_the_edits). The M4a bridge smoke drove the prompt on the real exe (shell-unsaved-work-loss), and the item 16 smoke's Don't-save close of the normal Release build deleted the autosave pair (D23). Autosave and recovery are upgrade-autosave-recovery.",
    "owner": "App.Storage",
    "check": "ui-auto",
    "disposition": "fix",
    "divergence": "4.1: closing or reloading silently discards all work. v5: save-changes prompt on close plus 60s autosave and crash recovery, not shown on a pristine or just-saved document. The prompt (Save, Don't save, Cancel, in the Windows wording) and the window title's * marker ship in M4a, ahead of M5's autosave and recovery (Este, 2026-10-16); the prompt also guards Open, and undoing back to the saved state reads clean.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "shell-userdata-footprint",
@@ -7462,11 +7462,11 @@
    "quirks": "The existing claim is false for the Electron build. The port fixes it for free, but only if it does not introduce a settings file without updating PRIVACY.md.",
    "portTarget": "The native WPF app should write nothing outside user-chosen files. With bundled fonts there is no HTTP cache. Under MSIX, any ApplicationData use is removed on uninstall. Update PRIVACY.md to state this, which makes the claim true.",
    "risk": "low",
-   "parityCheck": "After running the native build, %APPDATA% and %LOCALAPPDATA% contain no app folder (or only the MSIX package's LocalState, which is removed on uninstall). Record the Electron leftover folder as the 'before' state.",
+   "parityCheck": "docs/PRIVACY.md (2026-10-25) lists every file v5 stores (settings.json, the autosave pair, the error log), all under %LOCALAPPDATA%\\RBX15 (ErrorLogTests.The_storage_root_holds_settings_autosave_and_logs), and says the Store build's copy is meant to go with uninstall and the zip's is deleted by hand (D17). Open after M6, behind MAN-16: that the packaged build's writes land in the package's LocalCache, not the real %LOCALAPPDATA%\\RBX15, and that uninstall removes them.",
    "owner": "App.Storage",
    "check": "doc",
    "disposition": "fix",
-   "divergence": "4.1: Electron creates a hidden %APPDATA% userData folder with cache while PRIVACY says no hidden data. v5: only window state, recents and autosave are stored locally and PRIVACY discloses them.",
+   "divergence": "4.1: Electron creates a hidden %APPDATA% userData folder with cache while PRIVACY says no hidden data. v5: only window state, recents and autosave are stored locally and PRIVACY discloses them. It also keeps a local error log (M5).",
    "status": "open"
   },
   {
@@ -7548,12 +7548,12 @@
    "quirks": "The docs claim is false. Keep the behavior and correct the copy.",
    "portTarget": "Port the actual behavior (explicit newlines only, fit 85% of the front region) using SKFont.MeasureText per line. Fix the landing copy rather than adding wrapping, unless the feature is chosen deliberately.",
    "risk": "low",
-   "parityCheck": "Enter a 60-character single line and a 3-line text, then Add to canvas: the placed layer bounds match Electron within 1px and there is no wrapping. Repeat at Size 24 and Size 120: same placed bounds.",
+   "parityCheck": "The behavior is 4.1's (explicit newlines only, placed at 85% of the front's fit whatever the Size), closed with the Word Art rows in M3 and M4b. The copy is corrected (item 13): README says 'Text breaks only where you press Enter. Add to canvas places the result at 85% of the front slot's fit', and docs/index.html says 'Lines break where you press Enter. Add to canvas places the text at 85% of the front slot, whatever the size box says' (doc review, M6 item 17).",
    "owner": "Docs",
    "check": "doc",
    "disposition": "fix",
    "divergence": "4.1: landing page claims Word Art wraps text and adds at any size, but only explicit newlines break lines. v5: behavior ported unchanged and the landing copy corrected to match.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "claim-fullscreen-canvas",
@@ -7569,12 +7569,12 @@
    "quirks": "The marketing claim is only true by accident in Electron.",
    "portTarget": "Either add F11 (and optionally a View button) toggling WindowStyle=None + WindowState=Maximized, or reword the listing to say a large canvas that fills the window.",
    "risk": "low",
-   "parityCheck": "Press F11 in the native build: the documented outcome happens. The listing copy and the build agree.",
+   "parityCheck": "Reworded in M6 (D2): no fullscreen mode is added. README.md, docs/index.html, .626labs/manifest.json, docs/store/listing-copy-5.0.0.md and windows/RELEASE_NOTES_v5.md say 'a large canvas that fills the window, built for the exact 585x559 template grid' and none says 'fullscreen' except the release notes' line that the 4.1 wording promised one (grep, M6 item 17). The listing copy and the build agree.",
    "owner": "Docs",
    "check": "doc",
    "disposition": "fix",
-   "divergence": "4.1: Store and README promise a fullscreen canvas with no fullscreen feature behind it. v5: listing and README reworded (and the Store 'native' claim corrected) to describe what the app does.",
-   "status": "open"
+   "divergence": "4.1: Store and README promise a fullscreen canvas with no fullscreen feature behind it. v5: listing and README reworded (and the Store 'native' claim corrected) to describe what the app does. No F11 or fullscreen mode is added; the copy reads 'a large canvas that fills the window, built for the exact 585x559 template grid' (M6, D2).",
+   "status": "done"
   },
   {
    "id": "claim-region-click-color-picker",
@@ -7590,12 +7590,12 @@
    "quirks": "Stale documentation. Testers following TEST_PLAN would report a false failure.",
    "portTarget": "Port the code behavior and rewrite both test docs for the native build.",
    "risk": "low",
-   "parityCheck": "With nothing selected, click Torso Front: it fills with the current Fill Style and no dialog appears. With a layer selected: the layer fits the region (85%, rotation reset) and the fill is unchanged.",
+   "parityCheck": "UiFlowTests.A_region_tile_with_nothing_selected_paints_the_current_fill_style (no dialog opens) and the region rows closed in M4b (RegionsGroupTests) prove the behavior. docs/SMOKE_TEST.md (B6) and windows/TEST_PLAN.md (section 13) now say a tile paints the current Fill Style and nothing opens, and a selected layer fits the region instead; neither mentions a picker (doc review, M6 item 17).",
    "owner": "Docs",
    "check": "doc",
    "disposition": "fix",
    "divergence": "4.1: TEST_PLAN and SMOKE_TEST say a region click opens a color picker, but it paints the current Fill Style. v5: test docs rewritten for the native build to describe the real behavior.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "claim-network-surface-inconsistent",
@@ -7614,12 +7614,12 @@
    "quirks": "The docs understate the font surface (UI fonts are missing from the disclosure). The port makes 'zero requests' true for the first time.",
    "portTarget": "Bundle all 18 font families (15 Word Art + 3 UI) as embedded resources with FontFamily pack URIs and SKTypeface.FromStream. The native build then makes zero requests. Rewrite PRIVACY, SECURITY, reviewer letter and TEST_PLAN section 14 to 'no network access', and keep the MSIX manifest with no internetClient.",
    "risk": "med",
-   "parityCheck": "Run the native build with the network disabled and under Fiddler: zero outbound connections, Word Art preview glyphs pixel-match Electron rendered with fonts loaded online, and UI fonts render as Space Grotesk, Inter and JetBrains Mono.",
+   "parityCheck": "Narrowed in M6: zero sockets at three cold starts of the real exe (item 16 smoke, D23; the M4b smoke's cold starts likewise) and no network client in src/RBX15.App (ErrorLogTests.The_app_source_has_no_network_client), in place of a Fiddler session with the network disabled; the font clauses rest on fonts-google-runtime (closed on its narrowing in M4b) and the bundled font goldens. PRIVACY.md, SECURITY.md, the 5.0 reviewer letter and TEST_PLAN section 15 now agree: zero network requests, every font bundled, no internetClient capability (doc review, M6 item 17).",
    "owner": "Docs",
    "check": "doc",
    "disposition": "fix",
    "divergence": "4.1: SECURITY and PRIVACY contradict each other and the code on network and Google Fonts requests. v5: fonts bundled, zero network requests, and PRIVACY/SECURITY network claims corrected.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "claim-undo-everything",
@@ -7636,12 +7636,12 @@
    "quirks": "Marketing overclaim. The preset double-push means one Undo after a preset lands on an intermediate state.",
    "portTarget": "Port the coverage exactly (parity) or deliberately extend it with coalesced undo for drags, nudges and sliders. Whichever is chosen, the listing copy must not claim more than the build does.",
    "risk": "low",
-   "parityCheck": "Scripted sequence (nudge x3, wheel, slider, Fit Front, preset Meme) then count the Undo presses needed to return to the start. The native count matches Electron's, or the documented new count.",
+   "parityCheck": "LedgerScenarioTests.Every_action_is_exactly_one_undo_step and the undo matrix behind it (visibility, every reorder path, slider and wheel bursts, move, resize and rotate drags; checked by the controller, D21) make 'Undo covers every edit' true; README, the landing page, the 5.0 listing and the release notes say so (doc review, M6 item 17).",
    "owner": "Docs",
    "check": "doc",
    "disposition": "fix",
    "divergence": "4.1: Store claims 'Undo everything' while nudge, rotate, scale, wheel and slider edits push no undo step. v5: every document mutation is exactly one undo step, so the claim becomes true and the docs are updated.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "claim-mode-per-mode-region-data",
@@ -7725,12 +7725,12 @@
    "quirks": "Test-count inconsistency is already tracked (tests-count-claims). This item covers the instructions themselves.",
    "portTarget": "Replace with 'dotnet build' / 'dotnet test' / 'dotnet publish -r win-x64 --self-contained' plus the MSIX packaging step, state the .NET 10 SDK requirement, and port the lib tests to xUnit with one stated count.",
    "risk": "low",
-   "parityCheck": "A clean clone with only the .NET 10 SDK runs the documented commands successfully, and the documented test count equals the actual count.",
+   "parityCheck": "README.md, CONTRIBUTING.md and docs/index.html give only dotnet build, dotnet test, dotnet run --project src/RBX15.App and scripts/build-msix.ps1 with the .NET 10 SDK, and the old npm and Electron steps sit only in a marked 'Legacy 4.1 source' note; no test count is written down (tests-count-claims). Narrowed in M6: the clean clone is the CI runner (dotnet-ci.yml checks out and runs dotnet build and dotnet test on windows-latest with setup-dotnet), and build-msix.ps1 ran locally in items 9 and 16 (D14, D23); dotnet run was not run from a fresh clone.",
    "owner": "Docs",
    "check": "doc",
    "disposition": "fix",
    "divergence": "4.1: README, RELEASE_NOTES and landing page give npm/Electron build and dev instructions. v5: rewritten for dotnet build, test and publish plus MSIX packaging.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "kbd-ctrl-combo-tool-toggles",
@@ -7745,11 +7745,11 @@
    "quirks": "Ctrl+O is the Windows convention for Open, but here it switches to Ellipse. The port should probably fix this; it's a deliberate decision either way.",
    "portTarget": "Window PreviewKeyDown with Keyboard.Modifiers. Decide whether Ctrl+O should become Open project and Ctrl+S Save work (standard Windows), or keep the current mapping.",
    "risk": "med",
-   "parityCheck": "ShortcutRouterTests.Ctrl_and_alt_letters_leave_the_tool_alone (Ctrl+V/B/L/U/O/E, with and without Shift, and Alt, leave the tool alone), Ctrl_d_duplicates_the_selection and Ctrl_d_with_nothing_selected_is_handled_and_does_nothing; ShellTests.The_window_binds_exactly_the_seven_chords_and_not_ctrl_v (Ctrl+O opens, Ctrl+S saves, Ctrl+Shift+S saves as). Narrowed in M4b: Ctrl+V's paste moves to M5's paste row; M4b proves Ctrl+V does nothing (K3; M4b smoke K2).",
+   "parityCheck": "ShortcutRouterTests.Ctrl_and_alt_letters_leave_the_tool_alone (Ctrl+V/B/L/U/O/E, with and without Shift, and Alt, leave the tool alone), Ctrl_d_duplicates_the_selection and Ctrl_d_with_nothing_selected_is_handled_and_does_nothing; ShellTests.The_window_binds_exactly_the_eight_chords (renamed in M5, D11: Ctrl+O opens, Ctrl+S saves, Ctrl+Shift+S saves as, Ctrl+V pastes). Narrowed in M4b: Ctrl+V's paste is upgrade-paste-as-layer (M5); M4b proved Ctrl+V toggles no tool (K3; M4b smoke K2).",
    "owner": "App.Keyboard",
    "check": "ui-auto",
    "disposition": "fix",
-   "divergence": "4.1: Ctrl+V/B/L/U/O toggle tools and swallow standard shortcuts. v5: Ctrl+letter no longer toggles tools; Ctrl+O opens, Ctrl+S saves, Ctrl+Shift+S saves as, Ctrl+V pastes. Ctrl+V paste arrives with M5's paste row; in M4b Ctrl+V does nothing and toggles no tool (M4b, K3).",
+   "divergence": "4.1: Ctrl+V/B/L/U/O toggle tools and swallow standard shortcuts. v5: Ctrl+letter no longer toggles tools; Ctrl+O opens, Ctrl+S saves, Ctrl+Shift+S saves as, Ctrl+V pastes. Ctrl+V's paste is upgrade-paste-as-layer (M5).",
    "status": "done"
   },
   {
@@ -8296,12 +8296,12 @@
    "quirks": "",
    "portTarget": "VirtualizingWrapPanel with downscaled thumbnail decode (SKBitmap.Decode with SKImageInfo sampling) for memory.",
    "risk": "low",
-   "parityCheck": "Load a 500-image folder and compare memory and scroll responsiveness. Functional parity: all thumbnails display.",
+   "parityCheck": "AssetLibraryScaleTests.Five_hundred_1024_images_resolve_as_thumbnails_and_the_grid_stays_virtualized: 500 generated 1024x1024 PNGs through the real AssetLibraryViewModel, AssetThumbnailLoader and a shown AssetLibraryPanel; every thumbnail resolves (functional parity), decoded at 160 px, never at full size; realized rows stay at the viewport's (3 after load, 4 after scrolling to the end of 167). A_twenty_thousand_file_folder_lists_its_images_and_keeps_the_ui_thread_free runs under RBX15_PERF=1 only; the controller's PERF run (D13): +53 MB private bytes for the 500 decoded thumbnails (ceiling 300 MB), a 20,000-file scan of 85 ms listing exactly the 500 images, worst UI-thread wait 85.6 ms (provisional bound 250 ms). Narrowed in M6: memory and responsiveness are held to fixed bounds, not compared with a 4.1 run; AssetLibraryViewModel.OpenFolder still enumerates on the UI thread, so a cold or network disk can stall longer than the measured 85 ms (D13, a candidate follow-up).",
    "owner": "App.AssetLibrary",
    "check": "manual",
    "disposition": "fix",
    "divergence": "4.1: every thumbnail is decoded eagerly at full resolution. v5: thumbnails decoded lazily at thumb size.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "project-load-error-path-bugs",
@@ -8836,6 +8836,152 @@
    "parityCheck": "Engine FillStopsTests: a red, green, blue linear at angle 0 is red, green-dominant and blue at the left, middle and right; two stops sit at thirds; a radial with one stop has the stop color at mid-radius; no stops give the two-color ramp and the same pixels, other types ignore stops; Key is 4.1's without stops and appends them with them; equality, hash and Key are structural for Stops; more than 3 stops throw; painting an equal stop fill is a no-op and retargeting follows the stops. ProjectIOTests: stops are written after scale only when present and round-trip, an empty or null array reads as none and is not written, a file without stops loads with none and the 4.1 key, a bad stops entry or a fourth stop throws ProjectFormatException naming its path. All 4.1 fills and goldens pass unchanged. App FillStopsTests: \"+\" adds the halfway color and disables at 3; remove drops the chosen stop; a stale swatch does nothing; a stop pick previews live, commits as one step and a cancel reverts; stops hide for Solid, Stripes, Checker, Dots and Camo and return for Gradient and Radial; painting stores the fill with its stops; add and remove retarget painted regions one step each and undo leaves the controls; a region tile swatch shows the middle color; the \"+\" button and swatches are named, ordered, hidden and shown as above; the Fill Style group and the Home ribbon keep their height with three stops.",
    "owner": "Engine.Fills",
    "check": "unit",
+   "disposition": "new",
+   "divergence": "",
+   "status": "done"
+  },
+  {
+   "id": "upgrade-error-log",
+   "area": "shell",
+   "name": "Local error log of unhandled exceptions (new in v5)",
+   "source": "spec §3",
+   "behavior": "4.1 has no local diagnostics: a failure shows only in DevTools (Ctrl+Shift+I), which testers were told to open, and nothing is kept after the window closes.",
+   "codeRefs": [
+    "src/RBX15.App/Services/ErrorLog.cs",
+    "src/RBX15.App/Services/CrashHandler.cs",
+    "src/RBX15.App/Services/AppStorage.cs"
+   ],
+   "quirks": "",
+   "portTarget": "E1, E2: logs\\error.log under AppStorage's root (%LOCALAPPDATA%\\RBX15), rolled to error.1.log at 256 KB (two files at most). One entry per unhandled exception: UTC time, app and OS versions, type, HResult, message and stack, inner exceptions included; the profile path written as %USERPROFILE%; no document content, never sent. Dispatcher and AppDomain exceptions log, write an emergency autosave, show DialogText.FatalError (themed Alert, D4) and exit; an unobserved task exception is logged only. Write never throws.",
+   "risk": "low",
+   "parityCheck": "ErrorLogTests: An_exception_with_an_inner_exception_writes_one_entry_with_both (both types, HResults, stacks, the version and OS lines), The_user_profile_path_is_written_as_USERPROFILE, Writes_past_the_ceiling_roll_to_one_older_file, A_directory_that_cannot_be_created_makes_Write_return_quietly, A_read_only_log_file_makes_Write_return_quietly, A_dispatcher_exception_logs_then_autosaves_then_shows_then_exits, A_domain_exception_logs_then_autosaves_then_shows_then_exits, An_unobserved_task_exception_is_only_logged, The_app_source_has_no_network_client. The real app (run D9, Este, 2026-10-25): a dispatcher exception in a scratch build wrote one 864-byte entry to %LOCALAPPDATA%\\RBX15\\logs\\error.log (source, app 5.0.0, OS, the exception and its inner IOException with both HResults, the profile path as %USERPROFILE%, no document content), showed the themed fatal dialog, and exited on OK. The bridge has no throw command, so the item 16 smoke did not repeat it.",
+   "owner": "App.Shell",
+   "check": "unit",
+   "disposition": "new",
+   "divergence": "",
+   "status": "done"
+  },
+  {
+   "id": "upgrade-autosave-recovery",
+   "area": "shell",
+   "name": "Autosave every 60 s and crash recovery at the next launch (new in v5)",
+   "source": "spec §3",
+   "behavior": "4.1 keeps nothing between runs: a crash, a killed process or a closed window loses every unsaved edit, and there is no autosave (shell-lifecycle-quit, shell-no-unsaved-changes-guard).",
+   "codeRefs": [
+    "src/RBX15.App/Services/AutosaveService.cs",
+    "src/RBX15.App/Services/RecoveryService.cs",
+    "src/RBX15.App/Services/StartupFlow.cs",
+    "src/RBX15.App/EditorSession.cs"
+   ],
+   "quirks": "A kill mid-claim can leave a stray .json.claim file (D7). A corrupt autosave is offered every launch until Discard, never quarantined (D7).",
+   "portTarget": "A1, A2, R1-R3: every dirty document writes autosave\\<session-id>.r15proj plus a .json sidecar (owner pid and start time, original path, time, version) every 60 s, atomically (temp file, then move), never beside or over the user's file; a Save, an Open or a real close deletes the pair (AutosaveService.Close, D5). At launch, before anything else, StartupFlow offers the newest orphan whose owner is dead (one per launch, claimed through an exclusive claim-lock file, D6): Restore opens it dirty with CurrentFile set to the original when it exists, Discard deletes the pair, Later keeps it. A launch file with Restore goes to a new window (R3).",
+   "risk": "high",
+   "parityCheck": "Autosave: AutosaveServiceTests.A_dirty_document_writes_on_the_first_tick_and_not_again_until_it_changes, A_tick_inside_a_gesture_writes_nothing, The_written_file_reads_back_and_the_sidecar_names_its_owner, A_write_killed_before_the_move_keeps_the_previous_autosave, The_project_file_services_Save_and_Open_delete_the_pair, WriteNow_writes_a_dirty_document_synchronously; AutosaveWiringTests.A_real_close_deletes_the_pair_and_a_cancelled_close_keeps_it; ProjectIOTests.Encoding_the_same_image_twice_through_Write_encodes_once and Writing_on_a_pool_thread_while_the_UI_thread_renders_the_same_images_agrees_with_both. Recovery: StartupFlowTests.Restore_opens_an_untitled_autosave_dirty_with_empty_history, A_titled_restore_saves_over_the_original_and_the_pair_is_gone, Discard_deletes_the_pair, Later_keeps_the_pair_and_the_next_launch_lists_it_again, A_pair_owned_by_a_live_process_is_never_offered, A_corrupt_autosave_gives_LoadFailed_and_keeps_the_pair, A_restored_session_keeps_autosaving_under_its_own_session_id; RecoveryServiceTests.Concurrent_claims_have_exactly_one_winner and A_claimer_that_dies_leaves_the_pair_to_be_offered_again. On the real exe (item 16 smoke, D23): the pair appeared within one 60 s tick in the bridged and the normal Release build; Ctrl+S and a Don't-save close each deleted it; a normal build ended with Stop-Process offered its work at the next launch, Restore gave the dirty titled document and Save wrote the original with the pair gone, and an untitled Discard deleted the pair. MAN-10 (Task Manager's End task) is pending corroboration; a fail reopens the row.",
+   "owner": "App.Storage",
+   "check": "ui-auto",
+   "disposition": "new",
+   "divergence": "",
+   "status": "done"
+  },
+  {
+   "id": "upgrade-recent-projects",
+   "area": "shell",
+   "name": "Recent projects in the File group (new in v5)",
+   "source": "spec §3",
+   "behavior": "4.1 remembers no projects: every Open starts from the file dialog.",
+   "codeRefs": [
+    "src/RBX15.App/Services/RecentProjects.cs",
+    "src/RBX15.App/Services/JsonSettingsStore.cs",
+    "src/RBX15.App/ViewModels/FileGroupViewModel.cs"
+   ],
+   "quirks": "Two windows adding at the same moment can lose one add (read-modify-write per update; accepted in the plan's item 5 risk).",
+   "portTarget": "H1: a Recent drop-down beside Open lists the last 10 (newest first, case-insensitive dedupe, file name with the full path as tooltip) and ends with Clear recent list. Fed by a successful Save, Save As or Open (a launch file too), never a restore. Missing files are pruned at launch and when the list opens; opening a missing one says '<name> was moved or deleted.' and drops it. Stored as recentProjects in settings.json through the M4a Update path (D10).",
+   "risk": "low",
+   "parityCheck": "RecentProjectsTests.Twelve_adds_keep_the_newest_ten_newest_first, Re_adding_the_third_moves_it_to_the_top_with_no_duplicate, A_path_that_differs_only_in_case_is_one_entry, A_deleted_file_is_pruned_from_the_items_and_the_next_save; RecentProjectsFeedTests.Save_adds_the_saved_file, Save_As_adds_the_new_file_on_top, Open_adds_the_opened_file, A_cancelled_or_failed_save_or_open_adds_nothing; RecentProjectsRestoreTests.A_restore_adds_nothing; RecentMenuTests.Opening_a_recent_asks_the_save_question_first, A_missing_file_gives_the_status_line_and_leaves_the_list, Clear_recent_list_empties_the_menu_the_store_and_the_command; JsonSettingsStoreTests.Recents_round_trip_as_an_array_of_full_paths, A_recents_write_keeps_window_and_the_folders, A_recents_write_after_a_failed_read_is_skipped; HomeRibbonViewTests.The_recent_button_matches_the_file_group_buttons_and_its_menu_is_named; Task4ViewTests.The_file_group_shows_4_1s_four_buttons_then_Recent (renamed by D10); UiFlowTests.Ctrl_v_pastes_a_layer_and_the_recent_drop_down_lists_the_saved_file. On the real exe (item 16 smoke, D23): two saved files listed newest first, one opened from the list, and the list persisted across a relaunch.",
+   "owner": "App.Storage",
+   "check": "unit",
+   "disposition": "new",
+   "divergence": "",
+   "status": "done"
+  },
+  {
+   "id": "upgrade-jump-list",
+   "area": "shell",
+   "name": "Recent projects on the taskbar jump list (new in v5)",
+   "source": "spec §3",
+   "behavior": "4.1 publishes no jump list: the taskbar icon's menu has only the shell's own entries.",
+   "codeRefs": [
+    "src/RBX15.App/Services/JumpListPublisher.cs",
+    "src/RBX15.App/Services/IJumpListSink.cs"
+   ],
+   "quirks": "J1's fallback (WinRT Windows.UI.StartScreen.JumpList, a TFM change) holds for Este if the packaged taskbar rejects JumpTasks.",
+   "portTarget": "J1: on every recents change JumpListPublisher hands IJumpListSink one JumpTask per recent in a custom 'Recent' category (title the file name, description the full path, arguments the quoted path, this exe as application and icon), no tasks; the app's sink wraps System.Windows.Shell.JumpList. JumpItemsRemovedByUser removes the recent too; shell-rejected items stay in-app (D10). The bridged launch and the injectable Composition get an inert sink.",
+   "risk": "med",
+   "parityCheck": "JumpListPublisherTests.Ten_recents_publish_ten_tasks_with_the_exact_arguments, Clear_publishes_an_empty_list, An_item_the_user_removes_leaves_the_recents (a fake sink). Open after M6, behind MAN-11: no test or smoke reaches the real taskbar, so the packaged jump list showing the Recent category, a click opening the project (a new window when one is open) and 'Remove from this list' reaching the in-app list are unproven until Este runs MAN-11.",
+   "owner": "App.Shell",
+   "check": "manual",
+   "disposition": "new",
+   "divergence": "",
+   "status": "open"
+  },
+  {
+   "id": "upgrade-file-association-launch",
+   "area": "shell",
+   "name": "Launch with a .r15proj; a second project opens a second window (new in v5)",
+   "source": "spec §3",
+   "behavior": "4.1 registers no file type and ignores its command line: a .r15proj opens only through Load Work.",
+   "codeRefs": [
+    "src/RBX15.App/Services/LaunchArguments.cs",
+    "src/RBX15.App/Services/StartupFlow.cs",
+    "windows/msix/Package.v5.appxmanifest.template"
+   ],
+   "quirks": "",
+   "portTarget": "S1, R3: the manifest's FileTypeAssociation declares .r15proj (asserted by build-msix.ps1). LaunchArguments.Parse takes the first fully qualified path to an existing file, ignoring -- flags; StartupFlow opens it clean after the recovery step (with Restore it goes to IAppLauncher, a new window). Every launch is its own process and window; no pipe or mutex.",
+   "risk": "med",
+   "parityCheck": "LaunchArgumentsTests (Nothing_to_open_gives_null, A_missing_file_and_a_relative_path_are_not_launch_files, A_path_with_spaces_survives, A_unicode_path_survives, A_path_beside_the_bridge_flag_is_found_and_any_extension_qualifies); StartupLaunchFileTests (A_valid_launch_path_opens_clean_with_the_folder_remembered, A_corrupt_launch_file_shows_load_failed_over_a_new_document, Restore_keeps_the_recovered_work_and_launches_the_path_in_a_new_window, Discard_opens_the_launch_path_here, Later_opens_the_launch_path_here_and_keeps_the_autosave, The_bridged_launch_does_not_run_the_startup_flow); build-msix.ps1 asserts the .r15proj file type (Test-BuildMsix.ps1's 'a missing .r15proj' case). On the real exe (item 16 smoke, D23): a launch with a project path opened it clean, and a second launch with another path gave a second window with its own document. Open after M6, behind MAN-12: the packaged association handing Explorer's double-click to the app, the file icon and 'Open with' are checked only on the installed MSIX (plan item 4's risk).",
+   "owner": "App.Shell",
+   "check": "manual",
+   "disposition": "new",
+   "divergence": "",
+   "status": "open"
+  },
+  {
+   "id": "upgrade-paste-as-layer",
+   "area": "shell",
+   "name": "Ctrl+V pastes the clipboard image as a new layer (new in v5)",
+   "source": "spec §3",
+   "behavior": "4.1 has no paste: Ctrl+V toggles the Select tool and calls preventDefault (kbd-ctrl-combo-tool-toggles), and no paste event is handled.",
+   "codeRefs": [
+    "src/RBX15.App/Services/PasteService.cs",
+    "src/RBX15.App/Services/IClipboardSource.cs",
+    "src/RBX15.App/MainWindow.xaml.cs"
+   ],
+   "quirks": "WpfClipboardSource reads the PNG format, then a file list, then Clipboard.GetImage; a browser's CF_DIB alpha is unreliable (MAN-13).",
+   "portTarget": "P1, P2: the window's eighth chord. Always a new layer on top, selected, the Select tool on, one undo step, fit in the front slot as Add image places it; a focused text field keeps Ctrl+V. Sources in order: PNG (alpha kept), an Explorer file list (added like a drop, each named by its file), a bitmap; every source through the 100 MiB / 16384 / 50 MP caps. Nothing usable, a held clipboard (3 tries 50 ms apart, D11) or a refused image is a status line, never a modal.",
+   "risk": "med",
+   "parityCheck": "PasteServiceTests.A_png_with_alpha_pastes_as_one_layer_placed_like_add_image, A_paste_with_a_layer_selected_adds_a_new_layer_on_top, A_bitmap_pastes_when_the_clipboard_has_no_png, A_file_list_adds_its_images_in_order_as_one_step_and_names_the_skipped_file, Nothing_usable_gives_the_status_line_and_no_step, A_clipboard_held_for_every_attempt_is_named_on_the_status_strip, A_clipboard_busy_once_pastes_on_the_retry, An_oversized_image_is_refused_through_the_caps, Pants_mode_pastes_onto_the_pants_front_slot, Ctrl_v_in_a_text_field_does_not_paste_and_keys_off_does_not_block_it; ShellTests.The_window_binds_exactly_the_eight_chords; UiFlowTests.Ctrl_v_pastes_a_layer_and_the_recent_drop_down_lists_the_saved_file. Every test reads a fake IClipboardSource. Open after M6, behind MAN-13: WpfClipboardSource's read order (PNG before a file list before a bitmap) and the alpha of a browser's or the Snipping Tool's bitmap are untested (D11; PasteServiceTests.The_png_wins_over_a_bitmap_on_the_same_data_object hands the service a PNG and does not exercise the order), and the item 16 smoke skipped paste to keep Este's clipboard.",
+   "owner": "App.Clipboard",
+   "check": "unit",
+   "disposition": "new",
+   "divergence": "",
+   "status": "open"
+  },
+  {
+   "id": "parity-ui-automation-suite",
+   "area": "tests",
+   "name": "Thin UI automation suite over the real window (spec §6 Tier 3)",
+   "source": "spec §6",
+   "behavior": "4.1 has no UI automation: its flows were checked by hand from SMOKE_TEST.md and by tools/parity-ref's Electron harness.",
+   "codeRefs": [
+    "src/RBX15.App.Tests/UiFlowTests.cs",
+    "src/RBX15.App.Tests/UiaKit.cs"
+   ],
+   "quirks": "Flows must pick a tab first: UiaKit skips peers of subtrees that are not shown, and reaches popup content through RootsWithin (D15).",
+   "portTarget": "U1: in-process xUnit. UiFlowTests builds the real MainWindow through Composition.Build over fake dialogs, a fake clipboard and temp folders, shows it off-screen on the STA thread and drives it only through UI Automation patterns (Invoke, Value, Toggle, SelectionItem, ExpandCollapse) and the window's KeyBindings. No mouse, no keyboard device, no app launch; runs on every PR.",
+   "risk": "low",
+   "parityCheck": "UiFlowTests, one fact per spec flow, passing in the normal run: Launch_shows_the_title_four_tabs_home_active_and_a_clean_document, Add_image_adds_one_selected_layer_in_the_front_slot, A_region_tile_with_nothing_selected_paints_the_current_fill_style, Word_art_text_added_to_the_canvas_is_one_named_layer, Undo_three_times_returns_the_document_to_new, Save_then_open_brings_back_the_saved_document (ContentEquals for a fill-only document; layer fields, RegionFills and byte-equal Renderer.ExportPng with an image layer, D15), Download_template_writes_the_rendered_585x559_png, Ctrl_v_pastes_a_layer_and_the_recent_drop_down_lists_the_saved_file.",
+   "owner": "Parity",
+   "check": "ui-auto",
    "disposition": "new",
    "divergence": "",
    "status": "done"

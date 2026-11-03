@@ -25,7 +25,7 @@ that fills the window, built for the exact 585×559 template grid.
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/5.0/05-finished-shirt.png" alt="RBX15 Classic Shirt and Pants Maker 5.0 with a finished shirt: a gradient across every panel, a drip, a collar, cuffs and Word Art, with the 3D preview" width="860">
+  <img src="docs/screenshots/5.0/01-shirt-3d-preview.png" alt="RBX15 Classic Shirt and Pants Maker 5.0 with the Neon Tide shirt: a synthwave sun, NEON TIDE Word Art, a gradient across every panel, and the shirt on an R15 avatar in the 3D preview" width="860">
 </p>
 
 ---
@@ -64,12 +64,12 @@ To build the MSIX and the portable zip, run `scripts/build-msix.ps1` (it needs t
 
 <table>
   <tr>
-    <td align="center" width="50%"><img src="docs/screenshots/5.0/01-home.png" alt="Home tab with a layer selected" width="420"><br><strong>Home</strong><br><sub>tools, brush, placement, undo, file and recent projects</sub></td>
-    <td align="center" width="50%"><img src="docs/screenshots/5.0/02-background.png" alt="Background tab with presets, swatches, fill styles and template regions" width="420"><br><strong>Background</strong><br><sub>presets, backgrounds, fill styles, template regions</sub></td>
+    <td align="center" width="50%"><img src="docs/screenshots/5.0/03-layers.png" alt="Home tab with a layer selected" width="420"><br><strong>Home</strong><br><sub>tools, brush, placement, undo, file and recent projects</sub></td>
+    <td align="center" width="50%"><img src="docs/screenshots/5.0/04-fills.png" alt="Background tab with presets, swatches, fill styles and template regions" width="420"><br><strong>Background</strong><br><sub>presets, backgrounds, fill styles, template regions</sub></td>
   </tr>
   <tr>
-    <td align="center" width="50%"><img src="docs/screenshots/5.0/03-details.png" alt="Details tab with collars, cuffs, seams and accents" width="420"><br><strong>Details</strong><br><sub>collars, cuffs, hems, seams, pockets, plackets</sub></td>
-    <td align="center" width="50%"><img src="docs/screenshots/5.0/04-text.png" alt="Text tab with the Word Art preview" width="420"><br><strong>Text</strong><br><sub>Word Art: 15 fonts, six styles, live preview</sub></td>
+    <td align="center" width="50%"><img src="docs/screenshots/5.0/05-details.png" alt="Details tab with collars, cuffs, seams and accents" width="420"><br><strong>Details</strong><br><sub>collars, cuffs, hems, seams, pockets, plackets</sub></td>
+    <td align="center" width="50%"><img src="docs/screenshots/5.0/06-word-art.png" alt="Text tab with the Word Art preview" width="420"><br><strong>Text</strong><br><sub>Word Art: 15 fonts, six styles, live preview</sub></td>
   </tr>
 </table>
 

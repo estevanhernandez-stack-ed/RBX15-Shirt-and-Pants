@@ -1,0 +1,90 @@
+[
+ {
+  "name": "Neon_Tide_Shirt",
+  "base": "out/outfit/base-shirt.r15proj",
+  "ops": [
+   {
+    "op": "detail",
+    "type": "collar-crew",
+    "color": "#17d4fa",
+    "width": 3
+   },
+   {
+    "op": "detail",
+    "type": "cuffs-both",
+    "color": "#ff2e88",
+    "width": 4
+   },
+   {
+    "op": "detail",
+    "type": "seam-sides",
+    "color": "#17d4fa",
+    "width": 2,
+    "stitch": true
+   },
+   {
+    "op": "detail",
+    "type": "hem",
+    "color": "#ff2e88",
+    "width": 3
+   },
+   {
+    "op": "wordart",
+    "text": "NEON",
+    "font": "Bungee Shade",
+    "style": "gradient",
+    "fill": "#17d4fa",
+    "grad": "#ff2e88",
+    "size": 64,
+    "w": 112,
+    "cx": 491,
+    "cy": 114,
+    "layerName": "NEON"
+   },
+   {
+    "op": "wordart",
+    "text": "TIDE",
+    "font": "Bungee Shade",
+    "style": "gradient",
+    "fill": "#ff2e88",
+    "grad": "#ffd23f",
+    "size": 64,
+    "w": 112,
+    "cx": 491,
+    "cy": 166,
+    "layerName": "TIDE"
+   }
+  ]
+ },
+ {
+  "name": "Neon_Tide_Pants",
+  "base": "out/outfit/base-pants.r15proj",
+  "ops": [
+   {
+    "op": "detail",
+    "type": "seam-sides",
+    "color": "#17d4fa",
+    "width": 2,
+    "stitch": true
+   },
+   {
+    "op": "detail",
+    "type": "cuffs-both",
+    "color": "#ff2e88",
+    "width": 4
+   },
+   {
+    "op": "wordart",
+    "text": "NEON TIDE",
+    "font": "Orbitron",
+    "style": "neon",
+    "fill": "#17d4fa",
+    "size": 48,
+    "w": 104,
+    "cx": 295,
+    "cy": 100,
+    "layerName": "NEON TIDE"
+   }
+  ]
+ }
+]

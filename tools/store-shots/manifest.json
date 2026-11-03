@@ -1,0 +1,109 @@
+{
+ "version": 1,
+ "title": "RBX15 5.0 Store trailer: Neon Tide",
+ "description": "Silent 1920x1080 trailer for the Microsoft Store listing, built from PrintWindow and screen captures of the shipped 5.0.0 app.",
+ "shotsDir": "out/trailer",
+ "runtime_warning_seconds": 60,
+ "output": {
+  "path": "out/rbx15-trailer.mp4",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "video_codec": "libx264",
+  "preset": "slow",
+  "crf": 18,
+  "pixel_format": "yuv420p",
+  "audio_codec": "aac",
+  "audio_bitrate": "160k",
+  "audio_sample_rate": 44100
+ },
+ "voiceover": {
+  "provider": "none",
+  "directory": "out/voiceover"
+ },
+ "visual_style": {
+  "effect_family": "fade",
+  "entrance_delay": 0.0,
+  "entrance_seconds": 0.35,
+  "content_scale": 0.96,
+  "background_blur": 28,
+  "card": {
+   "background": "#0a1524",
+   "eyebrow": "#17d4fa",
+   "accent": "#f22f89",
+   "code": "#2bd99a"
+  }
+ },
+ "scenes": [
+  {
+   "id": "01-title",
+   "title": "01-title",
+   "type": "still",
+   "src": "out/trailer/01-title.png",
+   "duration": 3.5
+  },
+  {
+   "id": "02-empty",
+   "title": "02-empty",
+   "type": "still",
+   "src": "out/trailer/02-empty.png",
+   "duration": 2.6
+  },
+  {
+   "id": "03-fills",
+   "title": "03-fills",
+   "type": "still",
+   "src": "out/trailer/03-fills.png",
+   "duration": 2.6
+  },
+  {
+   "id": "04-art",
+   "title": "04-art",
+   "type": "still",
+   "src": "out/trailer/04-art.png",
+   "duration": 2.6
+  },
+  {
+   "id": "05-details",
+   "title": "05-details",
+   "type": "still",
+   "src": "out/trailer/05-details.png",
+   "duration": 2.6
+  },
+  {
+   "id": "06-wordart",
+   "title": "06-wordart",
+   "type": "still",
+   "src": "out/trailer/06-wordart.png",
+   "duration": 2.6
+  },
+  {
+   "id": "07-shirt-spin",
+   "title": "07-shirt-spin",
+   "type": "clip",
+   "src": "out/trailer/07-shirt-spin.mp4",
+   "duration": 6.0
+  },
+  {
+   "id": "08-pants",
+   "title": "08-pants",
+   "type": "still",
+   "src": "out/trailer/08-pants.png",
+   "duration": 2.6
+  },
+  {
+   "id": "09-pants-spin",
+   "title": "09-pants-spin",
+   "type": "clip",
+   "src": "out/trailer/09-pants-spin.mp4",
+   "duration": 6.0
+  },
+  {
+   "id": "10-close",
+   "title": "10-close",
+   "type": "still",
+   "src": "out/trailer/10-close.png",
+   "duration": 4.5
+  }
+ ]
+}

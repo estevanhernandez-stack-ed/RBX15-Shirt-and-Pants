@@ -23,6 +23,15 @@ These carry the **RBX15** product mark — brand-navy base, cyan + magenta gradi
 | `app-tile-150x150.png` | 150 x 150 | 1:1 150x150 |
 | `app-tile-300x300.png` | 300 x 300 | 1:1 App tile icon (300x300) |
 
+### Listing hero and trailer (Store listing step, added for the Neon Tide update)
+
+| File | Dimensions | Partner Center slot |
+|---|---|---|
+| `super-hero-art-1920x1080.png` | 1920 x 1080 | 16:9 Super hero art. No product title on it; required once a listing has a trailer |
+| `trailer-thumbnail-1920x1080.png` | 1920 x 1080 | The trailer's thumbnail |
+
+`trailer/rbx15-trailer.mp4` is the trailer itself: 36 seconds, 1920x1080, 30 fps, H.264, silent. The outfit in it and in the 5.0 screenshots is Neon Tide (`5.0/Neon_Tide_Shirt.r15proj` and `5.0/Neon_Tide_Pants.r15proj`), an original set made for the listing; open either in RBX15. How every asset was made, and how to remake it, is in [`tools/store-shots/README.md`](../../tools/store-shots/README.md).
+
 ### Publisher logos (reference only — use at the publisher/account level, not per-app)
 
 | File | Dimensions | Notes |

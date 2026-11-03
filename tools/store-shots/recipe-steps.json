@@ -1,0 +1,48 @@
+[
+ {
+  "name": "step0",
+  "base": "out/outfit/base-step0.r15proj",
+  "ops": []
+ },
+ {
+  "name": "step1",
+  "base": "out/outfit/base-step1.r15proj",
+  "ops": []
+ },
+ {
+  "name": "step2",
+  "base": "out/outfit/base-shirt.r15proj",
+  "ops": []
+ },
+ {
+  "name": "step3",
+  "base": "out/outfit/base-shirt.r15proj",
+  "ops": [
+   {
+    "op": "detail",
+    "type": "collar-crew",
+    "color": "#17d4fa",
+    "width": 3
+   },
+   {
+    "op": "detail",
+    "type": "cuffs-both",
+    "color": "#ff2e88",
+    "width": 4
+   },
+   {
+    "op": "detail",
+    "type": "seam-sides",
+    "color": "#17d4fa",
+    "width": 2,
+    "stitch": true
+   },
+   {
+    "op": "detail",
+    "type": "hem",
+    "color": "#ff2e88",
+    "width": 3
+   }
+  ]
+ }
+]

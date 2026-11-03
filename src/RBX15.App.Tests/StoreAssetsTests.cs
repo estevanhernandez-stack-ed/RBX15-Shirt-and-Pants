@@ -30,9 +30,9 @@ public class StoreAssetsTests
     }
 
     [Fact]
-    public void The_readme_lists_the_nine_store_images()
+    public void The_readme_lists_the_eleven_store_images()
     {
-        Assert.Equal(9, Listed().Count);
+        Assert.Equal(11, Listed().Count);
     }
 
     [Fact]
@@ -52,5 +52,23 @@ public class StoreAssetsTests
         var listed = Listed().Select(r => r.File).ToHashSet(StringComparer.Ordinal);
         var onDisk = Directory.GetFiles(Dir, "*.png").Select(Path.GetFileName).ToList();
         foreach (var f in onDisk) Assert.True(listed.Contains(f!), $"{f} is in docs/store-assets but not in the README table");
+    }
+
+    /// <summary>
+    /// Partner Center refuses a desktop screenshot under 1366x768 (either orientation). The 5.0 M6 captures were the app's
+    /// default 1200x800 window and had to be reshot at 1920x1080, so every versioned screenshot folder is checked.
+    /// </summary>
+    [Fact]
+    public void Every_versioned_screenshot_meets_the_store_minimum()
+    {
+        string root = Path.Combine(RepoRoot.Find(AppContext.BaseDirectory), "docs", "screenshots");
+        var versioned = Directory.GetDirectories(root).Where(d => Regex.IsMatch(Path.GetFileName(d), @"^\d+\.\d+$")).ToList();
+        Assert.NotEmpty(versioned);
+        foreach (var png in versioned.SelectMany(d => Directory.GetFiles(d, "*.png")))
+        {
+            var (w, h) = Size(png);
+            Assert.True(Math.Max(w, h) >= 1366 && Math.Min(w, h) >= 768,
+                $"{Path.GetRelativePath(root, png)} is {w}x{h}; Partner Center needs 1366x768 or larger");
+        }
     }
 }

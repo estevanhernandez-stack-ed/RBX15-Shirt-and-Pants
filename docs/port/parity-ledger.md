@@ -2,7 +2,7 @@
 
 Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not edit by hand). Every user-visible behavior of RBX15 4.1, inventoried 2026-10-11, with the module that owns it in v5, how parity is proven, and whether v5 keeps it, fixes it, drops it, or adds it. **v5 does not ship with a row whose status is `open`.** Design: [native v5 port design](../superpowers/specs/2026-10-11-native-v5-port-design.md). Deliberate changes: [divergences](divergences.md).
 
-**437 rows.** Status: done 410, open 27. Disposition: fix 211, keep 184, drop 26, new 16. Checks: ui-auto 128, unit 127, manual 69, golden 66, none-retired 25, doc 22.
+**437 rows.** Status: done 412, open 25. Disposition: fix 211, keep 184, drop 26, new 16. Checks: ui-auto 128, unit 127, manual 69, golden 66, none-retired 25, doc 22.
 
 ## App.AssetLibrary
 
@@ -264,7 +264,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `shell-no-persistence` | Zero persisted settings: window rect, tool state, last folder, template name | doc | fix | low |
 | done | `io-download-save-dialog` | Exports and project saves go through anchor-download, relying on Chromium/Electron's Save As behavior | manual | fix | med |
 | done | `shell-no-unsaved-changes-guard` | No unsaved-work prompt on close or reload | ui-auto | fix | low |
-| open | `shell-userdata-footprint` | Electron writes a hidden per-user profile folder despite the 'no hidden data' claim | doc | fix | low |
+| done | `shell-userdata-footprint` | Electron writes a hidden per-user profile folder despite the 'no hidden data' claim | doc | fix | low |
 | done | `shell-unsaved-work-loss` | No unsaved-changes guard on close, reload or quit | ui-auto | new | med |
 | done | `upgrade-autosave-recovery` | Autosave every 60 s and crash recovery at the next launch (new in v5) | ui-auto | new | high |
 | done | `upgrade-recent-projects` | Recent projects in the File group (new in v5) | unit | new | low |
@@ -534,7 +534,7 @@ Generated from `parity-ledger.json` by `tools/ledger/ledger.py render` (do not e
 | done | `msix-application-entry` | Application element: Id, Executable, EntryPoint, tiles | manual | keep | med |
 | done | `msix-capabilities` | Capabilities: only runFullTrust; justification text; network capability gap | doc | fix | med |
 | done | `msix-target-os` | TargetDeviceFamily min/max | manual | keep | low |
-| open | `msix-arch-self-contained` | x64 only; self-contained publish layout | manual | keep | med |
+| done | `msix-arch-self-contained` | x64 only; self-contained publish layout | manual | keep | med |
 | done | `msix-make-script` | make-msix.ps1 pipeline: stage, inject version, pack, optional self-sign | manual | fix | med |
 | done | `msix-images` | Generated tile images (Pillow) and their required set | manual | keep | low |
 | done | `msix-signing-policy` | Signing policy per channel | doc | fix | med |

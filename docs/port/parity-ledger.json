@@ -6665,12 +6665,12 @@
    "quirks": "ReadyToRun and trimming interactions with WPF are fragile; verify startup after publish, not just debug.",
    "portTarget": "`dotnet publish -c Release -r win-x64 --self-contained -p:PublishReadyToRun=true` (avoid single-file/trimming that break SkiaSharp native libs and WPF). Expected about 66 MB. Optionally add win-arm64 as a bundle.",
    "risk": "med",
-   "parityCheck": "Sizes reported from the unsigned build (D14, D23): MSIX 69.18 MB, zip 70.25 MB, installed 155.55 MB. build-msix.ps1 asserts libSkiaSharp.dll and libHarfBuzzSharp.dll in the unpacked package (Assert-PackageContents; Test-BuildMsix.ps1's missing-library cases). Open after M6, behind MAN-15: the portable zip launching on a machine with no .NET installed (Windows Sandbox).",
+   "parityCheck": "Sizes reported from the unsigned build (D14, D23): MSIX 69.18 MB, zip 70.25 MB, installed 155.55 MB. build-msix.ps1 asserts libSkiaSharp.dll and libHarfBuzzSharp.dll in the unpacked package (Assert-PackageContents; Test-BuildMsix.ps1's missing-library cases). MAN-15 passed in Windows Sandbox (Windows 11 24H2, no dotnet on PATH, no Microsoft.WindowsDesktop.App) on main bd3e5c1's portable zip, 2026-11-02: RBX15.App.exe showed its main window with no .NET install prompt, the Drips pack placed an image, and Download template saved a 585x559 PNG.",
    "owner": "Package",
    "check": "manual",
    "disposition": "keep",
    "divergence": "",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "msix-make-script",
@@ -7462,12 +7462,12 @@
    "quirks": "The existing claim is false for the Electron build. The port fixes it for free, but only if it does not introduce a settings file without updating PRIVACY.md.",
    "portTarget": "The native WPF app should write nothing outside user-chosen files. With bundled fonts there is no HTTP cache. Under MSIX, any ApplicationData use is removed on uninstall. Update PRIVACY.md to state this, which makes the claim true.",
    "risk": "low",
-   "parityCheck": "docs/PRIVACY.md (2026-10-25) lists every file v5 stores (settings.json, the autosave pair, the error log), all under %LOCALAPPDATA%\\RBX15 (ErrorLogTests.The_storage_root_holds_settings_autosave_and_logs), and says the Store build's copy is meant to go with uninstall and the zip's is deleted by hand (D17). MAN-16 on Este's machine (2026-10-25) did not prove the redirect: the installed package wrote settings.json (its recents) and an autosave folder to the real %LOCALAPPDATA%\\RBX15, which already existed there from dev builds and the msix-dev signing folder, and the package's LocalCache\\Local\\RBX15 was absent after a remove and reinstall. Windows appears to redirect a packaged app's AppData writes only when the target folder does not already exist (not yet confirmed against Microsoft's documentation). Still open: rerun MAN-16's storage step on a Windows user profile with no %LOCALAPPDATA%\\RBX15 (a fresh test account or Windows Sandbox), confirm the writes land in the package's LocalCache and that uninstall removes them; PRIVACY.md's 'meant to go with uninstall' wording stands until then.",
+   "parityCheck": "docs/PRIVACY.md (2026-10-25) lists every file v5 stores (settings.json, the autosave pair, the error log), all under %LOCALAPPDATA%\\RBX15 (ErrorLogTests.The_storage_root_holds_settings_autosave_and_logs), and says the Store build's copy is meant to go with uninstall and the zip's is deleted by hand (D17). MAN-16 on Este's machine (2026-10-25) did not prove the redirect: the installed package wrote settings.json (its recents) and an autosave folder to the real %LOCALAPPDATA%\\RBX15, which already existed there from dev builds and the msix-dev signing folder, and the package's LocalCache\\Local\\RBX15 was absent after a remove and reinstall. Windows appears to redirect a packaged app's AppData writes only when the target folder does not already exist (not yet confirmed against Microsoft's documentation). MAN-16's storage step passed in Windows Sandbox (a fresh profile with no %LOCALAPPDATA%\\RBX15) on main bd3e5c1's dev-signed MSIX, 2026-11-02: with a layer on the canvas, the autosave pair (.r15proj and .json) landed in the package's LocalCache\\Local\\RBX15 and so did settings.json (an earlier run in the same Sandbox setup), the real %LOCALAPPDATA%\\RBX15 never existed, and after uninstall the package folder was gone. So the redirect holds on a clean profile, and PRIVACY.md's wording stands. Where %LOCALAPPDATA%\\RBX15 already exists (dev builds), the package writes there instead, as MAN-16 saw on Este's machine.",
    "owner": "App.Storage",
    "check": "doc",
    "disposition": "fix",
    "divergence": "4.1: Electron creates a hidden %APPDATA% userData folder with cache while PRIVACY says no hidden data. v5: only window state, recents and autosave are stored locally and PRIVACY discloses them. It also keeps a local error log (M5).",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "project-load-untrusted-src",

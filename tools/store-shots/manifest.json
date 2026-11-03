@@ -1,7 +1,7 @@
 {
  "version": 1,
  "title": "RBX15 5.0 Store trailer: Neon Tide",
- "description": "Silent 1920x1080 trailer for the Microsoft Store listing, built from PrintWindow and screen captures of the shipped 5.0.0 app.",
+ "description": "1920x1080 trailer for the Microsoft Store listing, narrated by Este's ElevenLabs voice (ItsJustEste), built from PrintWindow and screen captures of the shipped 5.0.0 app.",
  "shotsDir": "out/trailer",
  "runtime_warning_seconds": 60,
  "output": {
@@ -18,8 +18,10 @@
   "audio_sample_rate": 44100
  },
  "voiceover": {
-  "provider": "none",
-  "directory": "out/voiceover"
+  "provider": "elevenlabs",
+  "voice": "8gpP3pZU3NERlkDEdxub",
+  "model": "eleven_multilingual_v2",
+  "directory": "voiceover"
  },
  "visual_style": {
   "effect_family": "fade",
@@ -40,27 +42,31 @@
    "title": "01-title",
    "type": "still",
    "src": "out/trailer/01-title.png",
-   "duration": 3.5
+   "narration": "RBX15. Paint your Roblox Classic shirts and pants, don't just place them.",
+   "duration": 5.3
   },
   {
    "id": "02-empty",
    "title": "02-empty",
    "type": "still",
    "src": "out/trailer/02-empty.png",
-   "duration": 2.6
+   "narration": "Start on the exact Roblox template, five eighty-five by five fifty-nine.",
+   "duration": 5.3
   },
   {
    "id": "03-fills",
    "title": "03-fills",
    "type": "still",
    "src": "out/trailer/03-fills.png",
-   "duration": 2.6
+   "narration": "Paint fills that wrap the body, one gradient across every panel.",
+   "duration": 4.7
   },
   {
    "id": "04-art",
    "title": "04-art",
    "type": "still",
    "src": "out/trailer/04-art.png",
+   "narration": "Stack your own art in layers.",
    "duration": 2.6
   },
   {
@@ -68,42 +74,48 @@
    "title": "05-details",
    "type": "still",
    "src": "out/trailer/05-details.png",
-   "duration": 2.6
+   "narration": "Collars, cuffs and seams, in one click.",
+   "duration": 3.0
   },
   {
    "id": "06-wordart",
    "title": "06-wordart",
    "type": "still",
    "src": "out/trailer/06-wordart.png",
-   "duration": 2.6
+   "narration": "Word Art, in fifteen fonts and six styles.",
+   "duration": 3.2
   },
   {
    "id": "07-shirt-spin",
    "title": "07-shirt-spin",
    "type": "clip",
    "src": "out/trailer/07-shirt-spin.mp4",
-   "duration": 6.0
+   "duration": 6.0,
+   "narration": "Then watch it on a 3D avatar, live, while you work."
   },
   {
    "id": "08-pants",
    "title": "08-pants",
    "type": "still",
    "src": "out/trailer/08-pants.png",
-   "duration": 2.6
+   "narration": "Pants use the same tools, so a matching set is easy.",
+   "duration": 4.0
   },
   {
    "id": "09-pants-spin",
    "title": "09-pants-spin",
    "type": "clip",
    "src": "out/trailer/09-pants-spin.mp4",
-   "duration": 6.0
+   "duration": 6.0,
+   "narration": "Neon Tide: a shirt and pants, made start to finish in RBX15."
   },
   {
    "id": "10-close",
    "title": "10-close",
    "type": "still",
    "src": "out/trailer/10-close.png",
-   "duration": 4.5
+   "narration": "Works offline. No account. No ads. Get RBX15 on the Microsoft Store.",
+   "duration": 7.1
   }
  ]
 }

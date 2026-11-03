@@ -38,11 +38,11 @@ Three things this needed:
 
 ## 3. Store set, trailer and hero art
 
-Needs ffmpeg and Node 18+. `demo-video/` is vendored from the demo-video skill, uses Node built-ins only, and renders silent with the provider set to `none`.
+Needs ffmpeg and Node 18+. `demo-video/` is vendored from the demo-video skill and uses Node built-ins only. The narration is Este's ElevenLabs voice (ItsJustEste, voice `8gpP3pZU3NERlkDEdxub`, adapter `demo-video/adapters/elevenlabs.mjs`). The ten clips are committed in `voiceover/`, and because the pipeline is cache-first, a render with those files present never calls ElevenLabs. To re-voice a line, delete its `slide_NN.mp3`, edit the line in `manifest.json`, and render with `ELEVENLABS_API_KEY` set.
 
 ```powershell
 python make_assets.py                      # out/store (7 screenshots), out/trailer (captioned stills, cards, clips)
-node demo-video/build.mjs manifest.json    # out/rbx15-trailer.mp4, 36 s, 1920x1080, 30 fps
+node demo-video/build.mjs manifest.json    # out/rbx15-trailer.mp4, 47 s, 1920x1080, 30 fps, narrated
 node demo-video/contact-sheet.mjs out/rbx15-trailer.mp4 --frames 2,8,16,23,31
 python make_hero.py                        # out/store/super-hero-art-1920x1080.png and the trailer thumbnail
 ```

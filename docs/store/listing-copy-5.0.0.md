@@ -1,5 +1,9 @@
 # Store listing copy, v5.0.0
 
+> **Shipped text lives in the store-listing-console** (`apps/rbx15`, merged with 5.0.0.0, published
+> 2026-11-03 as submission 1152921505702305729). The blocks below are the pre-submission draft:
+> the Store carries the approved 4.1 text updated for 5.0, not this wording, and keeps Este's 7 keywords.
+
 Public-facing copy for Partner Center. Reviewer-only notes:
 [`reviewer-letter-5.0.0.0.md`](./reviewer-letter-5.0.0.0.md). Paste the block under
 **What's new in this version** into that field. It is separate from the reviewer notes and

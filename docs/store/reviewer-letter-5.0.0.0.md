@@ -1,8 +1,8 @@
 # Notes for certification: reviewer letter (v5.0.0.0)
 
 > Paste the block between the `---` markers into Partner Center, your app,
-> **Submission options**, **Notes for certification** (about 2000 characters; the block is
-> under that and front-loaded).
+> **Submission options**, **Notes for certification** (2000 characters, and Partner Center counts
+> each line break as two; this block is 1491 by that count, one line per paragraph).
 >
 > Framing: RBX15 is a fully local, offline desktop creative tool. No account, no data
 > collection, no network requests. The letter states the disclosure surface up front, then
@@ -17,42 +17,19 @@ Hello reviewer,
 
 Thank you for your time on RBX15 Classic Shirt and Pants Maker v5.0.0.0.
 
-WHAT IT IS
-A Windows editor for Roblox Classic (R15) shirt and pants templates, the 585x559 PNG
-panels creators upload to Roblox. Users compose layers, paint region fills, draw, add
-word art and export a PNG. Version 5 is a native WPF app on .NET 10, self-contained,
-packaged as MSIX. It replaces the Electron build (4.1) under the same package identity.
+WHAT IT IS: A Windows editor for Roblox Classic (R15) shirt and pants templates, the 585x559 PNG panels creators upload to Roblox. Users compose layers, paint region fills, draw, add word art and export a PNG. Version 5 is a native WPF app on .NET 10, self-contained, packaged as MSIX, replacing the Electron build (4.1) under the same package identity.
 
-NO ACCOUNT, NO SETUP
-No login, no configuration. It does not connect to Roblox. It only produces a PNG that
-the user uploads to Roblox themselves.
+NO ACCOUNT: No login or setup. It does not connect to Roblox; the user uploads the PNG to Roblox themselves.
 
-NETWORK: NONE
-The app makes no network requests: no update check, telemetry, analytics or ads, and no
-internetClient capability. All fonts are bundled.
+NETWORK: NONE. No update check, telemetry, analytics or ads, and no internetClient capability. All fonts are bundled.
 
-DATA: ALL LOCAL
-It reads and writes only files the user chooses (projects, PNG exports, images, asset
-folders), plus its own settings, autosave copy and error log in its local app data. The
-error log holds no document content. Nothing is sent anywhere.
+DATA: ALL LOCAL. It reads and writes only files the user chooses, plus its own settings, autosave copy and error log in its local app data. The error log holds no document content. Nothing is sent anywhere.
 
-CAPABILITY: runFullTrust ONLY
-Justification: a Win32/.NET desktop app cannot run in the AppContainer; it reads and
-writes only user-chosen files, plus its own settings, autosave and error log in its
-local app data. The package also registers the .r15proj file type.
+CAPABILITY: runFullTrust only. A Win32/.NET desktop app cannot run in the AppContainer. The package also registers the .r15proj file type.
 
-FONTS
-15 Word Art fonts (Anton, Bangers, Bebas Neue, Bungee Shade, Creepster, Dancing
-Script, Great Vibes, Lato, Orbitron, Pacifico, Poppins, Press Start 2P, Righteous,
-Rubik Mono One, Permanent Marker) and 3 UI fonts (Inter, JetBrains Mono, Space
-Grotesk). 17 are under the SIL OFL 1.1; Permanent Marker is Apache 2.0. Licenses ship
-in the package.
+FONTS: 15 Word Art and 3 UI fonts, bundled. 17 are SIL OFL 1.1; Permanent Marker is Apache 2.0. Licenses ship in the package.
 
-TRADEMARK
-"Roblox" is a trademark of Roblox Corporation, used nominatively to describe the
-template file format. RBX15 Classic Shirt and Pants Maker is an independent
-third-party tool, not affiliated with or endorsed by Roblox Corporation. Source is
-MIT at https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants.
+TRADEMARK: "Roblox" is a trademark of Roblox Corporation, used nominatively to describe the template file format. RBX15 is an independent third-party tool, not affiliated with or endorsed by Roblox Corporation. Source (MIT): https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants
 
 Estevan Hernandez
 626Labs LLC

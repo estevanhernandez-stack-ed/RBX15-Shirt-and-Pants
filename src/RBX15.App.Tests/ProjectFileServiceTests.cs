@@ -483,7 +483,7 @@ public sealed class ProjectFileServiceTests : IDisposable
     [Fact] // dialogs-inventory, io-alert-inventory: 4.1's alert strings verbatim (editor.js:2344, :2364, :2385, :2676)
     public void Dialog_text_is_4_1s_verbatim()
     {
-        string js = File.ReadAllText(Path.Combine(Root, "editor.js"));
+        string js = File.ReadAllText(RepoRoot.Source41(AppContext.BaseDirectory, "editor.js"));
         Assert.Contains("alert('Built-in pack \"' + packName + '\" not found. Reinstall the app to restore it.');", js);
         Assert.Contains("alert('Built-in pack \"' + packName + '\" is empty.');", js);
         Assert.Contains("alert('" + DialogText.NoImagesInFolder + "');", js);
@@ -498,7 +498,7 @@ public sealed class ProjectFileServiceTests : IDisposable
     [Fact] // interfaces §2.2: .r15proj first, JSON keeps 4.1's reach (accept=".json,.r15proj", editor.html:108); Save writes .r15proj only
     public void The_dialog_filters_keep_4_1s_reach()
     {
-        Assert.Contains("<input type=\"file\" id=\"projectFileInput\" accept=\".json,.r15proj\" hidden>", File.ReadAllText(Path.Combine(Root, "editor.html")));
+        Assert.Contains("<input type=\"file\" id=\"projectFileInput\" accept=\".json,.r15proj\" hidden>", File.ReadAllText(RepoRoot.Source41(AppContext.BaseDirectory, "editor.html")));
         Assert.Equal("RBX15 project (*.r15proj)|*.r15proj|JSON project (*.json)|*.json", Win32FileDialogs.ProjectOpenFilter);
         Assert.Equal("RBX15 project (*.r15proj)|*.r15proj", Win32FileDialogs.ProjectSaveFilter);
     }

@@ -30,7 +30,7 @@ public class ShellTests
     public void The_product_name_is_4_1s_window_title()
     {
         Assert.Equal("RBX15 Classic Shirt and Pants Maker", AppInfo.ProductName);
-        Assert.Contains("<title>RBX15 Classic Shirt and Pants Maker</title>", File.ReadAllText(Path.Combine(Root, "editor.html")));
+        Assert.Contains("<title>RBX15 Classic Shirt and Pants Maker</title>", File.ReadAllText(RepoRoot.Source41(AppContext.BaseDirectory, "editor.html")));
     }
 
     [Fact] // shell-header (fix): editor.html:16-17, with the 626Labs mark in place of "ItsjustEste" (Este, 2026-10-17) and
@@ -39,7 +39,7 @@ public class ShellTests
     public void Header_and_footer_text_match_4_1_and_the_footer_credit()
     {
         var vm = TestShell.Main(new EditorSession());
-        var html = File.ReadAllText(Path.Combine(Root, "editor.html"));
+        var html = File.ReadAllText(RepoRoot.Source41(AppContext.BaseDirectory, "editor.html"));
         Assert.Contains("<h1>RBX15 Classic Shirt &amp; Pants Maker</h1>", html);
         Assert.Contains("<span>ItsjustEste | v4.1</span>", html);
         Assert.Contains("<footer>Developed at 626 Labs LLC</footer>", html);
@@ -68,7 +68,7 @@ public class ShellTests
     [InlineData(640, 200)]
     public void The_left_panel_narrows_at_900(double viewport, double panel)
     {
-        Assert.Contains("@media (max-width: 900px) {\n  .panel { width: 200px; }", File.ReadAllText(Path.Combine(Root, "styles.css")).Replace("\r\n", "\n"));
+        Assert.Contains("@media (max-width: 900px) {\n  .panel { width: 200px; }", File.ReadAllText(RepoRoot.Source41(AppContext.BaseDirectory, "styles.css")).Replace("\r\n", "\n"));
         Assert.Equal(panel, ShellLayout.PanelWidthFor(viewport));
     }
 

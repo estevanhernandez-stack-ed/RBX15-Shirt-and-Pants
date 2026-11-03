@@ -1,7 +1,7 @@
 # The MSIX contract assertions, shared by build-msix.ps1 (the real build) and Test-BuildMsix.ps1 (no packing, no
 # signing). Every failure throws with a named reason. Compatible with Windows PowerShell 5.1 and PowerShell 7.
 
-# The Store identity contract. Kept EXACTLY as 4.1 (windows/msix/Package.appxmanifest.template).
+# The Store identity contract. Kept EXACTLY as 4.1 (git show v4.1.0:windows/msix/Package.appxmanifest.template).
 function Get-MsixContract {
     return @{
         IdentityName         = "626LabsLLC.RBX15ClassicShirtandPantsMaker"

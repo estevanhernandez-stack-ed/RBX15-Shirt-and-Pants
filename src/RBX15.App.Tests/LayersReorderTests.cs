@@ -204,7 +204,7 @@ public class LayersReorderTests
     [Fact] // editor.html:317, verbatim
     public void The_reorder_hint_is_4_1s_text()
     {
-        var html = File.ReadAllText(Path.Combine(RepoRoot.Find(AppContext.BaseDirectory), "editor.html"));
+        var html = File.ReadAllText(RepoRoot.Source41(AppContext.BaseDirectory, "editor.html"));
         Assert.Contains("<h3>Layers <span style=\"font-size:10px;color:#555;text-transform:none\">(drag to reorder)</span></h3>", html);
         Assert.Equal("(drag to reorder)", StaThread.Run(() => Vm(new EditorSession()).ReorderHint));
     }

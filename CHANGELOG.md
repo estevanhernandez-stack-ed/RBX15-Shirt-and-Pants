@@ -6,6 +6,32 @@ All notable changes to RBX15 Classic Shirt and Pants Maker are documented here. 
 
 ### Removed
 
+- **The 4.1 Electron app and its tooling (the cutover).** `main.js`, `editor.html`, `editor.js`, `styles.css`, `lib/`, `package.json`, the Node tests, ESLint, `tools/parity-ref/`, the 4.x MSIX script and manifest, and the 4.x CI and release workflows are deleted. So are the legacy Python scripts, the launcher `.bat`, the shortcut script and their output art. All of it stays at the `v4.1.0` tag. Four 4.1 files remain as frozen test fixtures in `tests/goldens/source-4.1/`.
+- The parity ledger's last 25 rows (the Retired ones) are closed, so the release gate now requires zero open rows.
+
+## [5.0.0] — 2026-11-03
+
+A rebuild as a native Windows app (WPF on .NET 10) in place of the Electron app, under the same Store identity. Your `.r15proj` projects open as they are. Live on the Microsoft Store as 5.0.0.0.
+
+### Added
+
+- **3D preview** of the template on a Classic or R15 avatar, following every edit.
+- **Autosave and crash recovery**: unsaved work is copied every 60 seconds and offered back after a crash.
+- **Recent projects** in the File group and on the taskbar jump list, **open from Explorer** (`.r15proj` association), and **New** (Ctrl+N) for a fresh window.
+- **Paste** an image from the clipboard as a new layer.
+- **Colors from your art** in every color picker, and a region guide on transparent templates.
+- A local **error log** with no document content.
+
+### Changed
+
+- **Native and smaller**: about 69 MB, down from 141 MB, with its own .NET runtime.
+- **Works offline**: the app makes no network requests. The 15 Word Art and 3 UI fonts are bundled.
+- **Undo covers every edit**, with redo on Ctrl+Y and Ctrl+Shift+Z.
+- **Accessibility**: a cyan focus ring on every control, and names for Narrator.
+
+### Removed
+
+- The NSIS installer. 5.0 ships through the Store and a portable zip.
 - `roblox_uploader.py`, `upload_manifest.json` and `pants_manifest.json` moved to a private repository. They were local upload tooling, never part of the app.
 
 ## [4.1.0] — 2026-07-21
@@ -153,5 +179,7 @@ The app shipped as a 2,684-line single HTML file in v3. This release breaks it a
 
 ---
 
-[Unreleased]: https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/compare/v4.0.0...HEAD
+[Unreleased]: https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/compare/v5.0.0...HEAD
+[5.0.0]: https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/releases/tag/v5.0.0
+[4.1.0]: https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/releases/tag/v4.1.0
 [4.0.0]: https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/releases/tag/v4.0.0

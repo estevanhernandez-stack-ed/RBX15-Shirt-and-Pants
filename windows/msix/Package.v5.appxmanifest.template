@@ -6,7 +6,8 @@
   IgnorableNamespaces="uap rescap">
 
   <!-- v5 (native WPF / .NET 10) manifest. Rendered by scripts/build-msix.ps1; {{VERSION}} and {{EXECUTABLE}} are
-       the only placeholders. The 4.1 Electron template (Package.appxmanifest.template) stays for the legacy channel.
+       the only placeholders. It replaced the 4.1 Electron template at the cutover
+       (git show v4.1.0:windows/msix/Package.appxmanifest.template).
 
        Identity is kept EXACTLY as 4.1 so the Store treats v5 as an update to the live package (same Package Family
        Name 626LabsLLC.RBX15ClassicShirtandPantsMaker_wz1chhb2h2v4a). Do not re-case, do not edit:

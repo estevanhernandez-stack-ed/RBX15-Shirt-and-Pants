@@ -43,7 +43,7 @@ A few rules that keep the code honest:
 - CI runs `python tools/ledger/ledger.py check`. A row closes only on evidence that exercises the behavior its `parityCheck` names.
 - A deliberate change from 4.1 needs a `4.1: ... v5: ...` sentence in the row's `divergence` field.
 
-The images under `tests/goldens/` are frozen 4.1 output. The engine must match them, and no pull request changes them. A golden failure is a bug in the engine, never a reason to loosen a tolerance. A v5 behavior that looks different on purpose gets a new golden next to the old one and a line in `divergences.md`. The rules for making goldens are in [`tools/parity-ref/README.md`](tools/parity-ref/README.md).
+The images under `tests/goldens/` are frozen 4.1 output. The engine must match them, and no pull request changes them. A golden failure is a bug in the engine, never a reason to loosen a tolerance. A v5 behavior that looks different on purpose gets a new golden next to the old one and a line in `divergences.md`. They were rendered from the 4.1 app by the Node tools in `tools/parity-ref/`, which the cutover removed; both are at the [`v4.1.0` tag](https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/tree/v4.1.0). A new golden for a deliberate v5 change is rendered by the engine and reviewed by eye, since there is no 4.1 to compare it with.
 
 ## Easy first contributions
 
@@ -96,10 +96,9 @@ Check the [Known limitations in README.md](README.md#known-limitations). High-si
 
 The 4.0 specs and plans under [docs/superpowers/](docs/superpowers/) are history, not the current design. The v5 port design is `docs/superpowers/specs/2026-10-11-native-v5-port-design.md`.
 
-### Legacy 4.1 source
+### The 4.1 source
 
-<!-- Legacy 4.1 -->
-The Electron app (`main.js`, `editor.html`, `editor.js`, `styles.css`, `lib/`, `package.json`, `tests/*.test.js`) still sits in the repo root until the cutover removes it. v5 does not build from it. It is the reference the goldens in `tests/goldens/` were rendered from, through the Node tools in `tools/parity-ref/`. Don't extend it. Fixes to 4.1 behavior that v5 must match are rare, and they come with a note in the ledger.
+The cutover removed the Electron app, its Node tests and `tools/parity-ref/`. They live at the [`v4.1.0` tag](https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/tree/v4.1.0). Comments that cite `editor.js:<line>`, `main.js` or `lib/*.js` point there: `git show v4.1.0:editor.js` reads the line. Some tests still pin 4.1 strings (the window title, dialog text, theme tokens) as literal expectations, which keeps the parity they proved without needing the old files.
 
 ## License
 

@@ -124,7 +124,7 @@ public partial class WordArtHardeningTests(ITestOutputHelper output)
     [Fact]
     public void FontOptions_are_the_15_waFont_options_in_4_1s_order()
     {
-        var html = File.ReadAllText(Path.Combine(RepoRoot.Find(AppContext.BaseDirectory), "editor.html")).Replace("\r\n", "\n");
+        var html = File.ReadAllText(RepoRoot.Source41(AppContext.BaseDirectory, "editor.html")).Replace("\r\n", "\n");
         var start = html.IndexOf("id=\"waFont\"", StringComparison.Ordinal);
         var select = html[start..html.IndexOf("</select>", start, StringComparison.Ordinal)];
         var fromHtml = OptionRow().Matches(select).Select(m => (m.Groups["family"].Value, m.Groups["label"].Value)).ToList();

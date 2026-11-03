@@ -18,6 +18,6 @@ When the MCP tool `mcp__626Labs__manage_projects` with `action: findByRepo` is c
 
 ## Updating the manifest
 
-Bump `version` in `manifest.json` whenever `package.json` version bumps. Update `status` when distribution paths change (e.g., `distribution[].status: "pending-submission"` → `"live"` once the Microsoft Store listing is approved).
+Bump `version` in `manifest.json` whenever `src/RBX15.App/RBX15.App.csproj` `<Version>` bumps. Update `status` when distribution paths change (e.g., `distribution[].status: "pending-submission"` → `"live"` once the Microsoft Store listing is approved).
 
 Keep the manifest in sync with reality — the hub surfaces whatever's here.

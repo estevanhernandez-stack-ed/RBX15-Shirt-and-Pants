@@ -20,3 +20,6 @@ TestResults/
 *.user
 diff-heatmaps/
 bin-dev/
+
+# Store screenshot and trailer tooling outputs (tools/store-shots/README.md)
+tools/store-shots/out/

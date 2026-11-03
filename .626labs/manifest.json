@@ -50,11 +50,13 @@
     "tile_150": "docs/store-assets/app-tile-150x150.png",
     "tile_71": "docs/store-assets/app-tile-71x71.png",
     "screenshots": [
-      {"file": "docs/screenshots/5.0/05-finished-shirt.png", "caption": "A finished shirt: one gradient across every panel, a drip, a collar, cuffs and Word Art, with the 3D preview"},
-      {"file": "docs/screenshots/5.0/01-home.png", "caption": "Home: tools, brush, placement, undo, file and recent projects"},
-      {"file": "docs/screenshots/5.0/02-background.png", "caption": "Background: presets, backgrounds, fill styles and template regions"},
-      {"file": "docs/screenshots/5.0/03-details.png", "caption": "Details: collars, cuffs, hems, seams, pockets and plackets"},
-      {"file": "docs/screenshots/5.0/04-text.png", "caption": "Text: Word Art with 15 fonts, six styles and a live preview"}
+      {"file": "docs/screenshots/5.0/01-shirt-3d-preview.png", "caption": "The Neon Tide shirt on an R15 avatar in the 3D preview, which follows every edit"},
+      {"file": "docs/screenshots/5.0/02-pants-3d-preview.png", "caption": "The matching Neon Tide pants on the 3D preview"},
+      {"file": "docs/screenshots/5.0/03-layers.png", "caption": "Layers: stack your own art and edit the selected layer on the canvas"},
+      {"file": "docs/screenshots/5.0/04-fills.png", "caption": "Fills: one gradient sweeps across every panel, from presets or region by region"},
+      {"file": "docs/screenshots/5.0/05-details.png", "caption": "Details: collars, cuffs, hems, seams, pockets and plackets in one click"},
+      {"file": "docs/screenshots/5.0/06-word-art.png", "caption": "Text: Word Art in 15 fonts and six styles, with a live preview"},
+      {"file": "docs/screenshots/5.0/07-pants-fills.png", "caption": "Pants: the same tools, with a camo fill and tide stripes"}
     ]
   },
   "tech": {

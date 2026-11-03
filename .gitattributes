@@ -5,3 +5,5 @@ docs/port/*.json text eol=lf
 *.ttf binary
 assets/fonts/** -text
 *.sh text eol=lf
+*.mp4 binary
+*.mp3 binary

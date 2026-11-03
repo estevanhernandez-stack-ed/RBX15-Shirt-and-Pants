@@ -134,6 +134,7 @@ def check_v5_release(text):
     assert ledger < msix, "the ledger gate must run before build-msix.ps1"
     assert build < test < msix, "dotnet build and dotnet test must run before build-msix.ps1"
     assert "-SelfSign" not in text, "the release must never self-sign"
+    assert "          draft: true\n" in text, "the release must be a draft until the Store build is live"
 
 
 # ---- windows-release.yml ---------------------------------------------------------------------------------------------
@@ -181,6 +182,7 @@ class V5ReleaseTests(unittest.TestCase):
             "test before msix": text.replace("dotnet test src/RBX15.slnx -c Release --no-build", "echo no tests"),
             "build before msix": text.replace("dotnet build src/RBX15.slnx", "echo no build"),
             "self sign": text.replace("build-msix.ps1 -Version", "build-msix.ps1 -SelfSign -Version"),
+            "draft": text.replace("          draft: true\n", ""),
         }
         for name, broken in cases.items():
             self.assertNotEqual(broken, text, name)

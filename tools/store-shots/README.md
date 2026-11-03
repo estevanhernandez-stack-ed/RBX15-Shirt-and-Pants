@@ -60,4 +60,13 @@ Same captures and narration clips as the trailer, restacked for 9:16: the templa
 
 Slide 7's line was "live, while you work", which the voice read as the verb. It is now "in real time".
 
+## 5. Music
+
+```powershell
+python make_music.py trailer out/rbx15-trailer-final.mp4 out/rbx15-trailer-scored.mp4
+python make_music.py tiktok  out/tiktok/rbx15-tiktok.mp4 out/tiktok/rbx15-tiktok-scored.mp4
+```
+
+An instrumental synthwave score from ElevenLabs Music (`music_v2`), composed to each video's scene timing with a composition plan, so the build-up and reveal land on the cuts. The music sits 18 dB under the voice and ducks further while Este speaks. The TikTok track dips at the seam because the composed track starts about 6 LU quieter than it ends. The tracks are cached in `music/`; delete one to recompose it. Commercial use needs a paid ElevenLabs plan; the account is on Creator.
+
 Partner Center refuses desktop screenshots under 1366x768. `StoreAssetsTests.Every_versioned_screenshot_meets_the_store_minimum` checks every `docs/screenshots/<version>/` image. The super hero art must not carry the product title. Screenshots, the hero art and the trailer are uploaded by hand in Partner Center, because the submission API can't upload media.

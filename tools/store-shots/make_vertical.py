@@ -1,10 +1,10 @@
 """The 9:16 TikTok cut of the Neon Tide trailer, from the same captures and narration clips as the Store trailer.
 
-The landscape window is never shrunk into the frame. Each scene crops the part that matters and fills the phone
-with it: the template canvas for the build steps, the 3D preview for the spins (the avatar is about 230 px wide in
-the window, so it is scaled up roughly 2.5x). Content stays between y 150 and 1450, clear of TikTok's top bar,
-right rail and caption. It is cut to loop: no fade in, and the opening "R B X fifteen" lands right after the
-closing "Imagine something else." Overlay text is left to TikTok's editor; the lines are in docs/store-assets/tiktok/.
+Every scene shows the whole app across the top of the phone, with the part that matters outlined in cyan and zoomed
+in a callout below: the template canvas for the build steps, the 3D preview for the spins (about 2.5x, since the
+avatar is around 230 px wide in the window). Content stays between y 150 and 1452, clear of TikTok's top bar, right
+rail and caption. It is cut to loop: no fade in, and the opening "Like R B X fifteen" lands right after the closing
+"Imagine something else." Overlay text is left to TikTok's editor; the lines are in docs/store-assets/tiktok/.
 
     python make_vertical.py [--shots out/shots]     # out/tiktok/rbx15-tiktok.mp4
 """
@@ -23,7 +23,7 @@ AVATAR = (1674, 420, 1906, 850)     # the 3D preview, avatar and turntable ring
 
 # (kind, source, first frame, last frame or None, narration clip, seconds)
 SCENES = [
-    ("spin", "shirt-spin", 99, 159, "slide_01", 5.1),
+    ("spin", "shirt-spin", 99, 159, "tiktok_01", 5.1),
     ("template", "build-s1.png", 0, None, "slide_03", 4.2),
     ("template", "build-s2.png", 0, None, "slide_04", 2.2),
     ("template", "build-s3.png", 0, None, "slide_05", 2.6),
@@ -66,32 +66,50 @@ def soft_paste(canvas, img, x, y, feather=30):
     canvas.paste(img, (x, y), m.filter(ImageFilter.GaussianBlur(feather / 2)))
 
 
-def header(canvas, fonts):
-    d = ImageDraw.Draw(canvas)
-    wm = fonts["header"]
-    tw = d.textlength("RBX15", font=wm)
-    brand_cards.gradient_text(canvas, (W / 2 - tw / 2, 160), "RBX15", wm)
+APP_Y, ZOOM_Y, ZOOM_H = 170, 812, 640   # the whole app on top, the zoomed callout below, all inside y 150 to 1452
+CYAN = (23, 212, 250)
+
+
+def app_view(canvas, frame, region):
+    """The full app window across the top, with the region the callout zooms into outlined in cyan."""
+    s = W / frame.width
+    app = frame.resize((W, round(frame.height * s)), Image.LANCZOS)
+    sh = Image.new("RGBA", (W, app.height + 60), (0, 0, 0, 0))
+    ImageDraw.Draw(sh).rectangle([0, 30, W, 30 + app.height], fill=(0, 0, 0, 170))
+    sh = sh.filter(ImageFilter.GaussianBlur(16))
+    canvas.paste(sh, (0, APP_Y - 22), sh)
+    canvas.paste(app, (0, APP_Y))
+    box = [round(region[0] * s), APP_Y + round(region[1] * s), round(region[2] * s), APP_Y + round(region[3] * s)]
+    ImageDraw.Draw(canvas).rounded_rectangle(box, 6, outline=CYAN, width=3)
+    return box
+
+
+def connect(canvas, box, zx0, zx1):
+    """Faint leader lines from the outlined region down to the callout."""
+    ov = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(ov)
+    d.line([(box[0], box[3]), (zx0, ZOOM_Y)], fill=CYAN + (110,), width=2)
+    d.line([(box[2], box[3]), (zx1, ZOOM_Y)], fill=CYAN + (110,), width=2)
+    base = canvas.convert("RGBA"); base.alpha_composite(ov)
+    canvas.paste(base.convert("RGB"))
 
 
 def compose(kind, frame, fonts):
     if kind == "template":
         crop = frame.crop(TEMPLATE)
-        w = 960; h = round(crop.height * w / crop.width)
-        canvas = backdrop(crop)
-        body = crop.resize((w, h), Image.LANCZOS)
-        sh = Image.new("RGBA", (w + 80, h + 80), (0, 0, 0, 0))
-        ImageDraw.Draw(sh).rounded_rectangle([40, 52, 40 + w, 52 + h], 24, fill=(0, 0, 0, 150))
-        sh = sh.filter(ImageFilter.GaussianBlur(20))
-        x, y = (W - w) // 2, 360
-        canvas.paste(sh, (x - 40, y - 40), sh)
-        canvas.paste(body, (x, y))
+        w = round(crop.width * ZOOM_H / crop.height); x = (W - w) // 2
+        canvas = backdrop(frame)
+        box = app_view(canvas, frame, TEMPLATE)
+        connect(canvas, box, x, x + w)
+        canvas.paste(crop.resize((w, ZOOM_H), Image.LANCZOS), (x, ZOOM_Y))
+        ImageDraw.Draw(canvas).rounded_rectangle([x - 2, ZOOM_Y - 2, x + w + 1, ZOOM_Y + ZOOM_H + 1], 8, outline=CYAN, width=3)
     else:
         crop = frame.crop(AVATAR)
-        h = 1110; w = round(crop.width * h / crop.height)
-        canvas = panel_fill(frame, h / crop.height, 320)
-        body = crop.resize((w, h), Image.LANCZOS).filter(ImageFilter.UnsharpMask(2, 60, 2))
-        soft_paste(canvas, body, (W - w) // 2, 320)
-    header(canvas, fonts)
+        w = round(crop.width * ZOOM_H / crop.height); x = (W - w) // 2
+        canvas = panel_fill(frame, ZOOM_H / crop.height, ZOOM_Y)
+        box = app_view(canvas, frame, AVATAR)
+        connect(canvas, box, x, x + w)
+        soft_paste(canvas, crop.resize((w, ZOOM_H), Image.LANCZOS).filter(ImageFilter.UnsharpMask(2, 60, 2)), x, ZOOM_Y)
     return canvas
 
 
@@ -106,7 +124,7 @@ def still_segment(img, seconds, dst, fade_in=False):
     n = round(seconds * FPS)
     for i in range(n):
         u = i / max(n - 1, 1)
-        zoomed(img, 1.0 + 0.035 * (1 - (1 - u) ** 2)).save(tmp / f"f{i:04d}.png")
+        zoomed(img, 1.0 + 0.02 * (1 - (1 - u) ** 2)).save(tmp / f"f{i:04d}.png")
     vf = "format=yuv420p" + (",fade=t=in:st=0:d=0.3" if fade_in else "")
     run("-framerate", FPS, "-i", tmp / "f%04d.png", "-vf", vf, "-c:v", "libx264", "-crf", 18, "-preset", "slow",
         "-r", FPS, dst)
@@ -152,8 +170,6 @@ def main():
     args = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
     fonts = brand_cards.load_fonts(FONTS)
-    fonts["header"] = ImageFont.truetype(str(next((FONTS / "spacegrotesk").glob("*.ttf"))), 96)
-    fonts["header"].set_variation_by_axes([700])
     outro = OUT / "outro.png"; brand_cards.outro_vertical(outro, fonts)
 
     segs = []

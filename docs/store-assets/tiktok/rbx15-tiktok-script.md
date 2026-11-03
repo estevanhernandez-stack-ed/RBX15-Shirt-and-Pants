@@ -2,11 +2,11 @@
 
 **Runtime:** ~31s · **Slides:** 8 · **Voiceover:** yes (ElevenLabs voice: ItsJustEste)
 
-Cut to loop: the last line ends "Imagine something else.", and the first line opens "R B X fifteen." with no fade in, so the replay sounds continuous. Overlay text isn't burned in; add it in TikTok's editor.
+Cut to loop: the last line ends "Imagine something else." and the first opens "Like R B X fifteen.", so the replay reads as one sentence. There's no fade in. Every scene shows the whole app on top, with the part that matters outlined and zoomed below. Overlay text isn't burned in; add it in TikTok's editor.
 
 ## The hook (slide 1)
 > Overlay text: "I painted this whole outfit in one app"
-> Voiceover: "R B X fifteen. Paint your Roblox Classic shirts and pants. Don't just place them."
+> Voiceover: "Like R B X fifteen. Paint your Roblox Classic shirts and pants. Don't just place them."
 
 Why this hook: the spinning finished avatar is the payoff, so it plays first and the rest of the video explains how it was made. Alternate: "Roblox shirts, but you actually paint them".
 
@@ -50,7 +50,7 @@ Painted a full Roblox Classic fit from scratch in RBX15. Shirt, pants, Word Art,
 
 ## Voiceover script (full, for ElevenLabs Studio or re-recording)
 [NARRATOR]
-R B X fifteen. Paint your Roblox Classic shirts and pants. Don't just place them.
+Like R B X fifteen. Paint your Roblox Classic shirts and pants. Don't just place them.
 
 Paint fills that wrap the body, one gradient across every panel.
 

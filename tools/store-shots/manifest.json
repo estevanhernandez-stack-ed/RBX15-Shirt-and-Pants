@@ -27,7 +27,7 @@
   "effect_family": "fade",
   "entrance_delay": 0.0,
   "entrance_seconds": 0.35,
-  "content_scale": 0.96,
+  "content_scale": 1.0,
   "background_blur": 28,
   "card": {
    "background": "#0a1524",
@@ -38,12 +38,12 @@
  },
  "scenes": [
   {
-   "id": "01-title",
-   "title": "01-title",
+   "id": "01-intro",
+   "title": "01-intro",
    "type": "still",
-   "src": "out/trailer/01-title.png",
-   "narration": "RBX15. Paint your Roblox Classic shirts and pants, don't just place them.",
-   "duration": 5.3
+   "src": "out/trailer/00-intro.png",
+   "narration": "R B X fifteen. Paint your Roblox Classic shirts and pants. Don't just place them.",
+   "duration": 5.5
   },
   {
    "id": "02-empty",
@@ -110,12 +110,12 @@
    "narration": "Neon Tide: a shirt and pants, made start to finish in RBX15."
   },
   {
-   "id": "10-close",
-   "title": "10-close",
+   "id": "10-outro",
+   "title": "10-outro",
    "type": "still",
-   "src": "out/trailer/10-close.png",
-   "narration": "Works offline. No account. No ads. Get RBX15 on the Microsoft Store.",
-   "duration": 7.1
+   "src": "out/trailer/11-outro.png",
+   "narration": "Works offline. No account. No ads. R B X fifteen, from six-two-six Labs. Imagine something else.",
+   "duration": 7.8
   }
  ]
 }

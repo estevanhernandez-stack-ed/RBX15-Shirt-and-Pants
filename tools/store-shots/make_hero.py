@@ -71,5 +71,5 @@ for name, x, angle in (("Neon_Tide_Shirt.png", 150, 6), ("Neon_Tide_Pants.png", 
     base = img.convert("RGBA"); base.alpha_composite(sh, (x + 14 - pad, 230 + 24 - pad)); base.alpha_composite(card, (x, 230)); img = base.convert("RGB")
 
 img.save(OUT / "super-hero-art-1920x1080.png")
-shutil.copy(TOOL / "out" / "trailer" / "01-title.png", OUT / "trailer-thumbnail-1920x1080.png")
+shutil.copy(TOOL / "out" / "trailer" / "00-intro.png", OUT / "trailer-thumbnail-1920x1080.png")
 print("hero art and thumbnail written")

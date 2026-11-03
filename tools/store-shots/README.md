@@ -38,13 +38,16 @@ Three things this needed:
 
 ## 3. Store set, trailer and hero art
 
-Needs ffmpeg and Node 18+. `demo-video/` is vendored from the demo-video skill and uses Node built-ins only. The narration is Este's ElevenLabs voice (ItsJustEste, voice `8gpP3pZU3NERlkDEdxub`, adapter `demo-video/adapters/elevenlabs.mjs`). The ten clips are committed in `voiceover/`, and because the pipeline is cache-first, a render with those files present never calls ElevenLabs. To re-voice a line, delete its `slide_NN.mp3`, edit the line in `manifest.json`, and render with `ELEVENLABS_API_KEY` set.
+Needs ffmpeg, Node 18+, and Python with Pillow and `qrcode`. `demo-video/` is vendored from the demo-video skill and uses Node built-ins only. The narration is Este's ElevenLabs voice (ItsJustEste, voice `8gpP3pZU3NERlkDEdxub`, adapter `demo-video/adapters/elevenlabs.mjs`). The ten clips are committed in `voiceover/`, and because the pipeline is cache-first, a render with those files present never calls ElevenLabs. To re-voice a line, delete its `slide_NN.mp3`, edit the line in `manifest.json`, and render with `ELEVENLABS_API_KEY` set.
 
 ```powershell
-python make_assets.py                      # out/store (7 screenshots), out/trailer (captioned stills, cards, clips)
-node demo-video/build.mjs manifest.json    # out/rbx15-trailer.mp4, 47 s, 1920x1080, 30 fps, narrated
+python make_assets.py                      # out/store (7 screenshots), out/trailer (captioned stills, brand cards, clips)
+node demo-video/build.mjs manifest.json    # out/rbx15-trailer.mp4, 48 s, 1920x1080, 30 fps, narrated
+ffmpeg -i out/rbx15-trailer.mp4 -c:v copy -af "loudnorm=I=-16:TP=-1.5:LRA=11" -c:a aac -b:a 192k -ar 48000 -ac 2 -movflags +faststart out/rbx15-trailer-final.mp4
 node demo-video/contact-sheet.mjs out/rbx15-trailer.mp4 --frames 2,8,16,23,31
 python make_hero.py                        # out/store/super-hero-art-1920x1080.png and the trailer thumbnail
 ```
+
+The trailer opens and closes on the 626 Labs brand cards from `brand_cards.py`, in the RoRoRo launch video's layout. The intro has the app icon tile, the RBX15 wordmark and Este saying the name. The outro has a QR code to 626labs.dev/rbx15.html and the "RBX15, from six-two-six Labs. Imagine something else." sign-off, with the "626 LABS / IMAGINE SOMETHING ELSE." footer on both. The ffmpeg step normalizes the voice to -16 LUFS. Without it the narration sits around -25 dB, quiet enough to sound silent on laptop speakers.
 
 Partner Center refuses desktop screenshots under 1366x768. `StoreAssetsTests.Every_versioned_screenshot_meets_the_store_minimum` checks every `docs/screenshots/<version>/` image. The super hero art must not carry the product title. Screenshots, the hero art and the trailer are uploaded by hand in Partner Center, because the submission API can't upload media.

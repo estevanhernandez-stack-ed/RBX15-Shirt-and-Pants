@@ -6,6 +6,7 @@ out/store (the 1920x1080 Store screenshots).
 import shutil, subprocess
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
+import brand_cards
 
 TOOL = Path(__file__).parent
 SHOTS = TOOL / "out" / "shots"
@@ -108,8 +109,8 @@ for src, dst in (("02-layers.png", "03-layers.png"), ("03-background.png", "04-f
     shutil.copy(SHOTS / src, STORE / dst)
 
 # ---- trailer --------------------------------------------------------------------------------------------------------
-card("RBX15 Classic Shirt and Pants Maker", "Paint your clothes,\ndon't just place them.",
-     ["A Windows editor for Roblox Classic shirts and pants."], OUT / "01-title.png")
+BRAND = brand_cards.load_fonts(FONTS)
+brand_cards.intro(OUT / "00-intro.png", TOOL.parent.parent / "docs" / "store-assets" / "store-box-1080x1080.png", BRAND)
 captioned(SHOTS / "build-s0.png", "Start", "The exact 585×559 template", OUT / "02-empty.png")
 captioned(SHOTS / "build-s1.png", "Fills", "Gradients that wrap the body", OUT / "03-fills.png")
 captioned(SHOTS / "build-s2.png", "Layers", "Stack your own art", OUT / "04-art.png")
@@ -118,6 +119,5 @@ captioned(SHOTS / "build-s4.png", "Word Art", "15 fonts, six styles", OUT / "06-
 clip("shirt-spin", 99, 171, "3D preview", "See it on an avatar while you work", OUT / "07-shirt-spin.mp4")
 captioned(SHOTS / "07-pants-background.png", "Pants too", "Same tools, matching set", OUT / "08-pants.png")
 clip("pants-spin", 109, 181, "Neon Tide", "Shirt and pants, made in RBX15", OUT / "09-pants-spin.mp4")
-card("Get it on the Microsoft Store", "RBX15 Classic\nShirt and Pants Maker",
-     ["Works offline. No account. No ads.", "Export a PNG and upload it to Roblox yourself."], OUT / "10-close.png")
+brand_cards.outro(OUT / "11-outro.png", BRAND)
 print("assets written")

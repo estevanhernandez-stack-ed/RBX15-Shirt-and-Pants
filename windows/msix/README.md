@@ -2,8 +2,7 @@
 
 Microsoft Store Partner Center submission artifacts and build scripts for RBX15 Classic Shirt and Pants Maker.
 
-- **v5 (native WPF, .NET 10):** `scripts/build-msix.ps1` and `Package.v5.appxmanifest.template`. This is what ships from `v5.*` tags.
-- **4.x (Electron, legacy):** `make-msix.ps1` and `Package.appxmanifest.template`, documented in the second half of this file. Kept until the cutover PR deletes the Electron app; only `v4.*` tags build it.
+The package is built by `scripts/build-msix.ps1` from `Package.v5.appxmanifest.template`, and ships from `v5.*` tags. The 4.x Electron packaging (`make-msix.ps1`, `Package.appxmanifest.template`) was removed at the cutover and lives at the `v4.1.0` tag.
 
 ## v5 packaging
 
@@ -14,8 +13,8 @@ Microsoft Store Partner Center submission artifacts and build scripts for RBX15 
 | [`../../scripts/build-msix.ps1`](../../scripts/build-msix.ps1) | One command: publish, render manifest, pack, scan, optional sign, zip |
 | [`Package.v5.appxmanifest.template`](Package.v5.appxmanifest.template) | v5 manifest. `{{VERSION}}` and `{{EXECUTABLE}}` are the only placeholders |
 | [`make-app-icon.py`](make-app-icon.py) | Regenerates `src/RBX15.App/app.ico` (exe, window and taskbar icon) from `Images/Square310x310Logo.png` |
-| [`Images/`](Images/) | Tiles shared by 4.x and v5 (committed; the manifest references them) |
-| [`../RELEASE_NOTES_v5.md`](../RELEASE_NOTES_v5.md) | Release body for `v5.*` tags. A placeholder until `/cut-release` fills it; the release workflow refuses the placeholder |
+| [`Images/`](Images/) | The tiles the manifest references (committed). [`make-msix-images.py`](make-msix-images.py) regenerates them |
+| [`../RELEASE_NOTES_v5.md`](../RELEASE_NOTES_v5.md) | Release body for `v5.*` tags, filled by `/cut-release` before the tag. The release workflow refuses a placeholder |
 
 ### Build
 
@@ -79,83 +78,5 @@ Proves a 4.1 install updates in place to 5.0.0.0 with the same identity, the pin
 ### CI
 
 - `v5-package.yml`: every PR and main push touching `src/`, `packs/`, `assets/`, `scripts/` or this folder runs `build-msix.ps1` and uploads the MSIX and zip as the `rbx15-v5-package` artifact.
-- `v5-release.yml`: a `v5.MINOR.PATCH` tag checks the notes are filled, the ledger has no open row, builds with warnings as errors, runs every test, runs `build-msix.ps1 -Version <tag>.0` (fails if the tag and the csproj `<Version>` disagree), and creates the GitHub release with the MSIX and the zip attached and `windows/RELEASE_NOTES_v5.md` as the body.
-- `windows-release.yml` and `windows-ci.yml` are the 4.x Electron workflows; the release one is fenced to `v4.*` tags.
-
----
-
-## Legacy 4.1 (Electron) packaging
-
-### What's here (4.1)
-
-| File | Purpose |
-|---|---|
-| [`Package.appxmanifest.template`](Package.appxmanifest.template) | MSIX manifest with real Partner Center identity, `{{VERSION}}` placeholder |
-| [`make-msix-images.py`](make-msix-images.py) | Generates `Images/*.png` at all MSIX-required sizes |
-| [`make-msix.ps1`](make-msix.ps1) | PowerShell build script — packages the MSIX from `dist/win-unpacked/` |
-| [`Images/`](Images/) | Generated tiles for the manifest (StoreLogo, Square44/71/150/310, Wide310x150, Splash) |
-
-The `Images/` PNGs are regenerated whenever you re-run `make-msix-images.py`. They're committed so the MSIX can be packed without Python, but they should be refreshed any time the brand palette or wordmark changes.
-
-### Partner Center identity (reserved; unchanged in v5)
-
-| Field | Value |
-|---|---|
-| App name (reserved) | RBX15 Classic Shirt and Pants Maker |
-| Package Name | `626LabsLLC.RBX15ClassicShirtandPantsMaker` |
-| Publisher CN | `CN=177BCE59-0966-4975-9962-10E36652141F` |
-| Publisher Display Name | `626Labs LLC` |
-| Store ID | `9MV9G4XFJ8S0` |
-| Store URL | <https://apps.microsoft.com/detail/9MV9G4XFJ8S0> (live after listing approval) |
-
-All three identity fields (Name, Publisher CN, PublisherDisplayName) are hardcoded in [`Package.appxmanifest.template`](Package.appxmanifest.template). The Publisher CN is **not a secret** — it's baked into every signed MSIX for every app on the 626 Labs LLC Partner Center account (Sanduhr, RBX15, future products). Committing it is fine.
-
-### Build (4.1)
-
-#### Build the MSIX
-
-```powershell
-# From the repo root.
-powershell -ExecutionPolicy Bypass -File windows/msix/make-msix.ps1 -Build
-```
-
-The `-Build` flag runs `npm run build` to produce `dist/win-unpacked/` before packaging. Drop `-Build` if you've already run it.
-
-Output: `dist/RBX15-Maker-v{version}.msix`.
-
-#### Upload to Partner Center
-
-Partner Center's submission flow accepts **unsigned** MSIX packages and applies the Store's own signature during ingestion. **Do not sign the MSIX for Store submission.** The `-SelfSign` flag is purely for sideload-testing on your own machine.
-
-#### Local sideload test (optional)
-
-```powershell
-powershell -ExecutionPolicy Bypass -File windows/msix/make-msix.ps1 -SelfSign
-```
-
-The first run creates a dev cert in `Cert:\CurrentUser\My` and signs the MSIX. To *install* the signed MSIX locally, you'll need to trust the dev cert once — follow the instructions the script prints.
-
-### Requirements (4.1)
-
-- **Windows SDK** for `MakeAppx.exe` and `SignTool.exe`. Install via Visual Studio or the [standalone SDK installer](https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/).
-- **Node.js 18+** and the repo's `npm install` done (for the `electron-builder` step).
-- **Python 3.8+** and **Pillow** (for regenerating tile images, optional after first commit).
-
-### Manifest identity notes
-
-```xml
-<Identity
-  Name="626LabsLLC.RBX15ClassicShirtandPantsMaker"
-  Publisher="CN=177BCE59-0966-4975-9962-10E36652141F"
-  Version="{{VERSION}}"
-  ProcessorArchitecture="x64" />
-```
-
-- **Name** case matters — Partner Center assigned the exact casing `626LabsLLC.RBX15ClassicShirtandPantsMaker`. Note the lowercase `and` and `Pants` mid-string. Do not re-case.
-- **Publisher** is the 626 Labs LLC account CN, shared with Sanduhr and any future apps on the same account.
-- **Version** is injected from `package.json`, expanded to MSIX's 4-part `A.B.C.D` format by appending `.0` to the SemVer.
-- **runFullTrust** capability is declared because Electron can't run inside the MSIX sandbox cleanly (child processes, user-chosen folders via asset library). Partner Center will ask for a justification on submission — the one-liner is: *"Electron's multi-process architecture and the app's user-initiated folder picker require unsandboxed file access."*
-
-### Brand consistency
-
-The MSIX tiles are generated from the same brand tokens as `docs/store-assets/` — solid brand-navy base, cyan + magenta wordmark gradient, tracked "CLASSIC R15" eyebrow. If the palette changes in [styles.css](../../styles.css), rerun `make-msix-images.py` to regenerate.
+- `v5-release.yml`: a `v5.MINOR.PATCH` tag checks the notes are filled, the ledger has no open row, builds with warnings as errors, runs every test, runs `build-msix.ps1 -Version <tag>.0` (fails if the tag and the csproj `<Version>` disagree), and creates a **draft** GitHub release with the MSIX and the zip attached and `windows/RELEASE_NOTES_v5.md` as the body. The draft is published once the Store serves the new version, titled `<tag> — Live on the Microsoft Store`.
+- `v5-release.yml` is the only workflow that runs on a tag (`tools/ci/test_workflows.py`).

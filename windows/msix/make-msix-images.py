@@ -3,13 +3,13 @@
 Windows Store / MSIX wants a specific set of tile sizes and scales that
 don't match the generic Partner-Center store-listing assets in
 docs/store-assets/. This script outputs the MSIX-specific tiles into
-windows/msix/Images/ where make-msix.ps1 picks them up.
+windows/msix/Images/ where scripts/build-msix.ps1 picks them up.
 
 Design re-uses the same brand-compliant approach as docs/store-assets/
 (solid brand-navy base, brand-gradient text fill for "RBX", tracked
 "CLASSIC R15" eyebrow, hairline inner stroke, single soft corner glow).
 
-Required files (per Package.appxmanifest.template):
+Required files (per Package.v5.appxmanifest.template):
   StoreLogo.png              50x50
   Square44x44Logo.png        44x44
   Square71x71Logo.png        71x71   (SmallTile)

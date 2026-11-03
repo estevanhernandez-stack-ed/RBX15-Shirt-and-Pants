@@ -701,12 +701,12 @@
    "quirks": "The export path lives in another slice but must call the same paintRegions.",
    "portTarget": "A single FillPainter class in a shared library used by both the on-screen SkiaElement render and export.",
    "risk": "low",
-   "parityCheck": "Export and on-screen composite are bit-identical on same machine in native (an improvement over Electron GPU/software variance).",
+   "parityCheck": "Export and on-screen composite are bit-identical on same machine in native (an improvement over Electron GPU/software variance). Closed in the cutover (chore/v5-cutover, 2026-11-03, after Store 5.0.0.0 certified): the 4.1 code it describes (lib/fills.js) is deleted from the repo and stays at the v4.1.0 tag. v5 paints region fills through Fills.PaintRegions in the engine Renderer, which the canvas and the export share.",
    "owner": "Retired",
    "check": "none-retired",
    "disposition": "drop",
    "divergence": "4.1: UMD wrapper exposes the fills module to both browser (window.RBX15Fills) and Node tests. v5: not carried, since Fills is a C# engine class and the WYSIWYG guarantee comes from screen and export sharing one render path.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "region-union-rect",
@@ -1672,12 +1672,12 @@
    "quirks": "Row names use textContent (safe); this class of bug disappears natively.",
    "portTarget": "Not applicable in WPF (data binding); add a test that names with <, quotes, & render as literal text.",
    "risk": "low",
-   "parityCheck": "Name '<img src=x onerror=alert(1)>' shows literally everywhere.",
+   "parityCheck": "Name '<img src=x onerror=alert(1)>' shows literally everywhere. Closed in the cutover (chore/v5-cutover, 2026-11-03, after Store 5.0.0.0 certified): the 4.1 code it describes (editor.js) is deleted from the repo and stays at the v4.1.0 tag. v5 binds layer names as data, with no markup to inject into.",
    "owner": "Retired",
    "check": "none-retired",
    "disposition": "drop",
    "divergence": "4.1: layer names needed DOM-property assignment to avoid markup injection (tests/injection.test.js). v5: not carried, since WPF bindings cannot interpolate names into markup.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "props-live-refresh",
@@ -1810,12 +1810,12 @@
    "quirks": "Drops outside canvas/zone do nothing (not add).",
    "portTarget": "Not needed in WPF; just ensure unhandled drops do nothing (AllowDrop false elsewhere).",
    "risk": "low",
-   "parityCheck": "Drop an image on the toolbar: no crash, no new layer.",
+   "parityCheck": "Drop an image on the toolbar: no crash, no new layer. Closed in the cutover (chore/v5-cutover, 2026-11-03, after Store 5.0.0.0 certified): the 4.1 code it describes (editor.js) is deleted from the repo and stays at the v4.1.0 tag. v5 sets AllowDrop only on the drop zone and the canvas host.",
    "owner": "Retired",
    "check": "none-retired",
    "disposition": "drop",
    "divergence": "4.1: document-level preventDefault stops the browser navigating to dropped files. v5: not carried, since a WPF window has no navigate-on-drop behavior.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "drop-filetypes",
@@ -1992,12 +1992,12 @@
    "quirks": "nextId is never reset on restore/new project (check restoreState), so ids keep growing; names use ids.",
    "portTarget": "EditorDocument (layers, bg) + EditorSession (tool, selection, drag state) with change notifications; avoid global mutable state.",
    "risk": "med",
-   "parityCheck": "Snapshot JSON round trip for state used by history (snapshotState at 1404).",
+   "parityCheck": "Snapshot JSON round trip for state used by history (snapshotState at 1404). Closed in the cutover (chore/v5-cutover, 2026-11-03, after Store 5.0.0.0 certified): the 4.1 code it describes (editor.js) is deleted from the repo and stays at the v4.1.0 tag. v5 keeps document and session state in EditorSession, not globals.",
    "owner": "Retired",
    "check": "none-retired",
    "disposition": "drop",
    "divergence": "4.1: editor state lives in shared mutable globals in editor.js. v5: replaced by the Document/History model, so the globals are not carried.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "canvas-coord-map",
@@ -3855,12 +3855,12 @@
    "quirks": "Other slices may add mouse/wheel zoom and pan; check for conflicts.",
    "portTarget": "One KeyRouter service; documented table of bindings for a shortcuts help panel.",
    "risk": "low",
-   "parityCheck": "Binding inventory test equals this list: V B L U O E, Ctrl+D, Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z, arrows (+Shift), [ ] { }, R, + = - _, Delete, Backspace.",
+   "parityCheck": "Binding inventory test equals this list: V B L U O E, Ctrl+D, Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z, arrows (+Shift), [ ] { }, R, + = - _, Delete, Backspace. Closed in the cutover (chore/v5-cutover, 2026-11-03, after Store 5.0.0.0 certified): the 4.1 code it describes (editor.js) is deleted from the repo and stays at the v4.1.0 tag. v5 routes tool and layer keys through ShortcutRouter and the Ctrl chords through the window KeyBindings.",
    "owner": "Retired",
    "check": "none-retired",
    "disposition": "drop",
    "divergence": "4.1: one document.onkeydown assignment holds all shortcuts. v5: WPF key bindings and command routing replace it, so the single-handler constraint does not carry over.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "details-settings-controls",
@@ -4923,12 +4923,12 @@
    "quirks": "Alert wording is user-visible: keep strings exactly: 'Built-in pack \"X\" not found. Reinstall the app to restore it.', 'Built-in pack \"X\" is empty.', 'No images found in that folder. Pick a folder with PNG, JPG, GIF, or WEBP files.', 'Failed to load project. <err>'.",
    "portTarget": "Replace with .NET file APIs, async streams, WPF dialogs (Microsoft.Win32 file/folder dialogs), MessageBox for alerts. No IPC needed. Image decode via SKCodec/SKBitmap.Decode; keep layers in memory as SKBitmap (not data URLs) and only encode to data URL on save.",
    "risk": "low",
-   "parityCheck": "No renderer-level injection surface: verify no WebView is used.",
+   "parityCheck": "No renderer-level injection surface: verify no WebView is used. Closed in the cutover (chore/v5-cutover, 2026-11-03, after Store 5.0.0.0 certified): the 4.1 code it describes (editor.js, main.js) is deleted from the repo and stays at the v4.1.0 tag. v5 uses .NET file APIs and WPF dialogs.",
    "owner": "Retired",
    "check": "none-retired",
    "disposition": "drop",
    "divergence": "4.1: relies on nodeIntegration, fs/path in the renderer, blob URLs and browser downloads. v5: native .NET file APIs and dialogs, with no nodeIntegration.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "shell-window-frame",
@@ -6164,12 +6164,12 @@
    "quirks": "Port should keep a hostile-name regression test even though the vector is gone, because names are also used to build export filenames (see export filename sanitization).",
    "portTarget": "Disappears in WPF: there is no web content. The only Node uses (fs.readdirSync/readFileSync of packs, process.resourcesPath) become File/Directory APIs. The injection class of bug is structurally gone; keep the intent as a test (layer names with quotes, <, & render as literal text and round-trip in .r15proj).",
    "risk": "low",
-   "parityCheck": "Load a project whose layer name is `\"><img src=x onerror=alert(1)>`; confirm literal text in Name box and layer list, no dialog, name survives save/load.",
+   "parityCheck": "Load a project whose layer name is `\"><img src=x onerror=alert(1)>`; confirm literal text in Name box and layer list, no dialog, name survives save/load. Closed in the cutover (chore/v5-cutover, 2026-11-03, after Store 5.0.0.0 certified): the 4.1 code it describes (SECURITY.md, editor.js, feedback.md, main.js, tests/injection.test.js) is deleted from the repo and stays at the v4.1.0 tag. v5 hosts no web content.",
    "owner": "Retired",
    "check": "none-retired",
    "disposition": "drop",
    "divergence": "4.1: renderer runs with nodeIntegration true and contextIsolation false (the PR #27 injection sink). v5: no web content or Node in the renderer, with a hostile-layer-name regression test kept.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "shell-menu-hidden",
@@ -6185,12 +6185,12 @@
    "quirks": "Ctrl+R wiping the session is a data-loss quirk (the editor only ignores Ctrl+R for rotation, CHANGELOG 4.1.0, it does not block the reload). Recommend fix: inert. Page zoom with Ctrl+/- scales the whole UI and canvas hit-testing may break; recommend not porting.",
    "portTarget": "WPF has no default menu; nothing to hide. Decide per accelerator: F11 fullscreen (optional), Ctrl+/- zoom (the editor has its own canvas zoom, so page zoom is probably unwanted), Ctrl+R reload (do NOT port). Standard text editing in TextBox is free. Add Alt+F4 default.",
    "risk": "med",
-   "parityCheck": "Press Ctrl+R, F5, Ctrl+Shift+I, F11, Ctrl+=, Alt in Electron build and record what happens; in native build confirm each is either intentionally supported or inert and never loses work.",
+   "parityCheck": "Press Ctrl+R, F5, Ctrl+Shift+I, F11, Ctrl+=, Alt in Electron build and record what happens; in native build confirm each is either intentionally supported or inert and never loses work. Closed in the cutover (chore/v5-cutover, 2026-11-03, after Store 5.0.0.0 certified): the 4.1 code it describes (CHANGELOG.md, docs/SMOKE_TEST.md, main.js) is deleted from the repo and stays at the v4.1.0 tag. WPF has no default menu to hide.",
    "owner": "Retired",
    "check": "none-retired",
    "disposition": "drop",
    "divergence": "4.1: hidden default Electron menu leaves Ctrl+R/F5 reload (wipes unsaved work), devtools and page-zoom accelerators live. v5: no default menu, so none of these accelerators exist.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "shell-devtools-off",
@@ -6206,12 +6206,12 @@
    "quirks": "The smoke-test checklist requires a clean DevTools console. The port needs an equivalent 'no unhandled exceptions' signal (e.g. DispatcherUnhandledException logs to file, tests assert empty).",
    "portTarget": "No equivalent needed. Provide logging to %LOCALAPPDATA% or Debug output instead; optionally a hidden diagnostics toggle.",
    "risk": "low",
-   "parityCheck": "Launch packaged build; no secondary window or docked panel appears.",
+   "parityCheck": "Launch packaged build; no secondary window or docked panel appears. Closed in the cutover (chore/v5-cutover, 2026-11-03, after Store 5.0.0.0 certified): the 4.1 code it describes (CHANGELOG.md, main.js, windows/TEST_PLAN.md) is deleted from the repo and stays at the v4.1.0 tag. v5 has no DevTools; errors go to the local error log.",
    "owner": "Retired",
    "check": "none-retired",
    "disposition": "drop",
    "divergence": "4.1: DevTools exist but do not auto-open. v5: no DevTools; unhandled exceptions are logged instead.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "shell-lifecycle-quit",
@@ -6522,12 +6522,12 @@
    "quirks": "The shipped GitHub artifact name contains spaces and the version. release workflow hardcodes that exact name. No electron-builder icon, so default Electron icon (see shell-window-no-icon).",
    "portTarget": "MSIX is the primary channel. Decide whether the GitHub-Releases channel keeps a non-Store installer: either keep an NSIS/Inno/WiX setup for the self-contained publish output (needs per-user, optional dir, shortcuts, uninstaller parity) or drop it and distribute only the .msix/.msixbundle (sideloading needs a cert; SmartScreen story in SIGNING.md). Track as an explicit product decision.",
    "risk": "high",
-   "parityCheck": "If an installer is kept: clean VM install -> shortcuts exist (desktop + Start), dir picker defaults to %LOCALAPPDATA%\\Programs\\<name>, appears in Apps & features, uninstall removes shortcuts and dir. If dropped: README/index.html/RELEASE_NOTES no longer promise a Setup.exe.",
+   "parityCheck": "If an installer is kept: clean VM install -> shortcuts exist (desktop + Start), dir picker defaults to %LOCALAPPDATA%\\Programs\\<name>, appears in Apps & features, uninstall removes shortcuts and dir. If dropped: README/index.html/RELEASE_NOTES no longer promise a Setup.exe. Closed in the cutover (chore/v5-cutover, 2026-11-03, after Store 5.0.0.0 certified): the 4.1 code it describes (package.json, windows/TEST_PLAN.md) is deleted from the repo and stays at the v4.1.0 tag. v5 builds with scripts/build-msix.ps1.",
    "owner": "Retired",
    "check": "none-retired",
    "disposition": "drop",
    "divergence": "4.1: electron-builder config with NSIS target. v5: deleted at cutover, NSIS retired in favor of Store MSIX plus portable zip.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "build-extra-resources-packs",
@@ -6542,12 +6542,12 @@
    "quirks": "Filter excludes non-PNG silently; harmless today.",
    "portTarget": "csproj <Content Include=\"packs\\**\\*.png\" CopyToOutputDirectory=PreserveNewest> or MSIX layout files; include only PNG.",
    "risk": "low",
-   "parityCheck": "Inspect the built package file list: 181 pack PNGs, no README.",
+   "parityCheck": "Inspect the built package file list: 181 pack PNGs, no README. Closed in the cutover (chore/v5-cutover, 2026-11-03, after Store 5.0.0.0 certified): the 4.1 code it describes (editor.js, package.json) is deleted from the repo and stays at the v4.1.0 tag. v5 copies packs through the App csproj Content item.",
    "owner": "Retired",
    "check": "none-retired",
    "disposition": "drop",
    "divergence": "4.1: electron-builder extraResources copies packs to resources/packs. v5: deleted with electron-builder, packs ship as app content in the MSIX and zip.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "build-package-lock-stale",
@@ -6563,12 +6563,12 @@
    "quirks": "Reproducibility gap exists today; not a user-visible behavior.",
    "portTarget": "The .NET build is NuGet with packages.lock.json / Directory.Packages.props and `dotnet restore --locked-mode`. Do not carry the unlocked-install habit over. Electron/npm devDeps go away from the shipped product but remain for the legacy app until the cutover; decide repo layout (same repo subfolder vs new).",
    "risk": "low",
-   "parityCheck": "CI log shows restore with locked mode and identical package versions on two runs.",
+   "parityCheck": "CI log shows restore with locked mode and identical package versions on two runs. Closed in the cutover (chore/v5-cutover, 2026-11-03, after Store 5.0.0.0 certified): the 4.1 code it describes (.github/workflows/windows-ci.yml, .github/workflows/windows-release.yml, package.json) is deleted from the repo and stays at the v4.1.0 tag. v5 restores through NuGet; there is no npm lockfile.",
    "owner": "Retired",
    "check": "none-retired",
    "disposition": "drop",
    "divergence": "4.1: stale npm package-lock with CI using npm install. v5: package.json and npm tooling deleted at cutover.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "msix-identity",
@@ -6885,12 +6885,12 @@
    "quirks": "Test passes today only because the regex matches one pattern; other injection routes (e.g. innerHTML elsewhere) are not covered.",
    "portTarget": "Not portable as written (no JS). Replace with behavioral tests on the ViewModel: hostile names round-trip through binding, layer list, project save/load, and export-filename derivation without interpretation. Static guard becomes an analyzer ban (e.g. no string concatenation into XAML-loaded markup; no XamlReader.Parse of user text).",
    "risk": "low",
-   "parityCheck": "Layer named `\"><img src=x onerror=...>` displays literally everywhere, saves and reloads identical, filename sanitizes.",
+   "parityCheck": "Layer named `\"><img src=x onerror=...>` displays literally everywhere, saves and reloads identical, filename sanitizes. Closed in the cutover (chore/v5-cutover, 2026-11-03, after Store 5.0.0.0 certified): the 4.1 code it describes (tests/injection.test.js) is deleted from the repo and stays at the v4.1.0 tag. v5 has no HTML to inject into.",
    "owner": "Retired",
    "check": "none-retired",
    "disposition": "drop",
    "divergence": "4.1: source-grep test guarding HTML template injection in editor.js. v5: no HTML rendering of layer names, Node tests deleted at cutover.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "tests-smoke-parse",
@@ -6905,12 +6905,12 @@
    "quirks": "eslint is configured for no-undef ONLY (the 4.0 clickName ReferenceError escaped to production); the C# analogue is nullable + warnings-as-errors.",
    "portTarget": "Equivalent is the compiler (warnings as errors). Add a launch smoke test: start the WPF app headlessly (STA thread, create MainWindow, assert no exceptions, window title set) in CI.",
    "risk": "low",
-   "parityCheck": "CI job instantiates MainWindow and the Skia canvas control and exits 0.",
+   "parityCheck": "CI job instantiates MainWindow and the Skia canvas control and exits 0. Closed in the cutover (chore/v5-cutover, 2026-11-03, after Store 5.0.0.0 certified): the 4.1 code it describes (eslint.config.js, tests/smoke.test.js) is deleted from the repo and stays at the v4.1.0 tag. v5 builds with warnings as errors and tests the real window.",
    "owner": "Retired",
    "check": "none-retired",
    "disposition": "drop",
    "divergence": "4.1: new Function() parse check on main.js and editor.js. v5: the compiler with warnings-as-errors is the syntax floor.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "tests-count-claims",
@@ -6985,12 +6985,12 @@
    "quirks": "None.",
    "portTarget": "Roslyn analyzers with TreatWarningsAsErrors + nullable enabled replace it; gate in CI.",
    "risk": "low",
-   "parityCheck": "Intentionally reference an undefined symbol: build fails.",
+   "parityCheck": "Intentionally reference an undefined symbol: build fails. Closed in the cutover (chore/v5-cutover, 2026-11-03, after Store 5.0.0.0 certified): the 4.1 code it describes (eslint.config.js) is deleted from the repo and stays at the v4.1.0 tag. v5 gates on -warnaserror with nullable reference types on.",
    "owner": "Retired",
    "check": "none-retired",
    "disposition": "drop",
    "divergence": "4.1: ESLint no-undef gate over JS sources. v5: JS removed at cutover, nullable plus warnings-as-errors replaces it.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "docs-privacy-claims",
@@ -7182,12 +7182,12 @@
    "quirks": "Browser run has no Node, so pack buttons (require) fail there: it was already broken versus 4.x.",
    "portTarget": "LEGACY: not ported, not shipped. Recommend delete (or move to _archive) at or after the cutover; the three identical HTML copies (shirt_editor.html + 2 in backup/) are one file.",
    "risk": "low",
-   "parityCheck": "Native build contains none of these; repo search for 'Conundrum' returns only archive/history.",
+   "parityCheck": "Native build contains none of these; repo search for 'Conundrum' returns only archive/history. Closed in the cutover (chore/v5-cutover, 2026-11-03, after Store 5.0.0.0 certified): the 4.1 code it describes (LaunchShirtEditor.bat, backup/shirt_editor_v3_backup.html, backup/shirt_editor_working.html, shirt_editor.html) is deleted from the repo and stays at the v4.1.0 tag.",
    "owner": "Retired",
    "check": "none-retired",
    "disposition": "drop",
    "divergence": "4.1: LaunchShirtEditor.bat opens the pre-4.0 v3 HTML monolith in a browser. v5: not carried, the launcher and monolith are removed.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "legacy-create-shortcut",
@@ -7202,12 +7202,12 @@
    "quirks": "Leaks a local username/path into a public repo.",
    "portTarget": "LEGACY, not ported. Delete; the MSIX/installer creates Start-menu entries. Path points to a nonexistent product name and a user profile.",
    "risk": "low",
-   "parityCheck": "None needed; confirm repo has no references.",
+   "parityCheck": "None needed; confirm repo has no references. Closed in the cutover (chore/v5-cutover, 2026-11-03, after Store 5.0.0.0 certified): the 4.1 code it describes (.gitignore, create_shortcut.ps1) is deleted from the repo and stays at the v4.1.0 tag. The MSIX creates the Start entry.",
    "owner": "Retired",
    "check": "none-retired",
    "disposition": "drop",
    "divergence": "4.1: create_shortcut.ps1 hardcodes a local username and v1 exe path. v5: removed from the repo.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "legacy-roblox-uploader",
@@ -7225,12 +7225,12 @@
    "quirks": "Credential-stealing pattern in a public repo; flagged by the 2026-08-03 privacy sweep. Adjacent: a store-submitted package must never include it. Also a certification risk if the repo is scanned.",
    "portTarget": "NOT part of the product; DO NOT PORT. The reviewer letter tells Microsoft the app 'does not connect to Roblox, does not sign in to any Roblox account'; this file contradicts the spirit if it ever ships. Founder decision already open (README). Recommendation: remove from the public repo (history rewrite not needed unless secrets are embedded; userId is the only hardcoded identity), and ensure the native repo/package never contains it.",
    "risk": "high",
-   "parityCheck": "Native package file list contains no .py and no reference to ROBLOSECURITY, Chrome paths, or CryptUnprotectData (static scan in CI).",
+   "parityCheck": "Native package file list contains no .py and no reference to ROBLOSECURITY, Chrome paths, or CryptUnprotectData (static scan in CI). Closed in the cutover (chore/v5-cutover, 2026-11-03, after Store 5.0.0.0 certified): the 4.1 code it describes (README.md, docs/store/reviewer-letter-4.1.0.0.md, roblox_uploader.py) is deleted from the repo and stays at the v4.1.0 tag. It left the public repo at M0.",
    "owner": "Retired",
    "check": "none-retired",
    "disposition": "drop",
    "divergence": "4.1: roblox_uploader.py with Chrome cookie extraction lives in the public repo. v5: moves to a private repo and is never packaged.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "legacy-shirt-maker-py",
@@ -7247,12 +7247,12 @@
    "quirks": "Comment references rotemplate/constants/templates.ts (another repo). Gemini key may be placed in URL query via curl (key in process list). The shirts/ folder (48 PNGs) is the output of this script.",
    "portTarget": "LEGACY CLI tooling, not shipped (not in build.files). Do not port. Its SHIRT_REGIONS table is useful as a cross-check of the template geometry used by the native renderer; the 'Fit Front' placement in the editor supersedes it. The Gemini --ai path sends images to Google and contradicts 'no network' if ever bundled.",
    "risk": "low",
-   "parityCheck": "Region rects in the C# template data equal the 18 rects here and in editor.js (assert in a unit test).",
+   "parityCheck": "Region rects in the C# template data equal the 18 rects here and in editor.js (assert in a unit test). Closed in the cutover (chore/v5-cutover, 2026-11-03, after Store 5.0.0.0 certified): the 4.1 code it describes (roblox_shirt_maker.py) is deleted from the repo and stays at the v4.1.0 tag.",
    "owner": "Retired",
    "check": "none-retired",
    "disposition": "drop",
    "divergence": "4.1: roblox_shirt_maker.py CLI with optional Gemini call and the shirts/ outputs sit in the repo. v5: not carried into v5.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "legacy-variation-gen",
@@ -7268,12 +7268,12 @@
    "quirks": "Dead script (paths from a cloud sandbox). 86 PNGs in variations/ (14 MB) are its outputs.",
    "portTarget": "LEGACY, not shipped, not ported. The editor's placement presets (Fit Front, F+B, Stretch, Allover, Scatter) and layout presets (Meme Tee, Mirror F+B, Fullbleed, Sleeve Pop) are the in-app descendants, so the preset slice should read these functions as reference for Allover tile_scale and Scatter ranges only if the JS differs.",
    "risk": "low",
-   "parityCheck": "Not applicable; confirm presets parity in the presets slice.",
+   "parityCheck": "Not applicable; confirm presets parity in the presets slice. Closed in the cutover (chore/v5-cutover, 2026-11-03, after Store 5.0.0.0 certified): the 4.1 code it describes (variation_generator.py) is deleted from the repo and stays at the v4.1.0 tag. The placement presets cover its layouts.",
    "owner": "Retired",
    "check": "none-retired",
    "disposition": "drop",
    "divergence": "4.1: dead variation_generator.py and 86 variations/ PNGs. v5: not carried into v5.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "legacy-manifests-outputs",
@@ -7294,12 +7294,12 @@
    "quirks": "Third-party artwork may be in these PNGs (cat/frog/penguin/Pooh themed: 'pooh_think_think_think', 'steamboat'); licensing unclear for a public MIT repo; another reason to archive. packs/README warns only to bundle assets you own.",
    "portTarget": "LEGACY data/art, not shipped. Do not carry into the native repo/package (bloat). Optionally keep a handful as parity fixtures if they were produced by the app; they are outputs of the Python scripts so they are NOT useful as pixel-diff fixtures. Archive to a release asset or _old-* repo.",
    "risk": "low",
-   "parityCheck": "Native package size and repo checkout contain none of these; MSIX file list audited.",
+   "parityCheck": "Native package size and repo checkout contain none of these; MSIX file list audited. Closed in the cutover (chore/v5-cutover, 2026-11-03, after Store 5.0.0.0 certified): the 4.1 code it describes (dramatic_cat_roblox.png, panther_city_roblox.png, pants/, pants_manifest.json, roblox_uploader.py, shirts/, upload_manifest.json, variations/) is deleted from the repo and stays at the v4.1.0 tag.",
    "owner": "Retired",
    "check": "none-retired",
    "disposition": "drop",
    "divergence": "4.1: upload_manifest.json, pants_manifest.json and output PNGs of unclear licensing in the public repo. v5: uploader manifests move to the private repo, remaining outputs are not carried.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "legacy-scratch",
@@ -7314,12 +7314,12 @@
    "quirks": "scratch/ includes roblox_uploader.html and shirt_server.ps1, more local upload tooling; ignored so not public.",
    "portTarget": "Spike code is throwaway per the plan; rebuild the pixel-diff approach properly as the port's automated parity check using fixtures.json as seed data.",
    "risk": "low",
-   "parityCheck": "Native repo has a tests/parity project that regenerates references from lib/fills.js via node and diffs them.",
+   "parityCheck": "Native repo has a tests/parity project that regenerates references from lib/fills.js via node and diffs them. Closed in the cutover (chore/v5-cutover, 2026-11-03, after Store 5.0.0.0 certified): the 4.1 code it describes (.gitignore, scratch/spike-dotnet/) is deleted from the repo and stays at the v4.1.0 tag. scratch/ was never tracked, and the parity checks are the golden tests.",
    "owner": "Retired",
    "check": "none-retired",
    "disposition": "drop",
    "divergence": "4.1: gitignored scratch/ holds the .NET spike and local upload tooling. v5: scratch stays untracked local workspace and is not part of the product.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "legacy-docs-superpowers",
@@ -7419,12 +7419,12 @@
    "quirks": "Data-loss quirk: Ctrl+R reloads with no confirm. The SMOKE_TEST instruction to open DevTools with Ctrl+Shift+I has to be rewritten for the native build (a log pane or nothing).",
    "portTarget": "WPF has no implicit app menu. Decide each one explicitly in a KeyBinding table: drop Ctrl+R reload (a deliberate fix, since it loses data), drop or debug-gate DevTools, optionally map F11 to a WindowState/WindowStyle fullscreen toggle, and do not add whole-UI zoom unless chosen (use LayoutTransform if it is).",
    "risk": "med",
-   "parityCheck": "Press Ctrl+R, Ctrl+Shift+I, Ctrl+=, Ctrl+-, Ctrl+0 and F11 in the Electron build and in the native build with a document open. Record each outcome and confirm the native build matches the decision table, in particular that no key silently discards work.",
+   "parityCheck": "Press Ctrl+R, Ctrl+Shift+I, Ctrl+=, Ctrl+-, Ctrl+0 and F11 in the Electron build and in the native build with a document open. Record each outcome and confirm the native build matches the decision table, in particular that no key silently discards work. Closed in the cutover (chore/v5-cutover, 2026-11-03, after Store 5.0.0.0 certified): the 4.1 code it describes (CHANGELOG.md, docs/SMOKE_TEST.md, editor.js, main.js, windows/RELEASE_NOTES.md) is deleted from the repo and stays at the v4.1.0 tag. v5 binds each accelerator explicitly.",
    "owner": "Retired",
    "check": "none-retired",
    "disposition": "drop",
    "divergence": "4.1: hidden default Electron menu leaves Ctrl+R reload (no confirm), DevTools and page-zoom accelerators live. v5: no such accelerators exist in WPF, Ctrl+R unbound.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "shell-no-unsaved-changes-guard",
@@ -7702,12 +7702,12 @@
    "quirks": "Two installs with the same display name confuse users. The README promise 'winget install rbx-maker' is roadmap only.",
    "portTarget": "Decide the non-Store channel: a sideload MSIX/App Installer, a self-contained zip, or a WiX/Inno installer for the self-contained publish output. Document the migration for existing NSIS users (uninstall the old one; .r15proj files carry over).",
    "risk": "med",
-   "parityCheck": "On a clean VM, the chosen non-Store artifact installs, creates the same shortcuts, appears in Apps & features and uninstalls cleanly. On a VM with the 4.1.0 NSIS build present, the documented migration steps leave one working app.",
+   "parityCheck": "On a clean VM, the chosen non-Store artifact installs, creates the same shortcuts, appears in Apps & features and uninstalls cleanly. On a VM with the 4.1.0 NSIS build present, the documented migration steps leave one working app. Closed in the cutover (chore/v5-cutover, 2026-11-03, after Store 5.0.0.0 certified): the 4.1 code it describes (.626labs/manifest.json, README.md, docs/index.html, package.json, windows/TEST_PLAN.md sections 1, 15) is deleted from the repo and stays at the v4.1.0 tag. The non-Store channel is the portable zip; README says how 4.x NSIS users move over.",
    "owner": "Retired",
    "check": "none-retired",
    "disposition": "drop",
    "divergence": "4.1: unsigned NSIS installer on GitHub Releases is a second channel. v5: NSIS retired in favor of the Store MSIX plus an unsigned portable zip on GitHub.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "docs-dev-workflow-claims",
@@ -8518,12 +8518,12 @@
    "quirks": "",
    "portTarget": "Drop. List them so nobody hunts for their behavior.",
    "risk": "low",
-   "parityCheck": "N/A (confirm there's no visible UI in Electron).",
+   "parityCheck": "N/A (confirm there's no visible UI in Electron). Closed in the cutover (chore/v5-cutover, 2026-11-03, after Store 5.0.0.0 certified): the 4.1 code it describes (editor.html, editor.js) is deleted from the repo and stays at the v4.1.0 tag.",
    "owner": "Retired",
    "check": "none-retired",
    "disposition": "drop",
    "divergence": "4.1: hidden unused assetType select and btnExport2 button exist in markup. v5: not carried over.",
-   "status": "open"
+   "status": "done"
   },
   {
    "id": "layer-reorder-dragging-class-timer",

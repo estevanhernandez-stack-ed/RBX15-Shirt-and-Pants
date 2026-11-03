@@ -1,8 +1,8 @@
 # Vendored fonts
 
-The 15 Word Art families 4.1 loads from Google Fonts (`editor.html:11`) and the 3 UI families from `styles.css:6`, vendored as TTF from one pinned commit: **google/fonts@66928797f271fed5ee428544e7229685e2d90127** (main, 2026-10-12).
+The 15 Word Art families 4.1 loaded from Google Fonts (`editor.html:11` at `v4.1.0`) and the 3 UI families from `styles.css:6`, vendored as TTF from one pinned commit: **google/fonts@66928797f271fed5ee428544e7229685e2d90127** (main, 2026-10-12).
 
-Goldens v2 (`tests/goldens/app`) are captured with exactly these files injected as `@font-face` by `tools/parity-ref/fonts.js`, and the v5 bundle ships the same files. Google Fonts' served files drift over time; these do not.
+Goldens v2 (`tests/goldens/app`) are captured with exactly these files injected as `@font-face` by `tools/parity-ref/fonts.js` (removed at the cutover; at `v4.1.0`), and the v5 bundle ships the same files. Google Fonts' served files drift over time; these do not.
 
 ## Rules
 

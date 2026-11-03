@@ -39,7 +39,7 @@ public partial class ThemeTokenTests
     /// <summary>name to raw value, from the first :root block of styles.css.</summary>
     static Dictionary<string, string> CssTokens()
     {
-        var css = File.ReadAllText(Path.Combine(Root, "styles.css"));
+        var css = File.ReadAllText(RepoRoot.Source41(AppContext.BaseDirectory, "styles.css"));
         int start = css.IndexOf(":root {", StringComparison.Ordinal);
         int end = css.IndexOf('}', start);
         return TokenPattern().Matches(css[start..end]).ToDictionary(m => m.Groups[1].Value, m => m.Groups[2].Value.Trim());
@@ -175,7 +175,7 @@ public partial class ThemeTokenTests
     [Fact] // theme-scrollbars: thumb #223a54 on track #050c18 (styles.css:115)
     public void Scrollbars_are_navy_soft_on_ink_950()
     {
-        Assert.Contains("scrollbar-color: var(--brand-navy-soft) var(--ink-950)", File.ReadAllText(Path.Combine(Root, "styles.css")));
+        Assert.Contains("scrollbar-color: var(--brand-navy-soft) var(--ink-950)", File.ReadAllText(RepoRoot.Source41(AppContext.BaseDirectory, "styles.css")));
         var (track, thumb) = StaThread.Run(() =>
         {
             var bar = new System.Windows.Controls.Primitives.ScrollBar { Orientation = System.Windows.Controls.Orientation.Vertical, Height = 100 };

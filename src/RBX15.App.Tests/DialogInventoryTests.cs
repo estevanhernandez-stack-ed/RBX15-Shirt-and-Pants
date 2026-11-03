@@ -25,7 +25,7 @@ namespace RBX15.App.Tests;
 public sealed class DialogInventoryTests : IDisposable
 {
     static readonly string Root = RepoRoot.Find(AppContext.BaseDirectory);
-    static readonly string EditorJs = Path.Combine(Root, "editor.js");
+    static readonly string EditorJs = RepoRoot.Source41(AppContext.BaseDirectory, "editor.js");
     readonly string _dir = Directory.CreateTempSubdirectory("rbx15-m4a-t3-").FullName;
 
     public void Dispose()
@@ -45,7 +45,7 @@ public sealed class DialogInventoryTests : IDisposable
         Assert.Equal([1270, 1506, 2344, 2364, 2385, 2676], sites);
         foreach (var other in new[] { "editor.html", "main.js" })
         {
-            string text = File.ReadAllText(Path.Combine(Root, other));
+            string text = File.ReadAllText(RepoRoot.Source41(AppContext.BaseDirectory, other));
             Assert.DoesNotMatch(@"\b(alert|confirm|prompt)\(|showMessageBox|showErrorBox", text);
         }
     }

@@ -137,13 +137,17 @@ def check_v5_release(text):
     assert "          draft: true\n" in text, "the release must be a draft until the Store build is live"
 
 
-# ---- windows-release.yml ---------------------------------------------------------------------------------------------
+# ---- every workflow -------------------------------------------------------------------------------------------------
 
-def check_windows_release(text):
-    assert events(text) == ["push"], f"windows-release.yml must trigger on push of tags only, found {events(text)}"
-    tags = trigger_list(text, "push", "tags")
-    assert tags and all(t.startswith("v4.") for t in tags), f"windows-release.yml must be fenced to v4.*, found {tags}"
-    assert trigger_keys(text, "push") == ["tags"], "windows-release.yml must filter on tags alone (no branches, no paths)"
+def tag_workflows():
+    """The workflows that run on a tag push. Only v5-release.yml may: the 4.x Electron release workflow was deleted in
+    the cutover, and a second tag workflow would publish (or overwrite) a release alongside it."""
+    found = []
+    for path in sorted(WORKFLOWS.glob("*.yml")):
+        text = path.read_text(encoding="utf-8")
+        if "push" in events(text) and "tags" in trigger_keys(text, "push"):
+            found.append(path.name)
+    return found
 
 
 class DotnetCiTests(unittest.TestCase):
@@ -200,16 +204,9 @@ class V5ReleaseTests(unittest.TestCase):
             check_v5_release(head + "    steps:\n" + "\n".join(s) + "\n")
 
 
-class WindowsReleaseTests(unittest.TestCase):
-    def test_real_file_passes(self):
-        check_windows_release(read("windows-release.yml"))
-
-    def test_the_v4_fence_is_load_bearing(self):
-        text = read("windows-release.yml")
-        for broken in (text.replace('"v4.*.*"', '"v*"'), text.replace('"v4.*.*"', '"v5.*.*"')):
-            self.assertNotEqual(broken, text)
-            with self.assertRaises(AssertionError):
-                check_windows_release(broken)
+class TagWorkflowTests(unittest.TestCase):
+    def test_only_v5_release_runs_on_a_tag(self):
+        self.assertEqual(tag_workflows(), ["v5-release.yml"])
 
 
 if __name__ == "__main__":

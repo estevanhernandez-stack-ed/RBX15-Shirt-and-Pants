@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Vendors the Word Art fonts (editor.html:11) and UI fonts (styles.css:6) into assets/fonts from
+# Vendors the Word Art fonts (editor.html:11 at v4.1.0) and UI fonts (styles.css:6) into assets/fonts from
 # ONE pinned google/fonts commit. Each file is checked against the git blob id GitHub lists for it
 # at that commit (--no-filters: five upstream OFL.txt files are CRLF), so a download that is not
 # byte-identical to the pinned tree fails loudly. Re-pinning is a controller decision: see

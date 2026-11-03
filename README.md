@@ -38,7 +38,7 @@ Get it from the Store: [RBX15 Classic Shirt and Pants Maker](https://apps.micros
 
 ### Portable zip
 
-Download `RBX15-Maker-v5.0.0-portable-win-x64.zip` from [Releases](https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/releases), extract it anywhere, and run `RBX15.App.exe`. The app carries its own .NET runtime, so there is nothing else to install. The zip is not code-signed, so Windows SmartScreen may ask you to confirm the first launch.
+Download `RBX15-Maker-v5.0.0.0-portable-win-x64.zip` from [Releases](https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/releases), extract it anywhere, and run `RBX15.App.exe`. The app carries its own .NET runtime, so there is nothing else to install. The zip is not code-signed, so Windows SmartScreen may ask you to confirm the first launch.
 
 ### Quit RBX15 before updating
 
@@ -183,10 +183,13 @@ Keyboard. The Keys button in the Tools group turns the bare keys on and off (`Ke
 
 ---
 
-## Legacy 4.1 source
+## Coming from 4.x
 
-<!-- Legacy 4.1 -->
-The Electron app that shipped as 4.1 (`main.js`, `editor.html`, `editor.js`, `styles.css`, `lib/`, `package.json`) still sits in the repo root. v5 does not use it. It stays until the cutover removes it, as the reference the parity ledger and the frozen render goldens in `tests/goldens/` were taken from. Don't build on it. To run it you need Node.js 18+, then `npm install` and `npm start`.
+5.0 replaced the 4.x Electron app.
+
+- **Store installs** update in place, under the same package identity.
+- **The 4.x installer (NSIS) is retired.** Uninstall it from Settings, then install from the Store or the zip. Your `.r15proj` projects open in 5.0 as they are.
+- **The 4.1 source** is at the [`v4.1.0` tag](https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/tree/v4.1.0). It is the reference the [port ledger](docs/port/README.md) and the frozen render goldens in `tests/goldens/` were taken from. Comments in `src/` that cite `editor.js:<line>` or `lib/fills.js` point at that tag.
 
 ---
 

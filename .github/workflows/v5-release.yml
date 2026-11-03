@@ -3,6 +3,8 @@ name: v5 Release
 # v5.*.* tags build the native WPF app: tests first, then the MSIX and the portable zip, attached to a GitHub release
 # whose notes come from windows/RELEASE_NOTES_v5.md. The 4.x Electron tags (v4.*) are handled by windows-release.yml.
 # Cut the tag with /cut-release so the notes file holds real commit bullets before the tag is pushed.
+# The release is a draft: the Store build must be live before 6deux6 announces it, so Este retitles and publishes the
+# draft once the Store serves the new version (cut-release SOP; decision b3NfKLW232g2dhfrwBAO).
 
 on:
   push:
@@ -72,4 +74,5 @@ jobs:
             dist/RBX15-Maker-v${{ steps.ver.outputs.msix_version }}-portable-win-x64.zip
           body_path: windows/RELEASE_NOTES_v5.md
           fail_on_unmatched_files: true
+          draft: true
           prerelease: false

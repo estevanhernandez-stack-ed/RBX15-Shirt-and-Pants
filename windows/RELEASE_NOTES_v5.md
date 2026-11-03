@@ -1,8 +1,4 @@
-<!-- RELEASE-NOTES-PLACEHOLDER: this file is a draft. /cut-release replaces it with real commit-bullet notes before a
-     v5.* tag is pushed, and removes this marker when it does. v5-release.yml refuses to publish while this marker is present.
-     The user-facing sections below are written; the commit bullets since v4.1.0 are not. Not marketing copy. -->
-
-# RBX15 Classic Shirt and Pants Maker 5.0.0 (draft)
+# RBX15 Classic Shirt and Pants Maker 5.0.0
 
 RBX15 5.0 is a rebuild as a native Windows app (WPF on .NET 10) in place of the Electron app. Your `.r15proj` projects open as they are, and exports match what the canvas shows.
 
@@ -15,6 +11,9 @@ RBX15 5.0 is a rebuild as a native Windows app (WPF on .NET 10) in place of the 
 - **Recent projects and the jump list.** A Recent button beside Open lists your last 10 projects, and the taskbar jump list shows the same 10.
 - **Open from Explorer.** Double-click a `.r15proj` file to open it. Each launch is its own window.
 - **Paste.** Ctrl+V adds the clipboard image as a new layer on top, as one undo step.
+- **Colors from your art.** Every color picker (brush, Fill Style, region swatches) shows a "From your art" row taken from the images on your canvas, and the Brush group has a Palette button with the same swatches.
+- **A region guide on transparent templates.** A new template starts with a transparent background, and the canvas outlines each region faintly so you can see where art goes. The guide never appears in the export or the 3D preview.
+- **New window.** Ctrl+N or the New button opens a fresh window and leaves the current document alone.
 - **Undo covers every edit,** with redo on Ctrl+Y and Ctrl+Shift+Z.
 - **Error log.** An unexpected error is written to `%LOCALAPPDATA%\RBX15\logs\error.log`. It holds no document content and is never sent anywhere.
 - **Accessibility pass.** Keyboard focus shows a cyan ring on every control, and controls have names for Narrator.
@@ -29,3 +28,5 @@ RBX15 5.0 is a rebuild as a native Windows app (WPF on .NET 10) in place of the 
 - High-contrast themes are not supported. The app draws its own dark palette whatever Windows theme is set.
 - Screen readers read the controls, but edits made on the canvas (moving, painting, filling) are not announced.
 - The portable zip is not code-signed, so Windows SmartScreen may ask you to confirm the first launch.
+
+**Full Changelog**: <https://github.com/estevanhernandez-stack-ed/RBX15-Shirt-and-Pants/compare/v4.1.0...v5.0.0>

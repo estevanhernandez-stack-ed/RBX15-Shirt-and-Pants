@@ -11,19 +11,20 @@ TEAL, PLUM, INK = (16, 64, 88), (58, 24, 62), (14, 22, 40)
 CYAN, MAGENTA, WHITE, GREY, SOFT = (23, 212, 250), (242, 47, 137), (240, 244, 250), (150, 162, 182), (196, 206, 222)
 
 
-def background():
+def background(w=W, h=H):
     """A diagonal teal-to-plum wash over ink, like the RoRoRo cards."""
-    small = Image.new("RGB", (64, 36))
+    sw, sh = (64, 36) if w >= h else (36, 64)
+    small = Image.new("RGB", (sw, sh))
     px = small.load()
-    for y in range(36):
-        for x in range(64):
-            t = (x / 63 * 0.55 + y / 35 * 0.45)
+    for y in range(sh):
+        for x in range(sw):
+            t = (x / (sw - 1) * 0.55 + y / (sh - 1) * 0.45)
             a = TEAL if t < 0.5 else PLUM
             b = INK
             k = abs(t - 0.5) * 2
             mid = tuple(int(INK[i] * (1 - 0.35) + (TEAL[i] if t < 0.5 else PLUM[i]) * 0.35) for i in range(3))
             px[x, y] = tuple(int(mid[i] * (1 - k) + a[i] * k) for i in range(3))
-    return small.resize((W, H), Image.BICUBIC).filter(ImageFilter.GaussianBlur(30))
+    return small.resize((w, h), Image.BICUBIC).filter(ImageFilter.GaussianBlur(30))
 
 
 def gradient_text(draw_on, xy, text, font, c1=CYAN, c2=MAGENTA):
@@ -118,6 +119,27 @@ def outro(dst, fonts, url="626labs.dev/rbx15.html"):
     img.save(dst)
 
 
+def outro_vertical(dst, fonts, url="626labs.dev/rbx15.html", w=1080, h=1920):
+    """The outro restacked for 9:16. Everything sits between y 150 and 1450, clear of TikTok's top bar and caption."""
+    img = background(w, h); d = ImageDraw.Draw(img); cx = w / 2
+    tracked(d, cx, 190, "WINDOWS  ·  MICROSOFT STORE", fonts["mono"], SOFT)
+    qr = qrcode.QRCode(border=1, box_size=20, error_correction=qrcode.constants.ERROR_CORRECT_M)
+    qr.add_data("https://" + url); qr.make(fit=True)
+    q = qr.make_image(fill_color=(14, 22, 40), back_color="white").convert("RGB").resize((460, 460), Image.NEAREST)
+    card = Image.new("RGBA", (520, 520), (0, 0, 0, 0))
+    ImageDraw.Draw(card).rounded_rectangle([0, 0, 519, 519], 28, fill=(255, 255, 255, 255))
+    card.paste(q, (30, 30))
+    img.paste(card, (int(cx - 260), 280), card)
+    centered(d, cx, 860, "Get it on the", fonts["head"], WHITE)
+    centered(d, cx, 940, "Microsoft Store.", fonts["head"], WHITE)
+    rule(d, cx, 1065)
+    centered(d, cx, 1105, url, fonts["url_s"], CYAN)
+    centered(d, cx, 1215, "Works offline. No account. No ads.", fonts["body"], SOFT)
+    centered(d, cx, 1265, "Not affiliated with Roblox Corporation.", fonts["body_s"], GREY)
+    tracked(d, cx, 1395, "626 LABS  /  IMAGINE SOMETHING ELSE.", fonts["mono_s"], GREY)
+    img.save(dst)
+
+
 def load_fonts(font_dir: Path):
     def f(family, size, weight):
         path = next((font_dir / family).glob("*.ttf"))
@@ -127,4 +149,5 @@ def load_fonts(font_dir: Path):
         return ft
     return {"mono": f("jetbrainsmono", 30, 500), "mono_s": f("jetbrainsmono", 22, 500),
             "wordmark": f("spacegrotesk", 230, 700), "tag": f("spacegrotesk", 50, 500),
-            "head": f("spacegrotesk", 62, 600), "url": f("spacegrotesk", 64, 500), "body": f("inter", 34, 400)}
+            "head": f("spacegrotesk", 62, 600), "url": f("spacegrotesk", 64, 500), "body": f("inter", 34, 400),
+            "url_s": f("spacegrotesk", 52, 500), "body_s": f("inter", 28, 400)}

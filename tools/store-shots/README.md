@@ -50,4 +50,14 @@ python make_hero.py                        # out/store/super-hero-art-1920x1080.
 
 The trailer opens and closes on the 626 Labs brand cards from `brand_cards.py`, in the RoRoRo launch video's layout. The intro has the app icon tile, the RBX15 wordmark and Este saying the name. The outro has a QR code to 626labs.dev/rbx15.html and the "RBX15, from six-two-six Labs. Imagine something else." sign-off, with the "626 LABS / IMAGINE SOMETHING ELSE." footer on both. The ffmpeg step normalizes the voice to -16 LUFS. Without it the narration sits around -25 dB, quiet enough to sound silent on laptop speakers.
 
+## 4. TikTok cut
+
+```powershell
+python make_vertical.py                    # out/tiktok/rbx15-tiktok.mp4, 1080x1920, ~31 s, narrated, leveled to -17 LUFS
+```
+
+Same captures and narration clips as the trailer, restacked for 9:16: the template canvas or the 3D preview is cropped and scaled to fill the phone instead of shrinking the landscape window, and everything sits between y 150 and 1450, clear of TikTok's bar, rail and caption. It is cut to loop, so there is no fade in and the voice starts at 0.05 s: "Imagine something else." runs straight into "R B X fifteen." The overlay text, caption and hashtags are in `docs/store-assets/tiktok/rbx15-tiktok-script.md`, for TikTok's editor rather than burned in.
+
+Slide 7's line was "live, while you work", which the voice read as the verb. It is now "in real time".
+
 Partner Center refuses desktop screenshots under 1366x768. `StoreAssetsTests.Every_versioned_screenshot_meets_the_store_minimum` checks every `docs/screenshots/<version>/` image. The super hero art must not carry the product title. Screenshots, the hero art and the trailer are uploaded by hand in Partner Center, because the submission API can't upload media.
